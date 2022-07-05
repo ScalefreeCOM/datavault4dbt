@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: source_data
+    tables:
+      - name: source_opportunity
+      - name: source_contract
+      - name: source_account
