@@ -1,4 +1,21 @@
-{%- macro stage(ldts,
+{%- macro stage(ldts, rsrc, include_source_columns, source_schema, source_table, hashed_columns=none, derived_columns=none, ranked_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
+    
+    {{ return(adapter.dispatch('stage')(ldts,
+                                        rsrc, 
+                                        include_source_columns, 
+                                        source_schema,
+                                        source_table, 
+                                        hashed_columns=none, 
+                                        derived_columns=none, 
+                                        ranked_columns=none, 
+                                        sequence=none,
+                                        prejoined_columns=none,
+                                        missing_columns=none)) }}
+
+{%- endmacro -%}
+
+
+{%- macro default__stage(ldts,
                 rsrc, 
                 include_source_columns, 
                 source_schema,
