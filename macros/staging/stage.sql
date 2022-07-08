@@ -75,7 +75,7 @@ prejoined_columns AS (
   lcte.*
 
   {%- for col, vals in prejoined_columns.items() %}
-    ,pj_{{loop.index}}.{{ col }}
+    ,pj_{{loop.index}}.{{ col }} {% if vals['alias'] is not none %}AS vals['alias'] {%- endif %}
   {% endfor -%}
 
   FROM {{ last_cte }} lcte
