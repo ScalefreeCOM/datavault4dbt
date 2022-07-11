@@ -6,3 +6,4 @@ sources:
       - name: source_opportunity
       - name: source_contract
       - name: source_account
+      - name: source_solution

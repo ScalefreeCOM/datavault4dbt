@@ -1,6 +1,6 @@
 {%- macro stage(ldts, rsrc, include_source_columns, source_schema, source_table, hashed_columns=none, derived_columns=none, ranked_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
     
-    {{ return(adapter.dispatch('stage')(ldts,
+    {{ return(adapter.dispatch('stage', 'dbtvault-scalefree')(ldts,
                                         rsrc, 
                                         include_source_columns, 
                                         source_schema,
@@ -14,8 +14,7 @@
 
 {%- endmacro -%}
 
-
-{%- macro default__stage(ldts,
+{%- macro bigquery__stage(ldts,
                 rsrc, 
                 include_source_columns, 
                 source_schema,
@@ -75,14 +74,14 @@ prejoined_columns AS (
   lcte.*
 
   {%- for col, vals in prejoined_columns.items() %}
-    ,pj_{{loop.index}}.{{ col }} {% if vals['alias'] is not none %}AS vals['alias'] {%- endif %}
+    ,pj_{{loop.index}}.{{ bk }} AS vals['bk']
   {% endfor -%}
 
   FROM {{ last_cte }} lcte
 
   {%- for col, vals in prejoined_columns.items() %}
     left join {{ source(vals['src_schema']|string, vals['src_table']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
-  {% endfor %}
+  {% endfor -%}
 
   {% set last_cte = "prejoined_columns" -%}
 )

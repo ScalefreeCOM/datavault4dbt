@@ -1,9 +1,16 @@
-{%- macro virtual_end_dating(source_sat, src_hk, src_hd) -%}
+
+{%- macro sat_v1(source_sat, src_hk, src_hd) -%}
+
+    {{ return(adapter.dispatch('sat_v1', 'dbtvault-scalefree')(source_sat,
+                                         src_hk,
+                                         src_hd)) }}
+
+{%- endmacro -%}
+
+{%- macro bigquery__sat_v1(source_sat, src_hk, src_hd) -%}
 
     {%- set all_columns = adapter.get_columns_in_relation(ref(source_sat)) -%}
     {%- set exclude = [src_hk, src_hd, "ldts"] -%}
-
-
 
     SELECT
         {{ src_hk }},
@@ -18,4 +25,5 @@
         {%- endfor -%}
     FROM {{ ref(source_sat) }}
     WHERE {{ src_hd }} != 'ffffffffffffffffffffffffffffffff'
+
 {%- endmacro -%}

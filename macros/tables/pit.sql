@@ -1,6 +1,6 @@
 {%- macro pit(pit_type, src_hub, src_pk, sat_names, src_ldts, use_logarithmic_snap, snapshot_table) -%}
 
-    {{ return(adapter.dispatch('pit')(pit_type
+    {{ return(adapter.dispatch('pit', 'dbtvault-scalefree')(pit_type
                                     , src_hub
                                     , src_pk
                                     , sat_names
@@ -10,7 +10,7 @@
 
 {%- endmacro -%}
 
-{%- macro default__pit(pit_type, src_hub, src_pk, sat_names, src_ldts, use_logarithmic_snap, snapshot_table) -%}
+{%- macro bigquery__pit(pit_type, src_hub, src_pk, sat_names, src_ldts, use_logarithmic_snap, snapshot_table) -%}
 
 {%- set ghost_pk = '00000000000000000000000000000000' -%}
 {%- set ghost_date = '0001-01-01 00:00:00.000' %}

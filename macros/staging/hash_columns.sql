@@ -1,10 +1,11 @@
+
 {%- macro hash_columns(columns=none) -%}
 
-    {{- adapter.dispatch('hash_columns', 'dbtvault')(columns=columns) -}}
+    {{- adapter.dispatch('hash_columns', 'dbtvault-scalefree')(columns=columns) -}}
 
 {%- endmacro %}
 
-{%- macro default__hash_columns(columns=none) -%}
+{%- macro bigquery__hash_columns(columns=none) -%}
 
 {%- if columns is mapping and columns is not none -%}
 

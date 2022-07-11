@@ -1,4 +1,16 @@
-{%- macro sat(src_pk, src_hashdiff, src_payload, src_eff, src_ldts, src_source, source_model) -%}
+{%- macro sat_v0(src_pk, src_hashdiff, src_payload, src_eff, src_ldts, src_source, source_model) -%}
+
+    {{ return(adapter.dispatch('sat_v0', 'dbtvault-scalefree')(src_pk, 
+                                         src_hashdiff,
+                                         src_payload,
+                                         src_eff,
+                                         src_ldts,
+                                         src_source,
+                                         source_model))}}
+
+{%- endmacro -%}                                         
+
+{%- macro bigquery__sat_v0(src_pk, src_hashdiff, src_payload, src_eff, src_ldts, src_source, source_model) -%}
 
 {%- set source_cols = dbtvault.expand_column_list(columns=[src_pk, src_hashdiff, src_ldts, src_source, src_payload, src_eff]) -%}
 {%- set rank_cols = dbtvault.expand_column_list(columns=[src_pk, src_hashdiff, src_ldts]) -%}

@@ -204,11 +204,13 @@ prejoined_columns:
   contractnumber:
     src_schema: "source_data"
     src_table: "source_contract"
+    bk: "contractnumber"
     this_column_name: "ContractId"
     ref_column_name: "Id"
   account_key__c:
     src_schema: "source_data"
     src_table: "source_account"
+    bk: "account_key__c"
     this_column_name: "AccountId"
     ref_column_name: "Id"
 
