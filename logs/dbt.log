@@ -1,0 +1,26 @@
+
+
+============================== 2022-07-05 10:26:34.926372 | 43582d44-c198-45a3-99cb-d2586af07226 ==============================
+10:26:34.926372 [info ] [MainThread]: Running with dbt=1.1.1
+10:26:34.927445 [debug] [MainThread]: running dbt with arguments {'write_json': True, 'use_colors': True, 'printer_width': 80, 'version_check': True, 'partial_parse': True, 'static_parser': True, 'profiles_dir': 'C:\\Users\\tkirschke\\.dbt', 'send_anonymous_usage_stats': True, 'event_buffer_size': 100000, 'quiet': False, 'no_print': False, 'project_name': 'dbt-public-release', 'skip_profile_setup': False, 'which': 'init', 'indirect_selection': 'eager'}
+10:26:34.927445 [debug] [MainThread]: Tracking: tracking
+10:26:34.929009 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002B63CBC57F0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002B63CBC58B0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002B63CBC5700>]}
+10:26:47.099667 [debug] [MainThread]: Starter project path: c:\users\tkirschke\.vscode\dbt-public-release\dbt-public-release\lib\site-packages\dbt\include\starter_project
+10:27:56.205398 [info ] [MainThread]: Profile dbt_public_release written to C:\Users\tkirschke\.dbt\profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+10:27:56.206398 [info ] [MainThread]: 
+Your new dbt project "dbt_public_release" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+10:27:56.208985 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002B63CBCD430>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002B63CBCD5B0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002B63CBCD8B0>]}

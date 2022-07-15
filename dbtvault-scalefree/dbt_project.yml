@@ -1,0 +1,21 @@
+name: dbtvault-scalefree
+version: 0.8.3
+require-dbt-version: [">=1.0.0", "<2.0.0"]
+config-version: 2
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+docs-paths: ["docs"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  hash: 'MD5'
+  beginning_of_all_times: '0001-01-01T00-00-01'
+  end_of_all_times: '8888-12-31T23-59-59'
