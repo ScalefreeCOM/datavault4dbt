@@ -56,12 +56,12 @@
         {%- set column_str = dbtvault.as_constant(column) -%}
     {%- endif -%}
 
-    {{- "\nIFNULL({}, '{}')".format(standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
     {{- ",'{}',".format(concat_string) if not loop.last -}}
 
     {%- if loop.last -%}
 
-        {{ standardise_suffix }}
+        {{ standardise_suffix | indent(4) }}
 
     {%- else -%}
 
@@ -75,20 +75,3 @@
 {%- endmacro -%}
 
 
-{%- macro attribute_standardise() -%}
-'\"', REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\\\', '\\\\\\\\'), '\[QUOTE]', '\\\"'), '\[NULL_PLACEHOLDER_STRING]', '--'), '\"'
-{%- endmacro -%}
-
-{%- concattenated_standardise(case_sensitive, hash_alg, all_null, zero_key, alias) -%}
-
-{%- if case_sensitive -%}
-    {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
-    {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')))), '{}') AS {}".format(all_null | join(""),zero_key, alias)-%}
-{%- else -%}
-    {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
-    {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')))), '{}') AS {}".format(all_null | join(""),zero_key, alias)-%}
-{%- endif -%}
-
-{{ return(standardise_prefix, standardise_suffix) }}
-
-{%- endmacro -%}
