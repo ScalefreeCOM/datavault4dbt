@@ -15,6 +15,9 @@
 {%- set quote = var('quote', '"') -%}
 {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
 
+{%- set hashkey_input_case_sensitive = var('hashkey_input_case_sensitive', FALSE) -%}
+{%- set hashdiff_input_case_sensitive = var('hashdiff_input_case_sensitive', TRUE) -%}
+
 {#- Select hashing algorithm -#}
 {%- if hash == 'MD5' -%}
     {%- set hash_alg = 'MD5' -%}
@@ -27,50 +30,65 @@
     {%- set zero_key = '0000000000000000000000000000000000000000000000000000000000000000' -%}
 {%- endif -%}
 
-{%- set standardise = "CONCAT( '\"' , REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\\\', '\\\\\\\\'), '\"', '\\\"'), '\"' )" %}
+{%- set attribute_standardise = attribute_standardise() %}
 
 {#- If single column to hash -#}
 {%- if columns is string -%}
-    {%- set column_str = dbtvault.as_constant(columns) -%}
-    {{- "TO_HEX(({}({}))) AS {}".format(hash_alg, standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote), alias) | indent(4) -}}
+    {%- set columns = [columns] -%}
+{%- endif -%}
 
-{#- Else a list of columns to hash -#}
+{%- set all_null = [] -%}
+{%- if is_hashdiff -%}
+    {%- set standardise_prefix, standardise_suffix = concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=zero_key) -%}
 {%- else -%}
-    {%- set all_null = [] -%}
-    {%- if is_hashdiff -%}
-        {{- "TO_HEX({}(CONCAT(".format(hash_alg) | indent(4) -}}
+    {%- set standardise_prefix, standardise_suffix = concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=zero_key) -%}
+{%- endif -%}
+
+{{ standardise_prefix }}
+
+{%- for column in columns -%}
+
+    {%- do all_null.append(null_placeholder_string) -%}
+
+    {%- if '.' in column %}
+        {% set column_str = column -%}
     {%- else -%}
-        {{- "IFNULL(TO_HEX(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg) | indent(4) -}}
+        {%- set column_str = dbtvault.as_constant(column) -%}
     {%- endif -%}
 
-    {%- for column in columns -%}
+    {{- "\nIFNULL({}, '{}')".format(standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- ",'{}',".format(concat_string) if not loop.last -}}
 
-        {%- do all_null.append(null_placeholder_string) -%}
+    {%- if loop.last -%}
 
-        {%- if '.' in column %}
-            {% set column_str = column -%}
-        {%- else -%}
-            {%- set column_str = dbtvault.as_constant(column) -%}
-        {%- endif -%}
+        {{ standardise_suffix }}
 
-        {{- "\nREGEXP_REPLACE(IFNULL({}, '{}'), '{}', '--')".format(standardise | replace('[EXPRESSION]', column_str), null_placeholder_string, null_placeholder_string) | indent(4) -}}
-        {{- ",'{}',".format(concat_string) if not loop.last -}}
+    {%- else -%}
 
-        {%- if loop.last -%}
+        {%- do all_null.append(concat_string) -%}
 
-            {% if is_hashdiff %}
-                {{- "\n))) AS {}".format(alias) -}}
-            {%- else -%}
-                {{- "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')))), '{}') AS {}".format(all_null | join(""),zero_key, alias) -}}
-            {%- endif -%}
-        {%- else -%}
+    {%- endif -%}
 
-            {%- do all_null.append(concat_string) -%}
+{%- endfor -%}
 
-        {%- endif -%}
 
-    {%- endfor -%}
+{%- endmacro -%}
 
+
+{%- macro attribute_standardise() -%}
+'\"', REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\\\', '\\\\\\\\'), '\[QUOTE]', '\\\"'), '\[NULL_PLACEHOLDER_STRING]', '--'), '\"'
+{%- endmacro -%}
+
+{%- concattenated_standardise(case_sensitive, hash_alg, all_null, zero_key, alias) -%}
+
+{%- if case_sensitive -%}
+    {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
+    {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')))), '{}') AS {}".format(all_null | join(""),zero_key, alias)-%}
+{%- else -%}
+    {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
+    {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')))), '{}') AS {}".format(all_null | join(""),zero_key, alias)-%}
 {%- endif -%}
+
+{{ return(standardise_prefix, standardise_suffix) }}
 
 {%- endmacro -%}
