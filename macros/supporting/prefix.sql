@@ -1,6 +1,6 @@
 {%- macro prefix(columns, prefix_str, alias_target) -%}
 
-    {{- adapter.dispatch('prefix', 'dbtvault')(columns=columns,
+    {{- adapter.dispatch('prefix', 'dbtvault_scalefree')(columns=columns,
                                                prefix_str=prefix_str,
                                                alias_target=alias_target) -}}
 
@@ -16,15 +16,15 @@
 
                 {%- if alias_target == 'source' -%}
 
-                    {{- dbtvault.prefix([col['source_column']], prefix_str) -}}
+                    {{- dbtvault_scalefree.prefix([col['source_column']], prefix_str) -}}
 
                 {%- elif alias_target == 'target' -%}
 
-                    {{- dbtvault.prefix([col['alias']], prefix_str) -}}
+                    {{- dbtvault_scalefree.prefix([col['alias']], prefix_str) -}}
 
                 {%- else -%}
 
-                    {{- dbtvault.prefix([col['source_column']], prefix_str) -}}
+                    {{- dbtvault_scalefree.prefix([col['source_column']], prefix_str) -}}
 
                 {%- endif -%}
 
@@ -34,7 +34,7 @@
 
                 {%- if col is iterable and col is not string -%}
 
-                    {{- dbtvault.prefix(col, prefix_str) -}}
+                    {{- dbtvault_scalefree.prefix(col, prefix_str) -}}
 
                 {%- elif col is not none -%}
 

@@ -1,7 +1,7 @@
 {%- macro get_period_boundaries(target_schema, target_table, timestamp_field, start_date, stop_date, period) -%}
 
     {% set macro = adapter.dispatch('get_period_boundaries',
-                                    'dbtvault')(target_schema=target_schema,
+                                    'dbtvault_scalefree')(target_schema=target_schema,
                                                 target_table=target_table,
                                                 timestamp_field=timestamp_field,
                                                 start_date=start_date,
@@ -20,7 +20,7 @@
             SELECT
                 COALESCE(MAX({{ timestamp_field }}), '{{ start_date }}')::TIMESTAMP AS start_timestamp,
                 COALESCE({{ dbt_utils.dateadd('millisecond', 86399999, "NULLIF('" ~ stop_date | lower ~ "','none')::TIMESTAMP") }},
-                         {{ dbtvault.current_timestamp() }} ) AS stop_timestamp
+                         {{ dbtvault_scalefree.current_timestamp() }} ) AS stop_timestamp
             FROM {{ target_schema }}.{{ target_table }}
         )
         SELECT
@@ -32,7 +32,7 @@
         FROM period_data
     {%- endset %}
 
-    {% set period_boundaries_dict = dbtvault.get_query_results_as_dict(period_boundary_sql) %}
+    {% set period_boundaries_dict = dbtvault_scalefree.get_query_results_as_dict(period_boundary_sql) %}
 
     {% set period_boundaries = {'start_timestamp': period_boundaries_dict['START_TIMESTAMP'][0] | string,
                                 'stop_timestamp': period_boundaries_dict['STOP_TIMESTAMP'][0] | string,
@@ -64,7 +64,7 @@
     {%- endset %}
 
 
-    {% set period_boundaries_dict = dbtvault.get_query_results_as_dict(period_boundary_sql) %}
+    {% set period_boundaries_dict = dbtvault_scalefree.get_query_results_as_dict(period_boundary_sql) %}
 
     {% set period_boundaries = {'start_timestamp': period_boundaries_dict['START_TIMESTAMP'][0] | string,
                                 'stop_timestamp': period_boundaries_dict['STOP_TIMESTAMP'][0] | string,
@@ -87,7 +87,7 @@
             SELECT
                 CAST(COALESCE(MAX({{ timestamp_field }}), CAST('{{ start_date_mssql }}' AS DATETIME2)) AS DATETIME2) AS start_timestamp,
                 COALESCE({{ dbt_utils.dateadd('millisecond', 86399999, "CAST(NULLIF('" ~ stop_date_mssql | lower ~ "','none') AS DATETIME2)") }},
-                         {{ dbtvault.current_timestamp() }} ) AS stop_timestamp
+                         {{ dbtvault_scalefree.current_timestamp() }} ) AS stop_timestamp
             FROM {{ target_schema }}.{{ target_table }}
         )
         SELECT
@@ -99,7 +99,7 @@
         FROM period_data
     {%- endset %}
 
-    {% set period_boundaries_dict = dbtvault.get_query_results_as_dict(period_boundary_sql) %}
+    {% set period_boundaries_dict = dbtvault_scalefree.get_query_results_as_dict(period_boundary_sql) %}
 
     {% set period_boundaries = {'start_timestamp': period_boundaries_dict['START_TIMESTAMP'][0] | string,
                                 'stop_timestamp': period_boundaries_dict['STOP_TIMESTAMP'][0] | string,

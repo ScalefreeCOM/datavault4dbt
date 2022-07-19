@@ -1,6 +1,6 @@
 {%- macro pit(pit_type, src_hub, src_pk, sat_names, src_ldts, rsrc, snapshot_relation, snapshot_trigger_column, dimension_key) -%}
 
-    {{ return(adapter.dispatch('pit')('dbtvault-scalefree')(pit_type
+    {{ return(adapter.dispatch('pit')('dbtvault_scalefree')(pit_type
                                     , src_hub
                                     , src_pk
                                     , sat_names
@@ -31,7 +31,7 @@
 SELECT
     '{{ pit_type }}' as type,
     '{{ rsrc }}' as rsrc,
-    {{ hash(columns=[dbtvault.prefix([src_pk], 'h'), dbtvault.prefix(['sdts'], 'snap')],
+    {{ hash(columns=[dbtvault_scalefree.prefix([src_pk], 'h'), dbtvault_scalefree.prefix(['sdts'], 'snap')],
                 alias=dimension_key,
                 is_hashdiff=false)   }} ,
     h.{{ src_pk }},

@@ -1,7 +1,7 @@
 {%- macro get_period_filter_sql(target_cols_csv, base_sql, timestamp_field, period, start_timestamp, stop_timestamp, offset) -%}
 
     {% set macro = adapter.dispatch('get_period_filter_sql',
-                                    'dbtvault')(target_cols_csv=target_cols_csv,
+                                    'dbtvault_scalefree')(target_cols_csv=target_cols_csv,
                                                 base_sql=base_sql,
                                                 timestamp_field=timestamp_field,
                                                 period=period,
@@ -18,7 +18,7 @@
 
     {%- set filtered_sql = {'sql': base_sql} -%}
 
-    {%- do filtered_sql.update({'sql': dbtvault.replace_placeholder_with_period_filter(filtered_sql.sql,
+    {%- do filtered_sql.update({'sql': dbtvault_scalefree.replace_placeholder_with_period_filter(filtered_sql.sql,
                                                                                        timestamp_field,
                                                                                        start_timestamp,
                                                                                        stop_timestamp,
@@ -33,7 +33,7 @@
 
     {%- set filtered_sql = {'sql': base_sql} -%}
 
-    {%- do filtered_sql.update({'sql': dbtvault.replace_placeholder_with_period_filter(filtered_sql.sql,
+    {%- do filtered_sql.update({'sql': dbtvault_scalefree.replace_placeholder_with_period_filter(filtered_sql.sql,
                                                                                        timestamp_field,
                                                                                        start_timestamp,
                                                                                        stop_timestamp,

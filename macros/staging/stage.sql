@@ -1,6 +1,6 @@
 {%- macro stage(ldts, rsrc, source_schema, source_table, hashed_columns=none, derived_columns=none, ranked_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
     
-    {{ return(adapter.dispatch('stage', 'dbtvault')(ldts=ldts,
+    {{ return(adapter.dispatch('stage', 'dbtvault_scalefree')(ldts=ldts,
                                         rsrc=rsrc, 
                                         source_schema=source_schema,
                                         source_table=source_table, 
@@ -25,9 +25,9 @@
                 prejoined_columns,
                 missing_columns) -%}
 
-{%- set derived_column_names = dbtvault.extract_column_names(derived_columns) -%}
-{%- set hashed_column_names = dbtvault.extract_column_names(hashed_columns) -%}
-{%- set ranked_column_names = dbtvault.extract_column_names(ranked_columns) -%}
+{%- set derived_column_names = dbtvault_scalefree.extract_column_names(derived_columns) -%}
+{%- set hashed_column_names = dbtvault_scalefree.extract_column_names(hashed_columns) -%}
+{%- set ranked_column_names = dbtvault_scalefree.extract_column_names(ranked_columns) -%}
 {%- set exclude_column_names = derived_column_names + hashed_column_names %}
 
 {#- Select hashing algorithm -#}
@@ -63,7 +63,7 @@ source_data AS (
   {%- set last_cte = "source_data" -%}
 ),
 
-{% if dbtvault.is_something(missing_columns) %}
+{% if dbtvault_scalefree.is_something(missing_columns) %}
 
 -- Filling missing columns with NULL values for schema changes
 missing_columns AS (
@@ -82,7 +82,7 @@ missing_columns AS (
 {%- endif -%}
 
 -- Prejoining Business Keys of other source objects for Link purposes
-{% if dbtvault.is_something(prejoined_columns) %}
+{% if dbtvault_scalefree.is_something(prejoined_columns) %}
 
 prejoined_columns AS (  
   
@@ -105,14 +105,14 @@ prejoined_columns AS (
 {%- endif -%}
 
 
-{%- if dbtvault.is_something(derived_columns) %}
+{%- if dbtvault_scalefree.is_something(derived_columns) %}
 -- Adding derived columns to the selection
 derived_columns AS (
 
     SELECT
 
     *,
-    {{ dbtvault.derive_columns(columns=derived_columns) | indent(4) }}
+    {{ dbtvault_scalefree.derive_columns(columns=derived_columns) | indent(4) }}
 
     FROM {{ last_cte }}
     {%- set last_cte = "derived_columns" -%}
@@ -120,7 +120,7 @@ derived_columns AS (
 {%- endif -%}
 
 -- Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites)
-{% if dbtvault.is_something(hashed_columns) and hashed_columns is mapping -%}
+{% if dbtvault_scalefree.is_something(hashed_columns) and hashed_columns is mapping -%}
 
 hashed_columns AS (
 
@@ -128,7 +128,7 @@ hashed_columns AS (
 
     *,
 
-    {% set processed_hash_columns = dbtvault.process_hash_column_excludes(hashed_columns) -%}
+    {% set processed_hash_columns = dbtvault_scalefree.process_hash_column_excludes(hashed_columns) -%}
     {{- hash_columns(columns=processed_hash_columns) | indent(4) }}
 
     FROM {{ last_cte }}
@@ -137,13 +137,13 @@ hashed_columns AS (
 {%- endif -%}
 
 -- Adding Ranked Columsn to the selection
-{% if dbtvault.is_something(ranked_columns) -%}
+{% if dbtvault_scalefree.is_something(ranked_columns) -%}
 
 ranked_columns AS (
 
     SELECT *,
 
-    {{ dbtvault.rank_columns(columns=ranked_columns) | indent(4) if dbtvault.is_something(ranked_columns) }}
+    {{ dbtvault_scalefree.rank_columns(columns=ranked_columns) | indent(4) if dbtvault_scalefree.is_something(ranked_columns) }}
 
     FROM {{ last_cte }}
     {%- set last_cte = "ranked_columns" -%}

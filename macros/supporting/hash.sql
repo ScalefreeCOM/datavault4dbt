@@ -4,7 +4,7 @@
         {%- set is_hashdiff = false -%}
     {%- endif -%}
 
-    {{- adapter.dispatch('hash', 'dbtvault')(columns=columns, alias=alias, is_hashdiff=is_hashdiff) -}}
+    {{- adapter.dispatch('hash', 'dbtvault_scalefree')(columns=columns, alias=alias, is_hashdiff=is_hashdiff) -}}
 
 {%- endmacro %}
 
@@ -53,7 +53,7 @@
     {%- if '.' in column %}
         {% set column_str = column -%}
     {%- else -%}
-        {%- set column_str = dbtvault.as_constant(column) -%}
+        {%- set column_str = dbtvault_scalefree.as_constant(column) -%}
     {%- endif -%}
 
     {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}

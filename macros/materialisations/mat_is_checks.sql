@@ -1,5 +1,5 @@
 {%- macro is_any_incremental() -%}
-    {%- if dbtvault.is_vault_insert_by_period() or dbtvault.is_vault_insert_by_rank() or dbtvault.is_pit_incremental() or dbtvault.is_bridge_incremental() or is_incremental() -%}
+    {%- ifdbtvault_scalefree.is_vault_insert_by_period() ordbtvault_scalefree.is_vault_insert_by_rank() ordbtvault_scalefree.is_pit_incremental() ordbtvault_scalefree.is_bridge_incremental() or is_incremental() -%}
         {%- do return(true) -%}
     {%- else -%}
         {%- do return(false) -%}

@@ -5,13 +5,13 @@
 
     {% set columns_to_select = [] %}
 
-    {% if not dbtvault.is_list(columns_list) or not dbtvault.is_list(exclude_columns_list)  %}
+    {% if not dbtvault_scalefree.is_list(columns_list) or not dbtvault_scalefree.is_list(exclude_columns_list)  %}
 
         {{- exceptions.raise_compiler_error("One or both arguments are not of list type.") -}}
 
     {%- endif -%}
 
-    {%- if dbtvault.is_something(columns_list) and dbtvault.is_something(exclude_columns_list) -%}
+    {%- if dbtvault_scalefree.is_something(columns_list) and dbtvault_scalefree.is_something(exclude_columns_list) -%}
 
         {%- for col in columns_list -%}
 
@@ -56,7 +56,7 @@
 
                 {%- if col_mapping.columns -%}
 
-                    {%- set columns_to_hash = dbtvault.process_columns_to_select(source_columns, col_mapping.columns) -%}
+                    {%- set columns_to_hash = dbtvault_scalefree.process_columns_to_select(source_columns, col_mapping.columns) -%}
 
                     {%- do hash_columns[col].pop('exclude_columns') -%}
                     {%- do hash_columns[col].update({'columns': columns_to_hash}) -%}

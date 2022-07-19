@@ -1,7 +1,7 @@
 {%- macro replace_placeholder_with_rank_filter(core_sql, rank_column, rank_iteration) -%}
 
     {% set macro = adapter.dispatch('replace_placeholder_with_rank_filter',
-                                    'dbtvault')(core_sql=core_sql,
+                                    'dbtvault_scalefree')(core_sql=core_sql,
                                                 rank_column=rank_column,
                                                 rank_iteration=rank_iteration) %}
     {% do return(macro) %}

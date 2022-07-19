@@ -1,6 +1,6 @@
 {%- macro sat_v0(src_pk, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model, src_eff=none) -%}
 
-    {{ adapter.dispatch('sat_v0', 'dbtvault')(src_pk=src_pk, 
+    {{ adapter.dispatch('sat_v0', 'dbtvault_scalefree')(src_pk=src_pk, 
                                          src_hashdiff=src_hashdiff,
                                          src_payload=src_payload,
                                          src_eff=src_eff,

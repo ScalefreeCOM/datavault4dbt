@@ -1,6 +1,6 @@
 {%- macro concat_ws(string_list, separator="||") -%}
 
-    {{- adapter.dispatch('concat_ws', 'dbtvault')(string_list=string_list, separator=separator) -}}
+    {{- adapter.dispatch('concat_ws', 'dbtvault_scalefree')(string_list=string_list, separator=separator) -}}
 
 {%- endmacro %}
 

@@ -2,7 +2,7 @@
 
 {# Different platforms use different escape characters, the default below is for Snowflake which uses double quotes #}
 
-    {%- if dbtvault.is_something(columns) -%}
+    {%- if dbtvault_scalefree.is_something(columns) -%}
 
         {%- set col_string = '' -%}
         {%- set col_list = [] -%}
@@ -10,15 +10,15 @@
 
         {%- if columns is string -%}
 
-            {%- set col_string = dbtvault.escape_column_name(columns) -%}
+            {%- set col_string = dbtvault_scalefree.escape_column_name(columns) -%}
 
-        {%- elif dbtvault.is_list(columns) -%}
+        {%- elif dbtvault_scalefree.is_list(columns) -%}
 
             {%- for col in columns -%}
 
                 {%- if col is string -%}
 
-                    {%- set escaped_col = dbtvault.escape_column_name(col) -%}
+                    {%- set escaped_col = dbtvault_scalefree.escape_column_name(col) -%}
 
                     {%- do col_list.append(escaped_col) -%}
 
@@ -36,8 +36,8 @@
 
             {%- if columns['source_column'] and columns['alias'] -%}
 
-                {%- set escaped_source_col = dbtvault.escape_column_name(columns['source_column']) -%}
-                {%- set escaped_alias_col = dbtvault.escape_column_name(columns['alias']) -%}
+                {%- set escaped_source_col = dbtvault_scalefree.escape_column_name(columns['source_column']) -%}
+                {%- set escaped_alias_col = dbtvault_scalefree.escape_column_name(columns['alias']) -%}
                 {%- set col_mapping = {"source_column": escaped_source_col, "alias": escaped_alias_col} -%}
 
             {%- else -%}
@@ -80,7 +80,7 @@
 
     {%- do return(col_string) -%}
 
-{%- elif dbtvault.is_list(columns) -%}
+{%- elif dbtvault_scalefree.is_list(columns) -%}
 
     {%- do return(col_list) -%}
 
@@ -95,7 +95,7 @@
 
 {%- macro escape_column_name(column) -%}
 
-    {{- adapter.dispatch('escape_column_name', 'dbtvault')(column=column) -}}
+    {{- adapter.dispatch('escape_column_name', 'dbtvault_scalefree')(column=column) -}}
 
 {%- endmacro %}
 

@@ -1,6 +1,6 @@
 {%- macro link(src_pk, src_fk, source_model, src_ldts='ldts', src_rsrc='rsrc') -%}
 
-    {{- adapter.dispatch('link', 'dbtvault')(src_pk=src_pk, src_fk=src_fk,
+    {{- adapter.dispatch('link', 'dbtvault_scalefree')(src_pk=src_pk, src_fk=src_fk,
                                              src_ldts=src_ldts, src_rsrc=src_rsrc,
                                              source_model=source_model) -}}
 
@@ -8,24 +8,24 @@
 
 {%- macro default__link(src_pk, src_fk, src_ldts, src_rsrc, source_model) -%}
 
-{{- dbtvault.check_required_parameters(src_pk=src_pk, src_fk=src_fk,
+{{- dbtvault_scalefree.check_required_parameters(src_pk=src_pk, src_fk=src_fk,
                                        src_ldts=src_ldts, src_rsrc=src_rsrc,
                                        source_model=source_model) -}}
 
-{%- set src_pk = dbtvault.escape_column_names(src_pk) -%}
-{%- set src_fk = dbtvault.escape_column_names(src_fk) -%}
-{%- set src_ldts = dbtvault.escape_column_names(src_ldts) -%}
-{%- set src_rsrc = dbtvault.escape_column_names(src_rsrc) -%}
+{%- set src_pk = dbtvault_scalefree.escape_column_names(src_pk) -%}
+{%- set src_fk = dbtvault_scalefree.escape_column_names(src_fk) -%}
+{%- set src_ldts = dbtvault_scalefree.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = dbtvault_scalefree.escape_column_names(src_rsrc) -%}
 
-{%- set source_cols = dbtvault.expand_column_list(columns=[src_pk, src_fk, src_ldts, src_rsrc]) -%}
+{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[src_pk, src_fk, src_ldts, src_rsrc]) -%}
 
-{%- set fk_cols = dbtvault.expand_column_list([src_fk]) -%}
+{%- set fk_cols = dbtvault_scalefree.expand_column_list([src_fk]) -%}
 
 {%- if model.config.materialized == 'vault_insert_by_rank' %}
-    {%- set source_cols_with_rank = source_cols + dbtvault.escape_column_names([config.get('rank_column')]) -%}
+    {%- set source_cols_with_rank = source_cols + dbtvault_scalefree.escape_column_names([config.get('rank_column')]) -%}
 {%- endif -%}
 
-{{ dbtvault.prepend_generated_by() }}
+{{ dbtvault_scalefree.prepend_generated_by() }}
 
 {{ 'WITH ' -}}
 
@@ -41,13 +41,13 @@
 
 row_rank_{{ source_number }} AS (
     {%- if model.config.materialized == 'vault_insert_by_rank' %}
-    SELECT {{ dbtvault.prefix(source_cols_with_rank, 'rr') }},
+    SELECT {{ dbtvault_scalefree.prefix(source_cols_with_rank, 'rr') }},
     {%- else %}
-    SELECT {{ dbtvault.prefix(source_cols, 'rr') }},
+    SELECT {{ dbtvault_scalefree.prefix(source_cols, 'rr') }},
     {%- endif %}
            ROW_NUMBER() OVER(
-               PARTITION BY {{ dbtvault.prefix([src_pk], 'rr') }}
-               ORDER BY {{ dbtvault.prefix([src_ldts], 'rr') }}
+               PARTITION BY {{ dbtvault_scalefree.prefix([src_pk], 'rr') }}
+               ORDER BY {{ dbtvault_scalefree.prefix([src_ldts], 'rr') }}
            ) AS row_number
     FROM {{ ref(src) }} AS rr
     QUALIFY row_number = 1
@@ -85,8 +85,8 @@ stage_mat_filter AS (
 row_rank_union AS (
     SELECT ru.*,
            ROW_NUMBER() OVER(
-               PARTITION BY {{ dbtvault.prefix([src_pk], 'ru') }}
-               ORDER BY {{ dbtvault.prefix([src_ldts], 'ru') }}, {{ dbtvault.prefix([src_rsrc], 'ru') }} ASC
+               PARTITION BY {{ dbtvault_scalefree.prefix([src_pk], 'ru') }}
+               ORDER BY {{ dbtvault_scalefree.prefix([src_ldts], 'ru') }}, {{ dbtvault_scalefree.prefix([src_rsrc], 'ru') }} ASC
            ) AS row_rank_number
     FROM {{ ns.last_cte }} AS ru
     QUALIFY row_rank_number = 1
@@ -94,11 +94,11 @@ row_rank_union AS (
 ),
 {% endif %}
 records_to_insert AS (
-    SELECT {{ dbtvault.prefix(source_cols, 'a', alias_target='target') }}
+    SELECT {{ dbtvault_scalefree.prefix(source_cols, 'a', alias_target='target') }}
     FROM {{ ns.last_cte }} AS a
-    {%- if dbtvault.is_any_incremental() %}
+    {%- if dbtvault_scalefree.is_any_incremental() %}
     LEFT JOIN {{ this }} AS d
-    ON {{ dbtvault.multikey(src_pk, prefix=['a','d'], condition='=') }}
+    ON {{ dbtvault_scalefree.multikey(src_pk, prefix=['a','d'], condition='=') }}
     {%- endif %}
 )
 

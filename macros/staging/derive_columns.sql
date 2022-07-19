@@ -1,6 +1,6 @@
 {%- macro derive_columns(source_relation=none, columns=none) -%}
 
-    {{- adapter.dispatch('derive_columns', 'dbtvault')(source_relation=source_relation, columns=columns) -}}
+    {{- adapter.dispatch('derive_columns', 'dbtvault_scalefree')(source_relation=source_relation, columns=columns) -}}
 
 {%- endmacro %}
 
@@ -11,28 +11,28 @@
 {%- set src_columns = [] -%}
 {%- set der_columns = [] -%}
 
-{%- set source_cols = dbtvault.source_columns(source_relation=source_relation) -%}
+{%- set source_cols = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 
 {%- if columns is mapping and columns is not none -%}
 
     {#- Add aliases of derived columns to excludes and full SQL to includes -#}
     {%- for col in columns -%}
 
-        {%- if dbtvault.is_list(columns[col]) -%}
+        {%- if dbtvault_scalefree.is_list(columns[col]) -%}
             {%- set column_list = [] -%}
 
             {%- for concat_component in columns[col] -%}
-                {%- set column_str = dbtvault.as_constant(concat_component) -%}
+                {%- set column_str = dbtvault_scalefree.as_constant(concat_component) -%}
                 {%- do column_list.append(column_str) -%}
             {%- endfor -%}
-            {%- set concat = dbtvault.concat_ws(column_list, "||") -%}
-            {%- set concat_string = concat ~ " AS " ~ dbtvault.escape_column_names(col) -%}
+            {%- set concat = dbtvault_scalefree.concat_ws(column_list, "||") -%}
+            {%- set concat_string = concat ~ " AS " ~ dbtvault_scalefree.escape_column_names(col) -%}
 
             {%- do der_columns.append(concat_string) -%}
             {%- set exclude_columns = exclude_columns + columns[col] -%}
         {% else %}
-            {%- set column_str = dbtvault.as_constant(columns[col]) -%}
-            {%- do der_columns.append(column_str ~ " AS " ~ dbtvault.escape_column_names(col)) -%}
+            {%- set column_str = dbtvault_scalefree.as_constant(columns[col]) -%}
+            {%- do der_columns.append(column_str ~ " AS " ~ dbtvault_scalefree.escape_column_names(col)) -%}
             {%- do exclude_columns.append(col) -%}
         {% endif %}
 
@@ -43,7 +43,7 @@
 
         {%- for col in source_cols -%}
             {%- if col not in exclude_columns -%}
-                {%- do src_columns.append(dbtvault.escape_column_names(col)) -%}
+                {%- do src_columns.append(dbtvault_scalefree.escape_column_names(col)) -%}
             {%- endif -%}
         {%- endfor -%}
 

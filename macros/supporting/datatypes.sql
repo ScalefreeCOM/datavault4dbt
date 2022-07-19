@@ -1,5 +1,5 @@
 {%- macro type_timestamp() -%}
-  {{ return(adapter.dispatch('type_timestamp', 'dbtvault')()) }}
+  {{ return(adapter.dispatch('type_timestamp', 'dbtvault_scalefree')()) }}
 {%- endmacro -%}
 
 {%- macro default__type_timestamp() -%}

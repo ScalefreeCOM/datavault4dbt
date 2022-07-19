@@ -1,6 +1,6 @@
 {%- macro as_constant(column_str=none) -%}
 
-    {{- adapter.dispatch('as_constant', 'dbtvault')(column_str=column_str) -}}
+    {{- adapter.dispatch('as_constant', 'dbtvault_scalefree')(column_str=column_str) -}}
 
 {%- endmacro %}
 
@@ -14,13 +14,13 @@
         
         {%- else -%}
         
-            {%- if dbtvault.is_expression(column_str) -%}
+            {%- if dbtvault_scalefree.is_expression(column_str) -%}
 
                 {{- return(column_str) -}}
 
             {%- else -%}
 
-                {{- return(dbtvault.escape_column_names(column_str)) -}}
+                {{- return(dbtvault_scalefree.escape_column_names(column_str)) -}}
 
             {%- endif -%}
 

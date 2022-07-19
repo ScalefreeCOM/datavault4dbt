@@ -1,7 +1,7 @@
 
 {%- macro sat_v1(source_sat, src_hk, src_hd, src_ldts='ldts', ledts_alias='ledts') -%}
 
-    {{ adapter.dispatch('sat_v1', 'dbtvault')(source_sat=source_sat,
+    {{ adapter.dispatch('sat_v1', 'dbtvault_scalefree')(source_sat=source_sat,
                                          src_hk=src_hk,
                                          src_hd=src_hd,
                                          src_ldts=src_ldts,

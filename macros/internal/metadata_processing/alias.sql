@@ -1,6 +1,6 @@
 {%- macro alias(alias_config=none, prefix=none) -%}
 
-    {{- adapter.dispatch('alias', 'dbtvault')(alias_config=alias_config, prefix=prefix) -}}
+    {{- adapter.dispatch('alias', 'dbtvault_scalefree')(alias_config=alias_config, prefix=prefix) -}}
 
 {%- endmacro %}
 
@@ -24,7 +24,7 @@
 
         {%- if prefix -%}
 
-        {{- dbtvault.prefix([alias_config], prefix) -}}
+        {{- dbtvault_scalefree.prefix([alias_config], prefix) -}}
 
         {%- else -%}
 

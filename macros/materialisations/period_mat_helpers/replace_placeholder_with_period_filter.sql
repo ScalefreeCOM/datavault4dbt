@@ -1,7 +1,7 @@
 {%- macro replace_placeholder_with_period_filter(core_sql, timestamp_field, start_timestamp, stop_timestamp, offset, period) -%}
 
     {% set macro = adapter.dispatch('replace_placeholder_with_period_filter',
-                                    'dbtvault')(core_sql=core_sql,
+                                    'dbtvault_scalefree')(core_sql=core_sql,
                                                 timestamp_field=timestamp_field,
                                                 start_timestamp=start_timestamp,
                                                 stop_timestamp=stop_timestamp,

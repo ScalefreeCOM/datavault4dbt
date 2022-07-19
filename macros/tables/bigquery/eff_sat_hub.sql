@@ -12,7 +12,7 @@
 
 {%- macro eff_sat_hub(hub, src_pk, src_ldts, src_rsrc, source_model) -%}
 
-    {{ adapter.dispatch('eff_sat_hub', 'dbtvault')(hub=hub, 
+    {{ adapter.dispatch('eff_sat_hub', 'dbtvault_scalefree')(hub=hub, 
                                                   src_pk=src_pk,
                                                   src_ldts=src_ldts,
                                                   src_rsrc=src_rsrc,
@@ -23,11 +23,11 @@
 
 {%- macro default__eff_sat_hub(hub, src_pk, src_ldts, src_rsrc, source_model) -%}
 
-{{- dbtvault.check_required_parameters(hub=hub, src_pk=src_pk, src_nk=src_nk,
+{{- dbtvault_scalefree.check_required_parameters(hub=hub, src_pk=src_pk, src_nk=src_nk,
                                        src_ldts=src_ldts, src_rsrc=src_rsrc,
                                        source_model=source_model) -}}
 
-{%- set source_cols = dbtvault.expand_column_list(columns=[src_pk, src_ldts, src_rsrc]) -%}
+{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[src_pk, src_ldts, src_rsrc]) -%}
 
 {#- Select hashing algorithm -#}
 {%- set hash = var('hash', 'MD5') -%}
@@ -57,7 +57,7 @@ WITH
 {#- Get available HKs from stage #}
     source_union AS (
         {% for src in source_model -%}
-        SELECT {{ dbtvault.prefix(source_cols, 'source') }}
+        SELECT {{ dbtvault_scalefree.prefix(source_cols, 'source') }}
         FROM {{ ref(src) }} source
         {% if not loop.last %}UNION ALL{% endif %}
         {% endfor -%}
@@ -65,7 +65,7 @@ WITH
 
 {#- Get Hub data #}
     , target_hub AS (
-        SELECT {{ dbtvault.prefix(source_cols, 'hub') }}
+        SELECT {{ dbtvault_scalefree.prefix(source_cols, 'hub') }}
         FROM {{ ref(hub) }} hub
         WHERE {{ src_pk }} != '{{ zero_key }}'
         AND {{ src_pk }} != '{{ error_key }}'
@@ -82,7 +82,7 @@ WITH
 
 {#- Get Hub entries with PK, that are no longer available in stage #}
     , deleted AS (
-        SELECT {{ dbtvault.prefix(source_cols, 'target_hub') }}
+        SELECT {{ dbtvault_scalefree.prefix(source_cols, 'target_hub') }}
         FROM target_hub
         WHERE {{ src_pk }} NOT IN (
             SELECT {{ src_pk }}
@@ -92,7 +92,7 @@ WITH
 
 {# Records that already were available and still are available, get deleted=false #}
     , still_active AS (
-        SELECT {{ dbtvault.prefix(source_cols, 'target_hub') }}
+        SELECT {{ dbtvault_scalefree.prefix(source_cols, 'target_hub') }}
             , {{ src_ldts }} AS start_dts
             , PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') AS end_dts
             , false AS is_deleted 
@@ -127,7 +127,7 @@ WITH
 {# Records that were unactive before, but are now reactivated, get deleted=false again #}
 {%- if is_incremental() %}
     , reactivated AS (
-        SELECT {{ dbtvault.prefix(source_cols, 'source_union') }}
+        SELECT {{ dbtvault_scalefree.prefix(source_cols, 'source_union') }}
             , {{ src_ldts }} as start_dts
             , PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') AS end_dts
             , false as is_deleted 

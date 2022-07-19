@@ -1,6 +1,6 @@
 {%- macro hub(hashkey, business_key, src_ldts, src_rsrc, source_model) -%}
 
-    {{ return(adapter.dispatch('hub', 'dbtvault')(hashkey=hashkey,
+    {{ return(adapter.dispatch('hub', 'dbtvault_scalefree')(hashkey=hashkey,
                                                   business_key=business_key,
                                                   src_ldts=src_ldts,
                                                   src_rsrc=src_rsrc,
