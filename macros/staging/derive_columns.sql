@@ -60,9 +60,9 @@
 {%- else -%}
 
 {%- if execute -%}
-{{ exceptions.raise_compiler_error("Invalid column configuration:
-expected format: {'source_relation': Relation, 'columns': {column_name: column_value}}
-got: {'source_relation': " ~ source_relation ~ ", 'columns': " ~ columns ~ "}") }}
+    {{ exceptions.raise_compiler_error("Invalid column configuration:
+    expected format: {'source_relation': Relation, 'columns': {column_name: column_value}}
+    got: {'source_relation': " ~ source_relation ~ ", 'columns': " ~ columns ~ "}") }}
 {%- endif %}
 
 {%- endif %}

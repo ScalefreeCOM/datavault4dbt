@@ -38,7 +38,7 @@ SELECT
     snap.sdts,
     {% for satellite in sat_names %}
         COALESCE({{ satellite }}.{{ src_pk }}, CAST('{{ zero_key }}' AS STRING)) AS hk_{{ satellite }},
-        COALESCE({{ satellite }}.{{ src_ldts }}, CAST('{{ beginning_of_all_times }}' AS {{ dbtvault.type_timestamp() }})) AS ldts_{{ satellite }}
+        COALESCE({{ satellite }}.{{ src_ldts }}, CAST('{{ beginning_of_all_times }}' AS {{ dbtvault_scalefree.type_timestamp() }})) AS ldts_{{ satellite }}
         {{- "," if not loop.last }}
     {% endfor %}
 
