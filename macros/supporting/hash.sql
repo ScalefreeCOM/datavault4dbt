@@ -4,7 +4,9 @@
         {%- set is_hashdiff = false -%}
     {%- endif -%}
 
-    {{- adapter.dispatch('hash', 'dbtvault_scalefree')(columns=columns, alias=alias, is_hashdiff=is_hashdiff) -}}
+    {{- adapter.dispatch('hash', 'dbtvault_scalefree')(columns=columns, 
+                                             alias=alias, 
+                                             is_hashdiff=is_hashdiff) -}}
 
 {%- endmacro %}
 
