@@ -52,11 +52,11 @@ WITH
 -- Selecting all columns from the source data, renaming load date and record source to Scalefree naming conventions
 source_data AS (
   SELECT
-      src.{{ ldts }} AS ldts
-    , src.{{ rsrc }} AS rsrc
-    {{ ',src.{{ sequence }} as edwSequence' if sequence is not none }}
+    src.{{ ldts }} as ldts,
+    src.{{ rsrc }} as rsrc,
+    {{ 'src.{{ sequence }} AS edwSequence,' if sequence is not none }}
 
-    , src.*
+    src.*
 
   FROM {{ source(source_schema|string, source_table ) }} as src
 
@@ -70,10 +70,11 @@ missing_columns AS (
 
   SELECT 
 
-  *,
+    *,
 
   {%- for col, dtype in missing_columns.items() %}
-    ,CAST(NULL as {{ dtype }}) as {{ col }}
+    CAST(NULL as {{ dtype }}) as {{ col }},
+    
   {% endfor %}
 
   FROM {{ last_cte }}
@@ -88,7 +89,7 @@ prejoined_columns AS (
   
   SELECT
 
-  lcte.*
+  lcte.*,
 
   {%- for col, vals in prejoined_columns.items() %}
     ,pj_{{loop.index}}.{{ vals['bk'] }} AS {{ col }}
