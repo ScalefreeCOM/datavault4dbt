@@ -18,13 +18,7 @@
     {%- set timestamp_format = var('timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
     {%- set hash = var('hash', 'MD5') -%}
-    {%- if hash == 'MD5' -%}
-        {%- set error_key = 'ffffffffffffffffffffffffffffffff' -%}
-    {%- elif hash == 'SHA' or hash == 'SHA1' -%}
-        {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffff' -%}
-    {%- elif hash == 'SHA2' or hash == 'SHA256' -%}
-        {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
-    {%- endif -%}
+    {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
     {{ prepend_generated_by() }}
 
