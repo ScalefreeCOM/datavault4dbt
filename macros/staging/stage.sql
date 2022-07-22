@@ -186,7 +186,7 @@ hashed_columns AS (
     {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
 
     {% set processed_hash_columns = dbtvault_scalefree.process_hash_column_excludes(hashed_columns) -%}
-    {{- hash_columns(columns=processed_hash_columns) | indent(4) }}
+    {{- dbtvault_scalefree.hash_columns(columns=processed_hash_columns) | indent(4) }}
 
     FROM {{ last_cte }}
     {%- set last_cte = "hashed_columns" -%}
@@ -215,13 +215,13 @@ unknown_values AS (
 
     SELECT
 
-    PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as ldts, 
+    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as ldts, 
     'SYSTEM' as rsrc,
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {% for column in all_columns -%}
       {%- if column.name not in exclude_column_names %}
         {%- if column.name == 'rsrc' %} 'SYSTEM' as {{ column.name }}
-        {% elif column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ column.name }}
+        {% elif column.dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ column.name }}
         {% elif column.dtype == 'STRING' %} '(unknown)' as {{ column.name }}
         {% elif column.dtype == 'INT64' %} CAST('0' as INT64) as {{ column.name }}
         {% elif column.dtype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ column.name }}
@@ -234,7 +234,7 @@ unknown_values AS (
     {%- if missing_columns is not none -%},
     {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
-        {% if dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ col }}
+        {% if dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ col }}
         {% elif dtype == 'STRING' %} '(unknown)' as {{ col }}
         {% elif dtype == 'INT64' %} CAST('0' as INT64) as {{ col }}
         {% elif dtype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ col }}
@@ -253,7 +253,7 @@ unknown_values AS (
         
           {% for column in pj_relation_columns -%}
             {% if column.name|lower == vals['bk']|lower -%},
-              {%- if column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ col }}
+              {%- if column.dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ col }}
               {%- elif column.dtype == 'STRING' %} '(unknown)' as {{ col }}
               {%- elif column.dtype == 'INT64' %} CAST('0' as INT64) as {{ col }}
               {%- elif column.dtype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ col }}
@@ -270,7 +270,7 @@ unknown_values AS (
     {%- if derived_columns is not none -%}
     {# Additionally generating Ghost Records for Derived Columns #}
       ,{% for column_name, properties in derived_columns.items() -%}
-        {% if properties.datatype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ column_name }}
+        {% if properties.datatype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ column_name }}
         {% elif properties.datatype == 'STRING' %} '(unknown)' as {{ column_name }}
         {% elif properties.datatype == 'INT64' %} CAST('0' as INT64) as {{ column_name }}
         {% elif properties.datatype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ column_name }}
@@ -293,14 +293,14 @@ error_values AS (
 
     SELECT
     
-    PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as ldts,
+    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as ldts,
     'ERROR' as rsrc,
 
     {# Generating Ghost Records for Source Columns #}
     {% for column in all_columns -%}
         {%- if column.name not in exclude_column_names %}
           {%- if column.name == 'rsrc' %} 'SYSTEM' as {{ column.name }}
-          {% elif column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ column.name }}
+          {% elif column.dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ column.name }}
           {% elif column.dtype == 'STRING' %} '(error)' as {{ column.name }}
           {% elif column.dtype == 'INT64' %} CAST('-1' as INT64) as {{ column.name }}
           {% elif column.dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ column.name }}
@@ -313,7 +313,7 @@ error_values AS (
     {# Additionally generating ghost record for missing columns #}
     {% if missing_columns is not none -%},
       {% for col, dtype in missing_columns.items() %}
-        {% if dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ col }}
+        {% if dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ col }}
         {% elif dtype == 'STRING' %} '(error)' as {{ col }}
         {% elif dtype == 'INT64' %} CAST('-1' as INT64) as {{ col }}
         {% elif dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ col }}
@@ -331,7 +331,7 @@ error_values AS (
         
         ,{% for column in pj_relation_columns -%}
           {%- if column.name|lower == vals['bk']|lower -%}
-            {%- if column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ col }}
+            {%- if column.dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ col }}
             {%- elif column.dtype == 'STRING' %} '(error)' as {{ col }}
             {%- elif column.dtype == 'INT64' %} CAST('-1' as INT64) as {{ col }}
             {%- elif column.dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ col }}
@@ -348,7 +348,7 @@ error_values AS (
     {# Additionally generating Ghost Records for Derived Columns #}
     {% if derived_columns is not none -%},
       {% for column_name, properties in derived_columns.items() -%}
-        {% if properties.datatype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ column_name }}
+        {% if properties.datatype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ column_name }}
         {% elif properties.datatype == 'STRING' %} '(error)' as {{ column_name }}
         {% elif properties.datatype == 'INT64' %} CAST('-1' as INT64) as {{ column_name }}
         {% elif properties.datatype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ column_name }}
