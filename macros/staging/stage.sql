@@ -87,7 +87,7 @@ source_data AS (
 
 
 {% set alias_columns = ['ldts', 'rsrc'] %}
--- Selecting all columns from the source data, renaming load date and record source to Scalefree naming conventions
+{# Selecting all columns from the source data, renaming load date and record source to Scalefree naming conventions #}
 ldts_rsrc_data AS (
   SELECT
 
@@ -117,7 +117,7 @@ ldts_rsrc_data AS (
 {% if dbtvault_scalefree.is_something(missing_columns) %}
 
 
--- Filling missing columns with NULL values for schema changes
+{# Filling missing columns with NULL values for schema changes #}
 missing_columns AS (
 
   SELECT 
@@ -135,7 +135,7 @@ missing_columns AS (
 ),
 {%- endif -%}
 
--- Prejoining Business Keys of other source objects for Link purposes
+{# Prejoining Business Keys of other source objects for Link purposes #}
 {% if dbtvault_scalefree.is_something(prejoined_columns) %}
 
 prejoined_columns AS (  
@@ -161,7 +161,7 @@ prejoined_columns AS (
 
 
 {%- if dbtvault_scalefree.is_something(derived_columns) %}
--- Adding derived columns to the selection
+{# Adding derived columns to the selection #}
 derived_columns AS (
 
     SELECT
@@ -176,7 +176,7 @@ derived_columns AS (
 ),
 {%- endif -%}
 
--- Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites)
+{# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
 {% if dbtvault_scalefree.is_something(hashed_columns) and hashed_columns is mapping -%}
 
 hashed_columns AS (
@@ -194,7 +194,7 @@ hashed_columns AS (
 ),
 {%- endif -%}
 
--- Adding Ranked Columns to the selection
+{# Adding Ranked Columns to the selection #}
 {% if dbtvault_scalefree.is_something(ranked_columns) -%}
 
 ranked_columns AS (
@@ -209,7 +209,7 @@ ranked_columns AS (
 ),
 {%- endif -%}
 
--- Creating Ghost Record for unknown case, based on datatype
+{# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
     {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
 
@@ -217,7 +217,7 @@ unknown_values AS (
 
     PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as ldts, 
     'SYSTEM' as rsrc,
-    --Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column
+    {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {% for column in all_columns -%}
       {%- if column.name not in exclude_column_names %}
         {%- if column.name == 'rsrc' %} 'SYSTEM' as {{ column.name }}
@@ -232,7 +232,7 @@ unknown_values AS (
     {% endfor %}
 
     {%- if missing_columns is not none -%},
-    --Additionally generating ghost record for missing columns
+    {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
         {% if dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ col }}
         {% elif dtype == 'STRING' %} '(unknown)' as {{ col }}
@@ -247,7 +247,7 @@ unknown_values AS (
 
 
     {% if prejoined_columns is not none -%}
-    --Additionally generating ghost records for the prejoined attributes
+    {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
         {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
         
@@ -268,7 +268,7 @@ unknown_values AS (
     {%- endif %}
 
     {%- if derived_columns is not none -%}
-    --Additionally generating Ghost Records for Derived Columns
+    {# Additionally generating Ghost Records for Derived Columns #}
       ,{% for column_name, properties in derived_columns.items() -%}
         {% if properties.datatype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ column_name }}
         {% elif properties.datatype == 'STRING' %} '(unknown)' as {{ column_name }}
@@ -287,7 +287,7 @@ unknown_values AS (
     
     ),
 
---Creating Ghost Record for error case, based on datatype
+{# Creating Ghost Record for error case, based on datatype #}
 error_values AS (
     {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
 
@@ -296,7 +296,7 @@ error_values AS (
     PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as ldts,
     'ERROR' as rsrc,
 
-    -- Generating Ghost Records for Source Columns
+    {# Generating Ghost Records for Source Columns #}
     {% for column in all_columns -%}
         {%- if column.name not in exclude_column_names %}
           {%- if column.name == 'rsrc' %} 'SYSTEM' as {{ column.name }}
@@ -310,7 +310,7 @@ error_values AS (
         {% endif %}
     {% endfor %}
 
-    --Additionally generating ghost record for missing columns
+    {# Additionally generating ghost record for missing columns #}
     {% if missing_columns is not none -%},
       {% for col, dtype in missing_columns.items() %}
         {% if dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ col }}
@@ -323,7 +323,7 @@ error_values AS (
       {% endfor %}
     {%- endif -%}
 
-    --Additionally generating ghost records for the prejoined attributes
+    {# Additionally generating ghost records for the prejoined attributes #}
     {% if prejoined_columns is not none -%}
 
       {% for col, vals in prejoined_columns.items() %}
@@ -345,7 +345,7 @@ error_values AS (
 
     {%- endif %}
 
-    --Additionally generating Ghost Records for Derived Columns
+    {# Additionally generating Ghost Records for Derived Columns #}
     {% if derived_columns is not none -%},
       {% for column_name, properties in derived_columns.items() -%}
         {% if properties.datatype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ column_name }}
@@ -364,14 +364,14 @@ error_values AS (
     {%- endfor %}
     ),
 
--- Combining all previous ghost record calculations to two rows with the same width as regular entries
+{# Combining all previous ghost record calculations to two rows with the same width as regular entries #}
 ghost_records AS (
     SELECT * FROM unknown_values
     UNION ALL
     SELECT * FROM error_values
 ),
 
--- Combining the two ghost records with the regular data
+{# Combining the two ghost records with the regular data #}
 columns_to_select AS (
 
     SELECT
