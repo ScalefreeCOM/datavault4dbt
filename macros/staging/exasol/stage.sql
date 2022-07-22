@@ -11,7 +11,7 @@
                 missing_columns) -%}
 
 {%- set source_relation = source(source_name|string, source_table) -%}
-{%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}   
+{%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}   
 
 {%- set ldts_rsrc_column_names = [] -%}
 {%- if ldts['is_available'] -%}
@@ -205,9 +205,9 @@ unknown_values AS (
       {%- if column.name not in exclude_column_names %}
         {%- if column.name == 'rsrc' %} 'SYSTEM' as {{ column.name }}
         {% elif column.dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ column.name }}
-        {% elif column.dtype == 'STRING' %} '(unknown)' as {{ column.name }}
-        {% elif column.dtype == 'INT64' %} CAST('0' as INT64) as {{ column.name }}
-        {% elif column.dtype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ column.name }}
+        {% elif column.dtype == 'VARCHAR' %} '(unknown)' as {{ column.name }}
+        {% elif column.dtype == 'DECIMAL' %} CAST('0' as DECIMAL) as {{ column.name }}
+        {% elif column.dtype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as {{ column.name }}
         {% elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ column.name }}
         {% else %} CAST(NULL as {{ column.dtype }}) as {{ column.name }}
         {% endif -%}{%- if not loop.last %},{% endif -%}
@@ -218,9 +218,9 @@ unknown_values AS (
     --Additionally generating ghost record for missing columns
       {% for col, dtype in missing_columns.items() %}
         {% if dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ col }}
-        {% elif dtype == 'STRING' %} '(unknown)' as {{ col }}
-        {% elif dtype == 'INT64' %} CAST('0' as INT64) as {{ col }}
-        {% elif dtype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ col }}
+        {% elif dtype == 'VARCHAR' %} '(unknown)' as {{ col }}
+        {% elif dtype == 'DECIMAL' %} CAST('0' as DECIMAL) as {{ col }}
+        {% elif dtype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as {{ col }}
         {% elif dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
         {% else %} CAST(NULL as {{ dtype }}) as {{ col }}
         {% endif -%}{%- if not loop.last %},{% endif -%}
@@ -237,9 +237,9 @@ unknown_values AS (
           {% for column in pj_relation_columns -%}
             {% if column.name|lower == vals['bk']|lower -%},
               {%- if column.dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ col }}
-              {%- elif column.dtype == 'STRING' %} '(unknown)' as {{ col }}
-              {%- elif column.dtype == 'INT64' %} CAST('0' as INT64) as {{ col }}
-              {%- elif column.dtype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ col }}
+              {%- elif column.dtype == 'VARCHAR' %} '(unknown)' as {{ col }}
+              {%- elif column.dtype == 'DECIMAL' %} CAST('0' as DECIMAL) as {{ col }}
+              {%- elif column.dtype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as {{ col }}
               {%- elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
               {%- else %} CAST(NULL as {{ column.dtype }}) as {{ col }}
               {% endif -%}
@@ -254,9 +254,9 @@ unknown_values AS (
     --Additionally generating Ghost Records for Derived Columns
       ,{% for column_name, properties in derived_columns.items() -%}
         {% if properties.datatype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ column_name }}
-        {% elif properties.datatype == 'STRING' %} '(unknown)' as {{ column_name }}
-        {% elif properties.datatype == 'INT64' %} CAST('0' as INT64) as {{ column_name }}
-        {% elif properties.datatype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ column_name }}
+        {% elif properties.datatype == 'VARCHAR' %} '(unknown)' as {{ column_name }}
+        {% elif properties.datatype == 'DECIMAL' %} CAST('0' as DECIMAL) as {{ column_name }}
+        {% elif properties.datatype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as {{ column_name }}
         {% elif properties.datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ column_name }}
         {% else %} CAST(NULL as {{ properties.datatype }}) as {{ column_name }}
         {%- endif -%}{%- if not loop.last %},{% endif -%}
@@ -284,9 +284,9 @@ error_values AS (
         {%- if column.name not in exclude_column_names %}
           {%- if column.name == 'rsrc' %} 'SYSTEM' as {{ column.name }}
           {% elif column.dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ column.name }}
-          {% elif column.dtype == 'STRING' %} '(error)' as {{ column.name }}
-          {% elif column.dtype == 'INT64' %} CAST('-1' as INT64) as {{ column.name }}
-          {% elif column.dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ column.name }}
+          {% elif column.dtype == 'VARCHAR' %} '(error)' as {{ column.name }}
+          {% elif column.dtype == 'DECIMAL' %} CAST('-1' as DECIMAL) as {{ column.name }}
+          {% elif column.dtype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as {{ column.name }}
           {% elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ column.name }}
           {% else %} CAST(NULL as {{ column.dtype }}) as {{ column.name }}
           {% endif -%}{%- if not loop.last %},{% endif -%}
@@ -297,9 +297,9 @@ error_values AS (
     {% if missing_columns is not none -%},
       {% for col, dtype in missing_columns.items() %}
         {% if dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ col }}
-        {% elif dtype == 'STRING' %} '(error)' as {{ col }}
-        {% elif dtype == 'INT64' %} CAST('-1' as INT64) as {{ col }}
-        {% elif dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ col }}
+        {% elif dtype == 'VARCHAR' %} '(error)' as {{ col }}
+        {% elif dtype == 'DECIMAL' %} CAST('-1' as DECIMAL) as {{ col }}
+        {% elif dtype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as {{ col }}
         {% elif dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
         {% else %} CAST(NULL as {{ dtype }}) as {{ col }}
         {% endif -%}{%- if not loop.last %},{% endif -%}
@@ -315,9 +315,9 @@ error_values AS (
         ,{% for column in pj_relation_columns -%}
           {%- if column.name|lower == vals['bk']|lower -%}
             {%- if column.dtype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ col }}
-            {%- elif column.dtype == 'STRING' %} '(error)' as {{ col }}
-            {%- elif column.dtype == 'INT64' %} CAST('-1' as INT64) as {{ col }}
-            {%- elif column.dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ col }}
+            {%- elif column.dtype == 'VARCHAR' %} '(error)' as {{ col }}
+            {%- elif column.dtype == 'DECIMAL' %} CAST('-1' as DECIMAL) as {{ col }}
+            {%- elif column.dtype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as {{ col }}
             {%- elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
             {%- else %} CAST(NULL as {{ column.dtype }}) as {{ col }}
             {% endif -%}
@@ -332,9 +332,9 @@ error_values AS (
     {% if derived_columns is not none -%},
       {% for column_name, properties in derived_columns.items() -%}
         {% if properties.datatype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ column_name }}
-        {% elif properties.datatype == 'STRING' %} '(error)' as {{ column_name }}
-        {% elif properties.datatype == 'INT64' %} CAST('-1' as INT64) as {{ column_name }}
-        {% elif properties.datatype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ column_name }}
+        {% elif properties.datatype == 'VARCHAR' %} '(error)' as {{ column_name }}
+        {% elif properties.datatype == 'DECIMAL' %} CAST('-1' as DECIMAL) as {{ column_name }}
+        {% elif properties.datatype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as {{ column_name }}
         {% elif properties.datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ column_name }}
         {% else %} CAST(NULL as {{ properties.datatype }}) as {{ column_name }}
         {% endif -%}{%- if not loop.last %},{% endif -%}
