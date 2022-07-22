@@ -18,10 +18,10 @@
     {#- Add aliases of derived columns to excludes and full SQL to includes -#}
     {%- for col in columns -%}
 
-        {%- if dbtvault_scalefree.is_list(columns[col]) -%}
+        {%- if dbtvault_scalefree.is_list(columns[col]['value']) -%}
             {%- set column_list = [] -%}
 
-            {%- for concat_component in columns[col] -%}
+            {%- for concat_component in columns[col]['value'] -%}
                 {%- set column_str = dbtvault_scalefree.as_constant(concat_component) -%}
                 {%- do column_list.append(column_str) -%}
             {%- endfor -%}
@@ -29,9 +29,9 @@
             {%- set concat_string = concat ~ " AS " ~ dbtvault_scalefree.escape_column_names(col) -%}
 
             {%- do der_columns.append(concat_string) -%}
-            {%- set exclude_columns = exclude_columns + columns[col] -%}
+            {%- set exclude_columns = exclude_columns + columns[col]['value'] -%}
         {% else %}
-            {%- set column_str = dbtvault_scalefree.as_constant(columns[col]) -%}
+            {%- set column_str = dbtvault_scalefree.as_constant(columns[col]['value']) -%}
             {%- do der_columns.append(column_str ~ " AS " ~ dbtvault_scalefree.escape_column_names(col)) -%}
             {%- do exclude_columns.append(col) -%}
         {% endif %}

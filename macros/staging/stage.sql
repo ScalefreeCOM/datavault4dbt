@@ -1,8 +1,9 @@
-{%- macro stage(ldts, rsrc, source_schema, source_table, hashed_columns=none, derived_columns=none, ranked_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
+{%- macro stage(ldts, rsrc, source_name, source_table, include_source_columns=true, hashed_columns=none, derived_columns=none, ranked_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
     
-    {{ return(adapter.dispatch('stage', 'dbtvault_scalefree')(ldts=ldts,
+    {{ return(adapter.dispatch('stage', 'dbtvault_scalefree')(include_source_columns=include_source_columns,
+                                        ldts=ldts,
                                         rsrc=rsrc, 
-                                        source_schema=source_schema,
+                                        source_name=source_name,
                                         source_table=source_table, 
                                         hashed_columns=hashed_columns, 
                                         derived_columns=derived_columns, 
@@ -14,9 +15,10 @@
 {%- endmacro -%}
 
 
-{%- macro default__stage(ldts,
+{%- macro default__stage(include_source_columns,
+                ldts,
                 rsrc,  
-                source_schema,
+                source_name,
                 source_table, 
                 hashed_columns, 
                 derived_columns, 
@@ -25,10 +27,34 @@
                 prejoined_columns,
                 missing_columns) -%}
 
+{%- set source_relation = source(source_name|string, source_table) -%}
+{%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}   
+
+{%- set ldts_rsrc_column_names = [] -%}
+{%- if ldts['is_available'] -%}
+  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [ldts['column']]  -%}
+{%- endif -%}
+{%- if rsrc['is_available'] -%}
+  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [rsrc['column']] -%}
+{%- endif -%}
+{%- if sequence is not none -%}  
+  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [sequence] -%}
+{%- endif -%}
+
 {%- set derived_column_names = dbtvault_scalefree.extract_column_names(derived_columns) -%}
 {%- set hashed_column_names = dbtvault_scalefree.extract_column_names(hashed_columns) -%}
 {%- set ranked_column_names = dbtvault_scalefree.extract_column_names(ranked_columns) -%}
-{%- set exclude_column_names = derived_column_names + hashed_column_names %}
+{%- set prejoined_column_names = dbtvault_scalefree.extract_column_names(prejoined_columns) -%}
+{%- set missing_column_names = dbtvault_scalefree.extract_column_names(missing_columns) -%}
+{%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_column_names %}
+{%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
+
+
+{%- set source_columns_to_select = dbtvault.process_columns_to_select(all_source_columns, exclude_column_names) -%}
+{%- set derived_columns_to_select = dbtvault.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
+{%- set final_columns_to_select = [] -%}
+
+{%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 
 {#- Select hashing algorithm -#}
 {%- set hash = var('hash', 'MD5') -%}
@@ -49,28 +75,54 @@
 
 WITH
 
--- Selecting all columns from the source data, renaming load date and record source to Scalefree naming conventions
 source_data AS (
+    SELECT
+
+    {{- "\n\n    " ~ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
+
+  FROM {{ source_relation }}
+
+  {% set last_cte = "source_data" -%}
+),
+
+
+{% set alias_columns = ['ldts', 'rsrc'] %}
+-- Selecting all columns from the source data, renaming load date and record source to Scalefree naming conventions
+ldts_rsrc_data AS (
   SELECT
-    src.{{ ldts }} as ldts,
-    src.{{ rsrc }} as rsrc,
-    {{ 'src.{{ sequence }} AS edwSequence,' if sequence is not none }}
 
-    src.*
+  {% if ldts['is_available'] -%}
+    {{ ldts['column'] }} as ldts,
+  {% else -%}
+    '{{ ldts["value"] }}' as ldts,
+  {% endif -%}
+  {% if rsrc['is_available'] -%}
+    {{ rsrc['column'] }} as rsrc,
+  {% else -%}
+    '{{ rsrc["value"] }}' as rsrc,
+  {% endif -%}
+  {% if sequence is not none -%}
+    {{ sequence }} AS edwSequence,
+    {%- set alias_columns = alias_columns + ['edwSequence'] -%}
+  {% endif -%}
 
-  FROM {{ source(source_schema|string, source_table ) }} as src
+  {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(source_columns_to_select)) }}
 
-  {%- set last_cte = "source_data" -%}
+  FROM {{ last_cte }}
+
+  {% set last_cte = "ldts_rsrc_data" %}
+  {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
 ),
 
 {% if dbtvault_scalefree.is_something(missing_columns) %}
+
 
 -- Filling missing columns with NULL values for schema changes
 missing_columns AS (
 
   SELECT 
 
-    *,
+    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
 
   {%- for col, dtype in missing_columns.items() %}
     CAST(NULL as {{ dtype }}) as {{ col }},
@@ -79,6 +131,7 @@ missing_columns AS (
 
   FROM {{ last_cte }}
   {%- set last_cte = "missing_columns" -%}
+  {%- set final_columns_to_select = final_columns_to_select + missing_column_names %}
 ),
 {%- endif -%}
 
@@ -89,9 +142,9 @@ prejoined_columns AS (
   
   SELECT
 
-  lcte.*,
+  {{ dbtvault_scalefree.print_list(dbtvault_scalefree.prefix(columns=dbtvault_scalefree.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
 
-  {%- for col, vals in prejoined_columns.items() %}
+  {%- for col, vals in prejoined_columns.items() -%}
     ,pj_{{loop.index}}.{{ vals['bk'] }} AS {{ col }}
   {% endfor -%}
 
@@ -102,6 +155,7 @@ prejoined_columns AS (
   {% endfor %}
 
   {% set last_cte = "prejoined_columns" -%}
+  {%- set final_columns_to_select = final_columns_to_select + prejoined_column_names %}
 ),
 {%- endif -%}
 
@@ -112,11 +166,13 @@ derived_columns AS (
 
     SELECT
 
-    *,
+    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
+
     {{ dbtvault_scalefree.derive_columns(columns=derived_columns) | indent(4) }}
 
     FROM {{ last_cte }}
     {%- set last_cte = "derived_columns" -%}
+    {%- set final_columns_to_select = final_columns_to_select + derived_column_names %}
 ),
 {%- endif -%}
 
@@ -127,17 +183,18 @@ hashed_columns AS (
 
     SELECT
 
-    *,
+    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
 
     {% set processed_hash_columns = dbtvault_scalefree.process_hash_column_excludes(hashed_columns) -%}
     {{- hash_columns(columns=processed_hash_columns) | indent(4) }}
 
     FROM {{ last_cte }}
     {%- set last_cte = "hashed_columns" -%}
+    {%- set final_columns_to_select = final_columns_to_select + hashed_column_names %}
 ),
 {%- endif -%}
 
--- Adding Ranked Columsn to the selection
+-- Adding Ranked Columns to the selection
 {% if dbtvault_scalefree.is_something(ranked_columns) -%}
 
 ranked_columns AS (
@@ -148,17 +205,22 @@ ranked_columns AS (
 
     FROM {{ last_cte }}
     {%- set last_cte = "ranked_columns" -%}
+    {%- set final_columns_to_select = final_columns_to_select + ranked_column_names %}
 ),
 {%- endif -%}
 
 -- Creating Ghost Record for unknown case, based on datatype
 unknown_values AS (
-    {%- set all_columns = adapter.get_columns_in_relation( source(source_schema|string, source_table )) -%}
-    {%- set special_columns = ['edwRecordSource', 'rsrc_file'] -%}
+    {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
 
     SELECT
-    {%- for column in all_columns -%}
-        {%- if column.name in special_columns %} 'SYSTEM' as {{ column.name }}
+
+    PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as ldts, 
+    'SYSTEM' as rsrc,
+    --Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column
+    {% for column in all_columns -%}
+      {%- if column.name not in exclude_column_names %}
+        {%- if column.name == 'rsrc' %} 'SYSTEM' as {{ column.name }}
         {% elif column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ column.name }}
         {% elif column.dtype == 'STRING' %} '(unknown)' as {{ column.name }}
         {% elif column.dtype == 'INT64' %} CAST('0' as INT64) as {{ column.name }}
@@ -166,109 +228,147 @@ unknown_values AS (
         {% elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ column.name }}
         {% else %} CAST(NULL as {{ column.dtype }}) as {{ column.name }}
         {% endif -%}{%- if not loop.last %},{% endif -%}
+      {% endif -%}
     {% endfor %}
 
+    {%- if missing_columns is not none -%},
+    --Additionally generating ghost record for missing columns
+      {% for col, dtype in missing_columns.items() %}
+        {% if dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ col }}
+        {% elif dtype == 'STRING' %} '(unknown)' as {{ col }}
+        {% elif dtype == 'INT64' %} CAST('0' as INT64) as {{ col }}
+        {% elif dtype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ col }}
+        {% elif dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
+        {% else %} CAST(NULL as {{ dtype }}) as {{ col }}
+        {% endif -%}{%- if not loop.last %},{% endif -%}
+      {% endfor %}
+    {%- endif -%}
+
+
+
+    {% if prejoined_columns is not none -%}
     --Additionally generating ghost records for the prejoined attributes
-    {% if prejoined_columns is not none -%},
-      {%- for col, vals in prejoined_columns.items() %}
+      {% for col, vals in prejoined_columns.items() %}
         {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
         
-          {%- for column in pj_relation_columns -%}
-            {%- if column.name|lower == vals['bk']|lower -%}
-              {% if column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ col }}
-              {% elif column.dtype == 'STRING' %} '(unknown)' as {{ col }}
-              {% elif column.dtype == 'INT64' %} CAST('0' as INT64) as {{ col }}
-              {% elif column.dtype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ col }}
-              {% elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
-              {% else %} CAST(NULL as {{ column.dtype }}) as {{ col }}
-              {% endif -%}{%- if not loop.last %},{% endif -%}
+          {% for column in pj_relation_columns -%}
+            {% if column.name|lower == vals['bk']|lower -%},
+              {%- if column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ col }}
+              {%- elif column.dtype == 'STRING' %} '(unknown)' as {{ col }}
+              {%- elif column.dtype == 'INT64' %} CAST('0' as INT64) as {{ col }}
+              {%- elif column.dtype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ col }}
+              {%- elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
+              {%- else %} CAST(NULL as {{ column.dtype }}) as {{ col }}
+              {% endif -%}
             {%- endif -%}
           {% endfor -%}
         
         {% endfor -%}
 
     {%- endif %}
+
+    {%- if derived_columns is not none -%}
+    --Additionally generating Ghost Records for Derived Columns
+      ,{% for column_name, properties in derived_columns.items() -%}
+        {% if properties.datatype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as {{ column_name }}
+        {% elif properties.datatype == 'STRING' %} '(unknown)' as {{ column_name }}
+        {% elif properties.datatype == 'INT64' %} CAST('0' as INT64) as {{ column_name }}
+        {% elif properties.datatype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ column_name }}
+        {% elif properties.datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ column_name }}
+        {% else %} CAST(NULL as {{ properties.datatype }}) as {{ column_name }}
+        {%- endif -%}{%- if not loop.last %},{% endif -%}
+      {% endfor %}
+    {% endif %}
+
+    ,{%- for hash_column in processed_hash_columns %}
+    '{{ unknown_key }}' as {{ hash_column }}{{ "," if not loop.last }}
+        
+    {%- endfor %}
+    
     ),
 
 --Creating Ghost Record for error case, based on datatype
 error_values AS (
-    {%- set all_columns = adapter.get_columns_in_relation(source(source_schema|string, source_table)) -%}
-    {%- set special_columns = [rsrc] -%}
+    {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
 
     SELECT
-    {%- for column in all_columns -%}
-        {%- if column.name in special_columns %} 'ERROR' as {{ column.name }}
-        {% elif column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ column.name }}
-        {% elif column.dtype == 'STRING' %} '(error)' as {{ column.name }}
-        {% elif column.dtype == 'INT64' %} CAST('-1' as INT64) as {{ column.name }}
-        {% elif column.dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ column.name }}
-        {% elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ column.name }}
-        {% else %} CAST(NULL as {{ column.dtype }}) as {{ column.name }}
-        {% endif -%}{%- if not loop.last %},{% endif -%}
+    
+    PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as ldts,
+    'ERROR' as rsrc,
+
+    -- Generating Ghost Records for Source Columns
+    {% for column in all_columns -%}
+        {%- if column.name not in exclude_column_names %}
+          {%- if column.name == 'rsrc' %} 'SYSTEM' as {{ column.name }}
+          {% elif column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ column.name }}
+          {% elif column.dtype == 'STRING' %} '(error)' as {{ column.name }}
+          {% elif column.dtype == 'INT64' %} CAST('-1' as INT64) as {{ column.name }}
+          {% elif column.dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ column.name }}
+          {% elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ column.name }}
+          {% else %} CAST(NULL as {{ column.dtype }}) as {{ column.name }}
+          {% endif -%}{%- if not loop.last %},{% endif -%}
+        {% endif %}
     {% endfor %}
 
-    --Additionally generating ghost records for the prejoined attributes
-    {% if prejoined_columns is not none -%},
+    --Additionally generating ghost record for missing columns
+    {% if missing_columns is not none -%},
+      {% for col, dtype in missing_columns.items() %}
+        {% if dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ col }}
+        {% elif dtype == 'STRING' %} '(error)' as {{ col }}
+        {% elif dtype == 'INT64' %} CAST('-1' as INT64) as {{ col }}
+        {% elif dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ col }}
+        {% elif dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
+        {% else %} CAST(NULL as {{ dtype }}) as {{ col }}
+        {% endif -%}{%- if not loop.last %},{% endif -%}
+      {% endfor %}
+    {%- endif -%}
 
-      {%- for col, vals in prejoined_columns.items() %}
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
+    --Additionally generating ghost records for the prejoined attributes
+    {% if prejoined_columns is not none -%}
+
+      {% for col, vals in prejoined_columns.items() %}
+        {% set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
         
-        {%- for column in pj_relation_columns -%}
+        ,{% for column in pj_relation_columns -%}
           {%- if column.name|lower == vals['bk']|lower -%}
-            {% if column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ col }}
-            {% elif column.dtype == 'STRING' %} '(error)' as {{ col }}
-            {% elif column.dtype == 'INT64' %} CAST('-1' as INT64) as {{ col }}
-            {% elif column.dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ col }}
-            {% elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
-            {% else %} CAST(NULL as {{ column.dtype }}) as {{ col }}
-            {% endif -%}{%- if not loop.last %},{% endif -%}
+            {%- if column.dtype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ col }}
+            {%- elif column.dtype == 'STRING' %} '(error)' as {{ col }}
+            {%- elif column.dtype == 'INT64' %} CAST('-1' as INT64) as {{ col }}
+            {%- elif column.dtype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ col }}
+            {%- elif column.dtype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ col }}
+            {%- else %} CAST(NULL as {{ column.dtype }}) as {{ col }}
+            {% endif -%}
           {%- endif -%}
         {% endfor -%}
 
       {% endfor -%}
 
     {%- endif %}
-    ),
 
--- Adding hash unknown values to ghost record
-unknown_values_and_hashes AS (
-    SELECT
+    --Additionally generating Ghost Records for Derived Columns
+    {% if derived_columns is not none -%},
+      {% for column_name, properties in derived_columns.items() -%}
+        {% if properties.datatype == 'TIMESTAMP' %} PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as {{ column_name }}
+        {% elif properties.datatype == 'STRING' %} '(error)' as {{ column_name }}
+        {% elif properties.datatype == 'INT64' %} CAST('-1' as INT64) as {{ column_name }}
+        {% elif properties.datatype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ column_name }}
+        {% elif properties.datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ column_name }}
+        {% else %} CAST(NULL as {{ properties.datatype }}) as {{ column_name }}
+        {% endif -%}{%- if not loop.last %},{% endif -%}
+      {% endfor %}
+    {% endif %}
 
-    PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ beginning_of_all_times }}') as ldts, 
-    'SYSTEM' as rsrc,
-    
-    *,
-
-    {%- for hash_column in processed_hash_columns %}
-    '{{ unknown_key }}' as {{ hash_column }}{{ "," if not loop.last }}
-        
-    {%- endfor %}
-
-    FROM unknown_values
-),
-
--- Adding hash error values to ghost record
-error_values_and_hashes AS (
-    SELECT 
-
-    PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') as ldts,
-    'ERROR' as rsrc,
-    
-    *,
-
-    {%- for hash_column in processed_hash_columns %}
+    ,{%- for hash_column in processed_hash_columns %}
     '{{ error_key }}' as {{ hash_column }}{{ "," if not loop.last }}
         
     {%- endfor %}
-
-    FROM error_values
-),
+    ),
 
 -- Combining all previous ghost record calculations to two rows with the same width as regular entries
 ghost_records AS (
-    SELECT * FROM unknown_values_and_hashes
+    SELECT * FROM unknown_values
     UNION ALL
-    SELECT * FROM error_values_and_hashes
+    SELECT * FROM error_values
 ),
 
 -- Combining the two ghost records with the regular data

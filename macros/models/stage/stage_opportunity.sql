@@ -1,22 +1,29 @@
 {{ config(materialized='view') }}
-{{ config(schema='public_release_test', enabled=true) }}
+{{ config(schema='dbt_stage') }}
 
 {%- set yaml_metadata -%}
 source_table: "source_opportunity"
-source_schema: "source_data"
+source_name: "source_data"
+prejoined_columns: 
+  contractnumber:
+    src_schema: "source_data"
+    src_table: "source_contract"
+    bk: "contractnumber"
+    this_column_name: "ContractId"
+    ref_column_name: "Id"
+  account_key__c:
+    src_schema: "source_data"
+    src_table: "source_account"
+    bk: "account_key__c"
+    this_column_name: "AccountId"
+    ref_column_name: "Id"
+missing_columns:
+  eventbritesync__buyer__c: "STRING"
+  eventbritesync__eventbriteid__c: "STRING"
+  zapier_search_key__c: "STRING"
 hashed_columns: 
   hk_opportunity_h:
     - opportunity_key__c
-  hk_contract_h:
-    - contractnumber 
-  hk_opportunity_contract_l:
-    - opportunity_key__c
-    - contractnumber
-  hk_account_h:
-    - account_key__c
-  hk_opportunity_account_l:
-    - opportunity_key__c
-    - account_key__c
   hd_opportunity_data_sfdc_mrn_s:
     is_hashdiff: true
     columns:
@@ -112,11 +119,14 @@ hashed_columns:
     is_hashdiff: true
     columns:
       - lastmodifiedbyid
+      - zapier_search_key__c
       - gdrive_id__c
       - id
       - account_folder_name__c
       - ambassador__ambassador_referred_by__c
       - business_unit__c
+      - eventbritesync__eventbriteid__c
+      - eventbritesync__buyer__c
       - campaignid
       - pricebook2id
       - cirrus_files_folder_name__c
@@ -197,31 +207,32 @@ hashed_columns:
     is_hashdiff: true
     columns:
       - on_emailcc__c
-rsrc: 'rsrc_file' 
-ldts: 'edwLoadDate'
-prejoined_columns: 
-  contractnumber:
-    src_schema: "source_data"
-    src_table: "source_contract"
-    bk: "contractnumber"
-    this_column_name: "ContractId"
-    ref_column_name: "Id"
-  account_key__c:
-    src_schema: "source_data"
-    src_table: "source_account"
-    bk: "account_key__c"
-    this_column_name: "AccountId"
-    ref_column_name: "Id"
+rsrc: 
+  is_available: true
+  column: 'rsrc_file' 
+  value: none
+ldts: 
+  is_available: true
+  column: 'edwLoadDate'
+  value: none
+include_source_columns: true
+derived_columns:
+  type_lalala: 
+    value: '!STAGE'
+    datatype: 'STRING'
+
 
 {%- endset -%}
 
 {% set metadata_dict = fromyaml(yaml_metadata) %}
 
-{{ stage(source_table=metadata_dict['source_table'],
-        source_schema=metadata_dict['source_schema'],
-        hashed_columns=metadata_dict['hashed_columns'],
-        ranked_columns=none,
-        derived_columns=none,
-        rsrc=metadata_dict['rsrc'],
-        ldts=metadata_dict['ldts'],
-        prejoined_columns=metadata_dict['prejoined_columns']) }}
+{{ dbtvault_scalefree.stage(include_source_columns=metadata_dict['include_source_columns'],
+                  source_table=metadata_dict['source_table'],
+                  source_name=metadata_dict['source_name'],
+                  hashed_columns=metadata_dict['hashed_columns'],
+                  prejoined_columns=metadata_dict['prejoined_columns'],
+                  ranked_columns=none,
+                  derived_columns=metadata_dict['derived_columns'],
+                  missing_columns=metadata_dict['missing_columns'],
+                  rsrc=metadata_dict['rsrc'],
+                  ldts=metadata_dict['ldts']) }}
