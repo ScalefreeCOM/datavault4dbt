@@ -31,16 +31,7 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash = var('hash', 'MD5') -%}
-{%- if hash == 'MD5' -%}
-    {%- set unknown_key = '00000000000000000000000000000000' -%}
-    {%- set error_key = 'ffffffffffffffffffffffffffffffff' -%}
-{%- elif hash == 'SHA' or hash == 'SHA1' -%}
-    {%- set unknown_key = '0000000000000000000000000000000000000000' -%}
-    {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffff' -%}
-{%- elif hash == 'SHA2' or hash == 'SHA256' -%}
-    {%- set unknown_key = '0000000000000000000000000000000000000000000000000000000000000000' -%}
-    {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
-{%- endif -%}
+{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
 {%- set beginning_of_all_times = var('beginning_of_all_times', '0001-01-01T00-00-01') -%}
 {%- set end_of_all_times = var('end_of_all_times', '8888-12-31T23-59-59') -%}

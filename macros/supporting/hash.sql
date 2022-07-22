@@ -21,16 +21,7 @@
 {%- set hashdiff_input_case_sensitive = var('hashdiff_input_case_sensitive', TRUE) -%}
 
 {#- Select hashing algorithm -#}
-{%- if hash == 'MD5' -%}
-    {%- set hash_alg = 'MD5' -%}
-    {%- set zero_key = '00000000000000000000000000000000' -%}
-{%- elif hash == 'SHA' or hash == 'SHA1' -%}
-    {%- set hash_alg = 'SHA1' -%}
-    {%- set zero_key = '0000000000000000000000000000000000000000' -%}
-{%- elif hash == 'SHA2' or hash == 'SHA256' -%}
-    {%- set hash_alg = 'SHA256' -%}
-    {%- set zero_key = '0000000000000000000000000000000000000000000000000000000000000000' -%}
-{%- endif -%}
+{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
 {%- set attribute_standardise = attribute_standardise() %}
 
@@ -41,9 +32,9 @@
 
 {%- set all_null = [] -%}
 {%- if is_hashdiff -%}
-    {%- set standardise_prefix, standardise_suffix = concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=zero_key) -%}
+    {%- set standardise_prefix, standardise_suffix = concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
 {%- else -%}
-    {%- set standardise_prefix, standardise_suffix = concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=zero_key) -%}
+    {%- set standardise_prefix, standardise_suffix = concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
 {%- endif -%}
 
 {{ standardise_prefix }}

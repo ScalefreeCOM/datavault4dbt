@@ -15,13 +15,7 @@
 {%- macro default__pit(pit_type, src_hub, src_pk, sat_names, src_ldts, rsrc, snapshot_relation, snapshot_trigger_column, dimension_key) -%}
 
 {%- set hash = var('hash', 'MD5') -%}
-{%- if hash == 'MD5' -%}
-    {%- set zero_key = '00000000000000000000000000000000' -%}
-{%- elif hash == 'SHA' or hash == 'SHA1' -%}
-    {%- set zero_key = '0000000000000000000000000000000000000000' -%}
-{%- elif hash == 'SHA2' or hash == 'SHA256' -%}
-    {%- set zero_key = '0000000000000000000000000000000000000000000000000000000000000000' -%}
-{%- endif -%}
+{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
 {%- set beginning_of_all_times = var('beginning_of_all_times', '0001-01-01T00-00-01') -%}
 {%- set snapshot_relation = ref(snapshot_relation) -%}
