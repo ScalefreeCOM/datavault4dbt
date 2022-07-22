@@ -186,7 +186,7 @@ hashed_columns AS (
     {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
 
     {% set processed_hash_columns = dbtvault_scalefree.process_hash_column_excludes(hashed_columns) -%}
-    {{- hash_columns(columns=processed_hash_columns) | indent(4) }}
+    {{- dbtvault_scalefree.hash_columns(columns=processed_hash_columns) | indent(4) }}
 
     FROM {{ last_cte }}
     {%- set last_cte = "hashed_columns" -%}
