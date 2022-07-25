@@ -51,3 +51,33 @@
     {%- endif -%}
 
 {%- endmacro -%}
+
+
+{%- macro is_attribute(obj) -%}
+
+{%- if obj is not none and obj is string and obj -%}
+
+        {%- if obj | first == "!" -%}
+        
+            {{- return(false) -}}
+        
+        {%- else -%}
+        
+            {%- if dbtvault_scalefree.is_expression(obj) -%}
+
+                {{- return(false) -}}
+
+            {%- else -%}
+
+                {{- return(true) -}}
+
+            {%- endif -%}
+
+        {%- endif -%}
+    {%- else -%}
+        {%- if execute -%}
+            {{ exceptions.raise_compiler_error("Invalid 'obj' object provided to 'is_attribute' check. Must be a string and not null.") }}
+        {%- endif %}
+    {%- endif -%}
+
+{%- endmacro -%}
