@@ -31,15 +31,18 @@
 {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}   
 
 {%- set ldts_rsrc_column_names = [] -%}
-{%- if ldts['is_available'] -%}
-  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [ldts['column']]  -%}
+{%- if dbtvault_scalefree.is_attribute(ldts) -%}
+  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [ldts]  -%}
 {%- endif -%}
-{%- if rsrc['is_available'] -%}
-  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [rsrc['column']] -%}
+{%- if dbtvault_scalefree.is_attribute(rsrc) -%}
+  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [rsrc] -%}
 {%- endif -%}
 {%- if sequence is not none -%}  
   {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [sequence] -%}
 {%- endif -%}
+
+{%- set ldts = dbtvault_scalefree.as_constant(ldts) -%}
+{%- set rsrc = dbtvault_scalefree.as_constant(rsrc) -%}
 
 {%- set derived_column_names = dbtvault_scalefree.extract_column_names(derived_columns) -%}
 {%- set hashed_column_names = dbtvault_scalefree.extract_column_names(hashed_columns) -%}
@@ -82,16 +85,8 @@ source_data AS (
 ldts_rsrc_data AS (
   SELECT
 
-  {% if ldts['is_available'] -%}
-    {{ ldts['column'] }} as ldts,
-  {% else -%}
-    '{{ ldts["value"] }}' as ldts,
-  {% endif -%}
-  {% if rsrc['is_available'] -%}
-    {{ rsrc['column'] }} as rsrc,
-  {% else -%}
-    '{{ rsrc["value"] }}' as rsrc,
-  {% endif -%}
+  {{ ldts }} AS ldts,
+  {{ rsrc }} AS rsrc,
   {% if sequence is not none -%}
     {{ sequence }} AS edwSequence,
     {%- set alias_columns = alias_columns + ['edwSequence'] -%}
