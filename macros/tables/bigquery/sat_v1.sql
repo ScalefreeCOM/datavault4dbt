@@ -13,10 +13,10 @@
     {%- set all_columns = adapter.get_columns_in_relation(ref(source_sat)) -%}
     {%- set exclude = [src_hk, src_hd, src_ldts] -%}
 
-    {%- set end_of_all_times = var('end_of_all_times', '8888-12-31T23-59-59') -%}
-    {%- set timestamp_format = var('timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+    {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
+    {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
-    {%- set hash = var('hash', 'MD5') -%}
+    {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
     {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
     {{ prepend_generated_by() }}

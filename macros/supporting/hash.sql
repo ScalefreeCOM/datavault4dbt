@@ -12,13 +12,13 @@
 
 {%- macro default__hash(columns, alias, is_hashdiff) -%}
 
-{%- set hash = var('hash', 'MD5') -%}
+{%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
 {%- set quote = var('quote', '"') -%}
 {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
 
-{%- set hashkey_input_case_sensitive = var('hashkey_input_case_sensitive', FALSE) -%}
-{%- set hashdiff_input_case_sensitive = var('hashdiff_input_case_sensitive', TRUE) -%}
+{%- set hashkey_input_case_sensitive = var('dbtvault_scalefree.hashkey_input_case_sensitive', FALSE) -%}
+{%- set hashdiff_input_case_sensitive = var('dbtvault_scalefree.hashdiff_input_case_sensitive', TRUE) -%}
 
 {#- Select hashing algorithm -#}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}

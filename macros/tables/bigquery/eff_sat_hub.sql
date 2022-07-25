@@ -30,12 +30,12 @@
 {%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[src_pk, src_ldts, src_rsrc]) -%}
 
 {#- Select hashing algorithm -#}
-{%- set hash = var('hash', 'MD5') -%}
+{%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
-{%- set beginning_of_all_times = var('beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set end_of_all_times = var('end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 {{ prepend_generated_by() }}
 
