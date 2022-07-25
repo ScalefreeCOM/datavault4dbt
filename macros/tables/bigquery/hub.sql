@@ -47,9 +47,9 @@ delta AS (
     FROM {{ last_cte }}
     WHERE {{ src_ldts }} > (SELECT MAX({{ src_ldts }}) 
                             FROM {{ this }}
-                            WHERE {{ src_ldts }} != PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}'))
-    AND {{ get_standard_string(business_keys) }} 
-        NOT IN (SELECT {{ get_standard_string(business_keys) }}
+                            WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }} )
+    AND {{ dbtvault_scalefree.get_standard_string(business_keys) }} 
+        NOT IN (SELECT {{ dbtvault_scalefree.get_standard_string(business_keys) }}
                 FROM {{ this }})
 
     {%- set last_cte = 'delta' -%}
