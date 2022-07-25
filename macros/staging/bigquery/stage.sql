@@ -27,8 +27,38 @@
                 prejoined_columns,
                 missing_columns) -%}
 
-{%- set source_relation = source(source_name|string, source_table) -%}
-{%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}   
+{% if (source_model is none) and execute %}
+
+    {%- set error_message -%}
+    Staging error: Missing source_model configuration. A source model name must be provided.
+    e.g.
+    [REF STYLE]
+    source_model: model_name
+    OR
+    [SOURCES STYLE]
+    source_model:
+        source_name: source_table_name
+    {%- endset -%}
+
+    {{- exceptions.raise_compiler_error(error_message) -}}
+{%- endif -%}
+
+{#- Check for source format or ref format and create relation object from source_model -#}
+{% if source_model is mapping and source_model is not none -%}
+
+    {%- set source_name = source_model | first -%}
+    {%- set source_table_name = source_model[source_name] -%}
+
+    {%- set source_relation = source(source_name, source_table_name) -%}
+    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
+{%- elif source_model is not mapping and source_model is not none -%}
+
+    {%- set source_relation = ref(source_model) -%}
+    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
+{%- else -%}
+
+    {%- set all_source_columns = [] -%}
+{%- endif -%}   
 
 {%- set ldts_rsrc_column_names = [] -%}
 {%- if dbtvault_scalefree.is_attribute(ldts) -%}
