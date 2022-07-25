@@ -42,3 +42,39 @@
 {%- endif -%}
 
 {%- endmacro -%}
+
+{%- macro exasol__ghost_record_per_datatype(column_name, datatype, ghost_record_type) -%}
+
+{%- set beginning_of_all_times = var('beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set end_of_all_times = var('end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+
+{%- if ghost_record_type == 'unknown' -%}
+
+        {%- if datatype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as "{{ column_name }}"
+        {%- elif datatype == 'VARCHAR' %} '(unknown)' as "{{ column_name }}"
+        {%- elif datatype == 'DECIMAL' %} CAST('0' as DECIMAL) as {{ column_name }}
+        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as "{{ column_name }}"
+        {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as "{{ column_name }}"
+        {%- else %} CAST(NULL as {{ datatype }}) as "{{ column_name }}"
+        {% endif %}
+
+{%- elif ghost_record_type == 'error' -%}
+
+        {%- if datatype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as "{{ column_name }}"
+        {%- elif datatype == 'VARCHAR' %} '(error)' as "{{ column_name }}"
+        {%- elif datatype == 'DECIMAL' %} CAST('-1' as DECIMAL) as "{{ column_name }}"
+        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as "{{ column_name }}"
+        {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as "{{ column_name }}"
+        {%- else %} CAST(NULL as {{ datatype }}) as "{{ column_name }}"
+        {% endif %}
+
+{%- else -%}
+
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("Invalid Ghost Record Type. Accepted are 'unknown' and 'error'.") }}
+    {%- endif %}
+
+{%- endif -%}
+
+{%- endmacro -%}
