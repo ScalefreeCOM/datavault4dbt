@@ -104,7 +104,7 @@ SELECT * FROM records_to_insert
 {%- endmacro -%}
 
 
-{%- macro default__link(link_hashkey, foreign_hashkeys, src_ldts, src_rsrc, source_model) -%}
+{%- macro test_link(link_hashkey, foreign_hashkeys, src_ldts='ldts', src_rsrc='rsrc', source_model) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
     
