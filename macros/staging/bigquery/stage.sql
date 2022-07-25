@@ -1,10 +1,9 @@
-{%- macro stage(ldts, rsrc, source_name, source_table, include_source_columns=true, hashed_columns=none, derived_columns=none, ranked_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
+{%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, ranked_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
     
     {{ return(adapter.dispatch('stage', 'dbtvault_scalefree')(include_source_columns=include_source_columns,
                                         ldts=ldts,
                                         rsrc=rsrc, 
-                                        source_name=source_name,
-                                        source_table=source_table, 
+                                        source_model=source_model, 
                                         hashed_columns=hashed_columns, 
                                         derived_columns=derived_columns, 
                                         ranked_columns=ranked_columns, 
@@ -18,8 +17,7 @@
 {%- macro default__stage(include_source_columns,
                 ldts,
                 rsrc,  
-                source_name,
-                source_table, 
+                source_model, 
                 hashed_columns, 
                 derived_columns, 
                 ranked_columns, 
