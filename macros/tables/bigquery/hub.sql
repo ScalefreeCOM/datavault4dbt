@@ -19,7 +19,7 @@
 {%- set business_keys = business_key -%}
 {%- endif -%}
 
-{{ prepend_generated_by() }}
+{{ dbtvault_scalefree.prepend_generated_by() }}
 
 WITH
 

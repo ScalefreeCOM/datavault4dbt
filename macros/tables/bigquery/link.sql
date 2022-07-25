@@ -1,12 +1,12 @@
-{%- macro link(src_pk, src_fk, source_model, src_ldts='ldts', src_rsrc='rsrc') -%}
+{%- macro link(link_hashkey, foreign_hashkeys, source_model, src_ldts='ldts', src_rsrc='rsrc') -%}
 
-    {{- adapter.dispatch('link', 'dbtvault_scalefree')(src_pk=src_pk, src_fk=src_fk,
+    {{- adapter.dispatch('link', 'dbtvault_scalefree')(link_hashkey=link_hashkey, foreign_hashkeys=foreign_hashkeys,
                                              src_ldts=src_ldts, src_rsrc=src_rsrc,
                                              source_model=source_model) -}}
 
 {%- endmacro -%}
 
-{%- macro default__link(src_pk, src_fk, src_ldts, src_rsrc, source_model) -%}
+{%- macro default__old_link(src_pk, src_fk, src_ldts, src_rsrc, source_model) -%}
 
 {{- dbtvault_scalefree.check_required_parameters(src_pk=src_pk, src_fk=src_fk,
                                        src_ldts=src_ldts, src_rsrc=src_rsrc,
@@ -104,7 +104,7 @@ SELECT * FROM records_to_insert
 {%- endmacro -%}
 
 
-{%- macro test_link(link_hashkey, foreign_hashkeys, src_ldts='ldts', src_rsrc='rsrc', source_model) -%}
+{%- macro default__link(link_hashkey, foreign_hashkeys, source_model, src_ldts='ldts', src_rsrc='rsrc') -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
     
@@ -118,9 +118,9 @@ SELECT * FROM records_to_insert
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 
-{{ prepend_generated_by() }}
+{{ dbtvault_scalefree.prepend_generated_by() }}
 
-{%- set source_relation = ref(source_model) -%}
+{% set source_relation = ref(source_model) %}
 
 WITH
 
@@ -147,7 +147,7 @@ source_data AS (
     {# Deudplicate the data and only get the earliest entry for each link hashkey. #}
     QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
 
-    {%- set last_cte = 'source_data' -%}
+    {%- set last_cte = 'source_data' %}
 )
 
 {%- if is_incremental() -%},
@@ -175,6 +175,7 @@ delta AS (
 
     {%- set last_cte = 'delta' -%}
 )
+{%- endif %}
 
 SELECT * FROM {{ last_cte }}
 
