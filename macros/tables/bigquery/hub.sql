@@ -10,9 +10,8 @@
 
 {%- macro default__hub(hashkey, business_key, src_ldts, src_rsrc, source_model) -%}
 
-{%- set beginning_of_all_times = var('beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set end_of_all_times = var('end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 {%- if not (business_key is iterable and business_key is not string) -%}
 {%- set business_keys = [business_key] -%}
