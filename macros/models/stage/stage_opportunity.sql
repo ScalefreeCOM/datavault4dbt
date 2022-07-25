@@ -207,14 +207,8 @@ hashed_columns:
     is_hashdiff: true
     columns:
       - on_emailcc__c
-rsrc: 
-  is_available: true
-  column: 'rsrc_file' 
-  value: none
-ldts: 
-  is_available: true
-  column: 'edwLoadDate'
-  value: none
+rsrc: 'rsrc_file'
+ldts: 'edwLoadDate'
 include_source_columns: true
 derived_columns:
   type_lalala: 
