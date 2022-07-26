@@ -36,7 +36,7 @@
 {% endfor %}
 
 {%- if not (source_models is iterable and source_models is not string) -%}
-    {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model, having the keys 'name' and 'bk_column' and optional 'hk_column'.") }}
+    {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model, having the keys 'rsrc_static' and 'bk_column' and optional 'hk_column'.") }}
 {%- endif -%}
 
 {%- set final_columns_to_select = [hashkey] + ns.bk_columns + [src_ldts] + [src_rsrc] -%}
