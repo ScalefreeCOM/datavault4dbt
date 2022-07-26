@@ -39,6 +39,8 @@
     {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model, having the keys 'name' and 'bk_column' and optional 'hk_column'.") }}
 {%- endif -%}
 
+{%- set final_columns_to_select = [hashkey] + ns.bk_columns + [src_ldts] + [src_rsrc] -%}
+
 {{ dbtvault_scalefree.prepend_generated_by() }}
 
 WITH
@@ -53,21 +55,59 @@ distinct_target_hashkeys AS (
 
 ),
 
-max_ldts_per_source_in_target AS (
+{% for source_model in source_models.keys() %}
+
+    {%- set source_number = loop.index | string -%}
+    {%- set rsrc_static = source_models[source_model]['rsrc_static'] -%}
+    
+    rsrc_static_{{ source_number }} AS (
+        
+        SELECT 
+            *,
+            '{{ rsrc_static }}' AS rsrc_static
+        FROM {{ this }}
+        WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+
+        {%- set ns.last_cte = "rsrc_static_{}".format(source_number) -%}
+
+    ),
+{% endfor -%}
+
+{%- if source_models.keys() | length > 1 %}
+
+rsrc_static_union AS (
+
+    {% for source_model in source_models.keys() %}
+    {%- set source_number = loop.index | string -%}
+
+    SELECT * FROM rsrc_static_{{ source_number }}
+
+    {%- if not loop.last %}
+    UNION ALL
+    {% endif -%}
+    {%- endfor %}
+    {%- set ns.last_cte = "rsrc_static_union".format(source_number) -%}
+),
+
+{%- endif %}
+
+max_ldts_per_rsrc_static_in_target AS (
 
     SELECT
-        source_model,
+        rsrc_static,
         MAX({{ src_ldts }}) as max_ldts
-    FROM {{ this }}
+    FROM {{ ns.last_cte }}
     WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
-    GROUP BY source_model
+    GROUP BY rsrc_static
 
 ), 
 {% endif -%}
 
-{%- for source_model in source_models.keys() %}
+{% for source_model in source_models.keys() %}
 
     {%- set source_number = loop.index | string -%}
+
+    {%- set rsrc_static = source_models[source_model]['rsrc_static'] -%}
 
     {%- if 'hk_column' not in source_models[source_model].keys() %}
         {%- set hk_column = hashkey -%}
@@ -86,12 +126,12 @@ max_ldts_per_source_in_target AS (
 
             {{ src_ldts }},
             {{ src_rsrc }},
-            '{{ source_model }}' AS source_model
+            '{{ rsrc_static }}' AS rsrc_static
         FROM {{ ref(source_model) }} src
 
         {%- if is_incremental() %}
-        INNER JOIN max_ldts_per_source_in_target max 
-            ON max.source_model = '{{ source_model }}'
+        INNER JOIN max_ldts_per_rsrc_static_in_target max 
+            ON max.rsrc_static = '{{ rsrc_static }}'
         WHERE src.{{ src_ldts }} > max.max_ldts
         {%- endif %}
 
@@ -119,7 +159,7 @@ source_new_union AS (
 
         {{ src_ldts }},
         {{ src_rsrc }},
-        source_model
+        rsrc_static
     FROM src_new_{{ source_number }}
 
     {%- if not loop.last %}
@@ -149,11 +189,11 @@ earliest_hk_over_all_sources AS (
 records_to_insert AS (
 
     SELECT 
-        lcte.*
-    FROM {{ ns.last_cte }} AS lcte
+        {{ dbtvault_scalefree.print_list(final_columns_to_select) }}
+    FROM {{ ns.last_cte }}
 
     {%- if is_incremental() %}
-    WHERE lcte.{{ hashkey }} NOT IN (SELECT * FROM distinct_target_hashkeys)
+    WHERE {{ hashkey }} NOT IN (SELECT * FROM distinct_target_hashkeys)
     {% endif -%}
 )
 
