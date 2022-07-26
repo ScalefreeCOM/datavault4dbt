@@ -32,36 +32,41 @@
     {%- set source_table_name = source_model[source_name] -%}
 
     {%- set source_relation = source(source_name, source_table_name) -%}
-    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
+    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 {%- elif source_model is not mapping and source_model is not none -%}
 
     {%- set source_relation = ref(source_model) -%}
-    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
+    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 {%- else -%}
 
     {%- set all_source_columns = [] -%}
 {%- endif -%}   
 
-{%- set ldts_rsrc_column_names = [] -%}
-{%- if dbtvault_scalefree.is_attribute(ldts) -%}
-  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [ldts]  -%}
-{%- endif -%}
-{%- if dbtvault_scalefree.is_attribute(rsrc) -%}
-  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [rsrc] -%}
-{%- endif -%}
+{%- set ldts_rsrc_input_column_names = [] -%}
+{%- set load_datetime_col_name = ldts.alias -%}
+{%- set record_source_col_name = rsrc.alias -%}
+
+{%- if dbtvault_scalefree.is_attribute(ldts.value) -%}
+  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts.value]  -%}
+{%- endif %}
+
+{%- if dbtvault_scalefree.is_attribute(rsrc.value) -%}
+  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc.value] -%}
+{%- endif %}
+
 {%- if sequence is not none -%}  
-  {%- set ldts_rsrc_column_names = ldts_rsrc_column_names + [sequence] -%}
+  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [sequence] -%}
 {%- endif -%}
 
-{%- set ldts = dbtvault_scalefree.as_constant(ldts) -%}
-{%- set rsrc = dbtvault_scalefree.as_constant(rsrc) -%}
+{%- set ldts = dbtvault_scalefree.as_constant(ldts.value) -%}
+{%- set rsrc = dbtvault_scalefree.as_constant(rsrc.value) -%}
 
 {%- set derived_column_names = dbtvault_scalefree.extract_column_names(derived_columns) -%}
 {%- set hashed_column_names = dbtvault_scalefree.extract_column_names(hashed_columns) -%}
 {%- set ranked_column_names = dbtvault_scalefree.extract_column_names(ranked_columns) -%}
 {%- set prejoined_column_names = dbtvault_scalefree.extract_column_names(prejoined_columns) -%}
 {%- set missing_column_names = dbtvault_scalefree.extract_column_names(missing_columns) -%}
-{%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_column_names %}
+{%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
 
 
@@ -79,6 +84,19 @@
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 
+{#- Setting the column name for load date time and record source  -#}
+
+{% if load_datetime_col_name is none %}
+  {% set load_datetime_col_name = var('dbtvault_scalefree.ldts', 'LDTS') %}
+{% endif %}
+{% if record_source_col_name is none %}
+  {% set record_source_col_name = var('dbtvault_scalefree.rsrc', 'RSRC') %}
+{% endif %}
+
+{% set error_value_rsrc = var('dbtvault_scalefree.error_value_rsrc', 'ERROR') %}
+{% set unknown_value_rsrc = var('dbtvault_scalefree.unknown_value_rsrc', 'SYSTEM') %}
+
+
 WITH
 
 source_data AS (
@@ -92,13 +110,13 @@ source_data AS (
 ),
 
 
-{% set alias_columns = ['LDTS', 'RSRC'] %}
+{% set alias_columns = [load_datetime_col_name, record_source_col_name] %}
 -- Selecting all columns from the source data, renaming load date and record source to Scalefree naming conventions
 ldts_rsrc_data AS (
   SELECT
 
-  {{ ldts }} AS LDTS,
-  {{ rsrc }} AS RSRC,
+  {{ ldts }} AS {{ load_datetime_col_name}},
+  {{ rsrc }} AS {{record_source_col_name}},
   {% if sequence is not none -%}
     {{ sequence }} AS edwSequence,
     {%- set alias_columns = alias_columns + ['edwSequence'] -%}
@@ -213,8 +231,8 @@ unknown_values AS (
 
     SELECT
 
-    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as LDTS, 
-    'SYSTEM' as RSRC,
+    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{load_datetime_col_name}}, 
+    '{{ unknown_value_rsrc }}' as {{record_source_col_name}},
     --Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column
     {% for column in all_columns -%}
       {%- if column.name not in exclude_column_names %}
@@ -269,8 +287,8 @@ error_values AS (
 
     SELECT
     
-    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as LDTS,
-    'ERROR' as RSRC,
+    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{load_datetime_col_name}},
+    '{{error_value_rsrc}}' as {{record_source_col_name}},
 
     -- Generating Ghost Records for Source Columns
     {% for column in all_columns -%}
