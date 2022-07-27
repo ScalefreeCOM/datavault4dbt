@@ -53,8 +53,7 @@
 
         {%- if datatype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as "{{ column_name }}"
         {%- elif datatype == 'VARCHAR' %} '(unknown)' as "{{ column_name }}"
-        {%- elif datatype.upper().startswith('VARCHAR') -%}
-            
+        {%- elif datatype.upper().startswith('VARCHAR') -%}   
         {%- elif datatype == 'DECIMAL' %} CAST('0' as DECIMAL) as {{ column_name }}
         {%- elif datatype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as "{{ column_name }}"
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as "{{ column_name }}"

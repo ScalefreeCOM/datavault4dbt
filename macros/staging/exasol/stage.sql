@@ -141,7 +141,7 @@ ldts_rsrc_data AS (
 {% if dbtvault_scalefree.is_something(missing_columns) %}
 
 
--- Filling missing columns with NULL values for schema changes
+{# Filling missing columns with NULL values for schema changes #}
 missing_columns AS (
 
   SELECT 
@@ -160,7 +160,7 @@ missing_columns AS (
 {%- endif -%}
 
 {% if dbtvault_scalefree.is_something(prejoined_columns) %}
--- Prejoining Business Keys of other source objects for Link purposes
+{#  Prejoining Business Keys of other source objects for Link purposes #}
 prejoined_columns AS (  
   
   SELECT
