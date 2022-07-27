@@ -9,9 +9,9 @@
 
 {%- macro default__ghost_record_per_datatype(column_name, datatype, ghost_record_type) -%}
 
-{%- set beginning_of_all_times = var('beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set end_of_all_times = var('end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 {%- if ghost_record_type == 'unknown' -%}
 
@@ -45,9 +45,9 @@
 
 {%- macro exasol__ghost_record_per_datatype(column_name, datatype, ghost_record_type) -%}
 
-{%- set beginning_of_all_times = var('beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set end_of_all_times = var('end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+{%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 
 {%- if ghost_record_type == 'unknown' -%}
 
