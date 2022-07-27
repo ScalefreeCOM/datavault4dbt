@@ -100,7 +100,6 @@
 {% endif %}
 
 {# Setting the error/unknown value for the record source  for the ghost records#}
-
 {% set error_value_rsrc = var('dbtvault_scalefree.error_value_rsrc', 'ERROR') %}
 {% set unknown_value_rsrc = var('dbtvault_scalefree.unknown_value_rsrc', 'SYSTEM') %}
 

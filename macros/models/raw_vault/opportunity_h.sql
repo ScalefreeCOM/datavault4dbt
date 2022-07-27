@@ -2,7 +2,7 @@
            materialized='incremental') }}
 
 {{ hub(hashkey='hk_opportunity_h',
-                 business_key=['opportunity_key__c'],
                  src_ldts='ldts',
                  src_rsrc='rsrc',
-                 source_model='stage_opportunity') }}
+                 source_model={'stage_opportunity': {'bk_column': 'opportunity_key__c',
+                                                    'rsrc_static': '*/SALESFORCE/06sIPY/Opportunity/*'}}) }}
