@@ -250,6 +250,9 @@ unknown_values AS (
     {%- if derived_columns is not none -%}
     {# Additionally generating Ghost Records for Derived Columns #}
       ,
+      {# enrich incoming derived columns definition by datatypes. #}
+      {%- set derived_columns = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
+
       {% for column_name, properties in derived_columns.items() -%}
 
         
