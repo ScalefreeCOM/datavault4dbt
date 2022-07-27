@@ -270,7 +270,13 @@ unknown_values AS (
 
     {%- if derived_columns is not none -%}
     {# Additionally generating Ghost Records for Derived Columns #}
-      ,{% for column_name, properties in derived_columns.items() -%}
+      ,
+      {# enrich incoming derived columns definition by datatypes. #}
+      {%- set derived_columns = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
+
+      {% for column_name, properties in derived_columns.items() -%}
+
+        
 
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
