@@ -68,5 +68,3 @@
 {%- endif %}
 
 {%- endmacro -%}
-
-
