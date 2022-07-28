@@ -29,4 +29,8 @@ vars:
   dbtvault_scalefree.eff_to_alias: 'effective_to'
   dbtvault_scalefree.default_unknown_rsrc: 'SYSTEM'
   dbtvault_scalefree.default_error_rsrc: 'ERROR'
+  dbtvault_scalefree.error_value__VARCHAR_ghost_record: '(error)'
+  dbtvault_scalefree.unknown_value__VARCHAR_ghost_record: '(unknown)'
+  dbtvault_scalefree.unknown_value_alt__VARCHAR_ghost_record: 'u'
+  dbtvault_scalefree.error_value_alt__VARCHAR_ghost_record: 'e'
 
