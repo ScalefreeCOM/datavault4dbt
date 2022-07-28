@@ -41,6 +41,25 @@
     {{- exceptions.raise_compiler_error(error_message) -}}
 {%- endif -%}
 
+{%- if derived_column is not none -%}
+
+  {%- for column_name, column_value in derived_columns.items() -%}
+
+    {%- if not column_value is mapping -%}
+
+      {%- set input_column_value = column_value -%}
+
+      {%- do derive_columns.update({column_name: {'value': input_column_value, 'datatype': 'None'}}) -%}
+    
+    {%- endif -%}
+
+  {%- endfor -%}
+
+{%- endif -%}
+
+{{ log('Source Model input to stage macro: ' + source_model|string, true) }}
+{{ log('Model that calls stage macro: ' + this|string, true) }}
+
 {#- Check for source format or ref format and create relation object from source_model -#}
 {% if source_model is mapping and source_model is not none -%}
 
@@ -48,15 +67,17 @@
     {%- set source_table_name = source_model[source_name] -%}
 
     {%- set source_relation = source(source_name, source_table_name) -%}
-    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
+    {{ log('Source Relation attribute: ' + source_relation|string, true) }}
+    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 {%- elif source_model is not mapping and source_model is not none -%}
 
     {%- set source_relation = ref(source_model) -%}
-    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
+    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 {%- else -%}
 
     {%- set all_source_columns = [] -%}
 {%- endif -%}   
+{{ log('All source columns: ' + all_source_columns|string, true) }}
 
 {%- set ldts_rsrc_column_names = [] -%}
 {%- if dbtvault_scalefree.is_attribute(ldts) -%}
@@ -272,7 +293,7 @@ unknown_values AS (
     {# Additionally generating Ghost Records for Derived Columns #}
       ,
       {# enrich incoming derived columns definition by datatypes. #}
-      {%- set derived_columns = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
+      {%- set derived_columns = dbtvault_scalefree.derived_columns_datatypes(derived_columns, all_source_columns) -%}
 
       {% for column_name, properties in derived_columns.items() -%}
 
@@ -337,7 +358,12 @@ error_values AS (
 
     {%- if derived_columns is not none -%}
     {# Additionally generating Ghost Records for Derived Columns #}
-      ,{% for column_name, properties in derived_columns.items() -%}
+      ,
+      
+      {# enrich incoming derived columns definition by datatypes. #}
+      {%- set derived_columns = dbtvault_scalefree.derived_columns_datatypes(derived_columns, all_source_columns) -%}
+
+      {% for column_name, properties in derived_columns.items() -%}
 
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
