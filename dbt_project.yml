@@ -24,7 +24,5 @@ vars:
   dbtvault_scalefree.hashdiff_input_case_sensitive: TRUE
   dbtvault_scalefree.error_value_rsrc: 'ERROR'
   dbtvault_scalefree.unknown_value_rsrc: 'SYSTEM'
-  dbtvault_scalefree.error_value__VARCHAR_ghost_record: '(error)'
-  dbtvault_scalefree.unknown_value__VARCHAR_ghost_record: '(unknown)'
-  dbtvault_scalefree.unknown_value_alt__VARCHAR_ghost_record: 'u'
-  dbtvault_scalefree.error_value_alt__VARCHAR_ghost_record: 'e'
+  dbtvault_scalefree.error_value_ghost_record: '(error)'
+  dbtvault_scalefree.unknown_value_ghost_record: '(unknown)'
