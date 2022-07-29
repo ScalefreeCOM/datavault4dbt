@@ -1,49 +1,46 @@
-{%- macro derived_columns_datatypes(derived_columns, all_source_columns) -%}
-
-    {{- adapter.dispatch('derived_columns_datatypes', 'dbtvault_scalefree')(derived_columns=derived_columns, all_source_columns=all_source_columns) -}}
+{%- macro derived_columns_datatypes(columns, source_relation) -%}
+    
+    {{- adapter.dispatch('derived_columns_datatypes', 'dbtvault_scalefree')(columns=columns, source_relation=source_relation) -}}
 
 {%- endmacro -%}
 
 
-{%- macro default__derived_columns_datatypes(derived_columns, all_source_columns) -%}
+{%- macro default__derived_columns_datatypes(columns, source_relation) -%}
 
-{{ log('Macro derived_columns_datatypes called by model ' + this|string + '. Derived Columns = ' + derived_columns|string, true) }}
+{%- set all_source_columns = adapter.get_columns_in_relation(source_relation) -%}
 
-{%- if derived_column is mapping -%}
-    {{ log('Derived Columns is of type mapping!', true) }}
-{%- else -%}
-    {{ log('Derived Columns is not of type mapping!', true) }}
-{%- endif -%}
-
-{%- if derived_columns is not mapping and derive_columns is string -%}
+{%- if columns is not mapping and columns is string -%}
     {%- if execute -%}
         {{ exceptions.raise_compiler_error("Derived Columns is of datatype string. Needs to be mapping" ) }}
     {%- endif -%}
 
 {%- else -%}
 
-    {%- for column_name, column_value in derived_columns.items() -%}
+    {%- for column_name, column_value in columns.items() -%}
 
-        {%- if not (column_value is mapping and column_value.datatype is not none) and column_value is string -%}
+        {%- if not (column_value is mapping) and column_value is string -%}
         {# This is the case where no datatype is defined and one must be detected based on the input value. #}
 
             {%- if not dbtvault_scalefree.is_attribute(column_value) -%}
             {# If the value is a static value, it is not an attribute and no datatype needs to be detected. Instead a default datatype is applied. #}
                 
                 {%- set datatype = var('dbtvault_scalefree.default_datatype_derived_columns', 'STRING') -%}
+                {%- set value = column_value -%}
 
             {%- else -%}
             {# The value is an attribute and therefore the datatype gets detected out of the source relation. #}
 
-                {%- set input_column = column_value -%}
+                {%- set value = column_value -%}
+
+                
 
                 {%- set ns = namespace(datatype = "") -%}
 
                 {%- for source_column in all_source_columns -%}
 
-                    {%- if source_column.name == input_column -%}
+                    {%- if source_column.name|upper == value|upper -%}
 
-                        {%- set ns.datatype = source_column.dtype -%}
+                       {%- set ns.datatype = source_column.dtype -%}
                     
                     {%- endif -%}
 
@@ -57,16 +54,18 @@
                 {# The input column name could not be found inside the source relation. #}
 
                     {%- if execute -%}
-                        {{ exceptions.raise_compiler_error("Could not find the derived_column input column " + input_column + " inside the source relation " + source_relation|string ) }}
+                        {{ exceptions.raise_compiler_error("Could not find the derived_column input column " + value + " inside the source relation " + source_relation|string ) }}
+                    {%- else -%}
+                        {%- set datatype = "" -%}
                     {%- endif -%}
 
                 {%- endif -%}
 
             {%- endif -%}
                 
-            {%- do derived_columns.update({column_name: {'datatype': datatype}}) -%}
+            {%- do columns.update({column_name: {'datatype': datatype, 'value': value}}) -%}
 
-        {%- elif column_value is mapping and column_value.datatype is none -%}
+        {%- elif column_value is mapping and not column_value.get('datatype') -%}
 
             {%- if execute -%}
                 {{ exceptions.raise_compiler_error("Derived Column " + column_name + " is defined as a mapping, but has no datatype key set." ) }}
@@ -78,7 +77,7 @@
 
 {%- endif -%}
 
-{{ return(derived_columns) }}
+{{ return(columns | tojson) }}
 
 {%- endmacro -%}
 
