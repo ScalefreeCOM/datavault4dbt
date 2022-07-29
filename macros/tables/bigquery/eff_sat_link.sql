@@ -1,27 +1,27 @@
 {#-
-    This macro creates Effectivity Satellites attached to Hubs.
+    This macro creates Effectivity Satellites attached to Links.
     Its needed for detecting deletes, when that information is not provided by CDC.
 
     Parameters:
-    - hub::string                   Name of the hub model that this eff sat should be attached to
-    - src_pk::string                Name of the Primary Key column inside the Hub. Usually the Hashkey column
-    - src_ldts::string              Name of the LoadDate column inside the Hub. Usually 'ldts'
-    - src_rsrc::string              Name of the RecordSource column inside the Hub. Usually 'rsrc'
+    - link::string                  Name of the link model that this eff sat should be attached to
+    - src_pk::string                Name of the Primary Key column inside the Link. Usually the Link Hashkey
+    - src_ldts::string              Name of the LoadDate column inside the Link. Usually 'ldts'
+    - src_rsrc::string              Name of the RecordSource column inside the Link. Usually 'rsrc'
     - source_model::list or string  Name(s) of the source data models. Usually the staging layer
 -#}
 
-{%- macro eff_sat_hub(hub, src_pk, src_ldts, src_rsrc, source_model) -%}
+{%- macro eff_sat_link(link, src_pk, src_ldts, src_rsrc, source_model) -%}
 
-    {{ adapter.dispatch('eff_sat_hub', 'dbtvault_scalefree')(hub=hub, 
+    {{ adapter.dispatch('eff_sat_link', 'dbtvault_scalefree')(link=link, 
                                                   src_pk=src_pk,
                                                   src_ldts=src_ldts,
                                                   src_rsrc=src_rsrc,
                                                   source_model=source_model) }}
 
-{%- endmacro -%}                                                  
+{%- endmacro -%}  
 
 
-{%- macro default__eff_sat_hub(hub, src_pk, src_ldts, src_rsrc, source_model) -%}
+{%- macro default__eff_sat_link(link,), src_pk, src_ldts, src_rsrc, source_model) -%}
 
 {{- dbtvault_scalefree.check_required_parameters(hub=hub, 
                                                  src_pk=src_pk,
@@ -48,43 +48,47 @@ WITH
 {%- endif -%}
 
 {#- Get available HKs from stage #}
-    source_union AS (
-        {% for src in source_model -%}
-        SELECT {{ dbtvault_scalefree.prefix(source_cols, 'source') }}
-        FROM {{ ref(src) }} source
-        {% if not loop.last %}UNION ALL{% endif %}
-        {% endfor -%}
-    )
+source_union AS (
+    {% for src in source_model -%}
+    SELECT 
+        {{ dbtvault_scalefree.prefix(source_cols, 'source') }}
+    FROM 
+        {{ ref(src) }} source
+    {% if not loop.last %}UNION ALL{% endif %}
+    {% endfor -%}
+    ),
 
-{#- Get Hub data #}
-    , target_hub AS (
-        SELECT {{ dbtvault_scalefree.prefix(source_cols, 'hub') }}
-        FROM {{ ref(hub) }} hub
-        WHERE {{ src_pk }} != '{{ zero_key }}'
-        AND {{ src_pk }} != '{{ error_key }}'
-    )
+{#- Get Link data #}
+target_link AS (
+    SELECT 
+        {{ dbtvault_scalefree.prefix(source_cols, 'link') }}
+    FROM 
+        {{ ref(link) }} link
+    WHERE {{ src_pk }} != '{{ zero_key }}'
+    AND {{ src_pk }} != '{{ error_key }}'
+    ),
 
 {#- Get the latest record per PK from existing esat in incremental runs #}
 {%- if is_incremental() %}
-    , esat_latest AS (
-        SELECT *
-        FROM  {{ this }}
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ src_pk }} ORDER BY {{ src_ldts }} DESC) = 1
-    )
+esat_latest AS (
+    SELECT *
+    FROM  {{ this }}
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ src_pk }} ORDER BY {{ src_ldts }} DESC) = 1
+    ),
 {%- endif %}
 
-{#- Get Hub entries with PK, that are no longer available in stage #}
-    , deleted AS (
-        SELECT {{ dbtvault_scalefree.prefix(source_cols, 'target_hub') }}
-        FROM target_hub
-        WHERE {{ src_pk }} NOT IN (
-            SELECT {{ src_pk }}
-            FROM src_union
-        )
+{#- Get Link entries with PK, that are no longer available in stage #}
+deleted AS (
+    SELECT {{ dbtvault_scalefree.prefix(source_cols, 'target_link') }}
+    FROM target_link
+    WHERE {{ src_pk }} NOT IN (
+        SELECT DISTINCT {{ src_pk }}
+        FROM src_union
     )
+    ),
 
 {# Records that already were available and still are available, get deleted=false #}
-    , still_active AS (
+still_active AS (
         SELECT {{ dbtvault_scalefree.prefix(source_cols, 'target_hub') }}
             , {{ src_ldts }} AS start_dts
             , PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}') AS end_dts
@@ -149,5 +153,18 @@ SELECT * FROM records_to_insert
 {%- endmacro -%}
 
 
+WTIH 
+
+{%- if is_incremental() -%}
+distinct_target_hashkeys AS (
+
+    SELECT DISTINCT
+        {{ hashkey }}
+    FROM {{ link }}
+
+),
+{%- endif -%}
+
+{%-}
 
 
