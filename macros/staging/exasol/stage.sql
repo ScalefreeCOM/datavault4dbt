@@ -34,6 +34,7 @@
     {%- set source_relation = source(source_name, source_table_name) -%}
     {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 {%- elif source_model is not mapping and source_model is not none -%}
+
     {%- set source_relation = ref(source_model) -%}
     {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 {%- else -%}
@@ -77,12 +78,6 @@
 {%- set final_columns_to_select = [] -%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
-{%- set derived_columns_with_datatypes = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
-{# {{log("derived columns with updated datatypes " ~ derived_columns_with_datatypes, true)}} #}
-
-{# {{log("derived_columns_with_datatypes_DICT: " ~ fromjson(derived_columns_with_datatypes) ,true)}} #}
-{%- set derived_columns_with_datatypes_DICT = fromjson(derived_columns_with_datatypes) -%}
-
 
 {#- Select hashing algorithm -#}
 <<<<<<< HEAD
@@ -150,6 +145,7 @@ ldts_rsrc_data AS (
 
 {% if dbtvault_scalefree.is_something(missing_columns) %}
 
+
 {# Filling missing columns with NULL values for schema changes #}
 missing_columns AS (
 
@@ -170,8 +166,8 @@ missing_columns AS (
 
 {% if dbtvault_scalefree.is_something(prejoined_columns) %}
 {#  Prejoining Business Keys of other source objects for Link purposes #}
-prejoined_columns AS (
-
+prejoined_columns AS (  
+  
   SELECT
 
   {{ dbtvault_scalefree.print_list(dbtvault_scalefree.prefix(columns=dbtvault_scalefree.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
@@ -190,6 +186,7 @@ prejoined_columns AS (
   {%- set final_columns_to_select = final_columns_to_select + prejoined_column_names %}
 ),
 {%- endif -%}
+
 
 {%- if dbtvault_scalefree.is_something(derived_columns) %}
 {# Adding derived columns to the selection #} 
@@ -228,8 +225,7 @@ hashed_columns AS (
 {# Adding Ranked Columns to the selection #} 
 ranked_columns AS (
 
-    SELECT 
-    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
+    SELECT *,
 
     {{ dbtvault_scalefree.rank_columns(columns=ranked_columns) | indent(4) if dbtvault_scalefree.is_something(ranked_columns) }}
 
@@ -251,24 +247,23 @@ unknown_values AS (
     {% for column in all_columns -%}
       {%- if column.name not in exclude_column_names %}
           {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
-          {%- if not loop.last -%},{% endif %}
+          {%- if not loop.last %},{% endif -%}
       {% endif -%}
     {% endfor %}
 
     {%- if  dbtvault_scalefree.is_something(missing_columns) -%},
       {# Additionally generating ghost record for Missing columns #}
-      {% for col, dtype in missing_columns.items() -%}
+      {% for col, dtype in missing_columns.items() %}
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='unknown') }}
-        {%- if not loop.last -%},{% endif %}
+        {%- if not loop.last %},{% endif -%}
       {% endfor %}
     {%- endif -%}
 
 
 
     {% if dbtvault_scalefree.is_something(prejoined_columns) -%}
-
       {# Additionally generating ghost records for Prejoined columns #}
-      {% for col, vals in prejoined_columns.items() -%}
+      {% for col, vals in prejoined_columns.items() %}
         {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
         
           {% for column in pj_relation_columns -%}
@@ -283,13 +278,12 @@ unknown_values AS (
 
     {%- if dbtvault_scalefree.is_something(derived_columns) -%}
       {# Additionally generating Ghost Records for Derived Columns #}
-      ,{% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
-
+      ,{% for column_name, properties in derived_columns.items() -%}
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
-        {% if not loop.last -%},{%- endif -%}
-
+        {%- if not loop.last %},{% endif -%}
       {% endfor %}
     {% endif %}
+
     ,{%- for hash_column in processed_hash_columns %}
     CAST('{{ unknown_key }}' as HASHTYPE) as "{{ hash_column }}"{{ "," if not loop.last }}
         
@@ -310,21 +304,21 @@ error_values AS (
     {% for column in all_columns -%}
         {%- if column.name not in exclude_column_names %}
           {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
-          {%- if not loop.last -%},{% endif %}
+          {%- if not loop.last %},{% endif -%}
         {% endif %}
     {% endfor %}
 
     {% if dbtvault_scalefree.is_something(missing_columns) -%},
       {# Additionally generating ghost record for Missing columns #}
-      {% for col, dtype in missing_columns.items() -%}
+      {% for col, dtype in missing_columns.items() %}
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='error') }}
-          {%- if not loop.last -%},{% endif %}
+        {%- if not loop.last %},{% endif -%}
       {% endfor %}
     {%- endif -%}
 
     {% if dbtvault_scalefree.is_something(prejoined_columns) -%}
       {# Additionally generating ghost records for the Prejoined columns #}
-      {% for col, vals in prejoined_columns.items() -%}
+      {% for col, vals in prejoined_columns.items() %}
         {% set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
         
         ,{% for column in pj_relation_columns -%}
@@ -337,17 +331,16 @@ error_values AS (
 
     {%- endif %}
 
-    {%- if dbtvault_scalefree.is_something(derived_columns) -%}
+    {% if dbtvault_scalefree.is_something(derived_columns) -%},
       {# Additionally generating Ghost Records for Derived Columns #}
-      ,{% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
-
+      {% for column_name, properties in derived_columns.items() -%}
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
-        {% if not loop.last -%},{%- endif -%}
-
+        {%- if not loop.last %},{% endif -%}
       {% endfor %}
     {% endif %}
+
     ,{%- for hash_column in processed_hash_columns %}
-      CAST('{{ error_key }}' as HASHTYPE) as "{{ hash_column }}"{{ "," if not loop.last }}
+    CAST('{{ error_key }}' as HASHTYPE) as "{{ hash_column }}"{{ "," if not loop.last }}
         
     {%- endfor %}
     ),

@@ -33,11 +33,11 @@
     {%- set source_table_name = source_model[source_name] -%}
 
     {%- set source_relation = source(source_name, source_table_name) -%}
-    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
+    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
 {%- elif source_model is not mapping and source_model is not none -%}
 
     {%- set source_relation = ref(source_model) -%}
-    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
+    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
 {%- else -%}
 
     {%- set all_source_columns = [] -%}
@@ -80,9 +80,14 @@
 {%- set derived_columns_to_select = dbtvault.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 =======
 
+<<<<<<< HEAD
 {%- set source_columns_to_select = dbtvault_scalefree.process_columns_to_select(all_source_columns, exclude_column_names) -%}
 {%- set derived_columns_to_select = dbtvault_scalefree.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 >>>>>>> fe273c5 (derived column datatype detection now working for the ghost records)
+=======
+{%- set source_columns_to_select = dbtvault.process_columns_to_select(all_source_columns, exclude_column_names) -%}
+{%- set derived_columns_to_select = dbtvault.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
+>>>>>>> 442664f (fixed error caused by loop, new datatypes in ghostrecord macro, data type detection working)
 {%- set final_columns_to_select = [] -%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
@@ -225,7 +230,7 @@ unknown_values AS (
       {%- endif -%}
     {% endfor %}
 
-    {% if dbtvault_scalefree.is_something(missing_columns) %},
+    {%- if missing_columns is not none -%},
     {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
         
@@ -235,7 +240,7 @@ unknown_values AS (
       {% endfor %}
     {%- endif -%}
 
-    {% if dbtvault_scalefree.is_something(prejoined_columns) %}
+    {% if prejoined_columns is not none -%}
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
         
@@ -253,15 +258,9 @@ unknown_values AS (
 
     {%- endif %}
 
-    {% if dbtvault_scalefree.is_something(derived_columns) %}
+    {%- if derived_columns is not none -%}
     {# Additionally generating Ghost Records for Derived Columns #}
-      ,
-      {# enrich incoming derived columns definition by datatypes. #}
-      {%- set derived_columns = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
-
-      {% for column_name, properties in derived_columns.items() -%}
-
-        
+      ,{% for column_name, properties in derived_columns.items() -%}
 
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
@@ -291,7 +290,7 @@ error_values AS (
       {%- endif -%}
     {% endfor %}
 
-    {% if dbtvault_scalefree.is_something(missing_columns) %},
+    {%- if missing_columns is not none -%},
     {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
         
@@ -301,7 +300,7 @@ error_values AS (
       {% endfor %}
     {%- endif -%}
 
-    {% if dbtvault_scalefree.is_something(prejoined_columns) %}
+    {% if prejoined_columns is not none -%}
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
         
@@ -319,14 +318,11 @@ error_values AS (
 
     {%- endif %}
 
-    {% if dbtvault_scalefree.is_something(derived_columns) %}
+    {%- if derived_columns is not none -%}
     {# Additionally generating Ghost Records for Derived Columns #}
-      ,      {# enrich incoming derived columns definition by datatypes. #}
-      {%- set derived_columns = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
+      ,{% for column_name, properties in derived_columns.items() -%}
 
-      {% for column_name, properties in derived_columns.items() -%}
-
-        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
+        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
 
       {% endfor %},

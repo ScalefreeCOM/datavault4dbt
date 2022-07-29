@@ -33,4 +33,3 @@ vars:
   dbtvault_scalefree.unknown_value__VARCHAR_ghost_record: '(unknown)'
   dbtvault_scalefree.unknown_value_alt__VARCHAR_ghost_record: 'u'
   dbtvault_scalefree.error_value_alt__VARCHAR_ghost_record: 'e'
-
