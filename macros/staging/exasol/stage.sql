@@ -278,12 +278,10 @@ unknown_values AS (
 
     {%- if dbtvault_scalefree.is_something(derived_columns) -%}
       {# Additionally generating Ghost Records for Derived Columns #}
-      ,
-
-      {% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
+      ,{% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
 
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
-        {%- if not loop.last %},{% endif -%}
+        {% if not loop.last -%},{%- endif -%}
 
       {% endfor %}
     {% endif %}
@@ -334,19 +332,17 @@ error_values AS (
 
     {%- endif %}
 
-    {% if dbtvault_scalefree.is_something(derived_columns) -%}
+    {%- if dbtvault_scalefree.is_something(derived_columns) -%}
       {# Additionally generating Ghost Records for Derived Columns #}
-      ,
-      {% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
+      ,{% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
 
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
-        {%- if not loop.last %},{% endif -%}
+        {% if not loop.last -%},{%- endif -%}
 
       {% endfor %}
     {% endif %}
-
     ,{%- for hash_column in processed_hash_columns %}
-    CAST('{{ error_key }}' as HASHTYPE) as "{{ hash_column }}"{{ "," if not loop.last }}
+      CAST('{{ error_key }}' as HASHTYPE) as "{{ hash_column }}"{{ "," if not loop.last }}
         
     {%- endfor %}
     ),
