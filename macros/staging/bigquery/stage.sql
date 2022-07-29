@@ -75,8 +75,14 @@
 {%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
 
+<<<<<<< HEAD
 {%- set source_columns_to_select = dbtvault.process_columns_to_select(all_source_columns, exclude_column_names) -%}
 {%- set derived_columns_to_select = dbtvault.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
+=======
+
+{%- set source_columns_to_select = dbtvault_scalefree.process_columns_to_select(all_source_columns, exclude_column_names) -%}
+{%- set derived_columns_to_select = dbtvault_scalefree.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
+>>>>>>> fe273c5 (derived column datatype detection now working for the ghost records)
 {%- set final_columns_to_select = [] -%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
@@ -219,7 +225,7 @@ unknown_values AS (
       {%- endif -%}
     {% endfor %}
 
-    {%- if missing_columns is not none -%},
+    {% if dbtvault_scalefree.is_something(missing_columns) %},
     {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
         
@@ -229,7 +235,7 @@ unknown_values AS (
       {% endfor %}
     {%- endif -%}
 
-    {% if prejoined_columns is not none -%}
+    {% if dbtvault_scalefree.is_something(prejoined_columns) %}
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
         
@@ -247,7 +253,7 @@ unknown_values AS (
 
     {%- endif %}
 
-    {%- if derived_columns is not none -%}
+    {% if dbtvault_scalefree.is_something(derived_columns) %}
     {# Additionally generating Ghost Records for Derived Columns #}
       ,
       {# enrich incoming derived columns definition by datatypes. #}
@@ -285,7 +291,7 @@ error_values AS (
       {%- endif -%}
     {% endfor %}
 
-    {%- if missing_columns is not none -%},
+    {% if dbtvault_scalefree.is_something(missing_columns) %},
     {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
         
@@ -295,7 +301,7 @@ error_values AS (
       {% endfor %}
     {%- endif -%}
 
-    {% if prejoined_columns is not none -%}
+    {% if dbtvault_scalefree.is_something(prejoined_columns) %}
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
         
@@ -313,12 +319,14 @@ error_values AS (
 
     {%- endif %}
 
-    {%- if derived_columns is not none -%}
+    {% if dbtvault_scalefree.is_something(derived_columns) %}
     {# Additionally generating Ghost Records for Derived Columns #}
-      ,
+      ,      {# enrich incoming derived columns definition by datatypes. #}
+      {%- set derived_columns = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
+
       {% for column_name, properties in derived_columns.items() -%}
 
-        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
+        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
 
       {% endfor %},
