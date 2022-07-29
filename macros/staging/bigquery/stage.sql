@@ -48,11 +48,11 @@
     {%- set source_table_name = source_model[source_name] -%}
 
     {%- set source_relation = source(source_name, source_table_name) -%}
-    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
+    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 {%- elif source_model is not mapping and source_model is not none -%}
 
     {%- set source_relation = ref(source_model) -%}
-    {%- set all_source_columns = dbtvault.source_columns(source_relation=source_relation) -%}
+    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 {%- else -%}
 
     {%- set all_source_columns = [] -%}
@@ -81,8 +81,8 @@
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
 
 
-{%- set source_columns_to_select = dbtvault.process_columns_to_select(all_source_columns, exclude_column_names) -%}
-{%- set derived_columns_to_select = dbtvault.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
+{%- set source_columns_to_select = dbtvault_scalefree.process_columns_to_select(all_source_columns, exclude_column_names) -%}
+{%- set derived_columns_to_select = dbtvault_scalefree.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 {%- set final_columns_to_select = [] -%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
@@ -240,7 +240,7 @@ unknown_values AS (
       {% endif -%}
     {% endfor %}
 
-    {%- if missing_columns is not none -%},
+    {% if dbtvault_scalefree.is_something(missing_columns) %},
     {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
         
@@ -250,7 +250,7 @@ unknown_values AS (
       {% endfor %}
     {%- endif -%}
 
-    {% if prejoined_columns is not none -%}
+    {% if dbtvault_scalefree.is_something(prejoined_columns) %}
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
         
@@ -268,7 +268,7 @@ unknown_values AS (
 
     {%- endif %}
 
-    {%- if derived_columns is not none -%}
+    {% if dbtvault_scalefree.is_something(derived_columns) %}
     {# Additionally generating Ghost Records for Derived Columns #}
       ,
       {# enrich incoming derived columns definition by datatypes. #}
@@ -307,7 +307,7 @@ error_values AS (
       {% endif -%}
     {% endfor %}
 
-    {%- if missing_columns is not none -%},
+    {% if dbtvault_scalefree.is_something(missing_columns) %},
     {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
         
@@ -317,7 +317,7 @@ error_values AS (
       {% endfor %}
     {%- endif -%}
 
-    {% if prejoined_columns is not none -%}
+    {% if dbtvault_scalefree.is_something(prejoined_columns) %}
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
         
@@ -335,11 +335,14 @@ error_values AS (
 
     {%- endif %}
 
-    {%- if derived_columns is not none -%}
+    {% if dbtvault_scalefree.is_something(derived_columns) %}
     {# Additionally generating Ghost Records for Derived Columns #}
-      ,{% for column_name, properties in derived_columns.items() -%}
+      ,      {# enrich incoming derived columns definition by datatypes. #}
+      {%- set derived_columns = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
 
-        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
+      {% for column_name, properties in derived_columns.items() -%}
+
+        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
 
       {% endfor %}

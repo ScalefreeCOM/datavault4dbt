@@ -54,10 +54,13 @@
 {%- set error_value__VARCHAR_ghost_record = var('dbtvault_scalefree.error_value__VARCHAR_ghost_record', '(error)') -%}
 {%- set unknown_value_alt__VARCHAR_ghost_record = var('dbtvault_scalefree.unknown_value_alt__VARCHAR_ghost_record', 'u') |string -%}
 {%- set error_value_alt__VARCHAR_ghost_record = var('dbtvault_scalefree.error_value_alt__VARCHAR_ghost_record', 'e') |string -%}
+{%- set format_date = var('dbtvault_scalefree.format_date', 'YYYY-mm-dd') -%}
+{%- set hash = var('dbtvault_scalefree.hash', 'MD5')-%}
+{%- set hash_alg, unknown_value__HASHTYPE_ghost_record, error_value__HASHTYPE_ghost_record = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
 {%- if ghost_record_type == 'unknown' -%}
 
-        {%- if datatype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as "{{ column_name }}"
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as "{{ column_name }}"
         {%- elif datatype == 'VARCHAR' -%} CAST('{{unknown_value_alt__VARCHAR_ghost_record}}' as VARCHAR(2000000) UTF8) as "{{ column_name }}"
         {%- elif datatype.upper().startswith('VARCHAR') -%} 
             {%- set unknown_dtype_length = datatype.split(")")[0].split("(")[1] | int -%}
@@ -66,15 +69,18 @@
             {%- else -%} 
                 CAST('{{unknown_value__VARCHAR_ghost_record}}' as {{datatype}} ) as "{{ column_name }}"
             {%- endif -%}
+        {%- elif datatype.upper().startswith('CHAR') -%} CAST('{{unknown_value_alt__VARCHAR_ghost_record}}' as {{datatype}}) as "{{ column_name }}"
         {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('0' as {{datatype}}) as "{{ column_name }}"
         {%- elif datatype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as "{{ column_name }}"
+        {%- elif datatype == 'DATE'-%} TO_DATE(beginning_of_all_times, format_date ) as "{{ column_name }}"
         {%- elif datatype == 'BOOLEAN' %} FALSE as "{{ column_name }}"
+        {%- elif datatype.upper().startswith('HASHTYPE') -%} CAST('{{unknown_value__HASHTYPE_ghost_record}}' as {{datatype}}) as "{{ column_name }}"
         {%- else %} CAST(NULL as {{ datatype }}) as "{{ column_name }}"
         {% endif %}
 
 {%- elif ghost_record_type == 'error' -%}
 
-        {%- if datatype == 'TIMESTAMP' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as "{{ column_name }}"
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as "{{ column_name }}"
         {%- elif datatype == 'VARCHAR' -%} CAST('{{error_value_alt__VARCHAR_ghost_record}}' as VARCHAR(2000000) UTF8) as "{{ column_name }}"
         {%- elif datatype.upper().startswith('VARCHAR') -%}
             {%- set error_dtype_length = datatype.split(")")[0].split("(")[1] | int -%}
@@ -83,9 +89,12 @@
             {%- else -%} 
                 CAST('{{error_value__VARCHAR_ghost_record}}' as {{datatype}} ) as "{{ column_name }}"
             {%- endif -%}
+        {%- elif datatype.upper().startswith('CHAR') -%} CAST('{{error_value_alt__VARCHAR_ghost_record}}' as {{datatype}}) as "{{column_name}}"
         {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('-1' as {{datatype}}) as "{{ column_name }}"
         {%- elif datatype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as "{{ column_name }}"
         {%- elif datatype == 'BOOLEAN' %} FALSE as "{{ column_name }}"
+        {%- elif datatype == 'DATE'-%} TO_DATE(end_of_all_times, format_date ) as "{{ column_name }}"
+        {%- elif datatype.upper().startswith('HASHTYPE') -%} CAST('{{error_value__HASHTYPE_ghost_record}}' as {{datatype}}) as "{{ column_name }}"
         {%- else %} CAST(NULL as {{ datatype }}) as "{{ column_name }}"
         {% endif %}
 
