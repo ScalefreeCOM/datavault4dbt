@@ -1,12 +1,11 @@
-{%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, ranked_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
+{%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
     
     {{ return(adapter.dispatch('stage', 'dbtvault_scalefree')(include_source_columns=include_source_columns,
                                         ldts=ldts,
                                         rsrc=rsrc, 
                                         source_model=source_model, 
                                         hashed_columns=hashed_columns, 
-                                        derived_columns=derived_columns, 
-                                        ranked_columns=ranked_columns, 
+                                        derived_columns=derived_columns,
                                         sequence=sequence,
                                         prejoined_columns=prejoined_columns,
                                         missing_columns=missing_columns)) }}
@@ -20,7 +19,6 @@
                 source_model, 
                 hashed_columns, 
                 derived_columns, 
-                ranked_columns, 
                 sequence,
                 prejoined_columns,
                 missing_columns) -%}
@@ -82,7 +80,6 @@
 
 {%- set derived_column_names = dbtvault_scalefree.extract_column_names(derived_columns) -%}
 {%- set hashed_column_names = dbtvault_scalefree.extract_column_names(hashed_columns) -%}
-{%- set ranked_column_names = dbtvault_scalefree.extract_column_names(ranked_columns) -%}
 {%- set prejoined_column_names = dbtvault_scalefree.extract_column_names(prejoined_columns) -%}
 {%- set missing_column_names = dbtvault_scalefree.extract_column_names(missing_columns) -%}
 {%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_column_names %}
@@ -212,21 +209,6 @@ hashed_columns AS (
     FROM {{ last_cte }}
     {%- set last_cte = "hashed_columns" -%}
     {%- set final_columns_to_select = final_columns_to_select + hashed_column_names %}
-),
-{%- endif -%}
-
-{# Adding Ranked Columns to the selection #}
-{% if dbtvault_scalefree.is_something(ranked_columns) -%}
-
-ranked_columns AS (
-
-    SELECT *,
-
-    {{ dbtvault_scalefree.rank_columns(columns=ranked_columns) | indent(4) if dbtvault_scalefree.is_something(ranked_columns) }}
-
-    FROM {{ last_cte }}
-    {%- set last_cte = "ranked_columns" -%}
-    {%- set final_columns_to_select = final_columns_to_select + ranked_column_names %}
 ),
 {%- endif -%}
 
