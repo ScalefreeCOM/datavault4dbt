@@ -44,6 +44,23 @@
         {%- for col in source_cols -%}
             {%- if col not in exclude_columns -%}
                 {%- do src_columns.append(dbtvault_scalefree.escape_column_names(col)) -%}
+    {%- if column_value.get("value", False) %}
+            {%- set input_column = column_value["value"] -%}
+            {%- for source_column in source_columns -%}
+                {%- if source_column.name == input_column -%}
+                    {%- set ns.datatype = source_column.dtype -%}
+                {%- endif -%}
+            {%- endfor -%}
+            {%- if ns.datatype != "" -%}
+                {%- set datatype = ns.datatype -%}
+            {%- else -%}
+            {# The input column name could not be found inside the source relation. #}
+                {%- if execute -%}
+                    {{ exceptions.raise_compiler_error("Could not find the derived_column input column " + input_column + " inside the source relation " + source_relation|string ) }}
+                {% else %}
+                    {# get rid of parsing errors #}
+                    {%- set datatype = "" -%}
+                {%- endif -%}
             {%- endif -%}
         {%- endfor -%}
 
