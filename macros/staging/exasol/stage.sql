@@ -91,10 +91,10 @@
 {%- endfor -%}
 {#- Select hashing algorithm -#}
 
+{#- Setting unknown and error keys with default values for the selected hash algorithm -#}
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
-{{log("unknown key : "~ unknown_key)}}
-{{log("error key : "~ error_key)}}
+
 {# Select timestamp and format variables #}
 
 {%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
@@ -235,14 +235,14 @@ unknown_values AS (
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {% for column in columns_without_excluded_columns -%}
           {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
-          {%- if not loop.last %},{% endif -%}
+          {%- if not loop.last %},{% endif %}
     {% endfor %}
 
     {%- if  dbtvault_scalefree.is_something(missing_columns) -%},
       {# Additionally generating ghost record for Missing columns #}
       {% for col, dtype in missing_columns.items() %}
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='unknown') }}
-        {%- if not loop.last %},{% endif -%}
+        {%- if not loop.last %},{% endif %}
       {% endfor %}
     {%- endif -%}
 
@@ -256,25 +256,29 @@ unknown_values AS (
           {% for column in pj_relation_columns -%}
             {% if column.name|lower == vals['bk']|lower -%},
               {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
-            {%- endif -%}
+            {% endif %}
           {% endfor -%}
         
         {% endfor -%}
 
-    {%- endif %}
+    {%- endif -%}
 
-    {%- if dbtvault_scalefree.is_something(derived_columns) -%}
+    {% if dbtvault_scalefree.is_something(derived_columns) -%},
       {# Additionally generating Ghost Records for Derived Columns #}
-      ,{% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
+      {% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
-        {%- if not loop.last %},{% endif -%}
+        {%- if not loop.last %},{% endif %}
       {% endfor %}
-    {% endif %}
+    {%- endif -%}
 
-    ,{%- for hash_column in processed_hash_columns %}
-    CAST('{{ unknown_key }}' as HASHTYPE) as "{{ hash_column }}"{{ "," if not loop.last }}
-        
-    {%- endfor %}
+    {%- if dbtvault_scalefree.is_something(processed_hash_columns)-%}
+
+      ,{%- for hash_column in processed_hash_columns %}
+        CAST('{{ unknown_key }}' as HASHTYPE) as "{{ hash_column }}"
+        {%- if not loop.last %},{% endif %}
+          
+      {%- endfor %}
+    {%- endif -%}
     
     ),
 
@@ -288,7 +292,7 @@ error_values AS (
     {# Generating Ghost Records for Source Columns #}
     {% for column in columns_without_excluded_columns -%}
           {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
-          {%- if not loop.last %},{% endif -%}
+          {%- if not loop.last %},{% endif %}
     {% endfor %}
 
     {% if dbtvault_scalefree.is_something(missing_columns) -%},
@@ -307,7 +311,7 @@ error_values AS (
         ,{% for column in pj_relation_columns -%}
           {%- if column.name|lower == vals['bk']|lower -%}
             {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
-          {%- endif -%}
+          {% endif %}
         {% endfor -%}
 
       {% endfor -%}
@@ -318,14 +322,17 @@ error_values AS (
       {# Additionally generating Ghost Records for Derived Columns #}
       {% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
-        {%- if not loop.last %},{% endif -%}
+        {%- if not loop.last %},{% endif %}
       {% endfor %}
     {% endif %}
 
-    ,{%- for hash_column in processed_hash_columns %}
-    CAST('{{ error_key }}' as HASHTYPE) as "{{ hash_column }}"{{ "," if not loop.last }}
-        
-    {%- endfor %}
+    {%- if dbtvault_scalefree.is_something(processed_hash_columns)-%},
+      {%- for hash_column in processed_hash_columns %}
+        CAST('{{ error_key }}' as HASHTYPE) as "{{ hash_column }}"
+        {%- if not loop.last %},{% endif %}
+          
+      {%- endfor %}
+    {%- endif -%}
     ),
 
 {# Combining all previous ghost record calculations to two rows with the same width as regular entries #} 
