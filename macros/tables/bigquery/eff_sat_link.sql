@@ -153,18 +153,189 @@ SELECT * FROM records_to_insert
 {%- endmacro -%}
 
 
-WTIH 
+{%- macro eff_sat_link_v0(target_entity,
+                          hashkey_column,
+                          source_model,
+                          src_ldts,
+                          src_rsrc) -%}
+
+{%- set ns = namespace(last_cte= "") -%}
+
+{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+
+{%- if not (source_model is mapping) -%}
+    {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be a dictionary, with all source models as keys,  and for each source model a dictionary as value, having the keys 'rsrc_static' and optionally 'hk_column'.") }}
+{%- endif -%}     
+
+{%- for source in source_model.keys() -%}
+
+    {%- if 'hk_column' not in source_model[source].keys() -%}
+        {%- do source_model[source].update({'hk_column': hashkey_column}) -%}
+        {{ log("No custom hashkey column defined for source model '" + source + ", using default hashkey column '" + hashkey_column + " instead.", true) }}
+    {%- endif -%}
+
+{%- endfor -%}
+
+{# Incremental: Get latest ldts per rsrc_static in existing target_entity #}
 
 {%- if is_incremental() -%}
-distinct_target_hashkeys AS (
 
-    SELECT DISTINCT
-        {{ hashkey }}
-    FROM {{ link }}
+{%- for source in source_model.keys() %}
+
+    {%- set source_number = loop.index | string -%}
+    {%- set rsrc_static = source_model[source]['rsrc_static'] -%}
+
+    rsrc_static_{{ source_number }} AS (
+
+        SELECT
+            *, 
+            '{{ rsrc_static }}' AS rsrc_static
+        FROM {{ this }}
+        WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+
+        {%- set ns.last_cte = "rsrc_static_{}".format(source_number) -%}
+    
+    ),
+{% endfor -%}
+
+{%- if source_model.keys() | length > 1 %}
+
+rsrc_static_union AS (
+
+    {% for source in source_model.keys() %}
+    {%- set source_number = loop.index | string -%}
+
+    SELECT * FROM rsrc_static_{{ source_number }}
+
+    {%- if not loop.last %}
+    UNION ALL
+    {% endif -%}
+    {%- endfor %}
+    {%- set ns.last_cte = "rsrc_static_union".format(source_number) -%}
+),
+
+{%- endif %}
+
+max_ldts_per_rsrc_static_in_target AS (
+
+    SELECT
+        rsrc_static,
+        MAX({{ src_ldts }}) as max_ldts
+    FROM {{ ns.last_cte }}
+    WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    GROUP BY rsrc_static
+
+), 
+{% endif -%} {# End if_incremental #}
+
+{# Selecting each source, if incremental only the new ldts in each source. #}
+{%- for source in source_model.keys() -%}
+
+    {%- set source_number = loop.index | string -%}
+    {%- set rsrc_static = source_models[source_model]['rsrc_static'] -%}
+    {%- set hk_column = source_models[source_model]['hk_column'] -%}
+
+    src_{{ source_number }} AS (
+
+        SELECT
+            {{ hk_column }} AS {{ hashkey_column }}, 
+            {{ src_ldts }},
+            {{ src_rsrc }},
+            '{{ rsrc_static }}' AS rsrc_static
+        FROM {{ ref(source) }} src
+
+        {%- if is_incremental() %}
+        INNER JOIN max_ldts_per_rsrc_static_in_target max
+            ON max.rsrc_static = '{{ rsrc_static }}'
+        WHERE src.{{ src_ldts }} > max.max_ldts
+        {%- endif -%}
+
+        {%- set ns.last_cte = "src_{}".format(source_number) %}
+
+    ),
+{%- endfor -%}
+
+{# Unionize all sources. #}
+{%- if source_model.keys() | length > 1 %}
+
+source_union AS (
+
+    {%- for source in source_model.keys() -%}
+
+    {%- set source_number = loop.index | string -%}
+
+    SELECT
+        {{ hashkey_column }},
+        {{ src_ldts }},
+        {{ src_rsrc }},
+        rsrc_static
+    FROM src_{{ source_number }}
+
+    {%- if not loop.last %}
+    UNION ALL
+    {% endif -%}
+
+    {%- endfor -%}
+
+    {%- set ns.last_cte = 'source_union' -%}
 
 ),
 {%- endif -%}
 
-{%-}
+distinct_source_rows AS (
 
+    SELECT 
+        {{ hashkey_column }},
+        {{ src_ldts }},
+        MAX({{ src_rsrc }}) as {{ src_rsrc }},
+        MAX('rsrc_static') as rsrc_static
+    FROM {{ ns.last_cte }}
+    GROUP BY {{ hashkey_column }}, {{ src_ldts }}
 
+    {%- set ns.last_cte = 'distinct_source_rows' -%}
+
+),
+
+distinct_loads AS (
+
+    SELECT DISTINCT
+        {{ src_ldts }}
+    FROM {{ ns.last_cte }}
+
+),
+
+next_distinct_loads AS (
+
+    SELECT 
+        {{ src_ldts }},
+        COALESCE(LEAD({{ src_ldts }}) OVER (ORDER BY {{ src_ldts }}), dbtvault_scalefree.string_to_timestamp(format=timestamp_format, timestamp=end_of_all_times)) as next_load,
+    FROM distinct_loads
+
+),
+
+actual_next_loads AS (
+
+    SELECT 
+        {{ hashkey_column }},
+        {{ src_ldts }},
+        {{ src_rsrc }},
+        COALESCE(LEAD({{ src_ldts }}) OVER (PARTITION BY {{ hashkey_column }} ORDER BY {{ src_ldts }}), dbtvault_scalefree.string_to_timestamp(format=timestamp_format, timestamp=end_of_all_times)) as next_load
+    FROM {{ ns.last_cte }}
+
+),
+
+sdfsdf AS (
+
+    SELECT 
+        {{ hashkey_column }},
+        actual_next_loads.{{ src_ldts }},
+        CASE 
+            WHEN actual_next_loads.next_load > next_distinct_loads.next_load THEN 
+
+    FROM actual_next_loads 
+    JOIN next_distinct_loads ON actual_next_loads.{{ src_ldts }} = next_distinct_loads.{{ src_ldts }} 
+    WHERE 
+)
+
+ {%- endmacro -%}
