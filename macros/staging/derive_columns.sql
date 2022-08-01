@@ -74,7 +74,6 @@
             {%- endfor -%}
             {%- if ns.datatype != "" -%}
                 {%- set datatype = ns.datatype -%}
-                {# {{log("datatype: "~ datatype, true)}} #}
             {%- else -%}
             {# The input column name could not be found inside the source relation. #}
                 {%- if execute -%}

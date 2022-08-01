@@ -65,7 +65,6 @@
 {# Getting the column names for all additional columns #}
 {%- set derived_column_names = dbtvault_scalefree.extract_column_names(derived_columns) -%}
 {%- set hashed_column_names = dbtvault_scalefree.extract_column_names(hashed_columns) -%}
-{%- set ranked_column_names = dbtvault_scalefree.extract_column_names(ranked_columns) -%}
 {%- set prejoined_column_names = dbtvault_scalefree.extract_column_names(prejoined_columns) -%}
 {%- set missing_column_names = dbtvault_scalefree.extract_column_names(missing_columns) -%}
 {%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
@@ -77,10 +76,8 @@
 {%- set final_columns_to_select = [] -%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
-{%- set derived_columns_with_datatypes = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
-{# {{log("derived columns with updated datatypes " ~ derived_columns_with_datatypes, true)}} #}
 
-{# {{log("derived_columns_with_datatypes_DICT: " ~ fromjson(derived_columns_with_datatypes) ,true)}} #}
+{%- set derived_columns_with_datatypes = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
 {%- set derived_columns_with_datatypes_DICT = fromjson(derived_columns_with_datatypes) -%}
 
 
@@ -216,21 +213,6 @@ hashed_columns AS (
     FROM {{ last_cte }}
     {%- set last_cte = "hashed_columns" -%}
     {%- set final_columns_to_select = final_columns_to_select + hashed_column_names %}
-),
-{%- endif -%}
-
-{% if dbtvault_scalefree.is_something(ranked_columns) -%}
-{# Adding Ranked Columns to the selection #} 
-ranked_columns AS (
-
-    SELECT 
-    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
-
-    {{ dbtvault_scalefree.rank_columns(columns=ranked_columns) | indent(4) if dbtvault_scalefree.is_something(ranked_columns) }}
-
-    FROM {{ last_cte }}
-    {%- set last_cte = "ranked_columns" -%}
-    {%- set final_columns_to_select = final_columns_to_select + ranked_column_names %}
 ),
 {%- endif -%}
 
