@@ -78,13 +78,23 @@
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 
+{#- Getting Data types for derived columns with detection from source relation -#}
 {%- set derived_columns_with_datatypes = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
 {%- set derived_columns_with_datatypes_DICT = fromjson(derived_columns_with_datatypes) -%}
+
+{%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
+{%- set columns_without_excluded_columns = [] -%}
+{%- for column in all_columns -%}
+  {%- if column.name not in exclude_column_names %}
+    {%- do columns_without_excluded_columns.append(column) -%}
+  {%- endif -%}
+{%- endfor -%}
 {#- Select hashing algorithm -#}
 
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
-
+{{log("unknown key : "~ unknown_key)}}
+{{log("error key : "~ error_key)}}
 {# Select timestamp and format variables #}
 
 {%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
@@ -218,18 +228,14 @@ hashed_columns AS (
 {%- endif -%}
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
-    {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
-
     SELECT
 
     {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{load_datetime_col_name}}, 
     '{{ unknown_value_rsrc }}' as {{record_source_col_name}},
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
-    {% for column in all_columns -%}
-      {%- if column.name not in exclude_column_names %}
+    {% for column in columns_without_excluded_columns -%}
           {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
           {%- if not loop.last %},{% endif -%}
-      {% endif -%}
     {% endfor %}
 
     {%- if  dbtvault_scalefree.is_something(missing_columns) -%},
@@ -274,19 +280,15 @@ unknown_values AS (
 
 {# Creating Ghost Record for error case, based on datatype #}
 error_values AS (
-    {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
-
     SELECT
     
     {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{load_datetime_col_name}},
     '{{error_value_rsrc}}' as {{record_source_col_name}},
 
     {# Generating Ghost Records for Source Columns #}
-    {% for column in all_columns -%}
-        {%- if column.name not in exclude_column_names %}
+    {% for column in columns_without_excluded_columns -%}
           {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
           {%- if not loop.last %},{% endif -%}
-        {% endif %}
     {% endfor %}
 
     {% if dbtvault_scalefree.is_something(missing_columns) -%},
