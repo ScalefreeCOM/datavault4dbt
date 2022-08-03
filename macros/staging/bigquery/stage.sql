@@ -1,4 +1,4 @@
-{%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
+  {%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
     
     {{ return(adapter.dispatch('stage', 'dbtvault_scalefree')(include_source_columns=include_source_columns,
                                         ldts=ldts,
@@ -218,7 +218,7 @@ unknown_values AS (
 
     SELECT
     
-    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as ldts,
+    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as ldts,
     'SYSTEM' as rsrc,
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
