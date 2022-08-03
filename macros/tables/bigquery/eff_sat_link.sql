@@ -16,7 +16,7 @@
 
 {%- macro link_eff_sat(link, link_hk, driving_key, sec_fks, ldts, rsrc) -%}
 
-    {{ return(adapter.dispatch('eff_sat_link', 'dbtvault_scalefree')(link=link, link_hk=link_hk, driving_key=driving_key, 
+    {{ return(adapter.dispatch('link_eff_sat', 'dbtvault_scalefree')(link=link, link_hk=link_hk, driving_key=driving_key, 
                                                                      sec_fks=sec_fks, ldts=ldts, rsrc=rsrc)) }}
 
 {%- endmacro -%}                                                                     
@@ -37,7 +37,7 @@
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
-{%- if sec_fks is not iterable -%}
+{%- if not dbtvault_scalefree.is_list(sec_fks) -%}
     {%- set sec_fks = [sec_fks] -%}
 {%- endif -%}
 
