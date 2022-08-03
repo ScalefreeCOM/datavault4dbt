@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: stackoverflow
+    schema: scalefree_public_edw
+    tables:
+      - name: stackoverflow_posts
+      - name: users
+      - name: comments
