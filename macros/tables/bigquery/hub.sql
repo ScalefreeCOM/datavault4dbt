@@ -14,7 +14,7 @@
     {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
 
     {%- if 'bk_columns' is not in source_models[source_model].keys() -%}
-
+        {%- set bk_column_input = [bk_column_input] -%}
         {%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
 
     {%- elif not dbtvault_scalefree.is_list(bk_column_input) -%}
@@ -128,7 +128,6 @@ max_ldts_per_rsrc_static_in_target AS (
 
         SELECT 
             {{ hk_column }} AS {{ hashkey }},
-
             {% for bk in source_models[source_model]['bk_columns'] -%}
             {{ bk }},
             {%- endfor %}
