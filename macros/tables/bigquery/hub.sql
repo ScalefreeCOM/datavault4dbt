@@ -23,7 +23,7 @@
     {%- if not (bk_column_input is iterable and bk_column_input is not string) -%}
 
         {%- set bk_column_input = [bk_column_input] -%}
-        {%- do source_models[source_model].update({'bk_columns': bk_column_input}) -%}
+        {%- do source_models[source_model].update({'bk_column': bk_column_input}) -%}
 
     {%- endif -%}
 
@@ -120,7 +120,7 @@ max_ldts_per_rsrc_static_in_target AS (
         SELECT 
             {{ hk_column }} AS {{ hashkey }},
 
-            {% for bk in source_models[source_model]['bk_columns']|list -%}
+            {% for bk in source_models[source_model]['bk_column']|list -%}
             {{ bk }},
             {%- endfor %}
 
@@ -153,7 +153,7 @@ source_new_union AS (
     SELECT
         {{ hashkey }},
 
-        {% for bk in source_models[source_model]['bk_columns']|list %}
+        {% for bk in source_models[source_model]['bk_column']|list %}
             {{ bk }} AS {{ ns.bk_columns[loop.index - 1] }},
         {% endfor -%}
 
