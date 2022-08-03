@@ -10,6 +10,7 @@
 
 {%- endmacro -%}
 
+
 {%- macro default__ma_sat_v1(source_sat, src_hk, src_hd, src_ma, src_ldts, ledts_alias) -%}
     {%- set all_columns = adapter.get_columns_in_relation(ref(source_sat)) -%}
     {%- set exclude = [src_hk, src_hd, src_ma, src_ldts] -%}
@@ -30,7 +31,7 @@
 
     ord_ldts AS (
         SELECT DISTINCT 
-            {{ src_hashdiff }}
+            {{ src_hk }}
         , {{ src_ldts }}
         FROM mas_data
     ),
