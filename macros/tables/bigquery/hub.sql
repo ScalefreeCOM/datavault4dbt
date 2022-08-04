@@ -1,3 +1,20 @@
+{#
+    This macro creates a Hub entity based on one or more stage models. The macro requires an input source model similar to the output 
+    of the dbtvault-scalefree stage macro. So by default the stage models would be used as source models for hubs.
+
+    Parameters:
+
+    hashkey::string             Name of the hashkey column inside the stage, that should be used as PK of the Hub.
+    src_ldts::string            Name of the ldts column inside the source models.
+    src_rsrc::string            Name of the rsrc column inside the source models.
+    source_models::dictionary   Dictionary with information about the source models. The keys of the dict are the names of the source models, and the value of each
+                                source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column'
+                                and 'bk_columns'.
+
+
+#}
+
+
 {%- macro hub(hashkey, src_ldts, src_rsrc, source_models) -%}
 
     {{ return(adapter.dispatch('hub', 'dbtvault_scalefree')(hashkey=hashkey,
@@ -12,7 +29,7 @@
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
-{%- set ns = namespace(last_cte= "", bk_columns = []) -%}
+{%- set ns = namespace(last_cte= "", bk_columns = [], source_included_before = {}) -%}
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
 
@@ -60,6 +77,13 @@ distinct_target_hashkeys AS (
     {%- set source_number = loop.index | string -%}
     {%- set rsrc_static = source_models[source_model]['rsrc_static'] -%}
     
+    {%- set rsrc_static_query_source -%}
+        SELECT {{ this }}.{{ src_rsrc }},
+        '{{ rsrc_static }}' AS rsrc_static
+        FROM {{ this }}
+        WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+    {% endset %}
+
     rsrc_static_{{ source_number }} AS (
         
         SELECT 
@@ -71,6 +95,17 @@ distinct_target_hashkeys AS (
         {%- set ns.last_cte = "rsrc_static_{}".format(source_number) -%}
 
     ),
+
+
+    {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
+    {%- set source_in_target = true -%}
+
+    {% if not rsrc_static_result %}
+        {%- set source_in_target = false -%}
+    {% endif %}
+
+    {%- do ns.source_included_before.update({source_model: source_in_target}) -%}
+
 {% endfor -%}
 
 {%- if source_models.keys() | length > 1 %}
@@ -129,7 +164,7 @@ max_ldts_per_rsrc_static_in_target AS (
             '{{ rsrc_static }}' AS rsrc_static
         FROM {{ ref(source_model) }} src
 
-        {%- if is_incremental() %}
+        {%- if is_incremental() and ns.source_included_before[source_model] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max 
             ON max.rsrc_static = '{{ rsrc_static }}'
         WHERE src.{{ src_ldts }} > max.max_ldts
