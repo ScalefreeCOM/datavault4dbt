@@ -11,7 +11,6 @@
                                 source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column'
                                 and 'bk_columns'.
 
-
 #}
 
 
