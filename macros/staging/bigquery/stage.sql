@@ -1,18 +1,3 @@
-  {%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
-    
-    {{ return(adapter.dispatch('stage', 'dbtvault_scalefree')(include_source_columns=include_source_columns,
-                                        ldts=ldts,
-                                        rsrc=rsrc, 
-                                        source_model=source_model, 
-                                        hashed_columns=hashed_columns, 
-                                        derived_columns=derived_columns,
-                                        sequence=sequence,
-                                        prejoined_columns=prejoined_columns,
-                                        missing_columns=missing_columns)) }}
-
-{%- endmacro -%}
-
-
 {%- macro default__stage(include_source_columns,
                 ldts,
                 rsrc,  
@@ -172,7 +157,7 @@ prejoined_columns AS (
   FROM {{ last_cte }} lcte
 
   {%- for col, vals in prejoined_columns.items() %}
-    left join {{ source(vals['src_schema']|string, vals['src_table']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
+    left join {{ source(vals['src_name']|string, vals['src_table']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
   {% endfor %}
 
   {% set last_cte = "prejoined_columns" -%}
@@ -246,7 +231,7 @@ unknown_values AS (
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
         
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
         
           {% for column in pj_relation_columns -%}
 
@@ -310,7 +295,7 @@ error_values AS (
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
         
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
         
           {% for column in pj_relation_columns -%}
 
