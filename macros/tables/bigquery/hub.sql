@@ -1,28 +1,3 @@
-{#
-    This macro creates a Hub entity based on one or more stage models. The macro requires an input source model similar to the output 
-    of the dbtvault-scalefree stage macro. So by default the stage models would be used as source models for hubs.
-
-    Parameters:
-
-    hashkey::string             Name of the hashkey column inside the stage, that should be used as PK of the Hub.
-    src_ldts::string            Name of the ldts column inside the source models.
-    src_rsrc::string            Name of the rsrc column inside the source models.
-    source_models::dictionary   Dictionary with information about the source models. The keys of the dict are the names of the source models, and the value of each
-                                source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column'
-                                and 'bk_columns'.
-
-#}
-
-
-{%- macro hub(hashkey, src_ldts, src_rsrc, source_models) -%}
-
-    {{ return(adapter.dispatch('hub', 'dbtvault_scalefree')(hashkey=hashkey,
-                                                  src_ldts=src_ldts,
-                                                  src_rsrc=src_rsrc,
-                                                  source_models=source_models)) }}
-
-{%- endmacro -%}                                                  
-
 {%- macro default__hub(hashkey, src_ldts, src_rsrc, source_models) -%}
 
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
@@ -34,7 +9,7 @@
 
 {%- for source_model in source_models.keys() %}    
 
-    {%- set bk_column_input = source_models[source_model]['bk_column'] -%}
+    {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
 
     {%- if not (bk_column_input is iterable and bk_column_input is not string) -%}
 
