@@ -1,3 +1,5 @@
+{# This is the default version of the stage macro , designed for Google BigQuery. #}
+
 {%- macro default__stage(include_source_columns,
                 ldts,
                 rsrc,  
@@ -89,6 +91,7 @@
 
 WITH
 
+{# Selecting everything that we need from the source relation. #}
 source_data AS (
     SELECT
 
@@ -101,7 +104,7 @@ source_data AS (
 
 
 {% set alias_columns = [ldts_alias, rsrc_alias] %}
-{# Selecting all columns from the source data, renaming load date and record source to Scalefree naming conventions #}
+{# Selecting all columns from the source data, renaming load date and record source to global aliases #}
 ldts_rsrc_data AS (
   SELECT
 
@@ -207,7 +210,7 @@ unknown_values AS (
     SELECT
     
     {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ ldts_alias }},
-    'SYSTEM' as {{ rsrc_alias }},
+    '{{ var("dbtvault_scalefree.default_unknown_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
@@ -271,7 +274,7 @@ error_values AS (
     SELECT
     
     {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ ldts_alias }},
-    'ERROR' as {{ rsrc_alias }},
+    '{{ var("dbtvault_scalefree.default_error_rsrc", "ERROR") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
