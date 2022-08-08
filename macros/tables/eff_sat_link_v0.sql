@@ -1,6 +1,8 @@
 {#
-    This macro creates an effectivity satellite for a link entity, based on the stage data. It can handle multiple loads and
+    This macro creates an effectivity satellite version 0 for a link entity, based on the stage data. It can handle multiple loads and
     is therefor ready for both initial loads on persistent staging areas, and incremental loads on transient staging areas.
+    This version is the 0 version, because it does not include virtualized effectivity time ranges. For that you should create
+    one version 1 effectivity satellite for each version 0 effectivity satellite using the eff_sat_link_v1 macro.
     
     Parameters:
     
@@ -42,7 +44,7 @@
 
 #}
 
-{%- macro eff_sat_link(link_hashkey, driving_key, secondary_fks, src_ldts, src_rsrc, source_model) -%}
+{%- macro eff_sat_link_v0(link_hashkey, driving_key, secondary_fks, source_model, src_ldts=none, src_rsrc=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
     
@@ -54,7 +56,7 @@
         {%- set src_rsrc = var('dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
     {%- endif -%}
 
-    {{ return(adapter.dispatch('eff_sat_link', 'dbtvault_scalefree')(link_hashkey=link_hashkey, 
+    {{ return(adapter.dispatch('eff_sat_link_v0', 'dbtvault_scalefree')(link_hashkey=link_hashkey, 
                                                                     driving_key=driving_key,
                                                                     secondary_fks=secondary_fks,
                                                                     src_ldts=src_ldts,
