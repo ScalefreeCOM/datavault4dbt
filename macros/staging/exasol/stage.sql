@@ -237,6 +237,7 @@ unknown_values AS (
 
     {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ load_datetime_col_name }},
     '{{ unknown_value_rsrc }}' as {{ record_source_col_name }},
+
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {% for column in columns_without_excluded_columns -%}
           {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
