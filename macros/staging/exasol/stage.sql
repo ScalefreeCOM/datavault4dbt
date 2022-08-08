@@ -1,10 +1,10 @@
 {%- macro exasol__stage(include_source_columns,
                 ldts,
-                rsrc,  
+                rsrc,
                 source_model,
-                hashed_columns, 
-                derived_columns, 
-                ranked_columns, 
+                hashed_columns,
+                derived_columns,
+                ranked_columns,
                 sequence,
                 prejoined_columns,
                 missing_columns) -%}
@@ -40,7 +40,7 @@
 {%- else -%}
 
     {%- set all_source_columns = [] -%}
-{%- endif -%}   
+{%- endif -%}
 
 {%- set ldts_rsrc_input_column_names = [] -%}
 
@@ -56,7 +56,7 @@
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc.value] -%}
 {%- endif %}
 
-{%- if sequence is not none -%}  
+{%- if sequence is not none -%}
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [sequence] -%}
 {%- endif -%}
 
@@ -155,13 +155,13 @@ ldts_rsrc_data AS (
 {# Filling missing columns with NULL values for schema changes #}
 missing_columns AS (
 
-  SELECT 
+  SELECT
 
     {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
 
   {%- for col, dtype in missing_columns.items() %}
     CAST(NULL as {{ dtype }}) as "{{ col }}",
-    
+
   {% endfor %}
 
   FROM {{ last_cte }}
@@ -172,8 +172,8 @@ missing_columns AS (
 
 {% if dbtvault_scalefree.is_something(prejoined_columns) %}
 {#  Prejoining Business Keys of other source objects for Link purposes #}
-prejoined_columns AS (  
-  
+prejoined_columns AS (
+
   SELECT
 
   {{ dbtvault_scalefree.print_list(dbtvault_scalefree.prefix(columns=dbtvault_scalefree.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
@@ -195,7 +195,7 @@ prejoined_columns AS (
 
 
 {%- if dbtvault_scalefree.is_something(derived_columns) %}
-{# Adding derived columns to the selection #} 
+{# Adding derived columns to the selection #}
 derived_columns AS (
 
     SELECT
@@ -211,7 +211,7 @@ derived_columns AS (
 {%- endif -%}
 
 {% if dbtvault_scalefree.is_something(hashed_columns) and hashed_columns is mapping -%}
-{# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #} 
+{# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
 hashed_columns AS (
 
     SELECT
@@ -230,7 +230,8 @@ hashed_columns AS (
 unknown_values AS (
     SELECT
 
-    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{load_datetime_col_name}}, 
+
+    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ load_datetime_col_name }},
     '{{ unknown_value_rsrc }}' as {{record_source_col_name}},
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {% for column in columns_without_excluded_columns -%}
@@ -252,13 +253,13 @@ unknown_values AS (
       {# Additionally generating ghost records for Prejoined columns #}
       {% for col, vals in prejoined_columns.items() %}
         {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
-        
+
           {% for column in pj_relation_columns -%}
             {% if column.name|lower == vals['bk']|lower -%},
               {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
             {% endif %}
           {% endfor -%}
-        
+
         {% endfor -%}
 
     {%- endif -%}
@@ -276,18 +277,18 @@ unknown_values AS (
       ,{%- for hash_column in processed_hash_columns %}
         CAST('{{ unknown_key }}' as HASHTYPE) as "{{ hash_column }}"
         {%- if not loop.last %},{% endif %}
-          
+
       {%- endfor %}
     {%- endif -%}
-    
+
     ),
 
 {# Creating Ghost Record for error case, based on datatype #}
 error_values AS (
     SELECT
-    
-    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{load_datetime_col_name}},
-    '{{error_value_rsrc}}' as {{record_source_col_name}},
+
+    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ load_datetime_col_name }},
+    '{{ error_value_rsrc }}' as {{ record_source_col_name }},
 
     {# Generating Ghost Records for Source Columns #}
     {% for column in columns_without_excluded_columns -%}
@@ -307,7 +308,7 @@ error_values AS (
       {# Additionally generating ghost records for the Prejoined columns #}
       {% for col, vals in prejoined_columns.items() %}
         {% set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
-        
+
         ,{% for column in pj_relation_columns -%}
           {%- if column.name|lower == vals['bk']|lower -%}
             {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
@@ -330,28 +331,32 @@ error_values AS (
       {%- for hash_column in processed_hash_columns %}
         CAST('{{ error_key }}' as HASHTYPE) as "{{ hash_column }}"
         {%- if not loop.last %},{% endif %}
-          
+
       {%- endfor %}
     {%- endif -%}
     ),
 
-{# Combining all previous ghost record calculations to two rows with the same width as regular entries #} 
+{# Combining all previous ghost record calculations to two rows with the same width as regular entries #}
 ghost_records AS (
     SELECT * FROM unknown_values
     UNION ALL
     SELECT * FROM error_values
 ),
 
-{# Combining the two ghost records with the regular data #} 
+{# Combining the two ghost records with the regular data #}
 columns_to_select AS (
 
     SELECT
 
-    *
+     {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }}
 
     FROM {{ last_cte }}
-    UNION ALL 
-    SELECT * FROM ghost_records
+    UNION ALL
+    SELECT
+
+    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }}
+
+     FROM ghost_records
 )
 
 SELECT * FROM columns_to_select

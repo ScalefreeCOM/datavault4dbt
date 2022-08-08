@@ -65,6 +65,7 @@
 {%- for column_name, column_value in derived_columns.items() -%}
     {%- if column_value.get("value", False) %}
             {%- set input_column = column_value["value"] -%}
+            {%- set ns.datatype = column_value["datatype"] -%}
             {%- for source_column in source_columns -%}
                 {%- if source_column.name == input_column -%}
                     {%- set ns.datatype = source_column.dtype -%}

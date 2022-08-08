@@ -7,8 +7,9 @@
 {%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+{%- set hdiff_alias = var('dbtvault_scalefree.hdiff_alias', 'HASHDIFF') -%}
 
-{{ prepend_generated_by() }}
+{{ dbtvault_scalefree.prepend_generated_by() }}
 
 
 
@@ -17,13 +18,13 @@ WITH
 target AS (
     SELECT
         {{ src_pk|lower }},
-        {{ src_hashdiff }}
+        {{ hdiff_alias }}
     FROM {{ this }}
     WHERE {{ src_pk|lower }} IN (
-        SELECT {{ src_pk|lower }} 
+        SELECT {{ src_pk|lower }}
         FROM {{ ref(source_model) }}
         WHERE {{ src_ldts }} > (
-            SELECT 
+            SELECT
                 MAX({{ src_ldts }}) FROM {{ this }}
             WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times)}}
             )
@@ -49,18 +50,18 @@ base AS (
     FROM {{ ref(source_model) }}
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM {{ this }})
-    {%- endif -%}
-QUALIFY CASE
-            WHEN {{ src_hashdiff }} = LAG({{ src_hashdiff }}) OVER(PARTITION BY {{ src_pk|lower }} ORDER BY {{ src_ldts }}) THEN FALSE
-            ELSE TRUE
-        END
+    {%- endif %}
+    QUALIFY CASE
+                WHEN {{ src_hashdiff }} = LAG({{ src_hashdiff }}) OVER(PARTITION BY {{ src_pk|lower }} ORDER BY {{ src_ldts }}) THEN FALSE
+                ELSE TRUE
+            END
 
 )
 
-SELECT 
+SELECT
     {{ src_pk|lower }},
     {{ src_ldts }},
-    {{ src_hashdiff }},
+    {{ src_hashdiff }} as {{ hdiff_alias }},
     {{ src_rsrc }},
     {%- for col in src_payload %}
     {{ col }}
@@ -70,11 +71,11 @@ FROM base
 WHERE {{ src_pk|lower }} != '{{ error_key }}'
 {%- if is_incremental() %}
 {# Check if each record is already in the target CTE, if yes, then no delta, if no, then delta #}
-    AND NOT EXISTS (SELECT 1 
+    AND NOT EXISTS (SELECT 1
                     FROM target
                     WHERE target.{{ src_pk|lower }} = base.{{ src_pk|lower }}
-                        AND target.{{ src_hashdiff }} = base.{{ src_hashdiff }}
+                        AND target.{{ hdiff_alias }} = base.{{ src_hashdiff }}
                         AND base.rn = 1)
-{%- endif -%}                        
- 
+{%- endif -%}
+
 {%- endmacro -%}
