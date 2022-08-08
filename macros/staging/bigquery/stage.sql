@@ -258,10 +258,10 @@ unknown_values AS (
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
 
-      {% endfor %}
+      {% endfor %},
     {% endif %}
 
-    ,{%- for hash_column in processed_hash_columns %}
+    {%- for hash_column in processed_hash_columns %}
     '{{ unknown_key }}' as {{ hash_column }}{{ "," if not loop.last }}
         
     {%- endfor %}
@@ -320,10 +320,10 @@ error_values AS (
         {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
 
-      {% endfor %}
+      {% endfor %},
     {% endif %}
 
-    ,{%- for hash_column in processed_hash_columns %}
+    {%- for hash_column in processed_hash_columns %}
     '{{ error_key }}' as {{ hash_column }}{{ "," if not loop.last }}
         
     {%- endfor %}
