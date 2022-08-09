@@ -24,5 +24,6 @@ vars:
   dbtvault_scalefree.hashdiff_input_case_sensitive: TRUE
   dbtvault_scalefree.ldts_alias: 'ldts'
   dbtvault_scalefree.rsrc_alias: 'rsrc'
+  dbtvault_scalefree.ledts_alias: 'ledts'
   dbtvault_scalefree.default_unknown_rsrc: 'SYSTEM'
   dbtvault_scalefree.default_error_rsrc: 'ERROR'
