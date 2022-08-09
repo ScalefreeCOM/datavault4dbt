@@ -1,68 +1,67 @@
+{%- macro default__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, ledts_alias) -%}
 
-{%- macro ma_sat_v1(source_sat, src_hk, src_hd, src_ma, src_ldts='ldts', ledts_alias='ledts') -%}
+{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
-    {{ adapter.dispatch('ma_sat_v1', 'dbtvault_scalefree')(source_sat=source_sat,
-                                         src_hk=src_hk,
-                                         src_hd=src_hd,
-                                         src_ma=src_ma,
-                                         src_ldts=src_ldts,
-                                         ledts_alias=ledts_alias) }}
+{%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
+{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
-{%- endmacro -%}
+{%- set source_relation = ref(sat_v0) -%}
+{%- set all_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
+{%- set exclude = [hashkey, hashdiff, ma_attribute, src_ldts] -%}
 
+{%- set source_columns_to_select = dbtvault.process_columns_to_select(all_columns, exclude) -%}
 
-{%- macro default__ma_sat_v1(source_sat, src_hk, src_hd, src_ma, src_ldts, ledts_alias) -%}
-    {%- set all_columns = adapter.get_columns_in_relation(ref(source_sat)) -%}
-    {%- set exclude = [src_hk, src_hd, src_ma, src_ldts] -%}
+{{ dbtvault_scalefree.prepend_generated_by() }}
 
-    {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
-    {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+WITH 
 
-    {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
-    {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
+{# Getting everything from the underlying v0 satellite. #}
+source_satellite AS (
 
-    {{ prepend_generated_by() }}
+    SELECT * 
+    FROM {{ source_relation }}
 
-    WITH 
-    mas_data AS (
-        SELECT * 
-        FROM {{ ref(source_sat) }}
-    ), 
+), 
 
-    ord_ldts AS (
-        SELECT DISTINCT 
-            {{ src_hk }}
-        , {{ src_ldts }}
-        FROM mas_data
-    ),
+{# Selecting all distinct loads per hashkey. #}
+distinct_hk_ldts AS (
 
-    end_dt AS (
+    SELECT DISTINCT 
+        {{ hashkey }},
+        {{ src_ldts }}
+    FROM source_satellite
+
+),
+
+{# End-dating each ldts for each hashkey, based on earlier ldts per hashkey. #}
+end_dated_loads AS (
+    
     SELECT 
-        {{ src_hk }}
-        , {{ src_ldts }}
-        , COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ src_hk }} ORDER BY {{ src_ldts }}),PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}')) as {{ ledts_alias }}
-    FROM ord_ldts
-    ),
+        {{ hashkey }},
+        {{ src_ldts }},
+        COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }}
+    FROM distinct_hk_ldts
 
-    columns_to_select AS (
-        SELECT 
-            ms.{{ src_hk }}
-        , ms.{{ src_ldts }}
-        , endt.{{ ledts_alias }}
-        , ms.{{ src_hd }}
-        , ms.{{ src_ma }}
-        {%- for column in all_columns -%}
-            {%- if column.name not in exclude -%}
-                {{ column.name }}
-                {{ "," if not loop.last }}
-            {%- endif -%}
-        {%- endfor -%}
-        FROM mas_data ms
-        LEFT JOIN end_dt endt
-        ON ms.{{ src_hk }} = endt.{{ src_hk }}
-        AND ms.{{ src_ldts }} = endt.{{ src_ldts }}
-    )
+),
 
-    SELECT * FROM columns_to_select
+{# End-date each source record, based on the end-date for each load. #}
+end_dated_source AS (
+
+    SELECT 
+        src.{{ hashkey }},
+        src.{{ src_ldts }},
+        edl.{{ ledts_alias }},
+        src.{{ hashdiff }},
+        src.{{ ma_attribute }},
+        {{ dbtvault_scalefree.print_list(source_columns_to_select) }}
+    FROM source_satellite AS src
+    LEFT JOIN end_dated_loads edl
+        ON src.{{ hashkey }} = edl.{{ hashkey }}
+        AND src.{{ src_ldts }} = edl.{{ src_ldts }}
+
+)
+
+SELECT * FROM end_dated_source
 
 {%- endmacro -%}
