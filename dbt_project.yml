@@ -22,7 +22,9 @@ vars:
   dbtvault_scalefree.timestamp_format: '%Y-%m-%dT%H-%M-%S'
   dbtvault_scalefree.hashkey_input_case_sensitive: FALSE
   dbtvault_scalefree.hashdiff_input_case_sensitive: TRUE
-  dbtvault_scalefree.error_value_rsrc: 'ERROR'
-  dbtvault_scalefree.unknown_value_rsrc: 'SYSTEM'
   dbtvault_scalefree.error_value_ghost_record: '(error)'
   dbtvault_scalefree.unknown_value_ghost_record: '(unknown)'
+  dbtvault_scalefree.ldts_alias: 'ldts'
+  dbtvault_scalefree.rsrc_alias: 'rsrc'
+  dbtvault_scalefree.default_unknown_rsrc: 'SYSTEM'
+  dbtvault_scalefree.default_error_rsrc: 'ERROR'
