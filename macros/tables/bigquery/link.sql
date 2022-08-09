@@ -1,33 +1,3 @@
-{#
-    This macro creates a link entity, connecting two or more entities, or an entity with itself.
-    It can be loaded by one or more source staging tables, if multiple sources share the same buisness definitions.
-    Typically a link would only be loaded by multiple sources, if those multiple sources also share the business defintions
-    of the hubs, and therefor load the connected hubs together aswell. If multiple sources are used, it is requried that they 
-    all have the same number of foreign keys inside, otherwise they would not share the same business definition of that link.
-#}
-
-
-
-
-{%- macro link(link_hashkey, foreign_hashkeys, source_models, src_ldts=none, src_rsrc=none) -%}
-
-    {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
-    
-    {%- if src_ldts is none -%}
-        {%- set src_ldts = var('dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- endif -%}
-
-    {%- if src_rsrc is none -%}
-        {%- set src_rsrc = var('dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-    {%- endif -%}
-
-    {{- adapter.dispatch('link', 'dbtvault_scalefree')(link_hashkey=link_hashkey, foreign_hashkeys=foreign_hashkeys,
-                                             src_ldts=src_ldts, src_rsrc=src_rsrc,
-                                             source_models=source_models) -}}
-
-{%- endmacro -%}
-
-
 {%- macro default__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
@@ -67,6 +37,7 @@
 WITH
 
 {%- if is_incremental() -%},
+{# Get all distinct link hashkeys out of the existing link for later incremental logic. #}
 distinct_target_hashkeys AS (
 
     SELECT DISTINCT 
@@ -76,6 +47,7 @@ distinct_target_hashkeys AS (
 ),
 
 {% for source_model in source_models.keys() %}
+{# Create a new rsrc_static column for each source model. #}
 
     {%- set source_number = loop.index | string -%}
     {%- set rsrc_static = source_models[source_model]['rsrc_static'] -%}
@@ -114,6 +86,8 @@ distinct_target_hashkeys AS (
 {%- if source_models.keys() | length > 1 %}
 
 rsrc_static_union AS (
+    {#  create one unionized table over all source, will be the same as the already existing
+        link, but extended by the rsrc_static column. #}
 
     {% for source_model in source_models.keys() %}
     {%- set source_number = loop.index | string -%}
@@ -130,6 +104,7 @@ rsrc_static_union AS (
 {%- endif %}
 
 max_ldts_per_rsrc_static_in_target AS (
+{# Use the previously created CTE to calculate the max ldts per rsrc_static. #}
 
     SELECT
         rsrc_static,
@@ -142,6 +117,8 @@ max_ldts_per_rsrc_static_in_target AS (
 {% endif -%}
 
 {% for source_model in source_models.keys() %}
+{#  Select all deduplicated records from each source, and filter for records that are newer
+    than the max ldts inside the existing link, if incremental. #}
 
     {%- set source_number = loop.index | string -%}
 
@@ -177,6 +154,7 @@ max_ldts_per_rsrc_static_in_target AS (
 {%- if source_models.keys() | length > 1 %}
 
 source_new_union AS (
+{# Unionize the new records from all sources. #}
 
     {%- for source_model in source_models.keys() -%}
 
@@ -205,6 +183,7 @@ source_new_union AS (
 ),
 
 earliest_hk_over_all_sources AS (
+    {# Deduplicate the unionized records again to only insert the earliest one. #}
 
     SELECT
         lcte.*
@@ -219,6 +198,7 @@ earliest_hk_over_all_sources AS (
 {%- endif %}
 
 records_to_insert AS (
+    {# Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the link. #}
 
     SELECT 
         {{ dbtvault_scalefree.print_list(final_columns_to_select) }}
