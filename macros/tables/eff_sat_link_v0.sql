@@ -12,12 +12,17 @@
                                                     'hk_account_contact_l'  This hashkey belongs to the link between account and contact and
                                                                             was calculated before in the staging area by the stage macro.
     
-    driving_key::string                         Name of the driving key column inside staging model. Based on this column one active row
+    driving_key::string | list of strings       Name(s) of the driving key column(s) inside staging model. Based on this column one active row
                                                 per ldts is set.
 
                                                 Examples: 
-                                                    'hk_account_h'          With this configuration, inside the link an account is always only
-                                                                            connected to one contact at a time.
+                                                    'hk_account_h'                      With this configuration, inside the link an account 
+                                                                                        is always only connected to one contact at a time.
+
+                                                    ['hk_account_h', 'hk_contact_h']    Now the combination of the account hashkey and the
+                                                                                        contact hashkey would be used as a driving key. Therefor
+                                                                                        for each combination of account and contact, only one 
+                                                                                        relationship to other objects exists.
 
     secondary_fks::string | list of strings     Name(s) of all other foreign keys inside the link, called secondary foreign keys. A link ´
                                                 that connects two hubs usually has one driving key and one secondary foreign key. All foreign keys
@@ -48,13 +53,9 @@
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
     
-    {%- if src_ldts is none -%}
-        {%- set src_ldts = var('dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- endif -%}
+    {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
+    {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
 
-    {%- if src_rsrc is none -%}
-        {%- set src_rsrc = var('dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-    {%- endif -%}
 
     {{ return(adapter.dispatch('eff_sat_link_v0', 'dbtvault_scalefree')(link_hashkey=link_hashkey, 
                                                                     driving_key=driving_key,

@@ -1,4 +1,4 @@
-{%- macro default__eff_sat_link(link_hashkey, driving_key, secondary_fks, src_ldts, src_rsrc, source_model) -%}
+{%- macro default__eff_sat_link_v0(link_hashkey, driving_key, secondary_fks, src_ldts, src_rsrc, source_model) -%}
 
 {{- dbtvault.check_required_parameters(link_hashkey=link_hashkey, driving_key=driving_key, secondary_fks=secondary_fks,
                                        src_ldts=src_ldts, src_rsrc=src_rsrc,
