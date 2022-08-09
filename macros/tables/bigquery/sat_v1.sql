@@ -1,18 +1,4 @@
-
-{%- macro sat_v1(source_sat, src_hk, src_hd, src_ldts='ldts', ledts_alias='ledts') -%}
-
-    {{ adapter.dispatch('sat_v1', 'dbtvault_scalefree')(source_sat=source_sat,
-                                         src_hk=src_hk,
-                                         src_hd=src_hd,
-                                         src_ldts=src_ldts,
-                                         ledts_alias=ledts_alias) }}
-
-{%- endmacro -%}
-
-{%- macro default__sat_v1(source_sat, src_hk, src_hd, src_ldts, ledts_alias) -%}
-
-{%- set all_columns = adapter.get_columns_in_relation(ref(source_sat)) -%}
-{%- set exclude = [src_hk, src_hd, src_ldts] -%}
+{%- macro default__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias) -%}
 
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
@@ -20,20 +6,32 @@
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
-{{ prepend_generated_by() }}
+{%- set source_relation = ref(sat_v0) -%}
 
-SELECT
-    {{ src_hk }},
-    {{ src_ldts }},
-    COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ src_hk }} ORDER BY {{ src_ldts }}),{{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }},
-    {{ src_hd }},
-    {%- for column in all_columns -%}
-        {%- if column.name not in exclude -%}
-            {{ column.name }}
-            {{ "," if not loop.last }}
-        {%- endif -%}
-    {%- endfor -%}
-FROM {{ ref(source_sat) }}
-WHERE {{ src_hd }} != '{{ error_key }}'
+{%- set all_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
+{%- set exclude = [hashkey, hashdiff, src_ldts, src_rsrc] -%}
+
+{%- set source_columns_to_select = dbtvault.process_columns_to_select(all_columns, exclude) -%}
+
+{{ dbtvault_scalefree.prepend_generated_by() }}
+
+WITH
+
+{# Calculate ledts based on the ldts of the earlier record. #}
+end_dated_source AS (
+    
+    SELECT
+        {{ hashkey }},
+        {{ src_rsrc }},
+        {{ src_ldts }},
+        COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }},
+        {{ hashdiff }},
+        {{ dbtvault_scalefree.print_list(source_columns_to_select) }}
+    FROM {{ source_relation }}
+    WHERE {{ hashdiff }} != '{{ error_key }}'
+
+)
+
+SELECT * FROM end_dated_source
 
 {%- endmacro -%}
