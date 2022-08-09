@@ -70,6 +70,7 @@ SELECT
 FROM base
 WHERE {{ src_pk|lower }} != '{{ error_key }}'
 {%- if is_incremental() %}
+
 {# Check if each record is already in the target CTE, if yes, then no delta, if no, then delta #}
     AND NOT EXISTS (SELECT 1
                     FROM target
