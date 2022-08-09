@@ -57,13 +57,8 @@
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
     
-    {%- if src_ldts is none -%}
-        {%- set src_ldts = var('dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- endif -%}
-
-    {%- if src_rsrc is none -%}
-        {%- set src_rsrc = var('dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-    {%- endif -%}
+    {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
+    {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
 
     {{ return(adapter.dispatch('hub', 'dbtvault_scalefree')(hashkey=hashkey,
                                                   src_ldts=src_ldts,
