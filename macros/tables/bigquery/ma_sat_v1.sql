@@ -8,7 +8,9 @@
 
 {%- set source_relation = ref(sat_v0) -%}
 {%- set all_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
-{%- set exclude = [hashkey, hashdiff, ma_attribute, src_ldts] -%}
+{%- set exclude = dbtvault_scalefree.expand_column_list(columns=[hashkey, hashdiff, ma_attribute, src_ldts]) -%}
+{%- set ma_attributes = dbtvault_scalefree.expand_column_list(columns=[ma_attribute]) -%}
+
 
 {%- set source_columns_to_select = dbtvault.process_columns_to_select(all_columns, exclude) -%}
 
@@ -53,7 +55,7 @@ end_dated_source AS (
         src.{{ src_ldts }},
         edl.{{ ledts_alias }},
         src.{{ hashdiff }},
-        src.{{ ma_attribute }},
+        {{ dbtvault_scalefree.print_list(ma_attributes) }},
         {{ dbtvault_scalefree.print_list(source_columns_to_select) }}
     FROM source_satellite AS src
     LEFT JOIN end_dated_loads edl
