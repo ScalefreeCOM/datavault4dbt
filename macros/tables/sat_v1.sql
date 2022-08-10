@@ -46,7 +46,7 @@
     
     {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-    {%- set src_ledts = dbtvault_scalefree.replace_standard(src_ledts, 'dbtvault_scalefree.ldets_alias', 'ledts') -%}
+    {%- set src_ledts = dbtvault_scalefree.replace_standard(src_ledts, 'dbtvault_scalefree.ledts_alias', 'ledts') -%}
 
     {{ adapter.dispatch('sat_v1', 'dbtvault_scalefree')(sat_v0=sat_v0,
                                          hashkey=hashkey,
