@@ -52,4 +52,3 @@ records_to_select AS (
 SELECT * FROM records_to_select
         
 {%- endmacro -%}
-

@@ -57,18 +57,25 @@
                                                                                                                         number of columns inside each source models payload definition needs to equal the
                                                                                                                         number of columns defined in the upper level payload definition. 
 
-                                                                                                                        The 'rsrc_static' attribute defines a STRING that will be always the same over all
-                                                                                                                        loads of one source. Something like this needs to be identified for each source system,
-                                                                                                                        and strongly depends on the actual content of the rsrc column inside the stage.
-                                                                                                                        Sometimes the rsrc column includes the ldts of each load and could look something
+                                                                                                                        The 'rsrc_static' attribute defines a STRING or a list of strings which contains all the patterns
+                                                                                                                        of the record_source field that remains the same over the loads of one source.
+                                                                                                                        If a list of strings is defined that means that the record_source may have different patterns
+                                                                                                                        coming from the same source system. For example a source may be generating files with the pattern
+                                                                                                                        '{file_id}-{timestamp}-source.txt' or with the pattern '{file_id}-{timestamp}-{store_id}-source.csv'
+                                                                                                                        Those two patterns must be included then in the rsrc_static with the appropriate regex and wildcards in place.
+                                                                                                                        If the model has two source models as input and only one source model defines a rsrc_static, then this
+                                                                                                                        macro won't use the rsrc_static at all to do the look up in target. Therefore, if there are multiple
+                                                                                                                        source models defined, if there is a desire to execute this macro with the performance look up for the
+                                                                                                                        rsrc_static, then this parameter has to be defined for every source model that is defined.
+                                                                                                                        Sometimes the record source column includes the ldts of each load and could look something
                                                                                                                         like this: 'SALESFORCE/Partners/2022-01-01T07:00:00'. Obviously the timestamp part
                                                                                                                         inside that rsrc would change from load to load, and we now need to identify parts of
                                                                                                                         it that will be static over all loads. Here it would be 'SALESFORCE/Partners'. This static
                                                                                                                         part is now enriched by wildcard expressions (in BigQuery that would be '*') to catch
                                                                                                                         the variable part of the rsrc values.
-                                                                                                                        If my rsrc would be the same over all loads, then it might look something like
+                                                                                                                        If the record source is the same over all loads, then it might look something like
                                                                                                                         this: 'SAP/Accounts/'. Here everything would be static over all loads and
-                                                                                                                        therefor I would set rsrc_static to 'SAP/Accounts/' without any wildcards in place.
+                                                                                                                        therefore the rsrc_static would be set to 'SAP/Accounts/' without any wildcards in place.
 
     src_ldts::string                        Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
                                             Needs to use the same column name as defined as alias inside the staging model.
