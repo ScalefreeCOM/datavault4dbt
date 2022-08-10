@@ -24,21 +24,29 @@
     src_rsrc::string                            Name of the rsrc column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
+    eff_from_alias::string                      Desired alias of the effective_from column. Is optional, will use the global variable 'dbtvault_scalfree.eff_from_alias' if not set here.
+    
+    eff_to_alias::string                        Desired alias of the effective_to column. Is optional, will use the global variable 'dbtvault_scalfree.eff_to_alias' if not set here.
+
 
 #}
 
-{%- macro eff_sat_link_v1(eff_sat_link_v0, link_hashkey, driving_key, secondary_fks, src_ldts=none, src_rsrc=none) -%}
+{%- macro eff_sat_link_v1(eff_sat_link_v0, link_hashkey, driving_key, secondary_fks, src_ldts=none, src_rsrc=none, eff_from_alias=none, eff_to_alias=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
     
     {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
+    {%- set eff_from_alias = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.eff_from_alias', 'effective_from') -%}
+    {%- set eff_to_alias = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.eff_to_alias', 'effective_to') -%}
 
     {{ return(adapter.dispatch('eff_sat_link_v1', 'dbtvault_scalefree')(eff_sat_link_v0=eff_sat_link_v0,
                                                                         link_hashkey=link_hashkey, 
                                                                         driving_key=driving_key,
                                                                         secondary_fks=secondary_fks,
                                                                         src_ldts=src_ldts,
-                                                                        src_rsrc=src_rsrc)) }}
+                                                                        src_rsrc=src_rsrc,
+                                                                        eff_from_alias=eff_from_alias,
+                                                                        eff_to_alias=eff_to_alias)) }}
 
 {%- endmacro -%}

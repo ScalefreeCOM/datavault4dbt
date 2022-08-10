@@ -1,4 +1,4 @@
-{%- macro default__eff_sat_link_v1(eff_sat_link_v0, link_hashkey, driving_key, secondary_fks, src_ldts, src_rsrc) -%}
+{%- macro default__eff_sat_link_v1(eff_sat_link_v0, link_hashkey, driving_key, secondary_fks, src_ldts, src_rsrc, eff_from_alias, eff_to_alias) -%}
 
 {%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, secondary_fks, src_rsrc, src_ldts, 'is_active']) -%}
 {%- set final_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, secondary_fks, src_rsrc, 'effective_from', 'effective_to']) -%}
@@ -34,8 +34,8 @@ eff_ranges AS (
         {{ dbtvault_scalefree.print_list(secondary_fks) }},
         {{ src_rsrc }},
         is_active,
-        {{ src_ldts }} AS effective_from,
-        COALESCE(LAG(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ link_hashkey }} ORDER BY ldts DESC), {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }}) as effective_to
+        {{ src_ldts }} AS {{ eff_from_alias }},
+        COALESCE(LAG(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ link_hashkey }} ORDER BY ldts DESC), {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ eff_to_alias }}
     FROM source_data
 
 ),
