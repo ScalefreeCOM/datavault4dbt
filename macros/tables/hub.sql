@@ -1,5 +1,5 @@
 {#
-    This macro creates a Hub entity based on one or more stage models. The macro requires an input source model similar to the output 
+    This macro creates a Hub entity based on one or more stage models. The macro requires an input source model similar to the output
     of the dbtvault-scalefree stage macro. So by default the stage models would be used as source models for hubs.
 
     Parameters:
@@ -13,20 +13,20 @@
                                 source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column'
                                 and 'bk_columns'.
 
-                                Examples: 
+                                Examples:
                                     {'stage_account': {'bk_columns': ['account_number', 'account_key'],     This would create a hub loaded from only one source, which is not uncommon.
                                                        'rsrc_static': '*/SAP/Accounts/*'}}                  It uses the model 'stage_account', and defines the same columns as 'bk_columns'
                                                                                                             that were used to calculate the hashkey for the hub 'hk_account_h'.
 
                                     {'stage_account': {'bk_columns': 'account_key',                         This would create a hub loaded from two sources, which also is not uncommon.
                                                        'rsrc_static': '*/SAP/Accounts/*'},                  It again uses the model 'stage_account' but in this case the hashkey 'hk_account_h'
-                                     'stage_partner': {'bk_columns': 'partner_key',                         inside it was only calculated out of one business key. Therefor you see that 
+                                     'stage_partner': {'bk_columns': 'partner_key',                         inside it was only calculated out of one business key. Therefor you see that
                                                        'rsrc_static': '*/SALESFORCE/Partners/*',            'bk_columns' can either be a string or a list. It just have to match exactly the
                                                        'hk_column': 'hk_partner_h'}}                        attributes that were used to calculate the hashkey inside that source.
                                                                                                             Additionally the model 'stage_partner' is used, with the assumption that both sources
                                                                                                             share the same definition of an account, just under different names. Therefor
                                                                                                             a different business key column is defined as 'bk_columns', but the number of
-                                                                                                            business key columns must be the same over all sources, which is the case here. 
+                                                                                                            business key columns must be the same over all sources, which is the case here.
                                                                                                             The hashkey column inside this stage is called 'hk_partner_h' and is therefor defined
                                                                                                             under 'hk_column'. If it would not be defined, the macro would always search for
                                                                                                             a column called similar to the 'hashkey' parameter defined one level above.
@@ -56,7 +56,7 @@
 {%- macro hub(hashkey, source_models, src_ldts=none, src_rsrc=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
-    
+
     {%- if src_ldts is none -%}
         {%- set src_ldts = var('dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- endif -%}
@@ -70,4 +70,4 @@
                                                   src_rsrc=src_rsrc,
                                                   source_models=source_models)) }}
 
-{%- endmacro -%} 
+{%- endmacro -%}

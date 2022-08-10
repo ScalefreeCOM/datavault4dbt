@@ -56,7 +56,7 @@ distinct_concated_target AS (
 {% for source_model in source_models.keys() %}
 
     {%- set rsrc_static = source_models[source_model]['rsrc_static'] -%}
-    
+
     {%- set rsrc_static_query_source -%}
         SELECT *
         FROM {{ this }}
@@ -83,13 +83,13 @@ max_ldts_per_rsrc_static_in_target AS (
     WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
     GROUP BY rsrc_static
 
-), 
+),
 {% endif -%}
 
 {#
     We deduplicate each source over hashkey + ldts + rsrc_static and if is_incremental only select the rows, where the ldts is later
     than the latest one in the existing satellite for that rsrc_static. If a source is added to the existing satellite, all deduplicated
-    rows from that source are loaded into the satellite. 
+    rows from that source are loaded into the satellite.
 #}
 
 {% for source_model in source_models.keys() %}
@@ -114,7 +114,7 @@ max_ldts_per_rsrc_static_in_target AS (
 
 
         {%- if is_incremental() and ns.source_included_before[source_model] %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max 
+        INNER JOIN max_ldts_per_rsrc_static_in_target max
             ON max.rsrc_static = '{{ rsrc_static }}'
         WHERE src.{{ src_ldts }} > max.max_ldts
         {%- endif %}
@@ -161,7 +161,7 @@ source_new_union AS (
 
 records_to_insert AS (
 
-    SELECT 
+    SELECT
         {{ tracked_hashkey }},
         {{ src_ldts }},
         rsrc_static

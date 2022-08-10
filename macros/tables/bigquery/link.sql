@@ -2,7 +2,7 @@
     This macro creates a link entity, connecting two or more entities, or an entity with itself.
     It can be loaded by one or more source staging tables, if multiple sources share the same buisness definitions.
     Typically a link would only be loaded by multiple sources, if those multiple sources also share the business defintions
-    of the hubs, and therefor load the connected hubs together aswell. If multiple sources are used, it is requried that they 
+    of the hubs, and therefor load the connected hubs together aswell. If multiple sources are used, it is requried that they
     all have the same number of foreign keys inside, otherwise they would not share the same business definition of that link.
 #}
 
@@ -12,7 +12,7 @@
 {%- macro link(link_hashkey, foreign_hashkeys, source_models, src_ldts=none, src_rsrc=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
-    
+
     {%- if src_ldts is none -%}
         {%- set src_ldts = var('dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- endif -%}
@@ -31,7 +31,7 @@
 {%- macro default__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
-    
+
     {%- if execute -%}
         {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
     {%- endif %}
@@ -44,7 +44,7 @@
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apple the values set in the link_hashkey and foreign_hashkeys variable. #}
-{%- for source_model in source_models.keys() %}    
+{%- for source_model in source_models.keys() %}
 
     {%- if 'fk_columns' not in source_models[source_model].keys() -%}
 
@@ -69,7 +69,7 @@ WITH
 {%- if is_incremental() -%},
 distinct_target_hashkeys AS (
 
-    SELECT DISTINCT 
+    SELECT DISTINCT
     {{ link_hashkey }}
     FROM {{ this }}
 
@@ -79,7 +79,7 @@ distinct_target_hashkeys AS (
 
     {%- set source_number = loop.index | string -%}
     {%- set rsrc_static = source_models[source_model]['rsrc_static'] -%}
-    
+
     {%- set rsrc_static_query_source -%}
         SELECT {{ this }}.{{ src_rsrc }},
         '{{ rsrc_static }}' AS rsrc_static
@@ -88,8 +88,8 @@ distinct_target_hashkeys AS (
     {% endset %}
 
     rsrc_static_{{ source_number }} AS (
-        
-        SELECT 
+
+        SELECT
             *,
             '{{ rsrc_static }}' AS rsrc_static
         FROM {{ this }}
@@ -138,7 +138,7 @@ max_ldts_per_rsrc_static_in_target AS (
     WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
     GROUP BY rsrc_static
 
-), 
+),
 {% endif -%}
 
 {% for source_model in source_models.keys() %}
@@ -149,7 +149,7 @@ max_ldts_per_rsrc_static_in_target AS (
 
     src_new_{{ source_number }} AS (
 
-        SELECT 
+        SELECT
             {{ source_models[source_model]['link_hk'] }} AS {{ link_hashkey }},
 
             {% for fk in source_models[source_model]['fk_columns']|list -%}
@@ -162,7 +162,7 @@ max_ldts_per_rsrc_static_in_target AS (
         FROM {{ ref(source_model|string) }} src
 
         {%- if is_incremental() and ns.source_included_before[source_model] %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max 
+        INNER JOIN max_ldts_per_rsrc_static_in_target max
             ON max.rsrc_static = '{{ rsrc_static }}'
         WHERE src.{{ src_ldts }} > max.max_ldts
         {%- endif %}
@@ -220,7 +220,7 @@ earliest_hk_over_all_sources AS (
 
 records_to_insert AS (
 
-    SELECT 
+    SELECT
         {{ dbtvault_scalefree.print_list(final_columns_to_select) }}
     FROM {{ ns.last_cte }}
 
@@ -232,5 +232,3 @@ records_to_insert AS (
 SELECT * FROM records_to_insert
 
 {%- endmacro -%}
-
-

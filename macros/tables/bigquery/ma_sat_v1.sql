@@ -23,21 +23,21 @@
 
     {{ prepend_generated_by() }}
 
-    WITH 
+    WITH
     mas_data AS (
-        SELECT * 
+        SELECT *
         FROM {{ ref(source_sat) }}
-    ), 
+    ),
 
     ord_ldts AS (
-        SELECT DISTINCT 
+        SELECT DISTINCT
             {{ src_hk }}
         , {{ src_ldts }}
         FROM mas_data
     ),
 
     end_dt AS (
-    SELECT 
+    SELECT
         {{ src_hk }}
         , {{ src_ldts }}
         , COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ src_hk }} ORDER BY {{ src_ldts }}),PARSE_TIMESTAMP('{{ timestamp_format }}', '{{ end_of_all_times }}')) as {{ ledts_alias }}
@@ -45,7 +45,7 @@
     ),
 
     columns_to_select AS (
-        SELECT 
+        SELECT
             ms.{{ src_hk }}
         , ms.{{ src_ldts }}
         , endt.{{ ledts_alias }}
