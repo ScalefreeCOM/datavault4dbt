@@ -23,7 +23,7 @@
     
     source_models::dictionary               Dictionary with information about the source models. The keys of the dict are the names of the source models, and the value of each
                                             source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column'
-                                            and 'bk_columns'.
+                                            and 'fk_columns'.
 
                                             Examples: 
                                                 {'stage_account': {'fk_columns': ['hk_account_h', 'hk_contact_h'],      This would create a link loaded from only one source, which is not uncommon.
