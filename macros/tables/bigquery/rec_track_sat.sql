@@ -1,37 +1,3 @@
-{#
-    This macro creates a Record Tracking Satellite and is most commonly used to track the appearances of hashkeys (calculated out of business keys)
-    inside one or multiple source systems. Typically if a hub is loaded from three sources, the corresponding Record Tracking Satellite would track
-    the same three sources, since they apparently share the same business definition. For each source a rsrc_static must be defined, and optionally
-    the name of the hashkey column inside that source, if it deviates between sources.
-
-    Parameters:
-
-    tracked_hashkey::string
-    source_models::dictionary
-    src_ldts::string
-    src_rsrc::string
-
-#}
-
-
-
-
-
-
-
-{%- macro rec_track_sat(tracked_hashkey, source_models, src_ldts=none, src_rsrc=none) -%}
-
-    {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-
-    {{ return(adapter.dispatch('rec_track_sat', 'dbtvault_scalefree')(tracked_hashkey=tracked_hashkey,
-                                                                      source_models=source_models,
-                                                                      src_ldts=src_ldts,
-                                                                      src_rsrc=src_rsrc)) }}
-
-{%- endmacro -%}
-
-
 {%- macro default__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc) -%}
 
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
