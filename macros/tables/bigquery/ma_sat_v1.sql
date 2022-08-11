@@ -1,16 +1,3 @@
-
-{%- macro ma_sat_v1(source_sat, src_hk, src_hd, src_ma, src_ldts='ldts', ledts_alias='ledts') -%}
-
-    {{ adapter.dispatch('ma_sat_v1', 'dbtvault_scalefree')(source_sat=source_sat,
-                                         src_hk=src_hk,
-                                         src_hd=src_hd,
-                                         src_ma=src_ma,
-                                         src_ldts=src_ldts,
-                                         ledts_alias=ledts_alias) }}
-
-{%- endmacro -%}
-
-
 {%- macro default__ma_sat_v1(source_sat, src_hk, src_hd, src_ma, src_ldts, ledts_alias) -%}
     {%- set all_columns = adapter.get_columns_in_relation(ref(source_sat)) -%}
     {%- set exclude = [src_hk, src_hd, src_ma, src_ldts] -%}

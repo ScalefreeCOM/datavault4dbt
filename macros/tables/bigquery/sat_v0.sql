@@ -1,14 +1,3 @@
-{%- macro sat_v0(src_pk, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
-
-    {{ adapter.dispatch('sat_v0', 'dbtvault_scalefree')(src_pk=src_pk, 
-                                         src_hashdiff=src_hashdiff,
-                                         src_payload=src_payload,
-                                         src_ldts=src_ldts,
-                                         src_rsrc=src_rsrc,
-                                         source_model=source_model) }}
-
-{%- endmacro -%}                                         
-
 {%- macro default__sat_v0(src_pk, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
 
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}

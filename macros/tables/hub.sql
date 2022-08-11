@@ -9,6 +9,16 @@
                                 Examples:
                                     'hk_account_h'      This hashkey column was created before inside the corresponding staging area, using the stage macro.
 
+    business_keys::string|list of strings       Name(s) of the business key columns that should be loaded into the hub and are the input of the hashkey column. Needs to be
+                                                available inside the stage model. If the names differ between multiple sources, you should define here how the business keys
+                                                should be called inside the final hub model. The actual input column names need to be defined inside the 'source_model'
+                                                parameter then. 
+
+                                                Examples: 
+                                                    'account_key'                       This hub only has one business key and therefor only one is defined here.
+
+                                                    ['account_key', 'account_number']   This hub has two business keys which are both defined here.
+    
     source_models::dictionary   Dictionary with information about the source models. The keys of the dict are the names of the source models, and the value of each
                                 source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column'
                                 and 'bk_columns'.
