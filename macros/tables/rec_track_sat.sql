@@ -8,23 +8,23 @@
     Parameters:
 
     tracked_hashkey::string         The name of the hashkey column you want to track. Needs to be available in the underlying staging layer. If you want to track multiple
-                                    hashkeys out of one stage, you need to create one record tracking satellite for each hashkey. 
+                                    hashkeys out of one stage, you need to create one record tracking satellite for each hashkey.
 
                                     Examples:
                                         "hk_contact_h"              This record tracking satellite tracks the appearance of the hashkey for the contact hub.
 
                                         "hk_contact_account_l"      This record tracking satellite tracks the appearance of the hashkey for the link between contacts and accounts.
 
-    source_models::dictionary       Dictionary with information about the source model. The key of the dict is the name of the source model, and the value  
+    source_models::dictionary       Dictionary with information about the source model. The key of the dict is the name of the source model, and the value
                                     is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the key 'hk_column'.
 
-                                    Examples: 
+                                    Examples:
                                         {'stage_account': {'hk_column': 'hk_account_h',                         This record tracking satellite tracks the hashkey "hk_account_h" inside the
                                                         'rsrc_static': '*/SAP/Accounts/*'}}                     source model named "stage_account".
 
                                         {'stage_contact': {'rsrc_static': '*/SALESFORCE/Contact/*'},            This tracks the appearance of one hub hashkey that is loaded from the two source
                                         'stage_partner': {'hk_column': 'hk_partner_h',                          models "stage_contact" and "stage_partner". For "stage_account" no 'hk_column' is defined,
-                                                          'rsrc_static': '*/SALESFORCE/Partners/*'}}            and therefor the input of the upper level variable 'tracked_hashkey' will be used. 
+                                                          'rsrc_static': '*/SALESFORCE/Partners/*'}}            and therefor the input of the upper level variable 'tracked_hashkey' will be used.
                                                                                                                 For "stage_partner" the name of the hashkey column differs from the upper level definition
                                                                                                                 and therefor this other name is set under the variable 'hk_column.'
 
@@ -52,7 +52,7 @@
 {%- macro rec_track_sat(tracked_hashkey, source_models, src_ldts=none, src_rsrc=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
-    
+
     {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
 

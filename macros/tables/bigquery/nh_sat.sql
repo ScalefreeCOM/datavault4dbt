@@ -24,7 +24,7 @@ source_data AS (
 
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
-        SELECT 
+        SELECT
             MAX({{ src_ldts }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
@@ -38,26 +38,26 @@ distinct_hashkeys AS (
     SELECT DISTINCT
         {{ parent_hashkey }}
     FROM {{ this }}
-    
+
     ),
 
 {%- endif %}
 
-{# 
+{#
     Select all records from the source. If incremental, insert only records, where the
     hashkey is not already in the existing satellite.
 #}
 records_to_insert AS (
 
-    SELECT 
+    SELECT
         {{ dbtvault_scalefree.print_list(source_cols) }}
     FROM source_data
     {%- if is_incremental() %}
     WHERE {{ parent_hashkey }} NOT IN (SELECT * FROM distinct_hashkeys)
     {%- endif %}
-    
+
     )
 
-SELECT * FROM records_to_insert                      
- 
+SELECT * FROM records_to_insert
+
 {%- endmacro -%}

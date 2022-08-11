@@ -1,15 +1,15 @@
 {#
-    This macro creates a link entity, connecting two or more entities, or an entity with itself. It can be loaded by one or more source staging tables, 
-    if multiple sources share the same buisness definitions. Typically a link would only be loaded by multiple sources, if those multiple sources also 
-    share the business defintions of the hubs, and therefor load the connected hubs together aswell. If multiple sources are used, it is requried that they 
+    This macro creates a link entity, connecting two or more entities, or an entity with itself. It can be loaded by one or more source staging tables,
+    if multiple sources share the same buisness definitions. Typically a link would only be loaded by multiple sources, if those multiple sources also
+    share the business defintions of the hubs, and therefor load the connected hubs together aswell. If multiple sources are used, it is requried that they
     all have the same number of foreign keys inside, otherwise they would not share the same business definition of that link.
 
-    Parameters: 
+    Parameters:
 
     link_hashkey::string                    Name of the link hashkey column inside the stage. Should got calculated out of all business keys inside
-                                            the link. 
+                                            the link.
 
-                                            Examples: 
+                                            Examples:
                                                 'hk_account_contact_l'      This hashkey column belongs to the link between account and contact, and
                                                                             was created at the staging layer by the stage macro.
 
@@ -19,26 +19,26 @@
                                             Examples:
                                                 ['hk_account_h', 'hk_contact_h']    The link between account and contact needs to containt both the
                                                                                     hashkey of account and contact to enable joins the the corresponding
-                                                                                    hub entities. 
-    
+                                                                                    hub entities.
+
     source_models::dictionary               Dictionary with information about the source models. The keys of the dict are the names of the source models, and the value of each
                                             source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column'
                                             and 'fk_columns'.
 
-                                            Examples: 
+                                            Examples:
                                                 {'stage_account': {'fk_columns': ['hk_account_h', 'hk_contact_h'],      This would create a link loaded from only one source, which is not uncommon.
                                                                    'rsrc_static': '*/SAP/Accounts/*'}}                  It uses the model 'stage_account', and defines the same columns as 'fk_columns'
-                                                                                                                        that were defined in the attribute 'foreign_hashkeys'. Therefor it could have 
+                                                                                                                        that were defined in the attribute 'foreign_hashkeys'. Therefor it could have
                                                                                                                         been left out here.
 
                                                 {'stage_account': {'rsrc_static': '*/SAP/Accounts/*'},                  This would create a link loaded from two sources, which also is not uncommon.
-                                                 'stage_partner': {'fk_columns': ['hk_partner_h', 'hk_customer_h'],     The source model 'stage_account' has no 'fk_columns' and 'link_hk' defined, 
+                                                 'stage_partner': {'fk_columns': ['hk_partner_h', 'hk_customer_h'],     The source model 'stage_account' has no 'fk_columns' and 'link_hk' defined,
                                                                    'rsrc_static': '*/SALESFORCE/Partners/*',            therefor it uses the values set in the upper-level variables 'link_hashkey'
-                                                                   'link_hk': 'hk_partner_customer_l'}}                 and 'foreign_hashkeys'. Aditionally the model 'stage_partner' is used, with 
-                                                                                                                        the assumption that both sources share the same definition of an account, just 
-                                                                                                                        under different names. Therefor a different link hashkey column is defined as 
-                                                                                                                        'link_hk', but the number of foreign key columns defined in 'fk_columns' must be 
-                                                                                                                        the same over all sources, which is the case here. 
+                                                                   'link_hk': 'hk_partner_customer_l'}}                 and 'foreign_hashkeys'. Aditionally the model 'stage_partner' is used, with
+                                                                                                                        the assumption that both sources share the same definition of an account, just
+                                                                                                                        under different names. Therefor a different link hashkey column is defined as
+                                                                                                                        'link_hk', but the number of foreign key columns defined in 'fk_columns' must be
+                                                                                                                        the same over all sources, which is the case here.
 
                                                                                                                         The 'rsrc_static' attribute defines a STRING that will be always the same over all
                                                                                                                         loads of one source. Something like this needs to be identified for each source system,
@@ -64,7 +64,7 @@
 {%- macro link(link_hashkey, foreign_hashkeys, source_models, src_ldts=none, src_rsrc=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
-    
+
     {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
 

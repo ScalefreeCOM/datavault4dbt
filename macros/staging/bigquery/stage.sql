@@ -215,8 +215,9 @@ unknown_values AS (
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
       {%- if column.name not in exclude_column_names %}
-        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }},
-      {%- endif -%}
+        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
+        {%- if not loop.last %},{% endif -%}
+      {% endif -%}
     {% endfor %}
 
     {%- if missing_columns is not none -%},
@@ -278,8 +279,9 @@ error_values AS (
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
       {%- if column.name not in exclude_column_names %}
-        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }},
-      {%- endif -%}
+        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
+        {%- if not loop.last %},{% endif -%}
+      {% endif -%}
     {% endfor %}
 
     {%- if missing_columns is not none -%},

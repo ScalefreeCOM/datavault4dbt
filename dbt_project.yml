@@ -26,8 +26,5 @@ vars:
   dbtvault_scalefree.unknown_value_ghost_record: '(unknown)'
   dbtvault_scalefree.ldts_alias: 'ldts'
   dbtvault_scalefree.rsrc_alias: 'rsrc'
-  dbtvault_scalefree.ledts_alias: 'ledts'
-  dbtvault_scalefree.eff_from_alias: 'effective_from'
-  dbtvault_scalefree.eff_to_alias: 'effective_to'
   dbtvault_scalefree.default_unknown_rsrc: 'SYSTEM'
   dbtvault_scalefree.default_error_rsrc: 'ERROR'
