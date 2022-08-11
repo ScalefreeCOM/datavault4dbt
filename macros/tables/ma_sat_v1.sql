@@ -12,7 +12,7 @@
 
     Parameters:
 
-    sat_v0::string                              Name of the underlying version 0 satellite. 
+    sat_v0::string                              Name of the underlying version 0 satellite.
 
                                                 Examples:
                                                     'contact_phonenumber_0_s'   This satellite would be the version 1 satellite of the underlying
@@ -21,7 +21,7 @@
     hashkey::string                             Name of the parent hashkey column inside the version 0 satellite. Would either be the hashkey of a
                                                 hub or a link. Needs to be similar to the 'parent_hashkey' parameter inside the sat_v0 model.
 
-                                                Examples: 
+                                                Examples:
                                                     'hk_contact_h'          The satellite would be attached to the hub contact, which has the
                                                                             column 'hk_contact_h' as a hashkey column.
 
@@ -43,11 +43,11 @@
                                                     'phone_type'            Phone numbers are a good example for multi active data. One person could have an unlimited
                                                                             number of phone numbers, i. e. a mobile phone number, a home phone number, and a work phone
                                                                             number. Therefor a contact has one active phone number per type per ldts and the phone_type
-                                                                            uniquely identifies a record inside a hashkey+ldts combination.  
+                                                                            uniquely identifies a record inside a hashkey+ldts combination.
 
                                                     ['phone_type', 'iid']   If a contact could have multiple mobile phonenumbers, the phone_type alone would not be
-                                                                            enough to uniquely identify a record inside a hashkey+ldts combination. Additionally the attribute 
-                                                                            iid, which is an increasing identifier within a phone_type, is added as a ma_attribute. 
+                                                                            enough to uniquely identify a record inside a hashkey+ldts combination. Additionally the attribute
+                                                                            iid, which is an increasing identifier within a phone_type, is added as a ma_attribute.
 
 
     src_ldts::string                            Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
@@ -57,14 +57,14 @@
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
     ledts_alias::string                         Desired alias for the load end date column. Is optional, will use the global variable 'dbtvault_scalefree.ledts_alias' if
-                                                set here.  
+                                                set here.
 
 #}
 
 {%- macro ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts=none, ledts_alias=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
-    
+
     {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
     {%- set src_ledts = dbtvault_scalefree.replace_standard(src_ledts, 'dbtvault_scalefree.ledts_alias', 'ledts') -%}
