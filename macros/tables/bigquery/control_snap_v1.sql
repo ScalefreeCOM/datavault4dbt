@@ -64,11 +64,8 @@ virtual_logic AS (
                 {%- endif -%}
             {%- endif %}
 
-            {%- if ns.forever_status != 'TRUE' and log_logic.keys()|length > 1 %}
-            OR  
-            {% endif -%}
-
             {%- if 'weekly' in log_logic.keys() %}
+            OR
                 {%- if log_logic['weekly']['forever'] == 'TRUE' -%}
                     {%- set ns.forever_status = 'TRUE' -%}
                     (c.is_weekly = TRUE)
@@ -85,11 +82,8 @@ virtual_logic AS (
                 {%- endif -%}
             {% endif -%}
 
-            {%- if ns.forever_status != 'TRUE' and log_logic.keys()|length > 1 %}
-            OR  
-            {% endif -%}
-
             {%- if 'monthly' in log_logic.keys() %}
+            OR
                 {%- if log_logic['monthly']['forever'] == 'TRUE' -%}
                     {%- set ns.forever_status = 'TRUE' -%}
                     (c.is_monthly = TRUE)
@@ -106,11 +100,8 @@ virtual_logic AS (
                 {%- endif -%}
             {% endif -%}
 
-            {%- if ns.forever_status != 'TRUE' and log_logic.keys()|length > 1 %}
-            OR  
-            {% endif -%}
-
             {%- if 'yearly' in log_logic.keys() %}
+            OR
                 {%- if log_logic['yearly']['forever'] == 'TRUE' -%}
                     {%- set ns.forever_status = 'TRUE' -%}
                     (c.is_yearly = TRUE)
@@ -138,7 +129,6 @@ virtual_logic AS (
         END AS islatest,
 
         c.caption,
-        c.is_realtime,
         c.is_hourly,
         c.is_daily,
         c.is_weekly,

@@ -34,7 +34,7 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_hourly,
         CASE
-            WHEN is_hourly and EXTRACT(HOUR FROM sdts) = 0 THEN TRUE
+            WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 AND EXTRACT(HOUR FROM sdts) = 0 THEN TRUE
             ELSE FALSE
         END as is_daily,
         CASE

@@ -30,9 +30,35 @@
         log_logic::dictionary               Defining the desired durations of each granularity. Available granularities
                                             are 'daily', 'weekly', 'monthly', and 'yearly'. For each granularity the
                                             duration can be defined as an integer, and the time unit for that duration. 
-                                            The units include: 
+                                            The units include (in BigQuery): DAY, WEEK, MONTH, QUARTER, YEAR. Besides
+                                            defining a duration and a unit for each granularity, there is also the option
+                                            to set a granularity to 'forever'. E.g. reporting requires daily snapshots
+                                            for 3 months, and after that the monthly snapshots should be kept forever.
 
+                                            If log_logic is not set, no logic will be applied, and all snapshots will stay
+                                            active. The other dynamic columns are calculated anyway. 
+
+                                            The duration is always counted from the current date. 
+
+                                            Examples:
+                                                {'daily': {'duration': 3,               This configuration would keep daily
+                                                            'unit': 'MONTH',            snapshots for 3 months, weekly snapshots
+                                                            'forever': 'FALSE'},          for 1 year, monthly snapshots for 5
+                                                'weekly': {'duration': 1,               years and yearly snapshots forever. 
+                                                            'unit': 'YEAR'},            If 'forever' is not defined here, it 
+                                                'monthly': {'duration': 5,              is automatically set to 'FALSE'.
+                                                            'unit': 'YEAR'},            Therefor it could have been left out
+                                                'yearly': {'forever': 'TRUE'} }         in the configurtaion for daily snapshots.
+
+                                                {'daily': {'duration': 90,              This would keep daily snapshots for 90
+                                                           'unit': 'DAY'},              days, and monthly snapshots forever.
+                                                 'monthly': {'forever': 'TRUE'}}
                                         
-
-
 #}
+
+{%- macro control_snap_v1(control_snap_v0, log_logic=none) -%}
+
+{{ return(adapter.dispatch('control_snap_v1', 'dbtvault_scalefree')(control_snap_v0=control_snap_v0,
+                                                                    log_logic=log_logic)) }}
+
+{%- endmacro -%}                                                                    

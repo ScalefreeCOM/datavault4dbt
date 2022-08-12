@@ -29,7 +29,7 @@ stage AS (
 {%- if is_incremental() %}
 
 {#
-    Get the latest record for each driving key, already existing in eff_sat. Only applied if incremental.
+    Get the latest record for each driving key, already existing in eff_sat and included in incoming batch. Only applied if incremental.
 #}
 
 latest_record AS (
@@ -52,9 +52,9 @@ latest_record AS (
 #}
 stage_new AS (
     SELECT
-        {{ dbtvault.prefix(source_cols, 'stage') }}
-    ,   LEAD({{ dbtvault.prefix([src_ldts], 'stage') }}) OVER (PARTITION BY {{ dbtvault.prefix([driving_key], 'stage') }} ORDER BY {{ dbtvault.prefix([src_ldts], 'stage') }}) AS src_ldts_lead
-    ,   ROW_NUMBER() OVER (PARTITION BY {{ dbtvault.prefix([driving_key], 'stage') }} ORDER BY {{ dbtvault.prefix([src_ldts], 'stage') }}) as stage_rank
+        {{ dbtvault.prefix(source_cols, 'stage') }},
+        LEAD({{ dbtvault.prefix([src_ldts], 'stage') }}) OVER (PARTITION BY {{ dbtvault.prefix([driving_key], 'stage') }} ORDER BY {{ dbtvault.prefix([src_ldts], 'stage') }}) AS src_ldts_lead,
+        ROW_NUMBER() OVER (PARTITION BY {{ dbtvault.prefix([driving_key], 'stage') }} ORDER BY {{ dbtvault.prefix([src_ldts], 'stage') }}) as stage_rank,
     FROM stage
     {%- if is_incremental() %}
     LEFT JOIN latest_record
