@@ -5,6 +5,13 @@
     the same three sources, since they apparently share the same business definition. For each source a rsrc_static must be defined, and optionally
     the name of the hashkey column inside that source, if it deviates between sources.
 
+    Features:
+        - Tracks the appearance of a specific hashkey in one or more staging areas
+        - Allows source mappings for deviations between the hashkey name inside the stages and the target
+        - Supports mutliple updates per batch and therefor initial loading
+        - Using a dynamic high-water-mark to optimize loading performance of multiple loads
+        - Can either track link- or hub-hashkeys
+
     Parameters:
 
     tracked_hashkey::string         The name of the hashkey column you want to track. Needs to be available in the underlying staging layer. If you want to track multiple

@@ -4,6 +4,12 @@
     share the business defintions of the hubs, and therefor load the connected hubs together aswell. If multiple sources are used, it is requried that they 
     all have the same number of foreign keys inside, otherwise they would not share the same business definition of that link.
 
+    Features:
+        - Loadable by multiple sources
+        - Supports multiple updates per batch and therefor initial loading
+        - Using a dynamic high-water-mark to optimize loading performance of multiple loads
+        - Allows source mappings for deviations between source column names and hub column names
+
     Parameters: 
 
     link_hashkey::string                    Name of the link hashkey column inside the stage. Should got calculated out of all business keys inside

@@ -3,6 +3,10 @@
     usage in the PIT tables, and only virtualized to follow the insert-only approach. Usually one version 1 sat would
     be created for each version 0 sat. A version 1 satellite should be materialized as a view by default. 
 
+    Features: 
+        - Calculating a virtualized load-end-date on top of a version 0 satellite
+        - Enforces insert-only approach without loosing time ranges for business vault entities
+
     Parameters:
 
     sat_v0::string              Name of the underlying version 0 satellite. 

@@ -8,6 +8,10 @@
     and the required computation inside all PITs and Bridges. This logic is optional and would be captured in a
     boolean column called 'is_active'.
 
+    Whenever a logarithmic snapshot logic is used and picked up by PIT tables, a logic is required that deletes
+    records out of PIT tables, that are no longer active. For this a post_hook called "clean_up_pit" is provided
+    in this package, that should be applied for each PIT table.
+
     In addition to that, a few other dynamic columns are generated:
 
         is_latest::boolean                  Captures if a sdts is the latest one inside the snapshot table. There

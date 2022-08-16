@@ -4,6 +4,9 @@
     satellite applies the same loading logic as a regular version 0 satellite.
     Each satellite can only be loaded by one source model, since we typically recommend a satellite split by source system.
 
+    Features:
+        - High-Perfomance loading of non-historized satellite data
+        
     Parameters: 
 
     parent_hashkey::string          Name of the hashkey column inside the stage of the object that this satellite is attached to.

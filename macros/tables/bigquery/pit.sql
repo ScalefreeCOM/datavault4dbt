@@ -11,12 +11,24 @@
 
 WITH 
 
+{%- if is_incremental() %}
+
+existing_dimension_keys AS (
+
+    SELECT
+        {{ dimension_key }}
+    FROM {{ this }}
+
+),
+
+{%- endif %}
+
 pit_records AS (
     
     SELECT
-        '{{ pit_type }}' as type,
+        {{ dbtvault_scalefree.as_constant(pit_type) }} as type,
         '{{ custom_rsrc }}' as {{ rsrc }},
-        {{ dbtvault_scalefree.hash(columns=[dbtvault_scalefree.prefix([hashkey], 'te'), dbtvault_scalefree.prefix(['sdts'], 'snap')],
+        {{ dbtvault_scalefree.hash(columns=[dbtvault_scalefree.as_constant(pit_type), dbtvault_scalefree.prefix([hashkey], 'te'), dbtvault_scalefree.prefix(['sdts'], 'snap')],
                     alias=dimension_key,
                     is_hashdiff=false)   }} ,
         te.{{ hashkey }},
@@ -32,14 +44,6 @@ pit_records AS (
         FULL OUTER JOIN 
             {{ ref(snapshot_relation) }} snap
             ON snap.{{ snapshot_trigger_column }} = true
-        {%- if is_incremental() %}
-        LEFT JOIN 
-            {{ this }} bp 
-            ON
-                bp.{{ hashkey }} = te.{{ hashkey }} 
-                AND bp.sdts = snap.sdts 
-                AND bp.type = '{{ pit_type }}'
-        {% endif -%}
         {% for satellite in sat_names %}
         {%- set sat_columns = dbtvault_scalefree.source_columns(ref(satellite)) %}
         LEFT JOIN {{ ref(satellite) }}
@@ -50,14 +54,20 @@ pit_records AS (
                 {%- endif -%}
         {% endfor %}            
     WHERE snap.{{ snapshot_trigger_column }}
+
+),
+
+records_to_insert AS (
+    
+    SELECT
+        *
+    FROM pit_records
     {%- if is_incremental() %}
-        AND bp.{{ hashkey }} IS NULL
-        AND bp.sdts IS NULL
-        AND bp.type IS NULL
-    {% endif -%}    
+    WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
+    {% endif -%}
 
 )
 
-SELECT * FROM pit_records
+SELECT * FROM records_to_insert
 
 {%- endmacro -%}

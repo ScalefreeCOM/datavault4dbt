@@ -3,6 +3,11 @@
     version 0. This model is best materialized as a view, because otherwise it would require updates. For each version 0
     effectivity satellite for a link, one version 1 effectivity satellite should be created. 
 
+    Features:
+        - Calculates virtualized effectivity ranges based on a version 0 eff_sat_link
+        - Enforces insert-only-approach by view materialization
+        - Allows aliasing the effectivity range columns
+
     Parameters: 
 
     eff_sat_link_v0::string                     The name of the underlying version 0 effectivity satellite model.
