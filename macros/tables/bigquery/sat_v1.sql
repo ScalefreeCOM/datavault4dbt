@@ -1,4 +1,4 @@
-{%- macro default__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias) -%}
+{%- macro default__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
 
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
@@ -19,7 +19,7 @@ WITH
 
 {# Calculate ledts based on the ldts of the earlier record. #}
 end_dated_source AS (
-    
+
     SELECT
         {{ hashkey }},
         {{ src_rsrc }},

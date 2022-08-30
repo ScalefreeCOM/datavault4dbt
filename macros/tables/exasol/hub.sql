@@ -8,7 +8,7 @@
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
 
-{%- for source_model in source_models.keys() %}    
+{%- for source_model in source_models.keys() %}
 
     {%- set bk_column_input = source_models[source_model]['bk_column'] -%}
 
@@ -33,6 +33,7 @@
 
 {%- set final_columns_to_select = [hashkey] + ns.bk_columns + [src_ldts] + [src_rsrc] -%}
 {%- set ns_2 = namespace(rsrc_static_queries={}) %}
+
 {{ dbtvault_scalefree.prepend_generated_by() }}
 
 WITH
@@ -40,7 +41,7 @@ WITH
 
 {% if is_incremental() -%}
 distinct_target_hashkeys AS (
-    
+
     SELECT DISTINCT
         {{ hashkey }}
     FROM {{ this }}
@@ -59,7 +60,7 @@ distinct_target_hashkeys AS (
     {% endset %}
 
     rsrc_static_{{ source_number }} AS (
-        
+
         SELECT {{ this }}.*,
         '{{ rsrc_static }}' AS rsrc_static
         FROM {{ this }}
@@ -107,7 +108,7 @@ max_ldts_per_rsrc_static_in_target AS (
     WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
     GROUP BY rsrc_static
 
-), 
+),
 {% endif -%}
 
 {% for source_model in source_models.keys() %}
@@ -124,7 +125,7 @@ max_ldts_per_rsrc_static_in_target AS (
 
     src_new_{{ source_number }} AS (
 
-        SELECT 
+        SELECT
             {{ hk_column }} AS {{ hashkey }},
 
             {% for bk in source_models[source_model]['bk_column']|list -%}
@@ -137,7 +138,7 @@ max_ldts_per_rsrc_static_in_target AS (
         FROM {{ ref(source_model) }} src
 
         {%- if is_incremental() and ns_2.rsrc_static_queries[source_model] %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max 
+        INNER JOIN max_ldts_per_rsrc_static_in_target max
             ON max.rsrc_static = '{{ rsrc_static }}'
         WHERE src.{{ src_ldts }} > max.max_ldts
         {%- endif %}
@@ -195,7 +196,7 @@ earliest_hk_over_all_sources AS (
 
 records_to_insert AS (
 
-    SELECT 
+    SELECT
         {{ dbtvault_scalefree.print_list(final_columns_to_select) }}
     FROM {{ ns.last_cte }}
 

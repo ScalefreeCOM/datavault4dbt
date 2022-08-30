@@ -24,6 +24,7 @@ vars:
   dbtvault_scalefree.hashdiff_input_case_sensitive: TRUE
   dbtvault_scalefree.ldts_alias: 'ldts'
   dbtvault_scalefree.rsrc_alias: 'rsrc'
+  dbtvault_scalefree.rsrc_default_dtype: 'VARCHAR (200) UTF8'
   dbtvault_scalefree.default_unknown_rsrc: 'SYSTEM'
   dbtvault_scalefree.default_error_rsrc: 'ERROR'
   dbtvault_scalefree.error_value__VARCHAR_ghost_record: '(error)'

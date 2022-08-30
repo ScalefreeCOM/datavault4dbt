@@ -1,5 +1,5 @@
 {#
-    This macro creates a non-historized (former transactional) link entity, connecting two or more entities, or an entity with itself. It can be loaded by one or
+    This macro creates a non-historized (former transactional) link entity, connecting two or more entities, or a transactional fact of one entity. It can be loaded by one or
     more source staging tables, if multiple sources share the same buisness definitions. If multiple sources are used, it is requried that they all have the same
     number of foreign keys inside, otherwise they would not share the same business definition of that non-historized link.
 
@@ -36,8 +36,8 @@
                                                                                                                         'amount', 'purpose' and 'transaction_date'.
 
     source_models::dictionary               Dictionary with information about the source models. The keys of the dict are the names of the source models, and the value of each
-                                            source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column',
-                                            'fk_columns' and 'payload'.
+                                            source model is another dictionary. This inner dictionary optionally has the keys 'hk_column',
+                                            'fk_columns', 'payload' and 'rsrc_static'.
 
                                             Examples:
                                                 {'stage_account': {'fk_columns': ['hk_account_h', 'hk_contact_h'],      This would create a link loaded from only one source, which is not uncommon.
@@ -67,7 +67,9 @@
                                                                                                                         macro won't use the rsrc_static at all to do the look up in target. Therefore, if there are multiple
                                                                                                                         source models defined, if there is a desire to execute this macro with the performance look up for the
                                                                                                                         rsrc_static, then this parameter has to be defined for every source model that is defined.
-                                                                                                                        Sometimes the record source column includes the ldts of each load and could look something
+                                                                                                                        Something like this needs to be identified for each source system,
+                                                                                                                        and strongly depends on the actual content of the record source column inside the stage model.
+                                                                                                                        Sometimes the rsrc column includes the ldts of each load and could look something
                                                                                                                         like this: 'SALESFORCE/Partners/2022-01-01T07:00:00'. Obviously the timestamp part
                                                                                                                         inside that rsrc would change from load to load, and we now need to identify parts of
                                                                                                                         it that will be static over all loads. Here it would be 'SALESFORCE/Partners'. This static
@@ -76,6 +78,7 @@
                                                                                                                         If the record source is the same over all loads, then it might look something like
                                                                                                                         this: 'SAP/Accounts/'. Here everything would be static over all loads and
                                                                                                                         therefore the rsrc_static would be set to 'SAP/Accounts/' without any wildcards in place.
+
 
     src_ldts::string                        Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
                                             Needs to use the same column name as defined as alias inside the staging model.

@@ -31,31 +31,35 @@ source_data AS (
     {%- endif %}
 ),
 
-{% if is_incremental() -%}
 {# Get the latest record for each parent hashkey in existing sat, if incremental. #}
 latest_entries_in_sat AS (
 
     SELECT
-        {{ parent_hashkey }},
-        {{ src_hashdiff }}
-    FROM {{ this }}
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1
-    
-    ),
+        {{ dbtvault_scalefree.print_list(source_cols) }}
+    FROM {{ source_relation }}
 
-{%- endif %}
+    {%- if is_incremental() %}
+    WHERE {{ src_ldts }} > (
+        SELECT
+            MAX({{ src_ldts }}) FROM {{ this }}
+        WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    )
+    {%- endif %}
+),
 
-{# 
-    Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each hashkey. 
-    Additionally adding a row number based on that order, if incremental. 
+
+
+{#
+    Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each hashkey.
+    Additionally adding a row number based on that order, if incremental.
 #}
 deduplicated_numbered_source AS (
 
-    SELECT 
+    SELECT
         {{ dbtvault_scalefree.print_list(source_cols) }}
     {% if is_incremental() %}
         ,ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) as rn,
-    {%- endif -%}
+    {%- endif %}
     FROM source_data   
     QUALIFY 
         CASE
@@ -64,13 +68,13 @@ deduplicated_numbered_source AS (
         END     
 ),
 
-{# 
+{#
     Select all records from the previous CTE. If incremental, compare the oldest incoming entry to
-    the existing records in the satellite. 
+    the existing records in the satellite.
 #}
 records_to_insert AS (
 
-    SELECT 
+    SELECT
         {{ dbtvault_scalefree.print_list(source_cols) }}
     FROM deduplicated_numbered_source
     {%- if is_incremental() %}
@@ -84,6 +88,7 @@ records_to_insert AS (
     
     )
 
-SELECT * FROM records_to_insert                      
- 
+
+SELECT * FROM records_to_insert
+
 {%- endmacro -%}
