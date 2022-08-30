@@ -4,6 +4,12 @@
     version 0 satellite, that would then hold multiple records per hashkey+ldts combination. You have to identify one or more attributes
     inside the source, that in combination with the hashkey/business key will uniquely identify a record.
 
+    Features: 
+        - Applies a multi-active logic on top of a regular version 0 satellite
+        - Calculates virtualized load-end-dates to correctly identify multiple active records per batch
+        - Enforces insert-only approach by view materialization
+        - Allows multiple attributes to be used as the multi-active-attribute
+
     Parameters:
 
     sat_v0::string                              Name of the underlying version 0 satellite.

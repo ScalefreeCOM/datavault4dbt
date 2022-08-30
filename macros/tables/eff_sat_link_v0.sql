@@ -4,6 +4,14 @@
     This version is the 0 version, because it does not include virtualized effectivity time ranges. For that you should create
     one version 1 effectivity satellite for each version 0 effectivity satellite using the eff_sat_link_v1 macro.
 
+    
+    Features: 
+        - Calculates an 'is_active' flag, based on the assumption that only one relationship per driving key can be active at the same time
+        - Delivers the base to calculate effectivity ranges in the version 1 effectivity satellite
+        - Supports multiple updates per batch and therefor initial loading
+        - Using a dynamic high-water-mark to optimize loading performance of multiple loads
+        - Allows the driving key to hold mutliple keys of a relationship
+
     Parameters:
 
     link_hashkey::string                        Name of the hashkey column inside the stage, that represents the primary key of the link.

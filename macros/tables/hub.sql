@@ -2,6 +2,12 @@
     This macro creates a Hub entity based on one or more stage models. The macro requires an input source model similar to the output
     of the dbtvault-scalefree stage macro. So by default the stage models would be used as source models for hubs.
 
+    Features:
+        - Loadable by multiple sources
+        - Supports multiple updates per batch and therefor initial loading
+        - Using a dynamic high-water-mark to optimize loading performance of multiple loads
+        - Allows source mappings for deviations between source column names and hub column names
+        
     Parameters:
 
     hashkey::string             Name of the hashkey column inside the stage, that should be used as PK of the Hub.
