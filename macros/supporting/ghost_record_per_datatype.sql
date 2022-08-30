@@ -41,8 +41,8 @@
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 {%- set unknown_value__VARCHAR_ghost_record = var('dbtvault_scalefree.unknown_value__VARCHAR_ghost_record', '(unknown)') -%}
 {%- set error_value__VARCHAR_ghost_record = var('dbtvault_scalefree.error_value__VARCHAR_ghost_record', '(error)') -%}
-{%- set unknown_value_alt__VARCHAR_ghost_record = var('dbtvault_scalefree.unknown_value_alt__VARCHAR_ghost_record', 'u') |string -%}
-{%- set error_value_alt__VARCHAR_ghost_record = var('dbtvault_scalefree.error_value_alt__VARCHAR_ghost_record', 'e') |string -%}
+{%- set unknown_value_alt__VARCHAR_ghost_record = var('dbtvault_scalefree.unknown_value_alt__VARCHAR_ghost_record', 'u')  -%}
+{%- set error_value_alt__VARCHAR_ghost_record = var('dbtvault_scalefree.error_value_alt__VARCHAR_ghost_record', 'e')  -%}
 {%- set format_date = var('dbtvault_scalefree.format_date', 'YYYY-mm-dd') -%}
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5')-%}
 {%- set hash_alg, unknown_value__HASHTYPE_ghost_record, error_value__HASHTYPE_ghost_record = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}

@@ -4,7 +4,6 @@
                 source_model,
                 hashed_columns,
                 derived_columns,
-                ranked_columns,
                 sequence,
                 prejoined_columns,
                 missing_columns) -%}
@@ -48,11 +47,11 @@
 {%- set load_datetime_col_name = ldts.alias -%}
 {%- set record_source_col_name = rsrc.alias -%}
 
-{%- if dbtvault_scalefree.is_attribute(ldts.value) -%}
+{%- if dbtvault_scalefree.is_attribute(ldts.value) and ldts.value == ldts.alias -%}
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts.value]  -%}
 {%- endif %}
 
-{%- if dbtvault_scalefree.is_attribute(rsrc.value) -%}
+{%- if dbtvault_scalefree.is_attribute(rsrc.value) and rsrc.value == rsrc.alias -%}
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc.value] -%}
 {%- endif %}
 
@@ -68,7 +67,9 @@
 {%- set hashed_column_names = dbtvault_scalefree.extract_column_names(hashed_columns) -%}
 {%- set prejoined_column_names = dbtvault_scalefree.extract_column_names(prejoined_columns) -%}
 {%- set missing_column_names = dbtvault_scalefree.extract_column_names(missing_columns) -%}
+
 {%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
+
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
 
 
@@ -114,10 +115,13 @@
 {% set error_value_rsrc = var('dbtvault_scalefree.error_value_rsrc', 'ERROR') %}
 {% set unknown_value_rsrc = var('dbtvault_scalefree.unknown_value_rsrc', 'SYSTEM') %}
 
+{# Setting the rsrc default datatype and length #}
+{% set rsrc_default_dtype = var('dbtvault_scalefree.rsrc_default_dtype', 'VARCHAR (2000000) UTF8') %}
+
 WITH
 
 source_data AS (
-    SELECT
+    SELECT DISTINCT
 
     {{- "\n\n    " ~ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
 
@@ -135,7 +139,7 @@ ldts_rsrc_data AS (
   SELECT
 
   {{ ldts }} AS {{ load_datetime_col_name}},
-  {{ rsrc }} AS {{record_source_col_name}},
+  CAST( {{ rsrc }} as {{ rsrc_default_dtype }} ) AS {{ record_source_col_name }},
   {% if sequence is not none -%}
     {{ sequence }} AS edwSequence,
     {%- set alias_columns = alias_columns + ['edwSequence'] -%}
@@ -219,7 +223,8 @@ hashed_columns AS (
     {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
 
     {% set processed_hash_columns = dbtvault_scalefree.process_hash_column_excludes(hashed_columns) -%}
-    {{- dbtvault_scalefree.hash_columns(columns=processed_hash_columns) | indent(4) }}
+
+    {{ dbtvault_scalefree.hash_columns(columns=processed_hash_columns) | indent(4) }}
 
     FROM {{ last_cte }}
     {%- set last_cte = "hashed_columns" -%}
@@ -230,9 +235,8 @@ hashed_columns AS (
 unknown_values AS (
     SELECT
 
-
     {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ load_datetime_col_name }},
-    '{{ unknown_value_rsrc }}' as {{record_source_col_name}},
+    '{{ unknown_value_rsrc }}' as {{ record_source_col_name }},
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {% for column in columns_without_excluded_columns -%}
           {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
