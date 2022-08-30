@@ -5,7 +5,7 @@
     Features:
         - Loadable by multiple sources
         - Supports multiple updates per batch and therefor initial loading
-        - Using a dynamic high-water-mark to optimize loading performance of multiple loads
+        - Can use a dynamic high-water-mark to optimize loading performance of multiple loads
         - Allows source mappings for deviations between source column names and hub column names
         
     Parameters:
@@ -28,8 +28,8 @@
  
 
     source_models::dictionary   Dictionary with information about the source models. The keys of the dict are the names of the source models, and the value of each
-                                source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column'
-                                and 'bk_columns'.
+                                source model is another dictionary. This inner dictionary requires the key 'bk_columns' to be set (which contains the name of the business keys of that source model),
+                                and can have the optional keys 'hk_column', 'rsrc_static'.
 
                                 Examples:
                                     {'stage_account': {'bk_columns': ['account_number', 'account_key'],     This would create a hub loaded from only one source, which is not uncommon.
@@ -67,7 +67,7 @@
                                                                                                             the variable part of the rsrc values.
                                                                                                             If the record source is the same over all loads, then it might look something like
                                                                                                             this: 'SAP/Accounts/'. Here everything would be static over all loads and
-                                                                                                            therefore the rsrc_static would be set to 'SAP/Accounts/' without any wildcards in place.
+                                                                                                            therefore the rsrc_static can be set to 'SAP/Accounts/' without any wildcards in place.
 
     src_ldts::string            Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
                                 Needs to use the same column name as defined as alias inside the staging model.
