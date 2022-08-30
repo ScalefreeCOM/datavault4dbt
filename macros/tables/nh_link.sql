@@ -8,7 +8,7 @@
     Features:
         - Loadable by multiple sources
         - Supports multiple updates per batch and therefor initial loading
-        - Using a dynamic high-water-mark to optimize loading performance of multiple loads
+        - Can use a dynamic high-water-mark to optimize loading performance of multiple loads
         - Allows source mappings for deviations between source column names and nh-link column names
 
     Parameters: 

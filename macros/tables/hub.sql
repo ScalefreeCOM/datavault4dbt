@@ -5,7 +5,7 @@
     Features:
         - Loadable by multiple sources
         - Supports multiple updates per batch and therefor initial loading
-        - Using a dynamic high-water-mark to optimize loading performance of multiple loads
+        - Can use a dynamic high-water-mark to optimize loading performance of multiple loads
         - Allows source mappings for deviations between source column names and hub column names
         
     Parameters:
@@ -16,8 +16,8 @@
                                     'hk_account_h'      This hashkey column was created before inside the corresponding staging area, using the stage macro.
 
     source_models::dictionary   Dictionary with information about the source models. The keys of the dict are the names of the source models, and the value of each
-                                source model is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the keys 'hk_column'
-                                and 'bk_columns'.
+                                source model is another dictionary. This inner dictionary requires the key 'bk_columns' to be set (which contains the name of the business keys of that source model),
+                                and can have the optional keys 'hk_column', 'rsrc_static'.
 
                                 Examples:
                                     {'stage_account': {'bk_columns': ['account_number', 'account_key'],     This would create a hub loaded from only one source, which is not uncommon.
@@ -37,8 +37,16 @@
                                                                                                             under 'hk_column'. If it would not be defined, the macro would always search for
                                                                                                             a column called similar to the 'hashkey' parameter defined one level above.
 
-                                                                                                            The 'rsrc_static' attribute defines a STRING that will be always the same over all
-                                                                                                            loads of one source. Something like this needs to be identified for each source system,
+                                                                                                            The 'rsrc_static' attribute defines a STRING or a list of strings which contains the part
+                                                                                                            of the record_source field that remains the same over the loads of one source.
+                                                                                                            If a list of strings is defined that means that the record_source may have different patterns
+                                                                                                            coming from the same source system. For example a source may be generating files with the pattern
+                                                                                                            '{file_id}-{timestamp}-source.txt' or with the pattern '{file_id}-{timestamp}-{store_id}-source.csv'
+                                                                                                            Those two patterns must be included then in the rsrc_static with the appropriate regex and wildcards in place.
+                                                                                                            If the model has two source models as input and only one source model defines a rsrc_static, then this
+                                                                                                            macro won't use the rsrc_static at all to do the look up in target. Therefore, if there are multiple
+                                                                                                            source models defined, if there is a desire to execute this macro with the performance look up for the
+                                                                                                            rsrc_static, then this parameter has to be defined for every source model that is defined. Something like this needs to be identified for each source system,
                                                                                                             and strongly depends on the actual content of the rsrc column inside the stage.
                                                                                                             Sometimes the rsrc column includes the ldts of each load and could look something
                                                                                                             like this: 'SALESFORCE/Partners/2022-01-01T07:00:00'. Obviously the timestamp part
