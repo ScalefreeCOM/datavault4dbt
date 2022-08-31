@@ -105,7 +105,7 @@
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 
 {# Setting the error/unknown value for the record source  for the ghost records#}
-{% set error_value_rsrc = var('dbtvault_scalefree.default_error_rsrc', 'ERROR') %}
+{% set error_value_rsrc = var('dbtvault_scalefree.default_unknown_rsrc', 'ERROR') %}
 {% set unknown_value_rsrc = var('dbtvault_scalefree.default_unknown_rsrc', 'SYSTEM') %}
 
 {# Setting the rsrc default datatype and length #}

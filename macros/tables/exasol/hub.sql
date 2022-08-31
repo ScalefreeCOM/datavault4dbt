@@ -16,6 +16,7 @@
 
 {%- set business_keys = dbtvault_scalefree.expand_column_list(columns=[business_keys]) -%}
 
+{# If no specific bk_columns is defined for each source, we apply the values set in the business_keys variable. #}
 {# If no specific hk_column is defined for each source, we apply the values set in the hashkey variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
