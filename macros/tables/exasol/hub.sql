@@ -1,28 +1,37 @@
 
-{%- macro exasol__hub(hashkey, src_ldts, src_rsrc, source_models) -%}
+{%- macro exasol__hub(hashkey, business_keys, src_ldts, src_rsrc, source_models) -%}
 
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 
-{%- set ns = namespace(last_cte= "", bk_columns = [], source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
+{%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {%- if source_models is not mapping -%}
     {%- if execute -%}
-        {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model, having the key 'bk_column' and optionals 'hk_column' and 'rsrc_static'.") }}
+        {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model.") }}
     {%- endif %}
 {%- endif -%}
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
+
+{%- set business_keys = dbtvault_scalefree.expand_column_list(columns=[business_keys]) -%}
+
 {# If no specific hk_column is defined for each source, we apply the values set in the hashkey variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
 {%- for source_model in source_models.keys() %}
 
-    {%- set bk_column_input = source_models[source_model]['bk_column'] -%}
+    {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
 
-    {%- if not (bk_column_input is iterable and bk_column_input is not string) -%}
+    {%- if 'bk_columns' is not in source_models[source_model].keys() -%}
         {%- set bk_column_input = [bk_column_input] -%}
-        {%- do source_models[source_model].update({'bk_column': bk_column_input}) -%}
+        {%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
+
+    {%- elif not dbtvault_scalefree.is_list(bk_column_input) -%}
+
+        {%- set bk_list = dbtvault_scalefree.expand_column_list(columns=[bk_column_input]) -%}
+        {%- do source_models[source_model].update({'bk_columns': bk_list}) -%}
+
     {%- endif -%}
 
     {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
@@ -45,13 +54,9 @@
 
     {%- endif -%}
 
-    {%- if ns.bk_columns != bk_column_input -%}
-        {% set ns.bk_columns = ns.bk_columns + bk_column_input %}
-    {%- endif -%}
-
 {% endfor %}
 
-{%- set final_columns_to_select = [hashkey] + ns.bk_columns + [src_ldts] + [src_rsrc] -%}
+{%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] -%}
 
 {{ dbtvault_scalefree.prepend_generated_by() }}
 
@@ -160,7 +165,7 @@ WITH
         SELECT
             {{ hk_column }} AS {{ hashkey }},
 
-            {% for bk in source_models[source_model]['bk_column']|list %}
+            {% for bk in source_models[source_model]['bk_columns']  %}
             {{ bk }},
             {% endfor -%}
 
@@ -196,8 +201,8 @@ source_new_union AS (
     SELECT
         {{ hashkey }},
 
-        {% for bk in source_models[source_model]['bk_column']|list %}
-            {{ bk }} AS {{ ns.bk_columns[loop.index - 1] }},
+        {% for bk in source_models[source_model]['bk_columns']  %}
+            {{ bk }} AS {{ business_keys[loop.index - 1] }},
         {% endfor -%}
 
         {{ src_ldts }},
