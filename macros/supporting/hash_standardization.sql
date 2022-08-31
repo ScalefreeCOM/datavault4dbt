@@ -3,18 +3,6 @@
 {% endmacro %}
 {%- macro default__attribute_standardise() -%}
 
-{{ return(adapter.dispatch('attribute_standardise', 'dbtvault_scalefree')()) }}
-
-{%- endmacro -%}
-
-{%- macro default__attribute_standardise() -%}
-
-CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\', r'\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
-
-{%- endmacro -%}
-
-{%- macro snowflake__attribute_standardise() -%}
-
 CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\', r'\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
 
 {%- endmacro -%}

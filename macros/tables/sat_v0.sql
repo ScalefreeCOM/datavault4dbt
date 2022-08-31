@@ -4,10 +4,6 @@
     1 satellite should be created, using the sat_v1 macro. This extends the v0 satellite by a virtually calculated load end date.
     Each satellite can only be loaded by one source model, since we typically recommend a satellite split by source system.
 
-    Features:
-        - Can handle multiple updates per batch, without loosing intermediate changes. Therefor initial loading is supported.
-        - Using a dynamic high-water-mark to optimize loading performance of multiple loads
-        
     Parameters:
 
     parent_hashkey::string          Name of the hashkey column inside the stage of the object that this satellite is attached to.
