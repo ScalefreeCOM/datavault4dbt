@@ -6,7 +6,7 @@
 
 {%- set yaml_metadata -%}
 source_model: "stage_opportunity" 
-src_pk: "hk_opportunity_h"
+parent_hashkey: "hk_opportunity_h"
 src_hashdiff: 'hd_opportunity_data_sfdc_lrn_s'
 src_payload:
   - encryption_key__c
@@ -25,7 +25,7 @@ src_ldts: "ldts"
 
 {% set metadata_dict = fromyaml(yaml_metadata) %}
 
-{{ sat_v0(src_pk=metadata_dict["src_pk"],
+{{ sat_v0(parent_hashkey=metadata_dict["parent_hashkey"],
                 src_hashdiff=metadata_dict["src_hashdiff"],
                 src_payload=metadata_dict["src_payload"],
                 src_ldts=metadata_dict["src_ldts"],
