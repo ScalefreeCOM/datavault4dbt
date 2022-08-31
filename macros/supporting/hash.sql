@@ -22,8 +22,8 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
-
-{%- set attribute_standardise = dbtvault_scalefree.attribute_standardise() %}
+{{ log("hash: " ~ hash_alg, true ) }}
+{%- set attribute_standardise = attribute_standardise() %}
 
 
 {#- If single column to hash -#}
@@ -34,9 +34,9 @@
 {%- set all_null = [] -%}
 
 {%- if is_hashdiff -%}
-    {%- set standardise_prefix, standardise_suffix = dbtvault_scalefree.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
+    {%- set standardise_prefix, standardise_suffix = dbtvault_scalefree.concat_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
 {%- else -%}
-    {%- set standardise_prefix, standardise_suffix = dbtvault_scalefree.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
+    {%- set standardise_prefix, standardise_suffix = dbtvault_scalefree.concat_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
 {%- endif -%}
 
 
