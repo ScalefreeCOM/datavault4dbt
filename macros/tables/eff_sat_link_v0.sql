@@ -3,7 +3,6 @@
     is therefor ready for both initial loads on persistent staging areas, and incremental loads on transient staging areas.
     This version is the 0 version, because it does not include virtualized effectivity time ranges. For that you should create
     one version 1 effectivity satellite for each version 0 effectivity satellite using the eff_sat_link_v1 macro.
-<<<<<<< HEAD
     
     Features: 
         - Calculates an 'is_active' flag, based on the assumption that only one relationship per driving key can be active at the same time
@@ -11,8 +10,6 @@
         - Supports multiple updates per batch and therefor initial loading
         - Using a dynamic high-water-mark to optimize loading performance of multiple loads
         - Allows the driving key to hold mutliple keys of a relationship
-=======
->>>>>>> 36c37c1 (updates from tim and link exasol macro adaptation)
 
     Parameters:
 
@@ -21,8 +18,7 @@
                                                 Examples:
                                                     'hk_account_contact_l'  This hashkey belongs to the link between account and contact and
                                                                             was calculated before in the staging area by the stage macro.
-<<<<<<< HEAD
-    
+
     driving_key::string | list of strings       Name(s) of the driving key column(s) inside staging model. Based on this column one active row
                                                 per ldts is set.
 
@@ -34,15 +30,6 @@
                                                                                         contact hashkey would be used as a driving key. Therefor
                                                                                         for each combination of account and contact, only one 
                                                                                         relationship to other objects exists.
-=======
-
-    driving_key::string                         Name of the driving key column inside staging model. Based on this column one active row
-                                                per ldts is set.
-
-                                                Examples:
-                                                    'hk_account_h'          With this configuration, inside the link an account is always only
-                                                                            connected to one contact at a time.
->>>>>>> 36c37c1 (updates from tim and link exasol macro adaptation)
 
     secondary_fks::string | list of strings     Name(s) of all other foreign keys inside the link, called secondary foreign keys. A link ´
                                                 that connects two hubs usually has one driving key and one secondary foreign key. All foreign keys
@@ -72,16 +59,11 @@
 {%- macro eff_sat_link_v0(link_hashkey, driving_key, secondary_fks, source_model, src_ldts=none, src_rsrc=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
-<<<<<<< HEAD
     
     {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-=======
 
-    {%- if src_ldts is none -%}
-        {%- set src_ldts = var('dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- endif -%}
->>>>>>> 36c37c1 (updates from tim and link exasol macro adaptation)
+
 
 
     {{ return(adapter.dispatch('eff_sat_link_v0', 'dbtvault_scalefree')(link_hashkey=link_hashkey,
