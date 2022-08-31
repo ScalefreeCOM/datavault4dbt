@@ -5,13 +5,8 @@
 
     In the background a non-historized link uses exactly the same loading logic as a regular link, but adds the descriptive attributes as additional payload.
 
-    Features:
-        - Loadable by multiple sources
-        - Supports multiple updates per batch and therefor initial loading
-        - Can use a dynamic high-water-mark to optimize loading performance of multiple loads
-        - Allows source mappings for deviations between source column names and nh-link column names
+    Parameters:
 
-    Parameters: 
     link_hashkey::string                    Name of the non-historized link hashkey column inside the stage. Should got calculated out of all business keys inside
                                             the link.
 
@@ -41,7 +36,7 @@
                                             Examples:
                                                 {'stage_account': {'fk_columns': ['hk_account_h', 'hk_contact_h'],      This would create a link loaded from only one source, which is not uncommon.
                                                                    'rsrc_static': '*/SAP/Accounts/*'}}                  It uses the model 'stage_account', and defines the same columns as 'fk_columns'
-                                                                                                                        that were defined in the attribute 'foreign_hashkeys'. Therefor it could have
+                                                                                                                        that were defined in the attribute 'foreign_hashkeys'. Therefore it could have
                                                                                                                         been left out here.
 
                                                 {'stage_account': {'rsrc_static': '*/SAP/Accounts/*'},                  This would create a link loaded from two sources, which also is not uncommon.
