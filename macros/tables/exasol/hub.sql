@@ -21,17 +21,20 @@
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
 {%- for source_model in source_models.keys() %}
 
-    {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
+    {%- if 'hk_column' not in source_models[source_model].keys() -%}
+        {%- do source_models[source_model].update({'hk_column': hashkey}) -%}
+    {%- endif -%}
 
-    {%- if 'bk_columns' is not in source_models[source_model].keys() -%}
-        {%- set bk_column_input = [bk_column_input] -%}
+    {%- if 'bk_columns' in source_models[source_model].keys() -%}
+        {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
+
+        {%- if not (bk_column_input is iterable and bk_column_input is not string) -%}
+            {%- set bk_column_input = [bk_column_input] -%}
+        {%- endif -%}
+
+        {%- do source_models[source_model].update({'bk_columns': bk_column_input}) -%}
+    {%- else -%}
         {%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
-
-    {%- elif not dbtvault_scalefree.is_list(bk_column_input) -%}
-
-        {%- set bk_list = dbtvault_scalefree.expand_column_list(columns=[bk_column_input]) -%}
-        {%- do source_models[source_model].update({'bk_columns': bk_list}) -%}
-
     {%- endif -%}
 
     {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
@@ -154,18 +157,14 @@ WITH
         {%- set rsrc_statics = source_models[source_model]['rsrc_static'] %}
     {%- endif -%}
 
-    {%- if 'hk_column' not in source_models[source_model].keys() %}
-        {%- set hk_column = hashkey -%}
-    {%- else -%}
-        {%- set hk_column = source_models[source_model]['hk_column'] -%}
-    {% endif %}
+    {%- set hk_column = source_models[source_model]['hk_column'] -%}
 
     src_new_{{ source_number }} AS (
 
         SELECT
             {{ hk_column }} AS {{ hashkey }},
 
-            {% for bk in source_models[source_model]['bk_columns']  %}
+            {% for bk in source_models[source_model]['bk_columns']  -%}
             {{ bk }},
             {% endfor -%}
 
@@ -201,7 +200,7 @@ source_new_union AS (
     SELECT
         {{ hashkey }},
 
-        {% for bk in source_models[source_model]['bk_columns']  %}
+        {% for bk in source_models[source_model]['bk_columns']  -%}
             {{ bk }} AS {{ business_keys[loop.index - 1] }},
         {% endfor -%}
 

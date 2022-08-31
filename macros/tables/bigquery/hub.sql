@@ -10,18 +10,17 @@
 {%- set business_keys = dbtvault_scalefree.expand_column_list(columns=[business_keys]) -%}
 
 {%- for source_model in source_models.keys() %}    
-
-    {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
-
-    {%- if 'bk_columns' is not in source_models[source_model].keys() -%}
+    
+    {%- if 'hk_column' not in source_models[source_model].keys() -%}
+        {%- do source_models[source_model].update({'hk_column': hashkey}) -%}
+    {%- endif -%}
+    
+    {%- if 'bk_columns' in source_models[source_model].keys() -%}
+        {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
         {%- set bk_column_input = [bk_column_input] -%}
+        {%- do source_models[source_model].update({'bk_columns': bk_column_input}) -%}
+    {%- else -%}
         {%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
-
-    {%- elif not dbtvault_scalefree.is_list(bk_column_input) -%}
-
-        {%- set bk_list = dbtvault_scalefree.expand_column_list(columns=[bk_column_input]) -%}
-        {%- do source_models[source_model].update({'bk_columns': bk_list}) -%}
-
     {%- endif -%}
 
 {% endfor %}

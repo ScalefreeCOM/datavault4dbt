@@ -44,23 +44,25 @@
 {%- set ldts_rsrc_input_column_names = [] -%}
 
 {# Setting the column name for load date timestamp and record source to the alias coming from the attributes #}
-{%- set load_datetime_col_name = ldts.alias -%}
-{%- set record_source_col_name = rsrc.alias -%}
+{%- set ldts_alias = var('dbtvault_scalefree.ldts_alias', 'ldts') -%}
+{%- set rsrc_alias = var('dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
+{%- set load_datetime_col_name = ldts_alias -%}
+{%- set record_source_col_name = rsrc_alias -%}
 
-{%- if dbtvault_scalefree.is_attribute(ldts.value) and ldts.value == ldts.alias -%}
-  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts.value]  -%}
+{%- if dbtvault_scalefree.is_attribute(ldts) and ldts == ldts_alias -%}
+  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts]  -%}
 {%- endif %}
 
-{%- if dbtvault_scalefree.is_attribute(rsrc.value) and rsrc.value == rsrc.alias -%}
-  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc.value] -%}
+{%- if dbtvault_scalefree.is_attribute(rsrc) and rsrc == rsrc_alias -%}
+  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
 {%- endif %}
 
 {%- if sequence is not none -%}
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [sequence] -%}
 {%- endif -%}
 
-{%- set ldts = dbtvault_scalefree.as_constant(ldts.value) -%}
-{%- set rsrc = dbtvault_scalefree.as_constant(rsrc.value) -%}
+{%- set ldts = dbtvault_scalefree.as_constant(ldts) -%}
+{%- set rsrc = dbtvault_scalefree.as_constant(rsrc) -%}
 
 {# Getting the column names for all additional columns #}
 {%- set derived_column_names = dbtvault_scalefree.extract_column_names(derived_columns) -%}
@@ -102,18 +104,9 @@
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 
-{#- Setting the column name for load date time and record source if its not set  -#}
-
-{% if load_datetime_col_name is none %}
-  {% set load_datetime_col_name = var('dbtvault_scalefree.ldts', 'LDTS') %}
-{% endif %}
-{% if record_source_col_name is none %}
-  {% set record_source_col_name = var('dbtvault_scalefree.rsrc', 'RSRC') %}
-{% endif %}
-
 {# Setting the error/unknown value for the record source  for the ghost records#}
-{% set error_value_rsrc = var('dbtvault_scalefree.error_value_rsrc', 'ERROR') %}
-{% set unknown_value_rsrc = var('dbtvault_scalefree.unknown_value_rsrc', 'SYSTEM') %}
+{% set error_value_rsrc = var('dbtvault_scalefree.default_error_rsrc', 'ERROR') %}
+{% set unknown_value_rsrc = var('dbtvault_scalefree.default_unknown_rsrc', 'SYSTEM') %}
 
 {# Setting the rsrc default datatype and length #}
 {% set rsrc_default_dtype = var('dbtvault_scalefree.rsrc_default_dtype', 'VARCHAR (2000000) UTF8') %}
@@ -189,7 +182,7 @@ prejoined_columns AS (
   FROM {{ last_cte }} lcte
 
   {%- for col, vals in prejoined_columns.items() %}
-    left join {{ source(vals['src_schema']|string, vals['src_table']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
+    left join {{ source(vals['src_name']|string, vals['src_table']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
   {% endfor %}
 
   {% set last_cte = "prejoined_columns" -%}
@@ -256,7 +249,7 @@ unknown_values AS (
     {% if dbtvault_scalefree.is_something(prejoined_columns) -%}
       {# Additionally generating ghost records for Prejoined columns #}
       {% for col, vals in prejoined_columns.items() %}
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
 
           {% for column in pj_relation_columns -%}
             {% if column.name|lower == vals['bk']|lower -%},
@@ -311,7 +304,7 @@ error_values AS (
     {% if dbtvault_scalefree.is_something(prejoined_columns) -%}
       {# Additionally generating ghost records for the Prejoined columns #}
       {% for col, vals in prejoined_columns.items() %}
-        {% set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_schema']|string, vals['src_table']) ) -%}
+        {% set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
 
         ,{% for column in pj_relation_columns -%}
           {%- if column.name|lower == vals['bk']|lower -%}
