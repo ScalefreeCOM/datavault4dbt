@@ -22,9 +22,9 @@
                                         the .yml file is used, it must be a dictionary with 'source_name': 'source_table'.
 
                                         Examples:
-                                            'source_account'                The source model that you want to use for the stage is available as another dbt model with the name 'source_contract'.
-                                            {'source_data': 'account'}      The source model that you want to use for the stage is available as a source defined inside the .yml file
-                                                                            with the name 'source_date', and you select the table 'contract' out of that source.
+                                            'source_account'                        The source model that you want to use for the stage is available as another dbt model with the name 'source_account'.
+                                            {'source_data': 'source_account'}       The source model that you want to use for the stage is available as a source defined inside the .yml file
+                                                                                    with the name 'source_data', and you select the table 'source_account' out of that source.
 
     include_source_columns::boolean     Defines if all columns from the refered source table should be included in the result table, or if only the added columns should 
                                         be part of the result table. By default the source columns should be included. 
