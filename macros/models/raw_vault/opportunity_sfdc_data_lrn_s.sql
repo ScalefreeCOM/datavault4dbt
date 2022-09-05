@@ -1,5 +1,5 @@
 {{ config(schema='public_release_test',
-           materialized='view') }} 
+           materialized='view') }}
 
 {{ sat_v1(sat_v0='opportunity_sfdc_data_lrn0_s',
           hashkey='hk_opportunity_h',

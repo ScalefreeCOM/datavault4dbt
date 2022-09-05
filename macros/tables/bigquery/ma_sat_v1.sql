@@ -16,20 +16,20 @@
 
 {{ dbtvault_scalefree.prepend_generated_by() }}
 
-WITH 
+WITH
 
 {# Getting everything from the underlying v0 satellite. #}
 source_satellite AS (
 
-    SELECT * 
+    SELECT *
     FROM {{ source_relation }}
 
-), 
+),
 
 {# Selecting all distinct loads per hashkey. #}
 distinct_hk_ldts AS (
 
-    SELECT DISTINCT 
+    SELECT DISTINCT
         {{ hashkey }},
         {{ src_ldts }}
     FROM source_satellite
@@ -38,8 +38,8 @@ distinct_hk_ldts AS (
 
 {# End-dating each ldts for each hashkey, based on earlier ldts per hashkey. #}
 end_dated_loads AS (
-    
-    SELECT 
+
+    SELECT
         {{ hashkey }},
         {{ src_ldts }},
         COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }}
@@ -50,7 +50,7 @@ end_dated_loads AS (
 {# End-date each source record, based on the end-date for each load. #}
 end_dated_source AS (
 
-    SELECT 
+    SELECT
         src.{{ hashkey }},
         src.{{ src_ldts }},
         edl.{{ ledts_alias }},

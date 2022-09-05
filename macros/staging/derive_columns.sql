@@ -27,7 +27,7 @@
                 {%- do exclude_columns.append(col) -%}
             {% endif %}
         {%- endfor -%}
-        
+
         {#- Add all columns from source_model relation -#}
         {%- if source_relation is defined and source_relation is not none -%}
             {%- for col in source_cols -%}

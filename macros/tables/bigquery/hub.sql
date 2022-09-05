@@ -9,12 +9,12 @@
 
 {%- set business_keys = dbtvault_scalefree.expand_column_list(columns=[business_keys]) -%}
 
-{%- for source_model in source_models.keys() %}    
-    
+{%- for source_model in source_models.keys() %}
+
     {%- if 'hk_column' not in source_models[source_model].keys() -%}
         {%- do source_models[source_model].update({'hk_column': hashkey}) -%}
     {%- endif -%}
-    
+
     {%- if 'bk_columns' in source_models[source_model].keys() -%}
         {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
         {%- set bk_column_input = [bk_column_input] -%}

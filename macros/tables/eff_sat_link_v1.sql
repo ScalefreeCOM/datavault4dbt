@@ -8,7 +8,7 @@
         - Enforces insert-only-approach by view materialization
         - Allows aliasing the effectivity range columns
 
-    Parameters: 
+    Parameters:
 
     eff_sat_link_v0::string                     The name of the underlying version 0 effectivity satellite model.
 
@@ -33,17 +33,19 @@
 
     eff_to_alias::string                        Desired alias of the effective_to column. Is optional, will use the global variable 'dbtvault_scalfree.eff_to_alias' if not set here.
 
-
+    add_is_current_flag::boolean                Optional parameter to add a new column to the v1 sat based on the effective_to column. Default is false. If
+                                                set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if the effective_to time stamp is equal to the variable end of all times. If its not, then the record is not current therefore it
+                                                will be set to false.
 #}
 
-{%- macro eff_sat_link_v1(eff_sat_link_v0, link_hashkey, driving_key, secondary_fks, src_ldts=none, src_rsrc=none, eff_from_alias=none, eff_to_alias=none) -%}
+{%- macro eff_sat_link_v1(eff_sat_link_v0, link_hashkey, driving_key, secondary_fks, src_ldts=none, src_rsrc=none, eff_from_alias=none, eff_to_alias=none, add_is_current_flag=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
     {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-    {%- set eff_from_alias = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.eff_from_alias', 'effective_from') -%}
-    {%- set eff_to_alias = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.eff_to_alias', 'effective_to') -%}
+    {%- set eff_from_alias = dbtvault_scalefree.replace_standard(eff_from_alias, 'dbtvault_scalefree.eff_from_alias', 'effective_from') -%}
+    {%- set eff_to_alias = dbtvault_scalefree.replace_standard(eff_to_alias, 'dbtvault_scalefree.eff_to_alias', 'effective_to') -%}
 
     {{ return(adapter.dispatch('eff_sat_link_v1', 'dbtvault_scalefree')(eff_sat_link_v0=eff_sat_link_v0,
                                                                         link_hashkey=link_hashkey,
@@ -52,6 +54,7 @@
                                                                         src_ldts=src_ldts,
                                                                         src_rsrc=src_rsrc,
                                                                         eff_from_alias=eff_from_alias,
-                                                                        eff_to_alias=eff_to_alias)) }}
+                                                                        eff_to_alias=eff_to_alias,
+                                                                        add_is_current_flag= add_is_current_flag)) }}
 
 {%- endmacro -%}

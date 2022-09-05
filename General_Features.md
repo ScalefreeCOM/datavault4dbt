@@ -5,4 +5,3 @@ This package enforces a few features over all macros:
     - Following the insert-only-approach by using a mix of tables and views
     - Creating a centralized, snapshot-based Business interface by using a centralized snapshot table supporting logarithmic logic
     - Optimizing incremental loads by implemting a high-water-mark that also works for entities that are loaded from multiple sources
-

@@ -2,7 +2,7 @@
 
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
-WITH 
+WITH
 
 initial_timestamps AS (
 
@@ -12,8 +12,8 @@ initial_timestamps AS (
             {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, start_date) }},
             TIMESTAMP_ADD(
                 TIMESTAMP_ADD(
-                    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY), 
-                INTERVAL EXTRACT(HOUR FROM TIME '{{ daily_snapshot_time }}') HOUR), 
+                    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY),
+                INTERVAL EXTRACT(HOUR FROM TIME '{{ daily_snapshot_time }}') HOUR),
             INTERVAL EXTRACT(MINUTE FROM TIME '{{ daily_snapshot_time }}') MINUTE),
         INTERVAL 1 DAY)) AS sdts
 

@@ -1,11 +1,11 @@
 {{ config(schema='public_release_test',
            materialized='incremental',
-           unique_key=['hk_opportunity_h', 'hd_opportunity_data_sfdc_lrn_s']) }} 
+           unique_key=['hk_opportunity_h', 'hd_opportunity_data_sfdc_lrn_s']) }}
 
 
 
 {%- set yaml_metadata -%}
-source_model: "stage_opportunity" 
+source_model: "stage_opportunity"
 parent_hashkey: "hk_opportunity_h"
 src_hashdiff: 'hd_opportunity_data_sfdc_lrn_s'
 src_payload:

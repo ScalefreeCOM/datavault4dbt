@@ -24,7 +24,7 @@ source_data AS (
 
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
-        SELECT 
+        SELECT
             MAX({{ src_ldts }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
@@ -60,12 +60,12 @@ deduplicated_numbered_source AS (
     {% if is_incremental() %}
         ,ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) as rn,
     {%- endif %}
-    FROM source_data   
-    QUALIFY 
+    FROM source_data
+    QUALIFY
         CASE
             WHEN {{ src_hashdiff }} = LAG({{ src_hashdiff }}) OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) THEN FALSE
             ELSE TRUE
-        END     
+        END
 ),
 
 {#
@@ -85,7 +85,7 @@ records_to_insert AS (
             AND {{ dbtvault_scalefree.multikey(src_hashdiff, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
             AND deduplicated_numbered_source.rn = 1)
     {%- endif %}
-    
+
     )
 
 
