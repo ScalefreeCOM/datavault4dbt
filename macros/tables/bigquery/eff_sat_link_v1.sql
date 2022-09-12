@@ -1,10 +1,7 @@
-{%- macro default__eff_sat_link_v1(eff_sat_link_v0, link_hashkey, driving_key, secondary_fks, src_ldts, src_rsrc, eff_from_alias, eff_to_alias, add_is_current_flag) -%}
+{%- macro default__eff_sat_link_v1(eff_sat_link_v0, link_hashkey, src_ldts, src_rsrc, eff_from_alias, eff_to_alias, add_is_current_flag) -%}
 
-{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, secondary_fks, src_rsrc, src_ldts, 'is_active']) -%}
-{%- set final_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, secondary_fks, src_rsrc, 'effective_from', 'effective_to']) -%}
-
-{%- set driving_key = dbtvault_scalefree.expand_column_list(columns=[driving_key]) -%}
-{%- set secondary_fks = dbtvault_scalefree.expand_column_list(columns=[secondary_fks]) -%}
+{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, src_rsrc, src_ldts, 'is_active']) -%}
+{%- set final_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, src_rsrc, 'effective_from', 'effective_to']) -%}
 
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
@@ -31,8 +28,6 @@ eff_ranges AS (
 
     SELECT
         {{ link_hashkey }},
-        {{ dbtvault_scalefree.print_list(driving_key) }},
-        {{ dbtvault_scalefree.print_list(secondary_fks) }},
         {{ src_rsrc }},
         is_active,
         {{ src_ldts }} AS {{ eff_from_alias }},

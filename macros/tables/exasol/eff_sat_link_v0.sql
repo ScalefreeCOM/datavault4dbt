@@ -4,9 +4,9 @@
                                        src_ldts=src_ldts, src_rsrc=src_rsrc,
                                        source_model=source_model) -}}
 
-{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, secondary_fks, src_rsrc, src_ldts]) -%}
-{%- set union_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, secondary_fks, src_rsrc]) -%}
-{%- set final_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, secondary_fks, src_ldts, src_rsrc]) -%}
+{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, src_rsrc, src_ldts]) -%}
+{%- set union_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, src_rsrc]) -%}
+{%- set final_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, src_ldts, src_rsrc]) -%}
 
 {%- set source_relation = ref(source_model) -%}
 {{ dbtvault_scalefree.prepend_generated_by() }}

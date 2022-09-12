@@ -19,10 +19,6 @@
     link_hashkey::string                        Name of the hashkey column inside the v0 effectivity satellite. Must be the same as
                                                 in the v0 effectivity satellite.
 
-    driving_key::string | list of strings       Name(s) of the driving key column(s) inside the v0 effectivity satellite.
-
-    secondary_fks::string | list of strings     Name(s) of the secondary foreign key(s) inside the v0 effectivity satellite.
-
     src_ldts::string                            Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
@@ -38,7 +34,7 @@
                                                 will be set to false.
 #}
 
-{%- macro eff_sat_link_v1(eff_sat_link_v0, link_hashkey, driving_key, secondary_fks, src_ldts=none, src_rsrc=none, eff_from_alias=none, eff_to_alias=none, add_is_current_flag=false) -%}
+{%- macro eff_sat_link_v1(eff_sat_link_v0, link_hashkey, src_ldts=none, src_rsrc=none, eff_from_alias=none, eff_to_alias=none, add_is_current_flag=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
@@ -49,8 +45,6 @@
 
     {{ return(adapter.dispatch('eff_sat_link_v1', 'dbtvault_scalefree')(eff_sat_link_v0=eff_sat_link_v0,
                                                                         link_hashkey=link_hashkey,
-                                                                        driving_key=driving_key,
-                                                                        secondary_fks=secondary_fks,
                                                                         src_ldts=src_ldts,
                                                                         src_rsrc=src_rsrc,
                                                                         eff_from_alias=eff_from_alias,
