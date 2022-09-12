@@ -61,7 +61,7 @@
 
 #}
 
-{%- macro ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts=none, ledts_alias=none) -%}
+{%- macro ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts=none, src_rsrc=none, ledts_alias=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
 
@@ -74,6 +74,7 @@
                                          hashdiff=hashdiff,
                                          ma_attribute=ma_attribute,
                                          src_ldts=src_ldts,
+                                         src_rsrc=src_rsrc,
                                          ledts_alias=ledts_alias) }}
 
 {%- endmacro -%}
