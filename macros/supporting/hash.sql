@@ -22,7 +22,7 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
-{{ log("hash: " ~ hash_alg, true ) }}
+
 {%- set attribute_standardise = attribute_standardise() %}
 
 
@@ -92,26 +92,24 @@
 
 {%- set all_null = [] -%}
 {%- if is_hashdiff -%}
-    {%- if hashdiff_input_case_sensitive -%}
-        {%- set standardise_prefix = "NULLIF({}(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(CONCAT(".format(hash_alg) | string -%}
-        {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'{}')), '{}') AS {} ".format(all_null | join(""), unknown_key, alias) -%}
-    {%- else -%}
-        {%- set standardise_prefix = "NULLIF({}(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(CONCAT(".format(hash_alg) | string -%}
-        {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '{}')), '{}') AS {} ".format(all_null | join(""), unknown_key, alias) -%}
-    {%- endif -%}
+    {%- set std_dict = fromjson(dbtvault_scalefree.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key)) -%}
+    {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
+    {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
+
 {%- else -%}
-    {%- set standardise_prefix = "\n {}(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(CONCAT(".format(hash_alg) | string | indent(3) -%}
-    {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '{}')) ".format(all_null | join("")) -%}
+    {%- set std_dict = fromjson(dbtvault_scalefree.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=none, zero_key=unknown_key)) -%}
+    {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
+    {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
 
     CASE WHEN COALESCE(
-            {%- for column in columns -%}
-               "{{ column }}" {%- if not loop.last -%} , {% endif -%}
-            {% endfor -%}, NULL) IS NULL
+    {%- for column in columns -%}
+        "{{ column }}" {%- if not loop.last -%} , {% endif -%}
+    {% endfor -%}, NULL) IS NULL
     THEN CAST('{{ unknown_key }}' as HASHTYPE)
     ELSE
 {%- endif -%}
 
-{{ standardise_prefix }}
+{{" "~ standardise_prefix }}
 
 {%- for column in columns -%}
 
@@ -139,7 +137,7 @@
 {%- endfor -%}
 
 {% if not is_hashdiff -%}
-   {{- "\n END AS " -}} "{{ alias }}"
+   {{- "\n END " -}} {%- if alias is not none -%} {{" AS " }} "{{ alias }}" {%- endif -%}
 {%- endif -%}
 
 {%- endmacro -%}

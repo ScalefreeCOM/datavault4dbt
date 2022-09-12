@@ -63,7 +63,7 @@
 
             {%- endif -%}
 
-            {%- do columns.update({column_name: {'datatype': datatype, 'value': value}}) -%}
+            {%- do columns.update({column_name: {'datatype': datatype, 'value': value} }) -%}
 
         {%- elif column_value is mapping and not column_value.get('datatype') -%}
 
