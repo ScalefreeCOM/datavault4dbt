@@ -3,7 +3,7 @@ name: Bug report
 about: Create a report to help us improve
 title: "[BUG] <my bug title>"
 labels: bug
-assignees: DVAlexHiggs
+assignees: tkirschke
 
 ---
 
@@ -13,7 +13,7 @@ A clear and concise description of what the bug is.
 **Environment**
 
 dbt version: 
-dbtvault version: 
+datavault4dbt version: 
 Database/Platform:  
 
 **To Reproduce**
