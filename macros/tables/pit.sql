@@ -13,7 +13,8 @@
     Parameters:
 
     pit_type::string                    String to insert into the 'pit_type' column. Allows for future implementations of other
-                                        PIT variants, like T-PITs etc. Can be set freely, something like 'PIT' could be the default.
+                                        PIT variants, like T-PITs etc. Can be set freely, something like 'PIT' could be the default. 
+                                        Is optional, default value IS 'PIT'.
 
     tracked_entity::string              Name of the tracked Hub entity. Must be available as a model inside the dbt project.
 
@@ -37,6 +38,7 @@
 
     custom_rsrc::string                 A custom string that should be inserted into the 'rsrc' column inside the PIT table. Since
                                         a PIT table is a business vault entity, the technical record source is no longer used here.
+                                        Default value is 'PIT_<tracked_entity>'.
 
     ledts::string                      Name of the load-end-date column inside the satellites. Is optional, will use the global variable
                                        'dbtvault_scalefree.ledts_alias' if not set here.
@@ -45,7 +47,7 @@
 
 
 
-{%- macro pit(pit_type, tracked_entity, hashkey, sat_names, snapshot_relation, snapshot_trigger_column, dimension_key, ldts=none, custom_rsrc=none, ledts=none) -%}
+{%- macro pit(tracked_entity, hashkey, sat_names, snapshot_relation, snapshot_trigger_column, dimension_key,pit_type=none, ldts=none, custom_rsrc=none, ledts=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
 
@@ -54,6 +56,10 @@
 
     {%- if custom_rsrc is none -%}
         {%- set custom_rsrc = 'PIT_' + tracked_entity|string -%}
+    {%- endif -%}
+
+    {%- if pit_type is none -%}
+        {%- set pit_type = 'PIT' -%}
     {%- endif -%}
 
     {{ return(adapter.dispatch('pit','dbtvault_scalefree')(pit_type=pit_type,
