@@ -1,4 +1,4 @@
-name: dbtvault_scalefree
+name: datavault4dbt
 version: 0.8.3
 require-dbt-version: [">=1.0.0", "<2.0.0"]
 config-version: 2
@@ -16,21 +16,21 @@ clean-targets:
   - "dbt_packages"
 
 vars:
-  dbtvault_scalefree.hash: 'MD5'
-  dbtvault_scalefree.beginning_of_all_times: '0001-01-01T00-00-01'
-  dbtvault_scalefree.end_of_all_times: '8888-12-31T23-59-59'
-  dbtvault_scalefree.timestamp_format: '%Y-%m-%dT%H-%M-%S'
-  dbtvault_scalefree.hashkey_input_case_sensitive: FALSE
-  dbtvault_scalefree.hashdiff_input_case_sensitive: TRUE
-  dbtvault_scalefree.ldts_alias: 'ldts'
-  dbtvault_scalefree.rsrc_alias: 'rsrc'
-  dbtvault_scalefree.ledts_alias: 'ledts'
-  dbtvault_scalefree.eff_from_alias: 'effective_from'
-  dbtvault_scalefree.eff_to_alias: 'effective_to'
-  dbtvault_scalefree.rsrc_default_dtype: 'VARCHAR (200) UTF8'
-  dbtvault_scalefree.default_unknown_rsrc: 'SYSTEM'
-  dbtvault_scalefree.default_error_rsrc: 'ERROR'
-  dbtvault_scalefree.error_value__VARCHAR_ghost_record: '(error)'
-  dbtvault_scalefree.unknown_value__VARCHAR_ghost_record: '(unknown)'
-  dbtvault_scalefree.unknown_value_alt__VARCHAR_ghost_record: 'u'
-  dbtvault_scalefree.error_value_alt__VARCHAR_ghost_record: 'e'
+  datavault4dbt.hash: 'MD5'
+  datavault4dbt.beginning_of_all_times: '0001-01-01T00-00-01'
+  datavault4dbt.end_of_all_times: '8888-12-31T23-59-59'
+  datavault4dbt.timestamp_format: '%Y-%m-%dT%H-%M-%S'
+  datavault4dbt.hashkey_input_case_sensitive: FALSE
+  datavault4dbt.hashdiff_input_case_sensitive: TRUE
+  datavault4dbt.ldts_alias: 'ldts'
+  datavault4dbt.rsrc_alias: 'rsrc'
+  datavault4dbt.ledts_alias: 'ledts'
+  datavault4dbt.eff_from_alias: 'effective_from'
+  datavault4dbt.eff_to_alias: 'effective_to'
+  datavault4dbt.rsrc_default_dtype: 'VARCHAR (200) UTF8'
+  datavault4dbt.default_unknown_rsrc: 'SYSTEM'
+  datavault4dbt.default_error_rsrc: 'ERROR'
+  datavault4dbt.error_value__VARCHAR_ghost_record: '(error)'
+  datavault4dbt.unknown_value__VARCHAR_ghost_record: '(unknown)'
+  datavault4dbt.unknown_value_alt__VARCHAR_ghost_record: 'u'
+  datavault4dbt.error_value_alt__VARCHAR_ghost_record: 'e'

@@ -1,6 +1,6 @@
 {% macro get_distinct_value(source_relation, column_name, exclude_values=none) %}
 
-{{return(adapter.dispatch('get_distinct_value', 'dbtvault_scalefree')(source_relation= source_relation, 
+{{return(adapter.dispatch('get_distinct_value', 'datavault4dbt')(source_relation= source_relation, 
                                                             column_name= column_name,
                                                             exclude_values=exclude_values) )}}
 

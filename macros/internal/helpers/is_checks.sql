@@ -63,7 +63,7 @@
         
         {%- else -%}
         
-            {%- if dbtvault_scalefree.is_expression(obj) -%}
+            {%- if datavault4dbt.is_expression(obj) -%}
 
                 {{- return(false) -}}
 

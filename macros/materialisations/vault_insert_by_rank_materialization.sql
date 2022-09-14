@@ -10,14 +10,14 @@
     {%- set existing_relation = load_relation(this) -%}
     {%- set tmp_relation = make_temp_relation(target_relation) -%}
 
-    {%- set rank_column = dbtvault_scalefree.escape_column_names(config.require('rank_column')) -%}
+    {%- set rank_column = datavault4dbt.escape_column_names(config.require('rank_column')) -%}
     {%- set rank_source_models = config.require('rank_source_models') -%}
 
-    {%- set min_max_ranks = dbtvault_scalefree.get_min_max_ranks(rank_column, rank_source_models) | as_native -%}
+    {%- set min_max_ranks = datavault4dbt.get_min_max_ranks(rank_column, rank_source_models) | as_native -%}
 
     {%- set to_drop = [] -%}
 
-    {%- do dbtvault_scalefree.check_placeholder(sql, "__RANK_FILTER__") -%}
+    {%- do datavault4dbt.check_placeholder(sql, "__RANK_FILTER__") -%}
 
     {{ run_hooks(pre_hooks, inside_transaction=False) }}
 
@@ -26,7 +26,7 @@
 
     {% if existing_relation is none %}
 
-        {% set filtered_sql = dbtvault_scalefree.replace_placeholder_with_rank_filter(sql, rank_column, 1) %}
+        {% set filtered_sql = datavault4dbt.replace_placeholder_with_rank_filter(sql, rank_column, 1) %}
         {% set build_sql = create_table_as(False, target_relation, filtered_sql) %}
 
         {% do to_drop.append(tmp_relation) %}
@@ -36,11 +36,11 @@
         {{ log("Dropping relation " ~ target_relation ~ " because it is a view and this model is a table (vault_insert_by_rank).") }}
         {% do adapter.drop_relation(existing_relation) %}
 
-        {% set filtered_sql = dbtvault_scalefree.replace_placeholder_with_rank_filter(sql, rank_column, 1) %}
+        {% set filtered_sql = datavault4dbt.replace_placeholder_with_rank_filter(sql, rank_column, 1) %}
         {% set build_sql = create_table_as(False, target_relation, filtered_sql) %}
 
     {% elif full_refresh_mode %}
-        {% set filtered_sql = dbtvault_scalefree.replace_placeholder_with_rank_filter(sql, rank_column, 1) %}
+        {% set filtered_sql = datavault4dbt.replace_placeholder_with_rank_filter(sql, rank_column, 1) %}
         {% set build_sql = create_table_as(False, target_relation, filtered_sql) %}
     {% else %}
 
@@ -52,7 +52,7 @@
 
             {%- set iteration_number = i + 1 -%}
 
-            {%- set filtered_sql = dbtvault_scalefree.replace_placeholder_with_rank_filter(sql, rank_column, iteration_number) -%}
+            {%- set filtered_sql = datavault4dbt.replace_placeholder_with_rank_filter(sql, rank_column, iteration_number) -%}
 
             {{ dbt_utils.log_info("Running for {} {} of {} on column '{}' [{}]".format('rank', iteration_number, min_max_ranks.max_rank, rank_column, model.unique_id)) }}
 

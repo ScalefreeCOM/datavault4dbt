@@ -1,5 +1,5 @@
 {% macro current_timestamp() -%}
-  {{ return(adapter.dispatch('current_timestamp', 'dbtvault_scalefree')()) }}
+  {{ return(adapter.dispatch('current_timestamp', 'datavault4dbt')()) }}
 {%- endmacro %}
 
 {% macro default__current_timestamp() %}
@@ -11,7 +11,7 @@
 {% endmacro %}
 
 {% macro current_timestamp_in_utc() -%}
-  {{ return(adapter.dispatch('current_timestamp_in_utc', 'dbtvault_scalefree')()) }}
+  {{ return(adapter.dispatch('current_timestamp_in_utc', 'datavault4dbt')()) }}
 {%- endmacro %}
 
 {% macro default__current_timestamp_in_utc() %}

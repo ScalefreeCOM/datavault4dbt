@@ -17,8 +17,8 @@
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
@@ -65,7 +65,7 @@
 
 {%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] -%}
 
-{{ dbtvault_scalefree.prepend_generated_by() }}
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
@@ -146,7 +146,7 @@ WITH
                 rsrc_static,
                 MAX({{ src_ldts }}) as max_ldts
             FROM {{ ns.last_cte }}
-            WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
 
         ),
@@ -233,7 +233,7 @@ earliest_hk_over_all_sources AS (
 records_to_insert AS (
 
     SELECT
-        {{ dbtvault_scalefree.print_list(final_columns_to_select) | indent(4) }}
+        {{ datavault4dbt.print_list(final_columns_to_select) | indent(4) }}
     FROM {{ ns.last_cte }}
 
     {%- if is_incremental() %}

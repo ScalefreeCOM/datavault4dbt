@@ -30,10 +30,10 @@
                                     Examples:
                                         'stage_account'     This satellite is loaded out of the stage for account.
 
-    src_ldts::string                Name of the ldts column inside the source model. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
+    src_ldts::string                Name of the ldts column inside the source model. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
 
-    src_rsrc::string                Name of the rsrc column inside the source model. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
+    src_rsrc::string                Name of the rsrc column inside the source model. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
 
 
@@ -44,10 +44,10 @@
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
-    {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
+    {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
+    {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
 
-    {{ adapter.dispatch('nh_sat', 'dbtvault_scalefree')(parent_hashkey=parent_hashkey,
+    {{ adapter.dispatch('nh_sat', 'datavault4dbt')(parent_hashkey=parent_hashkey,
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
