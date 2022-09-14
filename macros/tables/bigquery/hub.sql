@@ -3,6 +3,9 @@
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
+{%- set rsrc_unknown = var('dbtvault_scalefree.default_unknown_rsrc', 'SYSTEM') -%}
+{%- set rsrc_error = var('dbtvault_scalefree.default_error_rsrc', 'ERROR') -%}
+
 {%- set ns = namespace(last_cte= "", source_included_before = {}) -%}
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
@@ -21,6 +24,11 @@
         {%- do source_models[source_model].update({'bk_columns': bk_column_input}) -%}
     {%- else -%}
         {%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
+    {%- endif -%}
+
+    {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
+        {%- set unique_rsrc = datavault4dbt.get_distinct_value(source_relation=source_model, column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
+        {%- do source_models[source_model].update({'rsrc_static': unique_rsrc}) -%}
     {%- endif -%}
 
 {% endfor %}
