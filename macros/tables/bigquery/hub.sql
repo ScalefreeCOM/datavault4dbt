@@ -27,7 +27,7 @@
     {%- endif -%}
 
     {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
-        {%- set unique_rsrc = datavault4dbt.get_distinct_value(source_relation=source_model, column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
+        {%- set unique_rsrc = datavault4dbt.get_distinct_value(source_relation=ref(source_model), column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
         {%- do source_models[source_model].update({'rsrc_static': unique_rsrc}) -%}
     {%- endif -%}
 
