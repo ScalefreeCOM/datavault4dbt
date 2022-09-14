@@ -26,7 +26,7 @@
 
         is_weekly::boolean              Captures if the day of the week of a sdts is monday.
 
-        is_monothly::boolean            Captures if a sdts is the first day of a month.
+        is_monthly::boolean            Captures if a sdts is the first day of a month.
 
         is_yearly::boolean              Captures if a sdts is the first day of a year.
 
