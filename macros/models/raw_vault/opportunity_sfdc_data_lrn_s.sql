@@ -1,5 +1,5 @@
 {{ config(schema='public_release_test',
-           materialized='view') }} 
+           materialized='view') }}
 
 {%- set yaml_metadata -%}
 source_sat: 'opportunity_sfdc_data_lrn0_s'

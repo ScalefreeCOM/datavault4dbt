@@ -19,7 +19,7 @@
         is_hourly::boolean              Captures if the time of a sdts is on an exact hours, meaning minutes=0 and seconds=0. All sdts
                                         created by this macro are daily and therefor always hourly, but this column enables future inserts
                                         of custom, user-defined sdts.
-        
+
         is_daily::boolean               Captures if the time of a sdts is on exactly midnight, meaning hours=0, minutes=0 and seconds=0.
                                         This depends on your desired daily_snapshot_time, but is not used by the downstream macros, and
                                         just generates additional metadata for potential future use.
@@ -40,7 +40,7 @@
 
                                         Examples:
                                             '2015-01-01T00-00-00'   This snapshot table would hold daily snapshots beginning at 2015.
-                                            
+
         daily_snapshot_time::time       Defines the time that your daily snapshots should have. Usually this is either something right before
                                         daily business starts, or after daily business is over.
 
