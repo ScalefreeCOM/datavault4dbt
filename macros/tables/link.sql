@@ -47,7 +47,7 @@
                                                                                                                         '{file_id}-{timestamp}-source.txt' or with the pattern '{file_id}-{timestamp}-{store_id}-source.csv'
                                                                                                                         Those two patterns must be included then in the rsrc_static with the appropriate regex and wildcards in place.
                                                                                                                         If the model has two source models as input and only one source model defines a rsrc_static, then this
-                                                                                                                        macro won't use the rsrc_static at all to do the look up in target. Therefore, if there are multiple
+                                                                                                                        macro wont use the rsrc_static at all to do the look up in target. Therefore, if there are multiple
                                                                                                                         source models defined, if there is a desire to execute this macro with the performance look up for the
                                                                                                                         rsrc_static, then this parameter has to be defined for every source model that is defined.
                                                                                                                         Sometimes the record source column includes the ldts of each load and could look something
