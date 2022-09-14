@@ -9,7 +9,7 @@
 
 {{ dbtvault_scalefree.prepend_generated_by() }}
 
-WITH 
+WITH
 
 {%- if is_incremental() %}
 
@@ -24,7 +24,7 @@ existing_dimension_keys AS (
 {%- endif %}
 
 pit_records AS (
-    
+
     SELECT
         {{ dbtvault_scalefree.as_constant(pit_type) }} as type,
         '{{ custom_rsrc }}' as {{ rsrc }},
@@ -39,9 +39,9 @@ pit_records AS (
             {{- "," if not loop.last }}
         {% endfor %}
 
-    FROM 
+    FROM
             {{ ref(tracked_entity) }} te
-        FULL OUTER JOIN 
+        FULL OUTER JOIN
             {{ ref(snapshot_relation) }} snap
             ON snap.{{ snapshot_trigger_column }} = true
         {% for satellite in sat_names %}
@@ -49,16 +49,16 @@ pit_records AS (
         LEFT JOIN {{ ref(satellite) }}
             ON
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
-                {%- if ledts|string in sat_columns %} 
+                {%- if ledts|string in sat_columns %}
                     AND snap.sdts BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
                 {%- endif -%}
-        {% endfor %}            
+        {% endfor %}
     WHERE snap.{{ snapshot_trigger_column }}
 
 ),
 
 records_to_insert AS (
-    
+
     SELECT
         *
     FROM pit_records

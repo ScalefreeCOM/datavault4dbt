@@ -1,10 +1,10 @@
-{%- macro default__eff_sat_link_v1(eff_sat_link_v0, link_hashkey, src_ldts, src_rsrc, eff_from_alias, eff_to_alias, add_is_current_flag) -%}
+{%- macro exasol__eff_sat_link_v1(eff_sat_link_v0, link_hashkey, src_ldts, src_rsrc, eff_from_alias, eff_to_alias, add_is_current_flag) -%}
 
 {%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, src_rsrc, src_ldts, 'is_active']) -%}
-{%- set final_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, src_rsrc, 'effective_from', 'effective_to']) -%}
+{%- set final_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, src_rsrc, eff_from_alias, eff_to_alias]) -%}
 
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-MM-DDTHH-MI-SS') -%}
 {%- set is_current_col_alias = var('dbtvault_scalefree.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
@@ -19,7 +19,7 @@ WITH
 source_data AS (
 
     SELECT
-        {{ dbtvault.prefix(source_cols, 'sat_v0') }}
+        {{ dbtvault_scalefree.prefix(source_cols, 'sat_v0') }}
     FROM {{ source_relation }} AS sat_v0
 
 ),
@@ -31,7 +31,7 @@ eff_ranges AS (
         {{ src_rsrc }},
         is_active,
         {{ src_ldts }} AS {{ eff_from_alias }},
-        COALESCE(LAG(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ link_hashkey }} ORDER BY ldts DESC), {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ eff_to_alias }}
+        COALESCE(LAG(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }} DESC), {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ eff_to_alias }}
     FROM source_data
 
 ),

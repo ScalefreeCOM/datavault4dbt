@@ -1,7 +1,7 @@
 {%- macro default__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
-    
+
     {%- if execute -%}
         {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
     {%- endif %}
@@ -14,7 +14,7 @@
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 {# If no specific link_hk, fk_columns, or payload are defined for each source, we apple the values set in the link_hashkey, foreign_hashkeys, and payload variable. #}
-{%- for source_model in source_models.keys() %}    
+{%- for source_model in source_models.keys() %}
 
     {%- if 'fk_columns' not in source_models[source_model].keys() -%}
 
@@ -46,7 +46,7 @@ WITH
 {# Get all distinct link hashkeys out of the existing link for later incremental logic. #}
 distinct_target_hashkeys AS (
 
-    SELECT DISTINCT 
+    SELECT DISTINCT
     {{ link_hashkey }}
     FROM {{ this }}
 
@@ -57,7 +57,7 @@ distinct_target_hashkeys AS (
 
     {%- set source_number = loop.index | string -%}
     {%- set rsrc_static = source_models[source_model]['rsrc_static'] -%}
-    
+
     {%- set rsrc_static_query_source -%}
         SELECT {{ this }}.{{ src_rsrc }},
         '{{ rsrc_static }}' AS rsrc_static
@@ -66,8 +66,8 @@ distinct_target_hashkeys AS (
     {% endset %}
 
     rsrc_static_{{ source_number }} AS (
-        
-        SELECT 
+
+        SELECT
             *,
             '{{ rsrc_static }}' AS rsrc_static
         FROM {{ this }}
@@ -119,7 +119,7 @@ max_ldts_per_rsrc_static_in_target AS (
     WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
     GROUP BY rsrc_static
 
-), 
+),
 {% endif -%}
 
 {% for source_model in source_models.keys() %}
@@ -132,7 +132,7 @@ max_ldts_per_rsrc_static_in_target AS (
 
     src_new_{{ source_number }} AS (
 
-        SELECT 
+        SELECT
             {{ source_models[source_model]['link_hk'] }} AS {{ link_hashkey }},
 
             {% for fk in source_models[source_model]['fk_columns']|list -%}
@@ -146,7 +146,7 @@ max_ldts_per_rsrc_static_in_target AS (
         FROM {{ ref(source_model|string) }} src
 
         {%- if is_incremental() and ns.source_included_before[source_model] %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max 
+        INNER JOIN max_ldts_per_rsrc_static_in_target max
             ON max.rsrc_static = '{{ rsrc_static }}'
         WHERE src.{{ src_ldts }} > max.max_ldts
         {%- endif %}
@@ -212,7 +212,7 @@ earliest_hk_over_all_sources AS (
 records_to_insert AS (
     {# Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the link. #}
 
-    SELECT 
+    SELECT
         {{ dbtvault_scalefree.print_list(final_columns_to_select) }}
     FROM {{ ns.last_cte }}
 

@@ -31,4 +31,4 @@ Explaining the rsrc_static attribute:
       a case rsrc_static is not to be set at all. Downside is, that the loading procedures do not benefit of the performance
       boost provided by the rsrc_static parameter. We recommend re-evaluating the contents of the record source column in such a case, to
       create at least a partially static content.
-    
+

@@ -4,7 +4,7 @@
     to include in the PIT table. The easiest way to create such a snapshot table is to use the control_snap macros
     provided by this package.
 
-    Features: 
+    Features:
         - Tracks the active satellite entries for each entry in a Hub for each snapshot
         - Strongly improves performance if upstream queries requires many JOIN operations
         - Creates a unique dimension key to optimize loading performance of incremental loads
@@ -32,14 +32,14 @@
     dimension_key::string               The desired name of the dimension key inside the PIT table. Should follow some naming conventions.
                                         Recommended is the name of the hashkey with a '_d' suffix.
 
-    ldts::string                        Name of the ldts column inside all source models. Is optional, will use the global variable 
+    ldts::string                        Name of the ldts column inside all source models. Is optional, will use the global variable
                                         'dbtvault_scalefree.ldts_alias'. Needs to use the same column name as defined as alias inside the staging model.
 
     custom_rsrc::string                 A custom string that should be inserted into the 'rsrc' column inside the PIT table. Since
                                         a PIT table is a business vault entity, the technical record source is no longer used here.
 
-    ledts::string                      Name of the load-end-date column inside the satellites. Is optional, will use the global variable 
-                                       'dbtvault_scalefree.ledts_alias' if not set here.  
+    ledts::string                      Name of the load-end-date column inside the satellites. Is optional, will use the global variable
+                                       'dbtvault_scalefree.ledts_alias' if not set here.
 
 #}
 
@@ -48,7 +48,7 @@
 {%- macro pit(pit_type, tracked_entity, hashkey, sat_names, snapshot_relation, snapshot_trigger_column, dimension_key, ldts=none, custom_rsrc=none, ledts=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
-    
+
     {%- set ldts = dbtvault_scalefree.replace_standard(ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set ledts = dbtvault_scalefree.replace_standard(ledts, 'dbtvault_scalefree.ledts_alias', 'ledts') -%}
 
