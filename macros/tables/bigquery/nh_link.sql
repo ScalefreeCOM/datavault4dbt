@@ -123,8 +123,8 @@ max_ldts_per_rsrc_static_in_target AS (
 {% endif -%}
 
 {% for source_model in source_models.keys() %}
-{#  Select all deduplicated records from each source, and filter for records that are newer
-    than the max ldts inside the existing link, if incremental. #}
+{#-  Select all deduplicated records from each source, and filter for records that are newer
+    than the max ldts inside the existing link, if incremental. -#}
 
     {%- set source_number = loop.index | string -%}
 
@@ -217,7 +217,8 @@ records_to_insert AS (
     FROM {{ ns.last_cte }}
 
     {%- if is_incremental() %}
-    WHERE {{ link_hashkey }} NOT IN (SELECT * FROM distinct_target_hashkeys)
+    WHERE {{ link_hashkey }} NOT
+     IN (SELECT * FROM distinct_target_hashkeys)
     {% endif -%}
 )
 

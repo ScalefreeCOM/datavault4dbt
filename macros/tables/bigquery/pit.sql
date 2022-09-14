@@ -34,7 +34,7 @@ pit_records AS (
         te.{{ hashkey }},
         snap.sdts,
         {% for satellite in sat_names %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ zero_key }}' AS STRING)) AS hk_{{ satellite }},
+            COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ zero_key }}' AS STRING)) AS hk_{{ satellite }},--zero key ersetzen
             COALESCE({{ satellite }}.{{ ldts }}, CAST('{{ beginning_of_all_times }}' AS {{ dbtvault_scalefree.type_timestamp() }})) AS {{ ldts }}_{{ satellite }}
             {{- "," if not loop.last }}
         {% endfor %}
