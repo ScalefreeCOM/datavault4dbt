@@ -13,15 +13,13 @@ Currently supported platforms are:
 In the future, the package will be available for <plenty/large variety of> platforms.
 
 ## Installation
-Since the package is listed on dbt Hub, you can simply add the following lines to your packages.yml. 
+Since the package is listed on [dbt Hub](https://hub.getdbt.com/), you can simply add the following lines to your packages.yml. 
 
       - package: scalefree/datavault4dbt
         version: 0.1.0
 
-
+For further information on how to install packages in dbt, please visit the following link: 
 https://docs.getdbt.com/docs/building-a-dbt-project/package-management#how-do-i-add-a-package-to-my-project
-
-For installation, please follow the instructions stated on this website: https://www.getdbt.com/blog/installing-dbt-packages/
 
 ## Usage
 
