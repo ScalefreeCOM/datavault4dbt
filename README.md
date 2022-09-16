@@ -4,15 +4,27 @@ FIXME add picture
 
 FIXME
 ## Worked example project
-
 FIXME
+
 ## Supported platforms:
+Currently supported platforms are:
+* Google Bigquery
+* Snowflake
+In the future, the package will be available for <plenty/large variety of> platforms.
 
-FIXME
 ## Installation
+Since the package is listed on dbt Hub, you can simply add the following lines to your packages.yml. 
 
-FIXME
+      - package: scalefree/datavault4dbt
+        version: 0.1.0
+
+
+https://docs.getdbt.com/docs/building-a-dbt-project/package-management#how-do-i-add-a-package-to-my-project
+
+For installation, please follow the instructions stated on this website: https://www.getdbt.com/blog/installing-dbt-packages/
+
 ## Usage
+
  FIXME
 ## Contributing
 [View our contribution guidelines](CONTRIBUTING.md)
