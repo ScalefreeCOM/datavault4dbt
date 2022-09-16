@@ -1,8 +1,7 @@
-FIXME add picture
-
 # datavault4dbt by [Scalefree International GmbH](https://www.scalefree.com)
 
-FIXME
+<img src="https://user-images.githubusercontent.com/108857158/185056464-508d0dd2-c0d7-46b7-8859-f9d0e679fb22.svg" width=50% align=right>
+
 ## Worked example project
 FIXME
 
