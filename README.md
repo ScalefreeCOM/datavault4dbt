@@ -10,7 +10,8 @@ FIXME
 Currently supported platforms are:
 * Google Bigquery
 * Snowflake
-In the future, the package will be available for <plenty/large variety of> platforms.
+
+We are working continuously at high pressure to adapt the package for large variety of different platforms. In the future, the package will be available for [INSERT HERE NEXT PLATFORMS].
 
 ## Installation
 Since the package is listed on [dbt Hub](https://hub.getdbt.com/), you can simply add the following lines to your packages.yml. 
