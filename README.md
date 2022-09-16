@@ -20,11 +20,11 @@ Since the package is listed on [dbt Hub](https://hub.getdbt.com/), you can simpl
         version: 0.1.0
 
 For further information on how to install packages in dbt, please visit the following link: 
-https://docs.getdbt.com/docs/building-a-dbt-project/package-management#how-do-i-add-a-package-to-my-project
+[https://docs.getdbt.com/docs/building-a-dbt-project/package-management](https://docs.getdbt.com/docs/building-a-dbt-project/package-management#how-do-i-add-a-package-to-my-project)
 
 ## Usage
+The datavault4dbt package provides macros for Staging and Creation of all DataVault-Entities you need to build your own DataVault2.0 soloution. The usage of the macros is well-exemplifed in the documentation: https://github.com/ScalefreeCOM/datavault4dbt/wiki
 
- FIXME
 ## Contributing
 [View our contribution guidelines](CONTRIBUTING.md)
 
