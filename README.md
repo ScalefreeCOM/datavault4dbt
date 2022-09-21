@@ -8,6 +8,7 @@ FIXME
 ## Supported platforms:
 Currently supported platforms are:
 * Google Bigquery
+* Exasol
 * Snowflake
 
 We are working continuously at high pressure to adapt the package for large variety of different platforms. In the future, the package will be available for [INSERT HERE NEXT PLATFORMS].
