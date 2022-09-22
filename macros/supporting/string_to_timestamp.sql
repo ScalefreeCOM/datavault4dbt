@@ -7,7 +7,10 @@
     PARSE_TIMESTAMP('{{ format }}', '{{ timestamp }}')
 {%- endmacro -%}
 
-
 {%- macro exasol__string_to_timestamp(format, timestamp) -%}
+    TO_TIMESTAMP('{{ timestamp }}', '{{ format }}')
+{%- endmacro -%}
+
+{%- macro snowflake__string_to_timestamp(format, timestamp) -%}
     TO_TIMESTAMP('{{ timestamp }}', '{{ format }}')
 {%- endmacro -%}
