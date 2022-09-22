@@ -1,25 +1,51 @@
-name: dbtvault_scalefree
-version: 0.8.3
-require-dbt-version: [">=1.0.0", "<2.0.0"]
+
+# Name your project! Project names should contain only lowercase characters
+# and underscores. A good package name should reflect your organization's
+# name or the intended use of these models
+name: '<name of your dbt project>'
+version: '1.0.0'
 config-version: 2
 
+# This setting configures which "profile" dbt uses for this project.
+profile: '<name of your dbt project>'
+
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
 seed-paths: ["seeds"]
 macro-paths: ["macros"]
-docs-paths: ["docs"]
+snapshot-paths: ["snapshots"]
 
-target-path: "target"
-clean-targets:
+target-path: "target"  # directory which will store compiled SQL files
+clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
+# Configuring models
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
+
+# In this example config, we tell dbt to build all models in the example/ directory
+# as tables. These settings can be overridden in the individual model files
+# using the `{{ config(...) }}` macro.
+models:
+  <name of your dbt project>:
+    # Config indicated by + and applies to all files under models/example/
+    dbt_stg:
+      +schema: <name of your Staging schema>
+      +materialized: view
+    raw_vault:
+      +schema: <name of your RDV schema>
+      +materialized: table
+
 vars:
   dbtvault_scalefree.hash: 'MD5'
-  dbtvault_scalefree.beginning_of_all_times: '0001-01-01T00-00-01'
-  dbtvault_scalefree.end_of_all_times: '8888-12-31T23-59-59'
-  dbtvault_scalefree.timestamp_format: '%Y-%m-%dT%H-%M-%S'
+  dbtvault_scalefree.hash_datatype: 'STRING'
+  dbtvault_scalefree.beginning_of_all_times: {"default":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01"}
+  dbtvault_scalefree.end_of_all_times: {"default":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59"}
+  dbtvault_scalefree.timestamp_format: {"default":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS"}
   dbtvault_scalefree.hashkey_input_case_sensitive: FALSE
   dbtvault_scalefree.hashdiff_input_case_sensitive: TRUE
   dbtvault_scalefree.ldts_alias: 'ldts'
@@ -27,5 +53,3 @@ vars:
   dbtvault_scalefree.ledts_alias: 'ledts'
   dbtvault_scalefree.eff_from_alias: 'effective_from'
   dbtvault_scalefree.eff_to_alias: 'effective_to'
-  dbtvault_scalefree.default_unknown_rsrc: 'SYSTEM'
-  dbtvault_scalefree.default_error_rsrc: 'ERROR'
