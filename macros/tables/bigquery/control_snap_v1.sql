@@ -1,29 +1,26 @@
 {%- macro default__control_snap_v1(control_snap_v0, log_logic=none) -%}
 
-{#
-
-log_logic = {'daily': {'duration': 3,
-                        'unit': 'MONTH',
-                        'forever': FALSE},
-            'weekly': {'duration': 1,
-                        'unit': 'YEAR'},
-            'monthly': {'duration': 5,
-                        'unit': 'YEAR'},
-            'yearly': {'forever': TRUE} }
-
+{# Sample intervals
+   {%-set log_logic = {'daily': {'duration': 3,
+                                'unit': 'MONTH',
+                                'forever': 'FALSE'},
+                      'weekly': {'duration': 1,
+                                 'unit': 'YEAR'},
+                      'monthly': {'duration': 5,
+                                  'unit': 'YEAR'},
+                      'yearly': {'forever': 'TRUE'} } %} 
 #}
 
-{%- for interval in log_logic.keys() -%}
-
-    {%- if 'forever' not in log_logic[interval].keys() -%}
-        {% do log_logic[interval].update({'forever': FALSE}) %}
-    {%- endif -%}
-
-{%- endfor -%}
+{%- if log_logic is not none %}
+    {%- for interval in log_logic.keys() %}
+        {%- if 'forever' not in log_logic[interval].keys() -%}
+            {% do log_logic[interval].update({'forever': 'FALSE'}) %}
+        {%- endif -%}
+    {%- endfor -%}
+{%- endif %}
 
 {%- set v0_relation = ref(control_snap_v0) -%}
-
-{%- set ns = namespace(forever_status=FALSE) -%}
+{%- set ns = namespace(forever_status=FALSE) %}
 
 
 WITH 
@@ -126,7 +123,7 @@ virtual_logic AS (
         CASE
             WHEN l.sdts IS NULL THEN FALSE
             ELSE TRUE
-        END AS islatest,
+        END AS is_latest,
 
         c.caption,
         c.is_hourly,
