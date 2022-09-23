@@ -49,7 +49,7 @@
 
 {%- if ghost_record_type == 'unknown' -%}
 
-        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as "{{ column_name }}"
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{- dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as "{{ column_name }}"
         {%- elif datatype == 'VARCHAR' -%} CAST('{{ unknown_value_alt__VARCHAR_ghost_record }}' as VARCHAR(2000000) UTF8) as "{{ column_name }}"
         {%- elif datatype.upper().startswith('VARCHAR') -%}
             {%- set unknown_dtype_length = datatype.split(")")[0].split("(")[1] | int -%}
@@ -69,7 +69,7 @@
 
 {%- elif ghost_record_type == 'error' -%}
 
-        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as "{{ column_name }}"
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{- dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as "{{ column_name }}"
         {%- elif datatype == 'VARCHAR' -%} CAST('{{ error_value_alt__VARCHAR_ghost_record }}' as VARCHAR(2000000) UTF8) as "{{ column_name }}"
         {%- elif datatype.upper().startswith('VARCHAR') -%}
             {%- set error_dtype_length = datatype.split(")")[0].split("(")[1] | int -%}

@@ -44,6 +44,22 @@
 
 {%- endmacro -%}
 
+{%- macro extract_input_columns(columns_dict=none) -%}
+
+    {%- set extracted_input_columns = [] -%}
+
+    {%- if columns_dict is mapping -%}
+        {%- for key, value in columns_dict.items() -%}
+            {%- do extracted_input_columns.append(value) -%}
+        {%- endfor -%}
+
+        {%- do return(extracted_input_columns) -%}
+    {%- else -%}
+        {%- do return([]) -%}
+    {%- endif -%}
+
+{%- endmacro -%}
+
 
 {%- macro process_hash_column_excludes(hash_columns=none, source_columns=none) -%}
 
@@ -83,10 +99,14 @@
 {%- endmacro -%}
 
 
-{%- macro print_list(list_to_print=none, indent=4) -%}
+{%- macro print_list(list_to_print=none, indent=4, src_alias=none) -%}
 
     {%- for col_name in list_to_print -%}
-        {{- col_name | indent(indent) -}}{{ ",\n    " if not loop.last }}
+        {%- if src_alias %}
+        {{ (src_alias ~ '.' ~ col_name) | indent(indent) }}{{ "," if not loop.last }}
+        {%- else %}
+        {{ col_name | indent(indent) }}{{ "," if not loop.last }}
+        {%- endif %}
     {%- endfor -%}
 
 {%- endmacro -%}

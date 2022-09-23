@@ -24,13 +24,18 @@ vars:
   dbtvault_scalefree.hashdiff_input_case_sensitive: TRUE
   dbtvault_scalefree.ldts_alias: 'ldts'
   dbtvault_scalefree.rsrc_alias: 'rsrc'
+  dbtvault_scalefree.stg_alias: 'stg'
   dbtvault_scalefree.ledts_alias: 'ledts'
+  dbtvault_scalefree.is_current_col_alias: 'IS_CURRENT'
+  dbtvault_scalefree.sdts_alias: 'sdts'
   dbtvault_scalefree.eff_from_alias: 'effective_from'
   dbtvault_scalefree.eff_to_alias: 'effective_to'
   dbtvault_scalefree.rsrc_default_dtype: 'VARCHAR (200) UTF8'
+  dbtvault_scalefree.stg_default_dtype: 'VARCHAR (200) UTF8'
   dbtvault_scalefree.default_unknown_rsrc: 'SYSTEM'
   dbtvault_scalefree.default_error_rsrc: 'ERROR'
   dbtvault_scalefree.error_value__VARCHAR_ghost_record: '(error)'
   dbtvault_scalefree.unknown_value__VARCHAR_ghost_record: '(unknown)'
   dbtvault_scalefree.unknown_value_alt__VARCHAR_ghost_record: 'u'
   dbtvault_scalefree.error_value_alt__VARCHAR_ghost_record: 'e'
+  dbtvault_scalefree.copy_rsrc_ldts_input_columns: false
