@@ -1,4 +1,4 @@
-{# This is the default version of the stage macro , designed for Snowflake. #}
+{# This is the default version of the stage macro, designed for Snowflake. #}
 {%- macro snowflake__stage(include_source_columns,
                            ldts,
                            rsrc,  
@@ -72,9 +72,9 @@
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
 {%- set hash_dtype = var('dbtvault_scalefree.hash_datatype', 'STRING') -%}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash,hash_datatype=hash_dtype) -%}
-{%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00:00:01') -%}
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23:59:59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-MM-DDTHH24:MI:SS') -%}
+{%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 {%- set alias_columns = [ldts_alias, rsrc_alias] %}
 
 WITH 
@@ -173,7 +173,7 @@ source_data AS
      ,'{{ var("dbtvault_scalefree.default_ghost_rec_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
     {#- Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
      ,{%- for column in all_columns %}
-    {%- if column.name not in exclude_column_names and column.name not in ['EDWLOADDATE','REC_SRC'] -%} 
+    {%- if column.name not in exclude_column_names and column.name | upper not in ['EDWLOADDATE','REC_SRC'] -%} 
 {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='unknown') }}{{"," if not loop.last }}
     {%- endif -%}
     {%- endfor -%}
@@ -213,7 +213,7 @@ source_data AS
      ,'{{ var("dbtvault_scalefree.default_ghost_rec_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
     {#- Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
      ,{%- for column in all_columns %}
-    {%- if column.name not in exclude_column_names and column.name not in ['EDWLOADDATE','REC_SRC'] -%} 
+    {%- if column.name not in exclude_column_names and column.name | upper not in ['EDWLOADDATE','REC_SRC'] -%} 
 {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='error') }}{{"," if not loop.last }}
     {%- endif -%}
     {%- endfor -%}
