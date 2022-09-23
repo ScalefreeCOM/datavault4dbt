@@ -53,3 +53,4 @@ vars:
   dbtvault_scalefree.ledts_alias: 'ledts'
   dbtvault_scalefree.eff_from_alias: 'effective_from'
   dbtvault_scalefree.eff_to_alias: 'effective_to'
+  dbtvault_scalefree.default_ghost_rec_rsrc: 'SYSTEM'
