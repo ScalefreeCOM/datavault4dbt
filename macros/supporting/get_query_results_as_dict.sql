@@ -1,5 +1,5 @@
 {% macro get_query_results_as_dict(query) %}
-    {{ return(adapter.dispatch('get_query_results_as_dict', 'dbtvault_scalefree')(query)) }}
+    {{ return(adapter.dispatch('get_query_results_as_dict', 'datavault4dbt')(query)) }}
 {% endmacro %}
 
 {% macro default__get_query_results_as_dict(query) %}

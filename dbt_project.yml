@@ -41,16 +41,16 @@ models:
       +materialized: table
 
 vars:
-  dbtvault_scalefree.hash: 'MD5'
-  dbtvault_scalefree.hash_datatype: 'STRING'
-  dbtvault_scalefree.beginning_of_all_times: {"default":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01"}
-  dbtvault_scalefree.end_of_all_times: {"default":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59"}
-  dbtvault_scalefree.timestamp_format: {"default":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS"}
-  dbtvault_scalefree.hashkey_input_case_sensitive: FALSE
-  dbtvault_scalefree.hashdiff_input_case_sensitive: TRUE
-  dbtvault_scalefree.ldts_alias: 'ldts'
-  dbtvault_scalefree.rsrc_alias: 'rsrc'
-  dbtvault_scalefree.ledts_alias: 'ledts'
-  dbtvault_scalefree.eff_from_alias: 'effective_from'
-  dbtvault_scalefree.eff_to_alias: 'effective_to'
-  dbtvault_scalefree.default_ghost_rec_rsrc: 'SYSTEM'
+  datavault4dbt.hash: 'MD5'
+  datavault4dbt.hash_datatype: 'STRING'
+  datavault4dbt.beginning_of_all_times: {"default":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01"}
+  datavault4dbt.end_of_all_times: {"default":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59"}
+  datavault4dbt.timestamp_format: {"default":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS"}
+  datavault4dbt.hashkey_input_case_sensitive: FALSE
+  datavault4dbt.hashdiff_input_case_sensitive: TRUE
+  datavault4dbt.ldts_alias: 'ldts'
+  datavault4dbt.rsrc_alias: 'rsrc'
+  datavault4dbt.ledts_alias: 'ledts'
+  datavault4dbt.eff_from_alias: 'effective_from'
+  datavault4dbt.eff_to_alias: 'effective_to'
+  datavault4dbt.default_ghost_rec_rsrc: 'SYSTEM'

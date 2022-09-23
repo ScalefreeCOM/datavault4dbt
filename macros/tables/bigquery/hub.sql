@@ -1,13 +1,13 @@
 {%- macro default__hub(hashkey, business_keys, src_ldts, src_rsrc, source_models) -%}
 
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}) -%}
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
 
-{%- set business_keys = dbtvault_scalefree.expand_column_list(columns=[business_keys]) -%}
+{%- set business_keys = datavault4dbt.expand_column_list(columns=[business_keys]) -%}
 
 {%- for source_model in source_models.keys() %}    
 
@@ -17,9 +17,9 @@
 
         {%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
 
-    {%- elif not dbtvault_scalefree.is_list(bk_column_input) -%}
+    {%- elif not datavault4dbt.is_list(bk_column_input) -%}
 
-        {%- set bk_list = dbtvault_scalefree.expand_column_list(columns=[bk_column_input]) -%}
+        {%- set bk_list = datavault4dbt.expand_column_list(columns=[bk_column_input]) -%}
         {%- do source_models[source_model].update({'bk_columns': bk_list}) -%}
 
     {%- endif -%}
@@ -32,7 +32,7 @@
 
 {%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] -%}
 
-{{ dbtvault_scalefree.prepend_generated_by() }}
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
@@ -106,7 +106,7 @@ max_ldts_per_rsrc_static_in_target AS (
         rsrc_static,
         MAX({{ src_ldts }}) as max_ldts
     FROM {{ ns.last_cte }}
-    WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
     GROUP BY rsrc_static
 
 ), 
@@ -198,7 +198,7 @@ earliest_hk_over_all_sources AS (
 records_to_insert AS (
 
     SELECT 
-        {{ dbtvault_scalefree.print_list(final_columns_to_select) }}
+        {{ datavault4dbt.print_list(final_columns_to_select) }}
     FROM {{ ns.last_cte }}
 
     {%- if is_incremental() %}

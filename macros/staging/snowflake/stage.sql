@@ -28,53 +28,53 @@
     {%- set source_name = source_model | first -%}
     {%- set source_table_name = source_model[source_name] -%}
     {%- set source_relation = source(source_name, source_table_name) -%}
-    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
+    {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
 {%- elif source_model is not mapping and source_model is not none -%}
     {%- set source_relation = ref(source_model) -%}
-    {%- set all_source_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
+    {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
 {%- else -%}
     {%- set all_source_columns = [] -%}
 {%- endif -%}
 
 {# Ensuring that the incoming derived_columns all have a datatype. #}
-{%- if dbtvault_scalefree.is_something(derived_columns) -%}
-  {%- set derived_columns_json = dbtvault_scalefree.derived_columns_datatypes(derived_columns, source_relation) -%}
+{%- if datavault4dbt.is_something(derived_columns) -%}
+  {%- set derived_columns_json = datavault4dbt.derived_columns_datatypes(derived_columns, source_relation) -%}
   {%- set derived_columns = fromjson(derived_columns_json) -%}
 {%- endif -%}
 
 {%- set ldts_rsrc_input_column_names = [] -%}
-{%- if dbtvault_scalefree.is_attribute(ldts) -%}
+{%- if datavault4dbt.is_attribute(ldts) -%}
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts]  -%}
 {%- endif -%}
-{%- if dbtvault_scalefree.is_attribute(rsrc) -%}
+{%- if datavault4dbt.is_attribute(rsrc) -%}
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
 {%- endif -%}
 {%- if sequence is not none -%}  
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [sequence] -%}
 {%- endif -%}
 
-{%- set ldts = dbtvault_scalefree.as_constant(ldts) -%}
-{%- set rsrc = dbtvault_scalefree.as_constant(rsrc) -%}
-{%- set ldts_alias = var('dbtvault_scalefree.ldts_alias', 'ldts') -%}
-{%- set rsrc_alias = var('dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-{%- set derived_column_names = dbtvault_scalefree.extract_column_names(derived_columns) -%}
-{%- set hashed_column_names = dbtvault_scalefree.extract_column_names(hashed_columns) -%}
-{%- set prejoined_column_names = dbtvault_scalefree.extract_column_names(prejoined_columns) -%}
-{%- set missing_column_names = dbtvault_scalefree.extract_column_names(missing_columns) -%}
+{%- set ldts = datavault4dbt.as_constant(ldts) -%}
+{%- set rsrc = datavault4dbt.as_constant(rsrc) -%}
+{%- set ldts_alias = var('datavault4dbt.ldts_alias', 'ldts') -%}
+{%- set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
+{%- set derived_column_names = datavault4dbt.extract_column_names(derived_columns) -%}
+{%- set hashed_column_names = datavault4dbt.extract_column_names(hashed_columns) -%}
+{%- set prejoined_column_names = datavault4dbt.extract_column_names(prejoined_columns) -%}
+{%- set missing_column_names = datavault4dbt.extract_column_names(missing_columns) -%}
 {%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
-{%- set source_columns_to_select = dbtvault_scalefree.process_columns_to_select(all_source_columns, exclude_column_names) -%}
-{%- set derived_columns_to_select = dbtvault_scalefree.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
+{%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_source_columns, exclude_column_names) -%}
+{%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 {%- set final_columns_to_select = [] -%}
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 
 {#- Select hashing algorithm and datatype -#}
-{%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
-{%- set hash_dtype = var('dbtvault_scalefree.hash_datatype', 'STRING') -%}
-{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash,hash_datatype=hash_dtype) -%}
-{%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype) -%}
+{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 {%- set alias_columns = [ldts_alias, rsrc_alias] %}
 
 WITH 
@@ -82,7 +82,7 @@ WITH
 source_data AS 
 (
     SELECT
-      {{- "\n\t" ~ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
+      {{- "\n\t" ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
     FROM 
       {{ source_relation }}
   {%- set last_cte = "source_data" %}
@@ -97,18 +97,18 @@ source_data AS
       {{ sequence }} AS edwSequence,
     {%- set alias_columns = alias_columns + ['edwSequence'] -%}
     {% endif -%}
-        {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(source_columns_to_select)) }}
+        {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_columns_to_select)) }}
     FROM 
        {{ last_cte }}
   {%- set last_cte = "ldts_rsrc_data" %}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select %}
 )
 {#- Filling missing columns with NULL values for schema changes #}
-{%- if dbtvault_scalefree.is_something(missing_columns) %}
+{%- if datavault4dbt.is_something(missing_columns) %}
 , missing_columns AS 
 (
     SELECT 
-    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
     {%- for col, dtype in missing_columns.items() %}
     CAST(NULL AS {{ dtype }}) AS {{ col | upper }} {% if not loop.last %},{% endif -%}
     {%- endfor %}
@@ -119,11 +119,11 @@ source_data AS
 )
 {%- endif -%}
 {#- Prejoining Business Keys of other source objects for Link purposes #}
-{%- if dbtvault_scalefree.is_something(prejoined_columns) %}
+{%- if datavault4dbt.is_something(prejoined_columns) %}
 , prejoined_columns AS 
 (  
     SELECT
-    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.prefix(columns=dbtvault_scalefree.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
+    {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=datavault4dbt.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
   {%- for col, vals in prejoined_columns.items() %}
     ,pj_{{loop.index}}.{{ vals['bk'] }} AS {{ col | upper }}
   {% endfor -%}
@@ -138,12 +138,12 @@ source_data AS
 )
 {%- endif -%}
 {#- Adding derived columns to the selection #}
-{%- if dbtvault_scalefree.is_something(derived_columns) %}
+{%- if datavault4dbt.is_something(derived_columns) %}
 , derived_columns AS 
 (
     SELECT
-    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
-    {{ dbtvault_scalefree.derive_columns(columns=derived_columns) | indent(4) }}
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
+    {{ datavault4dbt.derive_columns(columns=derived_columns) | indent(4) }}
     FROM 
       {{ last_cte }}
     {%- set last_cte = "derived_columns" -%}
@@ -151,13 +151,13 @@ source_data AS
 )
 {%- endif -%}
 {#- Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
-{% if dbtvault_scalefree.is_something(hashed_columns) and hashed_columns is mapping -%}
+{% if datavault4dbt.is_something(hashed_columns) and hashed_columns is mapping -%}
 , hashed_columns AS 
 (
     SELECT
-    {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
-    {% set processed_hash_columns = dbtvault_scalefree.process_hash_column_excludes(hashed_columns) -%}
-    {{- dbtvault_scalefree.hash_columns(columns=processed_hash_columns) | upper | indent(4) }}
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
+    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+    {{- datavault4dbt.hash_columns(columns=processed_hash_columns) | upper | indent(4) }}
     FROM 
       {{ last_cte }}
     {%- set last_cte = "hashed_columns" -%}
@@ -169,18 +169,18 @@ source_data AS
 (
     {%- set all_columns = adapter.get_columns_in_relation(source_relation) %}
     SELECT
-      {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['snowflake'], beginning_of_all_times['snowflake']) }} AS {{ ldts_alias | upper }}
-     ,'{{ var("dbtvault_scalefree.default_ghost_rec_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
+      {{ datavault4dbt.string_to_timestamp(timestamp_format['snowflake'], beginning_of_all_times['snowflake']) }} AS {{ ldts_alias | upper }}
+     ,'{{ var("datavault4dbt.default_ghost_rec_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
     {#- Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
      ,{%- for column in all_columns %}
     {%- if column.name not in exclude_column_names and column.name | upper not in ['EDWLOADDATE','REC_SRC'] -%} 
-{{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='unknown') }}{{"," if not loop.last }}
+{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='unknown') }}{{"," if not loop.last }}
     {%- endif -%}
     {%- endfor -%}
     {#- Additionally generating ghost record for missing columns #}
     {%- if missing_columns is not none -%}
       ,{%- for col, dtype in missing_columns.items() -%}        
-     {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=col | upper, datatype=dtype, ghost_record_type='unknown') }}{{"," if not loop.last }}     
+     {{ datavault4dbt.ghost_record_per_datatype(column_name=col | upper, datatype=dtype, ghost_record_type='unknown') }}{{"," if not loop.last }}     
       {%- endfor -%}
     {%- endif %}
     {#- Additionally generating ghost records for the prejoined attributes#}
@@ -188,7 +188,7 @@ source_data AS
       {%- for col, vals in prejoined_columns.items() -%}
       {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
         {%- for column in pj_relation_columns -%}
-            {%- if column.name|lower == vals['bk']|lower -%},{{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='unknown') }}
+            {%- if column.name|lower == vals['bk']|lower -%},{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='unknown') }}
             {%- endif -%}
         {%- endfor -%}
       {%- endfor -%}
@@ -196,7 +196,7 @@ source_data AS
     {# Additionally generating Ghost Records for Derived Columns #}
     {%- if derived_columns is not none -%}
       ,{%- for column_name, properties in derived_columns.items() -%}
-        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name | upper, datatype=properties.datatype, ghost_record_type='unknown') }}{{"," if not loop.last }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name | upper, datatype=properties.datatype, ghost_record_type='unknown') }}{{"," if not loop.last }}
       {%- endfor -%}
     {%- endif -%}    
     {#- Generating Ghost Records for hash columns #}
@@ -209,18 +209,18 @@ source_data AS
 (
     {%- set all_columns = adapter.get_columns_in_relation(source_relation) %}
     SELECT
-      {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }} AS {{ ldts_alias | upper }}
-     ,'{{ var("dbtvault_scalefree.default_ghost_rec_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
+      {{ datavault4dbt.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }} AS {{ ldts_alias | upper }}
+     ,'{{ var("datavault4dbt.default_ghost_rec_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
     {#- Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
      ,{%- for column in all_columns %}
     {%- if column.name not in exclude_column_names and column.name | upper not in ['EDWLOADDATE','REC_SRC'] -%} 
-{{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='error') }}{{"," if not loop.last }}
+{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='error') }}{{"," if not loop.last }}
     {%- endif -%}
     {%- endfor -%}
     {#- Additionally generating ghost record for missing columns #}
     {%- if missing_columns is not none -%}
       ,{%- for col, dtype in missing_columns.items() -%}        
-     {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=col | upper, datatype=dtype, ghost_record_type='error') }}{{"," if not loop.last }}     
+     {{ datavault4dbt.ghost_record_per_datatype(column_name=col | upper, datatype=dtype, ghost_record_type='error') }}{{"," if not loop.last }}     
       {%- endfor -%}
     {%- endif -%}
     {#- Additionally generating ghost records for the prejoined attributes#}
@@ -228,7 +228,7 @@ source_data AS
       {%- for col, vals in prejoined_columns.items() -%}
         {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
           {%- for column in pj_relation_columns -%}
-            {%- if column.name|lower == vals['bk']|lower -%},{{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='error') }}
+            {%- if column.name|lower == vals['bk']|lower -%},{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name | upper, datatype=column.dtype, ghost_record_type='error') }}
             {%- endif -%}
           {%- endfor -%}
         {%- endfor -%}
@@ -236,7 +236,7 @@ source_data AS
     {# Additionally generating Ghost Records for Derived Columns #}
     {%- if derived_columns is not none -%}
       ,{%- for column_name, properties in derived_columns.items() -%}
-        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column_name | upper, datatype=properties.datatype, ghost_record_type='error') }}{{"," if not loop.last }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name | upper, datatype=properties.datatype, ghost_record_type='error') }}{{"," if not loop.last }}
       {%- endfor -%}
     {%- endif -%}
     {#- Generating Ghost Records for hash columns #}

@@ -1,5 +1,5 @@
 {% macro string_to_timestamp(format, timestamp) %}
-{{return(adapter.dispatch('string_to_timestamp', 'dbtvault_scalefree')(format=format,
+{{return(adapter.dispatch('string_to_timestamp', 'datavault4dbt')(format=format,
                                                                         timestamp= timestamp)) }}
 {%- endmacro -%}
 

@@ -220,7 +220,7 @@ derived_columns:
 
 {% set metadata_dict = fromyaml(yaml_metadata) %}
 
-{{ dbtvault_scalefree.stage(include_source_columns=metadata_dict['include_source_columns'],
+{{ datavault4dbt.stage(include_source_columns=metadata_dict['include_source_columns'],
                   source_table=metadata_dict['source_table'],
                   source_name=metadata_dict['source_name'],
                   hashed_columns=metadata_dict['hashed_columns'],

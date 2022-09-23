@@ -1,19 +1,19 @@
 {%- macro snowflake__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
 
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times','8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times','8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
 
-{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[parent_hashkey, src_hashdiff, src_ldts, src_rsrc, src_payload]) -%}
+{%- set source_cols = datavault4dbt.expand_column_list(columns=[parent_hashkey, src_hashdiff, src_ldts, src_rsrc, src_payload]) -%}
 {%- set source_relation = ref(source_model) -%}
 
-{{ dbtvault_scalefree.prepend_generated_by() }}
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 {#- Selecting all source data, that is newer than latest data in sat if incremental #}
 source_data AS 
 (
     SELECT
-       {{ dbtvault_scalefree.print_list(source_cols) }}
+       {{ datavault4dbt.print_list(source_cols) }}
     FROM 
         {{ source_relation }}
     {%- if is_incremental() %}
@@ -23,7 +23,7 @@ source_data AS
             MAX({{ src_ldts }}) 
         FROM 
            {{ this }}
-        WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }}
+        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }}
     )
     {%- endif %}
 )
@@ -44,7 +44,7 @@ source_data AS
 , deduplicated_numbered_source AS 
 (
     SELECT 
-    {{ dbtvault_scalefree.print_list(source_cols) }}
+    {{ datavault4dbt.print_list(source_cols) }}
     {% if is_incremental() %}
     ,ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) AS rn,
     {%- endif -%}
@@ -61,7 +61,7 @@ source_data AS
 , records_to_insert AS 
 (
     SELECT 
-       {{ dbtvault_scalefree.print_list(source_cols) }}
+       {{ datavault4dbt.print_list(source_cols) }}
     FROM 
         deduplicated_numbered_source
     {%- if is_incremental() %}
@@ -69,8 +69,8 @@ source_data AS
     (
         SELECT 1
         FROM latest_entries_in_sat
-        WHERE {{ dbtvault_scalefree.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
-            AND {{ dbtvault_scalefree.multikey(src_hashdiff, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
+        WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
+            AND {{ datavault4dbt.multikey(src_hashdiff, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
             AND deduplicated_numbered_source.rn = 1
     )
     {%- endif %}

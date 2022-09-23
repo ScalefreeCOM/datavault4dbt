@@ -7,8 +7,8 @@
 {%- endif -%}
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}) -%}
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times','8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times','8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apple the values set in the link_hashkey and foreign_hashkeys variable. #}
 {%- for source_model in source_models.keys() %}    
@@ -22,7 +22,7 @@
 
 {%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] -%}
 
-{{ dbtvault_scalefree.prepend_generated_by() }}
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 {%- if is_incremental() -%}
@@ -84,7 +84,7 @@ max_ldts_per_rsrc_static_in_target AS
         MAX({{ src_ldts }}) AS max_ldts
     FROM 
         {{ ns.last_cte }}
-    WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }}
     GROUP BY rsrc_static
 ), 
 {% endif -%}
@@ -152,7 +152,7 @@ records_to_insert AS
 (
     {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the link. #}
     SELECT 
-        {{ dbtvault_scalefree.print_list(final_columns_to_select) }}
+        {{ datavault4dbt.print_list(final_columns_to_select) }}
     FROM 
         {{ ns.last_cte }}
     {%- if is_incremental() %}

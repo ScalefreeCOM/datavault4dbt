@@ -1,6 +1,6 @@
 {%- macro max_datetime() -%}
 
-    {{- return(adapter.dispatch('max_datetime', 'dbtvault_scalefree')()) -}}
+    {{- return(adapter.dispatch('max_datetime', 'datavault4dbt')()) -}}
 
 {%- endmacro %}
 

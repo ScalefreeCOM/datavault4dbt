@@ -93,7 +93,7 @@
   
   {%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
     
-    {{ return(adapter.dispatch('stage', 'dbtvault_scalefree')(include_source_columns=include_source_columns,
+    {{ return(adapter.dispatch('stage', 'datavault4dbt')(include_source_columns=include_source_columns,
                                         ldts=ldts,
                                         rsrc=rsrc, 
                                         source_model=source_model, 

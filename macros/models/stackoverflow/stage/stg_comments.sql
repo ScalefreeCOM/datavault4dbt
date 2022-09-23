@@ -29,7 +29,7 @@ include_source_columns: true
 
 {%- set metadata_dict = fromyaml(yaml_metadata) -%}
 
-{{ dbtvault_scalefree.stage(include_source_columns=metadata_dict['include_source_columns'],
+{{ datavault4dbt.stage(include_source_columns=metadata_dict['include_source_columns'],
                   source_model=metadata_dict['source_model'],
                   hashed_columns=metadata_dict['hashed_columns'],
                   rsrc=metadata_dict['rsrc'],

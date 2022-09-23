@@ -1,6 +1,6 @@
 {%- macro hash_default_values(hash_function, hash_datatype) -%}
 
-    {{ return(adapter.dispatch('hash_default_values', 'dbtvault_scalefree')(hash_function=hash_function,hash_datatype=hash_datatype)) }}
+    {{ return(adapter.dispatch('hash_default_values', 'datavault4dbt')(hash_function=hash_function,hash_datatype=hash_datatype)) }}
 
 {%- endmacro -%}
 

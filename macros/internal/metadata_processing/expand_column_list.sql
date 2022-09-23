@@ -8,7 +8,7 @@
 
 {%- set col_list = [] -%}
 
-{%- if dbtvault_scalefree.is_list(columns) -%}
+{%- if datavault4dbt.is_list(columns) -%}
 
     {%- set columns = columns | reject("none") %}
 
@@ -19,7 +19,7 @@
             {%- do col_list.append(col) -%}
 
         {#- If list of lists -#}
-        {%- elif dbtvault_scalefree.is_list(col) -%}
+        {%- elif datavault4dbt.is_list(col) -%}
 
             {%- for cols in col -%}
 

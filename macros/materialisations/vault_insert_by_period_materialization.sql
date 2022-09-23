@@ -10,15 +10,15 @@
     {%- set existing_relation = load_relation(this) -%}
     {%- set tmp_relation = make_temp_relation(target_relation) -%}
 
-    {%- set timestamp_field = dbtvault_scalefree.escape_column_names(config.require('timestamp_field')) -%}
+    {%- set timestamp_field = datavault4dbt.escape_column_names(config.require('timestamp_field')) -%}
     {%- set date_source_models = config.get('date_source_models', default=none) -%}
 
-    {%- set start_stop_dates = dbtvault_scalefree.get_start_stop_dates(timestamp_field, date_source_models) | as_native -%}
+    {%- set start_stop_dates = datavault4dbt.get_start_stop_dates(timestamp_field, date_source_models) | as_native -%}
 
     {%- set period = config.get('period', default='day') -%}
     {%- set to_drop = [] -%}
 
-    {%- do dbtvault_scalefree.check_placeholder(sql) -%}
+    {%- do datavault4dbt.check_placeholder(sql) -%}
 
     {{ run_hooks(pre_hooks, inside_transaction=False) }}
 
@@ -27,7 +27,7 @@
 
     {% if existing_relation is none %}
 
-        {% set filtered_sql = dbtvault_scalefree.replace_placeholder_with_period_filter(sql, timestamp_field,
+        {% set filtered_sql = datavault4dbt.replace_placeholder_with_period_filter(sql, timestamp_field,
                                                                        start_stop_dates.start_date,
                                                                        start_stop_dates.stop_date,
                                                                        0, period) %}
@@ -40,21 +40,21 @@
         {% do adapter.drop_relation(existing_relation) %}
         {% set build_sql = create_table_as(False, target_relation, filtered_sql) %}
 
-        {% set filtered_sql = dbtvault_scalefree.replace_placeholder_with_period_filter(sql, timestamp_field,
+        {% set filtered_sql = datavault4dbt.replace_placeholder_with_period_filter(sql, timestamp_field,
                                                                        start_stop_dates.start_date,
                                                                        start_stop_dates.stop_date,
                                                                        0, period) %}
         {% set build_sql = create_table_as(False, target_relation, filtered_sql) %}
 
     {% elif full_refresh_mode %}
-        {% set filtered_sql = dbtvault_scalefree.replace_placeholder_with_period_filter(sql, timestamp_field,
+        {% set filtered_sql = datavault4dbt.replace_placeholder_with_period_filter(sql, timestamp_field,
                                                                        start_stop_dates.start_date,
                                                                        start_stop_dates.stop_date,
                                                                        0, period) %}
         {% set build_sql = create_table_as(False, target_relation, filtered_sql) %}
     {% else %}
 
-        {% set period_boundaries = dbtvault_scalefree.get_period_boundaries(schema,
+        {% set period_boundaries = datavault4dbt.get_period_boundaries(schema,
                                                                   target_relation.name,
                                                                   timestamp_field,
                                                                   start_stop_dates.start_date,
@@ -68,13 +68,13 @@
         {% for i in range(period_boundaries.num_periods) -%}
 
             {%- set iteration_number = i + 1 -%}
-            {%- set period_of_load = dbtvault_scalefree.get_period_of_load(period, i, period_boundaries.start_timestamp) -%}
+            {%- set period_of_load = datavault4dbt.get_period_of_load(period, i, period_boundaries.start_timestamp) -%}
 
             {{ dbt_utils.log_info("Running for {} {} of {} ({}) [{}]".format(period, iteration_number, period_boundaries.num_periods, period_of_load, model.unique_id)) }}
 
             {% set tmp_relation = make_temp_relation(target_relation) %}
 
-            {% set tmp_table_sql = dbtvault_scalefree.get_period_filter_sql(target_cols_csv, sql, timestamp_field, period,
+            {% set tmp_table_sql = datavault4dbt.get_period_filter_sql(target_cols_csv, sql, timestamp_field, period,
                                                                   period_boundaries.start_timestamp,
                                                                   period_boundaries.stop_timestamp, i) %}
 

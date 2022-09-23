@@ -62,7 +62,7 @@
 
 {%- macro control_snap_v1(control_snap_v0, log_logic=none) -%}
 
-{{ return(adapter.dispatch('control_snap_v1', 'dbtvault_scalefree')(control_snap_v0=control_snap_v0,
+{{ return(adapter.dispatch('control_snap_v1', 'datavault4dbt')(control_snap_v0=control_snap_v0,
                                                                     log_logic=log_logic)) }}
 
 {%- endmacro -%}                                                                    

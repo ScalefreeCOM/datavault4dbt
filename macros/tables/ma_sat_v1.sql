@@ -50,13 +50,13 @@
                                                                             iid, which is an increasing identifier within a phone_type, is added as a ma_attribute. 
 
 
-    src_ldts::string                            Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
+    src_ldts::string                            Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
-    src_rsrc::string                            Name of the rsrc column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
+    src_rsrc::string                            Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
-    ledts_alias::string                         Desired alias for the load end date column. Is optional, will use the global variable 'dbtvault_scalefree.ledts_alias' if
+    ledts_alias::string                         Desired alias for the load end date column. Is optional, will use the global variable 'datavault4dbt.ledts_alias' if
                                                 set here.  
 
 #}
@@ -65,11 +65,11 @@
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
     
-    {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-    {%- set src_ledts = dbtvault_scalefree.replace_standard(src_ledts, 'dbtvault_scalefree.ledts_alias', 'ledts') -%}
+    {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
+    {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
+    {%- set src_ledts = datavault4dbt.replace_standard(src_ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
 
-    {{ adapter.dispatch('ma_sat_v1', 'dbtvault_scalefree')(sat_v0=sat_v0,
+    {{ adapter.dispatch('ma_sat_v1', 'datavault4dbt')(sat_v0=sat_v0,
                                          hashkey=hashkey,
                                          hashdiff=hashdiff,
                                          ma_attribute=ma_attribute,

@@ -36,7 +36,7 @@
 
         start_date::timestamp           Defines the earliest timestamp that should be available inside the snapshot_table. The time part of this
                                         timestamp needs to be set to '00:00:00'. The format of this timestamp must equal to the timestamp format
-                                        defined in the global variable 'dbtvault_scalefree..timestamp_format'.
+                                        defined in the global variable 'datavault4dbt..timestamp_format'.
 
                                         Examples:
                                             '2015-01-01T00-00-00'   This snapshot table would hold daily snapshots beginning at 2015.
@@ -52,7 +52,7 @@
 
 {%- macro control_snap_v0(start_date, daily_snapshot_time) -%}
 
-    {{ return(adapter.dispatch('control_snap_v0', 'dbtvault_scalefree')(start_date=start_date,
+    {{ return(adapter.dispatch('control_snap_v0', 'datavault4dbt')(start_date=start_date,
                                                                         daily_snapshot_time=daily_snapshot_time)) }}
 
 {%- endmacro -%}

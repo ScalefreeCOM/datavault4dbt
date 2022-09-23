@@ -1,19 +1,19 @@
 <div align="center">
-  <img src="https://user-images.githubusercontent.com/25080503/65772647-89525700-e132-11e9-80ff-12ad30a25466.png" alt="dbtvault">
+  <img src="https://user-images.githubusercontent.com/25080503/65772647-89525700-e132-11e9-80ff-12ad30a25466.png" alt="datavault4dbt">
 
-  [![Documentation Status](https://img.shields.io/badge/docs-stable-blue)](https://dbtvault.readthedocs.io/en/stable/?badge=stable)
-  [![Slack](https://img.shields.io/badge/Slack-Join-yellow?style=flat&logo=slack)](https://join.slack.com/t/dbtvault/shared_invite/enQtODY5MTY3OTIyMzg2LWJlZDMyNzM4YzAzYjgzYTY0MTMzNTNjN2EyZDRjOTljYjY0NDYyYzEwMTlhODMzNGY3MmU2ODNhYWUxYmM2NjA)
+  [![Documentation Status](https://img.shields.io/badge/docs-stable-blue)](https://datavault4dbt.readthedocs.io/en/stable/?badge=stable)
+  [![Slack](https://img.shields.io/badge/Slack-Join-yellow?style=flat&logo=slack)](https://join.slack.com/t/datavault4dbt/shared_invite/enQtODY5MTY3OTIyMzg2LWJlZDMyNzM4YzAzYjgzYTY0MTMzNTNjN2EyZDRjOTljYjY0NDYyYzEwMTlhODMzNGY3MmU2ODNhYWUxYmM2NjA)
   
 </div>
 
 
-[Changelog and past doc versions](https://dbtvault.readthedocs.io/en/latest/changelog/stable)
+[Changelog and past doc versions](https://datavault4dbt.readthedocs.io/en/latest/changelog/stable)
 
-# dbtvault by [Datavault](https://www.data-vault.co.uk)
+# datavault4dbt by [Datavault](https://www.data-vault.co.uk)
 
-Build your own Data Vault data warehouse! dbtvault is a free to use dbt package that generates & executes the ETL you need to run a Data Vault 2.0 Data Warehouse on your data platform.
+Build your own Data Vault data warehouse! datavault4dbt is a free to use dbt package that generates & executes the ETL you need to run a Data Vault 2.0 Data Warehouse on your data platform.
 
-What does dbtvault offer?
+What does datavault4dbt offer?
 - productivity gains, fewer errors
 - multi-threaded execution of the generated SQL
 - your data modeller can generate most of the ETL code directly from their mapping metadata
@@ -26,17 +26,17 @@ powered by [dbt](https://www.getdbt.com/), a registered trademark of [dbt Labs](
 
 Learn quickly with our worked example:
 
-- [Read the docs](https://dbtvault.readthedocs.io/en/latest/worked_example/we_worked_example/)
+- [Read the docs](https://datavault4dbt.readthedocs.io/en/latest/worked_example/we_worked_example/)
 
 - [Project Repository](https://github.com/Datavault-UK/snowflakeDemo)
 
 ## Supported platforms:
 
-[Platform support matrix](https://dbtvault.readthedocs.io/en/latest/macros/#platform-support)
+[Platform support matrix](https://datavault4dbt.readthedocs.io/en/latest/macros/#platform-support)
 
 ## Installation
 
-Check [dbt Hub](https://hub.getdbt.com/datavault-uk/dbtvault/latest/) for the latest installation instructions, 
+Check [dbt Hub](https://hub.getdbt.com/datavault-uk/datavault4dbt/latest/) for the latest installation instructions, 
 or [read the docs](https://docs.getdbt.com/docs/building-a-dbt-project/package-management/) for more information on installing packages.
 
 ## Usage
@@ -54,15 +54,15 @@ or [read the docs](https://docs.getdbt.com/docs/building-a-dbt-project/package-m
 ...
 
 # Call the macro
-{{ dbtvault.hub(src_pk, src_nk, src_ldts,
+{{ datavault4dbt.hub(src_pk, src_nk, src_ldts,
                 src_source, source_model) }}
 ```
 
 ## Join our Slack Channel
 
-Talk to our developers and other members of our growing community, get support and discuss anything related to dbtvault or Data Vault 2.0
+Talk to our developers and other members of our growing community, get support and discuss anything related to datavault4dbt or Data Vault 2.0
 
-[![Join our Slack](https://img.shields.io/badge/Slack-Join-yellow?style=flat&logo=slack)](https://join.slack.com/t/dbtvault/shared_invite/enQtODY5MTY3OTIyMzg2LWJlZDMyNzM4YzAzYjgzYTY0MTMzNTNjN2EyZDRjOTljYjY0NDYyYzEwMTlhODMzNGY3MmU2ODNhYWUxYmM2NjA)
+[![Join our Slack](https://img.shields.io/badge/Slack-Join-yellow?style=flat&logo=slack)](https://join.slack.com/t/datavault4dbt/shared_invite/enQtODY5MTY3OTIyMzg2LWJlZDMyNzM4YzAzYjgzYTY0MTMzNTNjN2EyZDRjOTljYjY0NDYyYzEwMTlhODMzNGY3MmU2ODNhYWUxYmM2NjA)
 
 ## Awards
 

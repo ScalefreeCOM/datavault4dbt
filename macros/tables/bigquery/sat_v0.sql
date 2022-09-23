@@ -1,17 +1,17 @@
 {%- macro default__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
 
-{%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
+{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
 
-{%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
-{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[parent_hashkey, src_hashdiff, src_ldts, src_rsrc, src_payload]) -%}
+{%- set source_cols = datavault4dbt.expand_column_list(columns=[parent_hashkey, src_hashdiff, src_ldts, src_rsrc, src_payload]) -%}
 
 {%- set source_relation = ref(source_model) -%}
 
-{{ dbtvault_scalefree.prepend_generated_by() }}
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
@@ -19,14 +19,14 @@ WITH
 source_data AS (
 
     SELECT
-        {{ dbtvault_scalefree.print_list(source_cols) }}
+        {{ datavault4dbt.print_list(source_cols) }}
     FROM {{ source_relation }}
 
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
         SELECT 
             MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
+        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
     )
     {%- endif %}
 ),
@@ -52,7 +52,7 @@ latest_entries_in_sat AS (
 deduplicated_numbered_source AS (
 
     SELECT 
-        {{ dbtvault_scalefree.print_list(source_cols) }}
+        {{ datavault4dbt.print_list(source_cols) }}
     {% if is_incremental() %}
         ,ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) as rn,
     {%- endif -%}
@@ -71,14 +71,14 @@ deduplicated_numbered_source AS (
 records_to_insert AS (
 
     SELECT 
-        {{ dbtvault_scalefree.print_list(source_cols) }}
+        {{ datavault4dbt.print_list(source_cols) }}
     FROM deduplicated_numbered_source
     {%- if is_incremental() %}
     WHERE NOT EXISTS (
         SELECT 1
         FROM latest_entries_in_sat
-        WHERE {{ dbtvault_scalefree.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
-            AND {{ dbtvault_scalefree.multikey(src_hashdiff, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
+        WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
+            AND {{ datavault4dbt.multikey(src_hashdiff, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
             AND deduplicated_numbered_source.rn = 1)
     {%- endif %}
     

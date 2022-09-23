@@ -4,7 +4,7 @@
         {%- set is_hashdiff = false -%}
     {%- endif -%}
 
-    {{- adapter.dispatch('hash', 'dbtvault_scalefree')(columns=columns, 
+    {{- adapter.dispatch('hash', 'datavault4dbt')(columns=columns, 
                                              alias=alias, 
                                              is_hashdiff=is_hashdiff) -}}
 
@@ -12,16 +12,16 @@
 
 {%- macro default__hash(columns, alias, is_hashdiff) -%}
 
-{%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
+{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
 {%- set quote = var('quote', '"') -%}
 {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
 
-{%- set hashkey_input_case_sensitive = var('dbtvault_scalefree.hashkey_input_case_sensitive', FALSE) -%}
-{%- set hashdiff_input_case_sensitive = var('dbtvault_scalefree.hashdiff_input_case_sensitive', TRUE) -%}
+{%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
+{%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
 
 {#- Select hashing algorithm -#}
-{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
+{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
 
 {%- set attribute_standardise = attribute_standardise() %}
 
@@ -46,7 +46,7 @@
     {%- if '.' in column %}
         {% set column_str = column -%}
     {%- else -%}
-        {%- set column_str = dbtvault_scalefree.as_constant(column) -%}
+        {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
 
     {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}

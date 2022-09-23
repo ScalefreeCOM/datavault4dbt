@@ -9,11 +9,11 @@
 
 {%- endif -%}
 
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 
-{{ dbtvault_scalefree.prepend_generated_by() }}
+{{ datavault4dbt.prepend_generated_by() }}
 
 {% set source_relation = ref(source_model) %}
 
@@ -36,7 +36,7 @@ source_data AS (
     {%- if is_incremental() -%}
     WHERE {{ src_ldts }} > (SELECT MAX({{ src_ldts }}) 
                             FROM {{ this }}
-                            WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }} )
+                            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} )
     {%- endif -%}
 
     {# Deudplicate the data and only get the earliest entry for each link hashkey. #}

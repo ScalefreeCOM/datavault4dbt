@@ -1,6 +1,6 @@
 {%- macro default__control_snap_v0(start_date, daily_snapshot_time) -%}
 
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 WITH 
 
@@ -9,7 +9,7 @@ initial_timestamps AS (
     SELECT sdts
     FROM
         UNNEST(GENERATE_TIMESTAMP_ARRAY(
-            {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['default'], start_date) }},
+            {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], start_date) }},
             TIMESTAMP_ADD(
                 TIMESTAMP_ADD(
                     TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY), 
