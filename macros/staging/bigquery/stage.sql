@@ -81,9 +81,10 @@
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 
-{#- Select hashing algorithm -#}
+{#- Select hashing algorithm and datatype -#}
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
+{%- set hash_dtype = var('dbtvault_scalefree.hash_datatype', 'STRING') -%}
+{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash,hash_datatype=hash_dtype) -%}
 
 {%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
@@ -134,7 +135,7 @@ missing_columns AS (
     {{ dbtvault_scalefree.print_list(dbtvault_scalefree.escape_column_names(final_columns_to_select)) }},
 
   {%- for col, dtype in missing_columns.items() %}
-    CAST(NULL as {{ dtype }}) as {{ col }},
+    CAST(NULL as {{ dtype }}) as {{ col }}{% if not loop.last %},{% endif -%}
     
   {% endfor %}
 
@@ -209,13 +210,13 @@ unknown_values AS (
 
     SELECT
     
-    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ ldts_alias }},
-    '{{ var("dbtvault_scalefree.default_unknown_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
+    {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['default'],beginning_of_all_times['default']) }} as {{ ldts_alias }},
+    '{{ var("dbtvault_scalefree.default_ghost_rec_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
-      {%- if column.name not in exclude_column_names %}
-        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }},
+      {%- if column.name not in exclude_column_names and column.name | upper not in ['EDWLOADDATE','REC_SRC'] %}
+        {{ dbtvault_scalefree.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}{{"," if not loop.last }}
       {%- endif -%}
     {% endfor %}
 
@@ -272,8 +273,8 @@ error_values AS (
 
     SELECT
     
-    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ ldts_alias }},
-    '{{ var("dbtvault_scalefree.default_error_rsrc", "ERROR") }}' as {{ rsrc_alias }},
+    {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['default'],end_of_all_times['default']) }} as {{ ldts_alias }},
+    '{{ var("dbtvault_scalefree.default_ghost_rec_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
