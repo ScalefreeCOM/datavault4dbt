@@ -3,8 +3,6 @@
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times','8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
 
-{%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 {%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[parent_hashkey, src_hashdiff, src_ldts, src_rsrc, src_payload]) -%}
 {%- set source_relation = ref(source_model) -%}
 
@@ -48,7 +46,7 @@ source_data AS
     SELECT 
     {{ dbtvault_scalefree.print_list(source_cols) }}
     {% if is_incremental() %}
-    ,ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) as rn,
+    ,ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) AS rn,
     {%- endif -%}
     FROM 
         source_data   
