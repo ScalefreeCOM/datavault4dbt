@@ -170,7 +170,7 @@ source_data AS
     {%- set all_columns = adapter.get_columns_in_relation(source_relation) %}
     SELECT
       {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['snowflake'], beginning_of_all_times['snowflake']) }} AS {{ ldts_alias | upper }}
-     ,'{{ var("dbtvault_scalefree.default_unknown_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
+     ,'{{ var("dbtvault_scalefree.default_ghost_rec_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
     {#- Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
      ,{%- for column in all_columns %}
     {%- if column.name not in exclude_column_names and column.name not in ['EDWLOADDATE','REC_SRC'] -%} 
@@ -210,7 +210,7 @@ source_data AS
     {%- set all_columns = adapter.get_columns_in_relation(source_relation) %}
     SELECT
       {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }} AS {{ ldts_alias | upper }}
-     ,'{{ var("dbtvault_scalefree.default_error_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
+     ,'{{ var("dbtvault_scalefree.default_ghost_rec_rsrc", "SYSTEM") }}' AS {{ rsrc_alias | upper }}
     {#- Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
      ,{%- for column in all_columns %}
     {%- if column.name not in exclude_column_names and column.name not in ['EDWLOADDATE','REC_SRC'] -%} 
