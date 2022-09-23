@@ -4,9 +4,6 @@
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times','8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
 
-{%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
-
 {%- set source_relation = ref(sat_v0) -%}
 {%- set all_columns = dbtvault_scalefree.source_columns(source_relation=source_relation) -%}
 {%- set exclude = dbtvault_scalefree.expand_column_list(columns=[hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc]) -%}
