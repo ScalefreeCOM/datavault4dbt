@@ -39,6 +39,10 @@
     {%- endif -%}
 
     {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
+
+        {# set rsrc_static to the unique value of the rsrc column of that source (see pre-release branch hub macro) #}
+
+    {%- elif 'rsrc_static' == '%' -%}
         {%- set ns.has_rsrc_static_defined = false -%}
     {%- else -%}
 
