@@ -1,10 +1,17 @@
-{%- macro exasol__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc) -%}
+{%- macro exasol__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg) -%}
 
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 
-{%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={}, all_rsrc=[]) -%}
+{# Setting the unknown and error ghost record value for record source column #}
+{%- set rsrc_unknown = var('dbtvault_scalefree.default_unknown_rsrc', 'SYSTEM') -%}
+{%- set rsrc_error = var('dbtvault_scalefree.default_error_rsrc', 'ERROR') -%}
+
+{# Setting the rsrc and stg_alias default datatype and length #}
+{%- set rsrc_default_dtype = var('dbtvault_scalefree.rsrc_default_dtype', 'VARCHAR (2000000) UTF8') -%}
+{%- set stg_default_dtype = var('dbtvault_scalefree.stg_default_dtype', 'VARCHAR (200) UTF8') -%}
+{%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
 
 {%- if source_models is not mapping -%}
     {%- if execute -%}
@@ -14,22 +21,17 @@
 
 
 {# If no specific hk_column is defined for each source, we apply the values set in the tracked_hashkey input variable. #}
-{# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
-{# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
+{# If no rsrc_static parameter is defined in a source model then it is assumed that the record source column for that source is always static  #}
+{# If rsrc_static in any of the models is defined as the wild card '*' then the record source performance look up won't be executed #}
 {%- for source_model in source_models.keys() %}
 
-    {%- if 'hk_column' in source_models[source_model].keys() -%}
-        {%- set hk_column_input = source_models[source_model]['hk_column'] -%}
-
-        {%- do source_models[source_model].update({'hk_column': hk_column_input}) -%}
-    {%- else -%}
+    {%- if 'hk_column' not in source_models[source_model].keys() -%}
         {%- do source_models[source_model].update({'hk_column': tracked_hashkey}) -%}
     {%- endif -%}
 
     {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
-        {%- if execute -%}
-            {{ exceptions.raise_compiler_error("rsrc_static must be defined for each source model ") }}
-        {%- endif %}
+        {%- set unique_rsrc = dbtvault_scalefree.get_distinct_value(source_relation=ref(source_model), column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
+        {%- do ns.source_models_rsrc_dict.update({source_model : [unique_rsrc] } ) -%}
     {%- else -%}
 
         {%- if not (source_models[source_model]['rsrc_static'] is iterable and source_models[source_model]['rsrc_static'] is not string) -%}
@@ -38,23 +40,21 @@
                 {%- if execute -%}
                     {{ exceptions.raise_compiler_error("rsrc_static must not be an empty string ") }}
                 {%- endif %}
+            {%- elif source_models[source_model]['rsrc_static'] == '*'-%}
+                {%- set ns.has_rsrc_static_defined = false -%}
             {%- else -%}
                 {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
-                {%- do ns.all_rsrc.append(source_models[source_model]['rsrc_static']) -%}
             {%- endif -%}
 
         {%- elif source_models[source_model]['rsrc_static'] is iterable -%}
             {%- do ns.source_models_rsrc_dict.update({source_model : source_models[source_model]['rsrc_static'] } ) -%}
-            {%- for rsrc in source_models[source_model]['rsrc_static'] -%}
-                {%- do ns.all_rsrc.append(rsrc) -%}
-            {%- endfor -%}
         {%- endif -%}
 
     {%- endif -%}
 
 {% endfor %}
 
-{%- set final_columns_to_select = [tracked_hashkey] + [src_ldts] + [src_rsrc] -%}
+{%- set final_columns_to_select = [tracked_hashkey] + [src_ldts] + [src_rsrc] + [src_stg] -%}
 
 {{ dbtvault_scalefree.prepend_generated_by() }}
 
@@ -68,61 +68,58 @@ WITH
         SELECT
         {{ dbtvault_scalefree.concat_ws(concat_columns) }} as concat
         FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }} and
-        {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
-
     ),
+    {%- if ns.has_rsrc_static_defined -%}
+        rsrc_static_unionized AS (
+        {% for source_model in source_models.keys() %}
+        {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
+            {%- set source_number = loop.index | string -%}
+            {%- set hk_column = source_models[source_model]['hk_column'] -%}
+            {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
 
-    rsrc_static_unionized AS (
-    {% for source_model in source_models.keys() %}
-    {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
-        {%- set source_number = loop.index | string -%}
-        {%- set hk_column = source_models[source_model]['hk_column'] -%}
-        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
+            {%- set rsrc_static_query_source -%}
+                {%- for rsrc_static in rsrc_statics -%}
+                    SELECT 
+                    {{ hk_column }} as {{ tracked_hashkey }},
+                    {{ src_ldts }},
+                    '{{ rsrc_static }}' AS rsrc_static
+                    FROM {{ this }}
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    {%- if not loop.last %} 
+                        UNION ALL
+                    {% endif -%}
+                {%- endfor -%}
+            {% endset %}
 
-        {%- set rsrc_static_query_source -%}
-            {%- for rsrc_static in rsrc_statics -%}
-                SELECT 
-                {{ hk_column }} as {{ tracked_hashkey }},
-                {{ src_ldts }},
-                '{{ rsrc_static }}' AS rsrc_static
-                FROM {{ this }}
-                WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
-                {%- if not loop.last %} 
-                    UNION ALL
-                {% endif -%}
-            {%- endfor -%}
-        {% endset %}
+            {{ rsrc_static_query_source }}  
 
-        {{ rsrc_static_query_source }}  
+            {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
+            {%- set source_in_target = true -%}
 
-        {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
-        {%- set source_in_target = true -%}
+            {% if not rsrc_static_result %}
+                {%- set source_in_target = false -%}
+            {% endif %}
 
-        {% if not rsrc_static_result %}
-            {%- set source_in_target = false -%}
-        {% endif %}
+            {%- do ns.source_included_before.update({source_model: source_in_target}) -%}
+            {# Unionize over all sources #}
+            {%- if not loop.last %}
+                UNION ALL 
+            {% endif -%}
 
-        {%- do ns.source_included_before.update({source_model: source_in_target}) -%}
-        {# Unionize over all sources #}
-        {%- if not loop.last %}
-            UNION ALL 
-        {% endif -%}
+        {% endfor -%}
+        {%- set ns.last_cte = "rsrc_static_unionized" -%}
+        ),
 
-    {% endfor -%}
-    {%- set ns.last_cte = "rsrc_static_unionized" -%}
-    ),
+        max_ldts_per_rsrc_static_in_target AS (
 
-    max_ldts_per_rsrc_static_in_target AS (
+            SELECT
+                rsrc_static,
+                MAX({{ src_ldts }}) as max_ldts
+            FROM {{ ns.last_cte }}
+            GROUP BY rsrc_static
 
-        SELECT
-            rsrc_static,
-            MAX({{ src_ldts }}) as max_ldts
-        FROM {{ ns.last_cte }}
-        WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
-        GROUP BY rsrc_static
-
-    ),
+        ),
+    {%- endif -%}
 {% endif -%}
 
 {#
@@ -131,39 +128,49 @@ WITH
     rows from that source are loaded into the satellite.
 #}
 
-{% for source_model in source_models.keys() %}
+{%- for source_model in source_models.keys() %}
 
     {%- set source_number = loop.index | string -%}
-
-    {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
-
     {%- set hk_column = source_models[source_model]['hk_column'] -%}
+    {%- if ns.has_rsrc_static_defined -%}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
 
-    src_new_{{ source_number }} AS (
-    {%- for rsrc_static in rsrc_statics %}
-        SELECT DISTINCT
-            {{ hk_column }} AS {{ tracked_hashkey }},
-            {{ src_ldts }},
-            '{{ rsrc_static }}' AS {{ src_rsrc }}
-        FROM {{ ref(source_model) }} src
+        src_new_{{ source_number }} AS (
+        {%- for rsrc_static in rsrc_statics %}
+            SELECT DISTINCT
+                {{ hk_column }} AS {{ tracked_hashkey }},
+                {{ src_ldts }},
+                CAST('{{ rsrc_static }}' AS {{ rsrc_default_dtype }} ) AS {{ src_rsrc }},
+                CAST(UPPER('{{ source_model }}') AS {{ stg_default_dtype }})  AS {{ src_stg }}
+            FROM {{ ref(source_model) }} src
 
 
-        {%- if is_incremental() and ns.source_included_before[source_model] %}
-            INNER JOIN max_ldts_per_rsrc_static_in_target max
-                ON max.rsrc_static = '{{ rsrc_static }}'
-            WHERE src.{{ src_ldts }} > max.max_ldts
-        {%- endif %}
+            {%- if is_incremental() and ns.source_included_before[source_model] %}
+                INNER JOIN max_ldts_per_rsrc_static_in_target max
+                    ON max.rsrc_static = '{{ rsrc_static }}'
+                WHERE src.{{ src_ldts }} > max.max_ldts
+            {%- endif %}
 
-        {%- if not loop.last %}
-            UNION ALL
-        {% endif -%}
-    {% endfor %}
+            {%- if not loop.last %}
+                UNION ALL
+            {% endif -%}
+        {% endfor %}
 
-    ),
+        ),
+    {%- else -%}
+        src_new_{{ source_number}} AS (
+            SELECT DISTINCT
+                {{ hk_column }} AS {{ tracked_hashkey }},
+                {{ src_ldts }},
+                CAST({{ src_rsrc }} AS {{ rsrc_default_dtype }}) AS {{ src_rsrc }},
+                CAST(UPPER('{{ source_model }}') AS {{ stg_default_dtype }}) AS {{ src_stg }}
+            FROM {{ ref(source_model) }} src
+        ),
+    {%- endif -%}
 
     {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 
-{%- endfor -%}
+{% endfor %}
 
 {#
     If more than one source model is selected, all previously created deduplicated CTEs are unionized.
@@ -177,9 +184,10 @@ source_new_union AS (
         {%- set source_number = loop.index | string -%}
 
         SELECT
-        {{ hk_column }} as {{ tracked_hashkey }},
+        {{ tracked_hashkey }},
         {{ src_ldts }},
-        {{ src_rsrc }}
+        {{ src_rsrc }},
+        {{ src_stg }}
         FROM src_new_{{ source_number }}
 
         {%- if not loop.last %}

@@ -35,8 +35,9 @@
                                                                                                                 For "stage_partner" the name of the hashkey column differs from the upper level definition
                                                                                                                 and therefor this other name is set under the variable 'hk_column.'
 
-                                                                                                                The 'rsrc_static' attribute defines a STRING that will be always the same over all
-                                                                                                                loads of one source. Something like this needs to be identified for each source system,
+                                                                                                                The 'rsrc_static' attribute defines a STRING or a list of strings that will always be 
+                                                                                                                the same over all loads of one source.
+                                                                                                                Something like this needs to be identified for each source system,
                                                                                                                 and strongly depends on the actual content of the rsrc column inside the stage.
                                                                                                                 Sometimes the rsrc column includes the ldts of each load and could look something
                                                                                                                 like this: 'SALESFORCE/Partners/2022-01-01T07:00:00'. Obviously the timestamp part
@@ -47,6 +48,12 @@
                                                                                                                 If my rsrc would be the same over all loads, then it might look something like
                                                                                                                 this: 'SAP/Accounts/'. Here everything would be static over all loads and
                                                                                                                 therefor I would set rsrc_static to 'SAP/Accounts/' without any wildcards in place.
+                                                                                                                If the rsrc_static is defined as solely the wildcard '*' for any source then 
+                                                                                                                this record source performance lookup will not be executed. 
+                                                                                                                If the rsrc_static is not set in one of the source models, then the assumption is made that
+                                                                                                                or this source there is always the same value for any record in the record source column. 
+                                                                                                                The macro will then get automatically this unique value querying the source model.
+                                                                                                                
 
     src_ldts::string                Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
@@ -54,19 +61,22 @@
     src_rsrc::string                Name of the rsrc column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
 
+    src_stg::string                 Name of the source stage model. Is optional, will use the global variable  'dbtvault_scalefree.stg_alias'.
+
 #}
 
-{%- macro rec_track_sat(tracked_hashkey, source_models, src_ldts=none, src_rsrc=none) -%}
+{%- macro rec_track_sat(tracked_hashkey, source_models, src_ldts=none, src_rsrc=none, src_stg=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
     {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-
+    {%- set src_stg = dbtvault_scalefree.replace_standard(src_stg, 'dbtvault_scalefree.stg_alias', 'stg') -%}
 
     {{ return(adapter.dispatch('rec_track_sat', 'dbtvault_scalefree')(tracked_hashkey=tracked_hashkey,
                                                                       source_models=source_models,
                                                                       src_ldts=src_ldts,
-                                                                      src_rsrc=src_rsrc)) }}
+                                                                      src_rsrc=src_rsrc,
+                                                                      src_stg=src_stg)) }}
 
 {%- endmacro -%}
