@@ -9,7 +9,7 @@ initial_timestamps AS (
     SELECT sdts
     FROM
         UNNEST(GENERATE_TIMESTAMP_ARRAY(
-            {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, start_date) }},
+            {{ dbtvault_scalefree.string_to_timestamp(timestamp_format['default'], start_date) }},
             TIMESTAMP_ADD(
                 TIMESTAMP_ADD(
                     TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY), 
