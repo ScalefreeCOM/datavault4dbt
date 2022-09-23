@@ -80,7 +80,7 @@ WITH
         {% for source_model in source_models.keys() %}
          {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
             {%- set source_number = loop.index | string -%}
-            {%- set rsrc_statics = source_models[source_model]['rsrc_static'] -%}
+            {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
 
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
@@ -155,7 +155,7 @@ WITH
     {%- set source_number = loop.index | string -%}
 
     {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = source_models[source_model]['rsrc_static'] %}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
     {%- endif -%}
 
     {%- set hk_column = source_models[source_model]['hk_column'] -%}
