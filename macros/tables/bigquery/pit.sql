@@ -1,4 +1,4 @@
-{%- macro default__pit(pit_type, tracked_entity, hashkey, sat_names, ldts, custom_rsrc, ledts, snapshot_relation, snapshot_trigger_column, dimension_key) -%}
+{%- macro default__pit(pit_type, tracked_entity, hashkey, sat_names, ldts, custom_rsrc, ledts, sdts, snapshot_relation, snapshot_trigger_column, dimension_key) -%}
 
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
@@ -59,8 +59,7 @@ pit_records AS (
 
 records_to_insert AS (
 
-    SELECT
-        *
+    SELECT *
     FROM pit_records
     {%- if is_incremental() %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)

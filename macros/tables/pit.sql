@@ -13,7 +13,7 @@
     Parameters:
 
     pit_type::string                    String to insert into the 'pit_type' column. Allows for future implementations of other
-                                        PIT variants, like T-PITs etc. Can be set freely, something like 'PIT' could be the default.
+                                        PIT variants, like T-PITs etc. Can be set freely, something like 'PIT' could be the default. Is optional.
 
     tracked_entity::string              Name of the tracked Hub entity. Must be available as a model inside the dbt project.
 
@@ -38,22 +38,25 @@
     custom_rsrc::string                 A custom string that should be inserted into the 'rsrc' column inside the PIT table. Since
                                         a PIT table is a business vault entity, the technical record source is no longer used here.
 
-    ledts::string                      Name of the load-end-date column inside the satellites. Is optional, will use the global variable
-                                       'dbtvault_scalefree.ledts_alias' if not set here.
+    ledts::string                       Name of the load-end-date column inside the satellites. Is optional, will use the global variable
+                                        'dbtvault_scalefree.ledts_alias' if not set here.
+    
+    sdts::string                        Name of the snapshot date timestamp column inside the snapshot table. It is optional, will use the 
+                                        global variable 'dbtvault_scalefree.sdts_alias' if not set here.
 
 #}
 
 
 
-{%- macro pit(pit_type, tracked_entity, hashkey, sat_names, snapshot_relation, snapshot_trigger_column, dimension_key, ldts=none, custom_rsrc=none, ledts=none) -%}
+{%- macro pit(tracked_entity, hashkey, sat_names, snapshot_relation, dimension_key, snapshot_trigger_column=none, ldts=none, custom_rsrc=none, ledts=none, sdts=none, pit_type=none) -%}
 
-    {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
+    {# Applying the default aliases as stored inside the global variables, if ldts, sdts and ledts are not set. #}
 
     {%- set ldts = dbtvault_scalefree.replace_standard(ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set ledts = dbtvault_scalefree.replace_standard(ledts, 'dbtvault_scalefree.ledts_alias', 'ledts') -%}
-
-    {%- if custom_rsrc is none -%}
-        {%- set custom_rsrc = 'PIT_' + tracked_entity|string -%}
+    {%- set sdts = dbtvault_scalefree.replace_standard(sdts, 'dbtvault_scalefree.sdts_alias', 'sdts') -%}
+    {%- if pit_type is none -%}
+        {% set pit_type = '!PIT' | string %}
     {%- endif -%}
 
     {{ return(adapter.dispatch('pit','dbtvault_scalefree')(pit_type=pit_type,
@@ -61,6 +64,7 @@
                                                         hashkey=hashkey,
                                                         sat_names=sat_names,
                                                         ldts=ldts,
+                                                        sdts=sdts,
                                                         custom_rsrc=custom_rsrc,
                                                         ledts=ledts,
                                                         snapshot_relation=snapshot_relation,
