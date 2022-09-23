@@ -1,8 +1,10 @@
-{%- macro exasol__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
+{%- macro exasol__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model, ma_attribute) -%}
 
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
 {%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
 
+{%- set ma_attribute = [] if not ma_attribute else ma_attribute -%}
+{%- set partition_by_columns = dbtvault_scalefree.expand_column_list(columns=[parent_hashkey, ma_attribute]) -%}
 {%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
 {%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
@@ -14,7 +16,8 @@
     {% set ns.src_hashdiff = src_hashdiff %}
     {% set ns.hdiff_alias = src_hashdiff  %}
 {%- endif -%}
-{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[src_rsrc, src_ldts, src_payload]) -%}
+
+{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[src_rsrc, src_ldts, ma_attribute, src_payload]) -%}
 
 {%- set source_relation = ref(source_model) -%}
 
@@ -48,7 +51,7 @@ latest_entries_in_sat AS (
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }}
     FROM {{ this }}
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ dbtvault_scalefree.print_list(partition_by_columns) }} ORDER BY {{ src_ldts }} DESC) = 1
 
     ),
 
@@ -65,12 +68,12 @@ deduplicated_numbered_source AS (
     {{ ns.hdiff_alias }},
     {{ dbtvault_scalefree.print_list(source_cols) }}
     {% if is_incremental() -%}
-     , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) as rn
+     , ROW_NUMBER() OVER(PARTITION BY {{ dbtvault_scalefree.print_list(partition_by_columns) }} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
     FROM source_data
     QUALIFY
         CASE
-            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) THEN FALSE
+            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {{ dbtvault_scalefree.print_list(partition_by_columns) }} ORDER BY {{ src_ldts }}) THEN FALSE
             ELSE TRUE
         END
 ),

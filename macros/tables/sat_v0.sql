@@ -1,4 +1,4 @@
-{#
+{#-
     This macro creates a standard satellite version 0, meaning that it should be materialized as an incremental table. It should be
     applied 'on top' of the staging layer, and is either connected to a Hub or a Link. On top of each version 0 satellite, a version
     1 satellite should be created, using the sat_v1 macro. This extends the v0 satellite by a virtually calculated load end date.
@@ -46,15 +46,15 @@
 
     src_rsrc::string                Name of the rsrc column inside the source model. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
-
-
+    
+    ma_attribute::string|list       Multi-active attribute in case the Satellite has more than one active row per hashkey in a load date. It is optional,
+                                    and it should only be used for creating multi-active satellites
 
 #}
 
-{%- macro sat_v0(parent_hashkey, src_hashdiff, src_payload, source_model, src_ldts=none, src_rsrc=none) -%}
+{%- macro sat_v0(parent_hashkey, src_hashdiff, src_payload, source_model, src_ldts=none, src_rsrc=none, ma_attribute=none) -%}
 
-    {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
-
+    {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
     {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
 
@@ -63,6 +63,7 @@
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
-                                         source_model=source_model) }}
-
+                                         source_model=source_model,
+                                         ma_attribute=ma_attribute) 
+    }}
 {%- endmacro -%}
