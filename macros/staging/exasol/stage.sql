@@ -64,14 +64,12 @@
 {%- set ldts = datavault4dbt.as_constant(ldts) -%}
 {%- set rsrc = datavault4dbt.as_constant(rsrc) -%}
 
-{# Getting the column names for all additional columns #}
 {%- set derived_column_names = datavault4dbt.extract_column_names(derived_columns) -%}
 {%- set hashed_column_names = datavault4dbt.extract_column_names(hashed_columns) -%}
+{%- set ranked_column_names = datavault4dbt.extract_column_names(ranked_columns) -%}
 {%- set prejoined_column_names = datavault4dbt.extract_column_names(prejoined_columns) -%}
 {%- set missing_column_names = datavault4dbt.extract_column_names(missing_columns) -%}
-
-{%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
-
+{%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_column_names %}
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
 
 
@@ -92,6 +90,7 @@
     {%- do columns_without_excluded_columns.append(column) -%}
   {%- endif -%}
 {%- endfor -%}
+
 {#- Select hashing algorithm -#}
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
@@ -224,6 +223,22 @@ hashed_columns AS (
     {%- set final_columns_to_select = final_columns_to_select + hashed_column_names %}
 ),
 {%- endif -%}
+
+{# Adding Ranked Columns to the selection #}
+{% if datavault4dbt.is_something(ranked_columns) -%}
+
+ranked_columns AS (
+
+    SELECT *,
+
+    {{ datavault4dbt.rank_columns(columns=ranked_columns) | indent(4) if datavault4dbt.is_something(ranked_columns) }}
+
+    FROM {{ last_cte }}
+    {%- set last_cte = "ranked_columns" -%}
+    {%- set final_columns_to_select = final_columns_to_select + ranked_column_names %}
+),
+{%- endif -%}
+
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
     SELECT
@@ -261,15 +276,13 @@ unknown_values AS (
 
     {%- endif -%}
 
-    {% if datavault4dbt.is_something(derived_columns) -%},
-      {# Additionally generating Ghost Records for Derived Columns #}
-      {% for column_name, properties in derived_columns_with_datatypes_DICT.items() -%}
+    {%- if derived_columns is not none -%}
+    --Additionally generating Ghost Records for Derived Columns
+      ,{% for column_name, properties in derived_columns.items() -%}
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
-        {%- if not loop.last %},{% endif %}
+        {%- if not loop.last %},{% endif -%}
       {% endfor %}
-    {%- endif -%}
-
-    {%- if datavault4dbt.is_something(processed_hash_columns)-%}
+    {% endif %}
 
       ,{%- for hash_column in processed_hash_columns %}
         CAST('{{ unknown_key }}' as HASHTYPE) as "{{ hash_column }}"
@@ -309,7 +322,7 @@ error_values AS (
         ,{% for column in pj_relation_columns -%}
           {%- if column.name|lower == vals['bk']|lower -%}
             {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
-          {% endif %}
+          {%- endif -%}
         {% endfor -%}
 
       {% endfor -%}

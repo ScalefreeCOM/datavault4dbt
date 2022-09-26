@@ -6,23 +6,22 @@
 
 {%- macro default__hash_columns(columns=none) -%}
 
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{#- Select hashing algorithm -#}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
-
 {%- if columns is mapping and columns is not none -%}
 
     {%- for col in columns -%}
 
         {% if columns[col] is mapping and columns[col].is_hashdiff -%}
 
-            {{- datavault4dbt.hash(columns=columns[col]['columns'],
-                              alias=col,
+            {{- datavault4dbt.hash(columns=columns[col]['columns'], 
+                              alias=col, 
                               is_hashdiff=columns[col]['is_hashdiff']) -}}
 
         {%- elif columns[col] is not mapping -%}
-             {{- datavault4dbt.hash(columns=columns[col], alias=col, is_hashdiff=false) }}
 
+            {{- datavault4dbt.hash(columns=columns[col],
+                              alias=col,
+                              is_hashdiff=false) -}}
+        
         {%- elif columns[col] is mapping and not columns[col].is_hashdiff -%}
 
             {%- if execute -%}

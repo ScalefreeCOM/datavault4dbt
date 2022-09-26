@@ -7,7 +7,9 @@
         {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
     {%- endif %}
 
-{%- endif -%}
+            {%- else -%}
+                {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
+            {%- endif -%}
 
 {%- if source_models is not mapping -%}
     {%- if execute -%}

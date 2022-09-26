@@ -77,14 +77,14 @@
 
 {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_source_columns, exclude_column_names) -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
-
 {%- set final_columns_to_select = [] -%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 
-{#- Select hashing algorithm -#}
+{#- Select hashing algorithm and datatype -#}
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype) -%}
 
 {%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
@@ -135,8 +135,8 @@ missing_columns AS (
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
 
   {%- for col, dtype in missing_columns.items() %}
-    CAST(NULL as {{ dtype }}) as {{ col }},
-
+    CAST(NULL as {{ dtype }}) as {{ col }}{% if not loop.last %},{% endif -%}
+    
   {% endfor %}
 
   FROM {{ last_cte }}
@@ -209,8 +209,8 @@ unknown_values AS (
     {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
 
     SELECT
-
-    {{ datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ ldts_alias }},
+    
+    {{ datavault4dbt.string_to_timestamp(timestamp_format['default'],beginning_of_all_times['default']) }} as {{ ldts_alias }},
     '{{ var("datavault4dbt.default_unknown_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
@@ -224,7 +224,7 @@ unknown_values AS (
     {%- if missing_columns is not none -%},
     {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
-
+        
         {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
 
@@ -251,9 +251,10 @@ unknown_values AS (
 
     {%- if derived_columns is not none -%}
     {# Additionally generating Ghost Records for Derived Columns #}
+      ,
+      {% for column_name, properties in derived_columns.items() -%}
 
-      ,{% for column_name, properties in derived_columns.items() -%}
-
+        
 
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
@@ -272,22 +273,21 @@ error_values AS (
     {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
 
     SELECT
-
-    {{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ ldts_alias }},
+    
+    {{ datavault4dbt.string_to_timestamp(timestamp_format['default'],end_of_all_times['default']) }} as {{ ldts_alias }},
     '{{ var("datavault4dbt.default_error_rsrc", "ERROR") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
       {%- if column.name not in exclude_column_names %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
-        {%- if not loop.last %},{% endif -%}
-      {% endif -%}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }},
+      {%- endif -%}
     {% endfor %}
 
     {%- if missing_columns is not none -%},
     {# Additionally generating ghost record for missing columns #}
       {% for col, dtype in missing_columns.items() %}
-
+        
         {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
 
