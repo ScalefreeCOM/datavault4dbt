@@ -1,4 +1,5 @@
 {%- macro derived_columns_datatypes(columns, source_relation) -%}
+    
     {{- adapter.dispatch('derived_columns_datatypes', 'datavault4dbt')(columns=columns, source_relation=source_relation) -}}
 
 {%- endmacro -%}
