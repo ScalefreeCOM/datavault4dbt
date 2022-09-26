@@ -64,11 +64,11 @@
 {%- set ldts = datavault4dbt.as_constant(ldts) -%}
 {%- set rsrc = datavault4dbt.as_constant(rsrc) -%}
 
-{%- set derived_column_names = dbtvault_scalefree.extract_column_names(derived_columns) -%}
-{%- set hashed_column_names = dbtvault_scalefree.extract_column_names(hashed_columns) -%}
-{%- set ranked_column_names = dbtvault_scalefree.extract_column_names(ranked_columns) -%}
-{%- set prejoined_column_names = dbtvault_scalefree.extract_column_names(prejoined_columns) -%}
-{%- set missing_column_names = dbtvault_scalefree.extract_column_names(missing_columns) -%}
+{%- set derived_column_names = datavault4dbt.extract_column_names(derived_columns) -%}
+{%- set hashed_column_names = datavault4dbt.extract_column_names(hashed_columns) -%}
+{%- set ranked_column_names = datavault4dbt.extract_column_names(ranked_columns) -%}
+{%- set prejoined_column_names = datavault4dbt.extract_column_names(prejoined_columns) -%}
+{%- set missing_column_names = datavault4dbt.extract_column_names(missing_columns) -%}
 {%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_column_names %}
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
 
