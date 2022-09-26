@@ -1,67 +1,76 @@
-{%- macro pit(pit_type, src_hub, src_pk, sat_names, src_ldts, use_logarithmic_snap, snapshot_table) -%}
+{#
+    This macro creates a PIT table to gather snapshot based information of one hub and its surrounding satellites.
+    For this macro to work, a snapshot table is required, that has a trigger collumn to identify which snapshots
+    to include in the PIT table. The easiest way to create such a snapshot table is to use the control_snap macros
+    provided by this package.
 
-    {{ return(adapter.dispatch('pit', 'dbtvault-scalefree')(pit_type
-                                    , src_hub
-                                    , src_pk
-                                    , sat_names
-                                    , src_ldts
-                                    , use_logarithmic_snap
-                                    , snapshot_table)) }}
+    Features:
+        - Tracks the active satellite entries for each entry in a Hub for each snapshot
+        - Strongly improves performance if upstream queries requires many JOIN operations
+        - Creates a unique dimension key to optimize loading performance of incremental loads
+        - Allows to insert a static string as record source column, matching business vault definition of a record source
 
-{%- endmacro -%}
+    Parameters:
 
-{%- macro bigquery__pit(pit_type, src_hub, src_pk, sat_names, src_ldts, use_logarithmic_snap, snapshot_table) -%}
+    pit_type::string                    String to insert into the 'pit_type' column. Allows for future implementations of other
+                                        PIT variants, like T-PITs etc. Can be set freely, something like 'PIT' could be the default. 
+                                        Is optional, default value IS 'PIT'.
 
-{%- set ghost_pk = '00000000000000000000000000000000' -%}
-{%- set ghost_date = '0001-01-01 00:00:00.000' %}
+    tracked_entity::string              Name of the tracked Hub entity. Must be available as a model inside the dbt project.
 
-{%- set snapshot_relation = ref(snapshot_table) -%}
+    hashkey::string                     The name of the hashkey column inside the previously refered Hub entity.
 
-{%- set unique_hash_alias = src_pk | replace('_h', '_d') -%}
+    sat_names::list of strings          A list of all the satellites that should be included in this PIT table. Can only be satellites
+                                        that are attached to the tracked Hub, and should typically include all those satellites.
+                                        You should always refer here to the version 1 satellites, since those hold the load-end-date.
+                                        The macro currently supports regular satellites and nh-satellites.
 
-SELECT
-    '{{ pit_type }}' as type,
-    concat('https://scalefree-edw-docs.s3.eu-west-1.amazonaws.com/dbt-docs/index.html#!/model/model.bigquery_edw.', '{{ this.table }}') as rsrc,
-    {{ hash(columns=[dbtvault.prefix([src_pk], 'h'), dbtvault.prefix(['sdts'], 'snap')],
-                alias=unique_hash_alias,
-                is_hashdiff=false)   }} ,
-    h.{{ src_pk }},
-    snap.sdts,
-    {% for satellite in sat_names %}
-        COALESCE({{ satellite }}.{{ src_pk }}, CAST('{{ ghost_pk }}' AS STRING)) AS hk_{{ satellite }},
-        COALESCE({{ satellite }}.{{ src_ldts }}, CAST('{{ ghost_date }}' AS {{ dbtvault.type_timestamp() }})) AS ldts_{{ satellite }}
-        {{- "," if not loop.last }}
-    {% endfor %}
+    snapshot_relation::string           The name of the snapshot relation. It needs to be available as a model inside this dbt project.
 
-FROM 
-        {{ ref(src_hub) }} h
-    FULL OUTER JOIN 
-        {{ snapshot_relation }} snap
-        ON 
-        {% if use_logarithmic_snap %}
-            snap.is_logarithmic_snap = true
-        {% else %}
-            1=1
-        {%- endif %}
-    {%- if is_incremental() %}
-    LEFT JOIN 
-        {{ this }} bp 
-        ON
-            bp.{{ src_pk }} = h.{{ src_pk }} 
-            AND bp.sdts = snap.sdts 
-            AND bp.type = '{{ pit_type }}'
-    {% endif -%}
-    {% for satellite in sat_names %}
-    LEFT JOIN {{ ref(satellite) }}
-        ON
-            {{ satellite }}.{{ src_pk}} = h.{{ src_pk }} 
-            AND snap.sdts BETWEEN {{ satellite }}.ldts AND {{ satellite }}.ledts
-    {% endfor %}            
-WHERE snap.is_active
-{%- if is_incremental() %}
-    AND bp.{{ src_pk }} IS NULL
-    AND bp.sdts IS NULL
-    AND bp.type IS NULL
-{% endif -%}    
+    snapshot_trigger_column::string     The name of the column inside the previously mentioned snapshot relation, that is boolean and
+                                        identifies the snapshots that should be included in the PIT table.
+
+    dimension_key::string               The desired name of the dimension key inside the PIT table. Should follow some naming conventions.
+                                        Recommended is the name of the hashkey with a '_d' suffix.
+
+    ldts::string                        Name of the ldts column inside all source models. Is optional, will use the global variable
+                                        'datavault4dbt.ldts_alias'. Needs to use the same column name as defined as alias inside the staging model.
+
+    custom_rsrc::string                 A custom string that should be inserted into the 'rsrc' column inside the PIT table. Since
+                                        a PIT table is a business vault entity, the technical record source is no longer used here.
+                                        Default value is 'PIT_<tracked_entity>'.
+
+    ledts::string                      Name of the load-end-date column inside the satellites. Is optional, will use the global variable
+                                       'datavault4dbt.ledts_alias' if not set here.
+
+#}
+
+
+
+{%- macro pit(tracked_entity, hashkey, sat_names, snapshot_relation, snapshot_trigger_column, dimension_key,pit_type=none, ldts=none, custom_rsrc=none, ledts=none) -%}
+
+    {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
+
+    {%- set ldts = datavault4dbt.replace_standard(ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
+    {%- set ledts = datavault4dbt.replace_standard(ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
+
+    {%- if custom_rsrc is none -%}
+        {%- set custom_rsrc = 'PIT_' + tracked_entity|string -%}
+    {%- endif -%}
+
+    {%- if pit_type is none -%}
+        {%- set pit_type = 'PIT' -%}
+    {%- endif -%}
+
+    {{ return(adapter.dispatch('pit','datavault4dbt')(pit_type=pit_type,
+                                                        tracked_entity=tracked_entity,
+                                                        hashkey=hashkey,
+                                                        sat_names=sat_names,
+                                                        ldts=ldts,
+                                                        custom_rsrc=custom_rsrc,
+                                                        ledts=ledts,
+                                                        snapshot_relation=snapshot_relation,
+                                                        snapshot_trigger_column=snapshot_trigger_column,
+                                                        dimension_key=dimension_key)) }}
 
 {%- endmacro -%}

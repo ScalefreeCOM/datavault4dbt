@@ -1,80 +1,143 @@
-
 {%- macro hash(columns=none, alias=none, is_hashdiff=false) -%}
 
     {%- if is_hashdiff is none -%}
         {%- set is_hashdiff = false -%}
     {%- endif -%}
 
-    {{- adapter.dispatch('hash', 'dbtvault-scalefree')(columns=columns, alias=alias, is_hashdiff=is_hashdiff) -}}
+    {{- adapter.dispatch('hash', 'datavault4dbt')(columns=columns,
+                                             alias=alias,
+                                             is_hashdiff=is_hashdiff) -}}
 
 {%- endmacro %}
 
-{%- macro bigquery__hash(columns, alias, is_hashdiff) -%}
+{%- macro default__hash(columns, alias, is_hashdiff) -%}
 
-{%- set hash = var('hash', 'MD5') -%}
+{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
 {%- set quote = var('quote', '"') -%}
 {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
 
-{#- Select hashing algorithm -#}
-{%- if hash == 'MD5' -%}
-    {%- set hash_alg = 'MD5' -%}
-    {%- set hash_size_char = 32 -%}
-    {%- set zero_key = '00000000000000000000000000000000' -%}
-{%- elif hash == 'SHA' or hash == 'SHA1' -%}
-    {%- set hash_alg = 'SHA1' -%}
-    {%- set hash_size_char = 40 -%}
-    {%- set zero_key = '0000000000000000000000000000000000000000' -%}
-{%- elif hash == 'SHA2' or hash == 'SHA256' -%}
-    {%- set hash_alg = 'SHA256' -%}
-    {%- set hash_size_char = 64 -%}
-    {%- set zero_key = '0000000000000000000000000000000000000000000000000000000000000000' -%}
-{%- endif -%}
+{%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
+{%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
 
-{%- set standardise = "CONCAT( '\"' , REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\\\', '\\\\\\\\'), '\"', '\\\"'), '\"' )" %}
+{#- Select hashing algorithm -#}
+{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+
+{%- set attribute_standardise = attribute_standardise() %}
+
 
 {#- If single column to hash -#}
 {%- if columns is string -%}
-    {%- set column_str = dbtvault.as_constant(columns) -%}
-    {{- "TO_HEX(({}({}))) AS {}".format(hash_alg, standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote), alias) | indent(4) -}}
+    {%- set columns = [columns] -%}
+{%- endif -%}
 
-{#- Else a list of columns to hash -#}
+{%- set all_null = [] -%}
+
+{%- if is_hashdiff -%}
+    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concat_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
 {%- else -%}
-    {%- set all_null = [] -%}
-    {%- if is_hashdiff -%}
-        {{- "TO_HEX({}(CONCAT(".format(hash_alg) | indent(4) -}}
+    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concat_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
+{%- endif -%}
+
+
+{{ standardise_prefix }}
+
+{%- for column in columns -%}
+
+    {%- do all_null.append(null_placeholder_string) -%}
+
+    {%- if '.' in column %}
+        {% set column_str = column -%}
     {%- else -%}
-        {{- "IFNULL(TO_HEX(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg) | indent(4) -}}
-    {%- endif -%}	
+        {%- set column_str = datavault4dbt.as_constant(column) -%}
+    {%- endif -%}
 
+    {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- ",'{}',".format(concat_string) if not loop.last -}}
+
+    {%- if loop.last -%}
+
+        {{ standardise_suffix | indent(4) }}
+
+    {%- else -%}
+
+        {%- do all_null.append(concat_string) -%}
+
+    {%- endif -%}
+
+{%- endfor -%}
+
+{%- endmacro -%}
+
+
+{%- macro exasol__hash(columns, alias, is_hashdiff) -%}
+
+{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+{%- set concat_string = var('concat_string', '||') -%}
+{%- set quote = var('quote', '"') -%}
+{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+
+{%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
+{%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
+
+{#- Select hashing algorithm -#}
+{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+
+{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+
+{#- If single column to hash -#}
+{%- if columns is string -%}
+    {%- set columns = [columns] -%}
+{%- endif -%}
+
+{%- set all_null = [] -%}
+{%- if is_hashdiff -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key)) -%}
+    {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
+    {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
+
+{%- else -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=none, zero_key=unknown_key)) -%}
+    {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
+    {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
+
+    CASE WHEN COALESCE(
     {%- for column in columns -%}
+        "{{ column }}" {%- if not loop.last -%} , {% endif -%}
+    {% endfor -%}, NULL) IS NULL
+    THEN CAST('{{ unknown_key }}' as HASHTYPE)
+    ELSE
+{%- endif -%}
 
-        {%- do all_null.append(null_placeholder_string) -%}
+{{" "~ standardise_prefix }}
 
-        {%- if '.' in column %}
-            {% set column_str = column -%}
-        {%- else -%}
-            {%- set column_str = dbtvault.as_constant(column) -%}
-        {%- endif -%}
+{%- for column in columns -%}
 
-        {{- "\nREGEXP_REPLACE(IFNULL({}, '{}'), '{}', '--')".format(standardise | replace('[EXPRESSION]', column_str), null_placeholder_string, null_placeholder_string) | indent(4) -}}
-        {{- ",'{}',".format(concat_string) if not loop.last -}}
+    {%- do all_null.append(null_placeholder_string) -%}
 
-        {%- if loop.last -%}
+    {%- if '.' in column %}
+        {% set column_str = column -%}
+    {%- else -%}
+        {%- set column_str = datavault4dbt.as_constant(column) -%}
+    {%- endif -%}
 
-            {% if is_hashdiff %}
-                {{- "\n))) AS {}".format(alias) -}}
-            {%- else -%}
-                {{- "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')))), '{}') AS {}".format(all_null | join(""), zero_key, alias) -}}
-            {%- endif -%}
-        {%- else -%}
+    {{- "\n NULLIF(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- ",'{}',".format(concat_string) if not loop.last -}}
 
-            {%- do all_null.append(concat_string) -%}
+    {%- if loop.last -%}
 
-        {%- endif -%}
+        {{ standardise_suffix | indent(4) }}
 
-    {%- endfor -%}
+    {%- else -%}
 
+        {%- do all_null.append(concat_string) -%}
+
+    {%- endif -%}
+
+{%- endfor -%}
+
+{% if not is_hashdiff -%}
+   {{- "\n END " -}} {%- if alias is not none -%} {{" AS " }} "{{ alias }}" {%- endif -%}
 {%- endif -%}
 
 {%- endmacro -%}

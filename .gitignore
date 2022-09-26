@@ -2,3 +2,5 @@
 target/
 dbt_packages/
 logs/
+.idea/
+dbt-public-release.code-workspace

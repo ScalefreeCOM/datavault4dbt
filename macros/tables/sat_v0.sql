@@ -1,83 +1,68 @@
-{%- macro sat_v0(src_pk, src_hashdiff, src_payload, src_eff, src_ldts, src_source, source_model) -%}
+{#
+    This macro creates a standard satellite version 0, meaning that it should be materialized as an incremental table. It should be
+    applied 'on top' of the staging layer, and is either connected to a Hub or a Link. On top of each version 0 satellite, a version
+    1 satellite should be created, using the sat_v1 macro. This extends the v0 satellite by a virtually calculated load end date.
+    Each satellite can only be loaded by one source model, since we typically recommend a satellite split by source system.
 
-    {{ return(adapter.dispatch('sat_v0', 'dbtvault-scalefree')(src_pk, 
-                                         src_hashdiff,
-                                         src_payload,
-                                         src_eff,
-                                         src_ldts,
-                                         src_source,
-                                         source_model))}}
+    Features:
+        - Can handle multiple updates per batch, without loosing intermediate changes. Therefor initial loading is supported.
+        - Using a dynamic high-water-mark to optimize loading performance of multiple loads
 
-{%- endmacro -%}                                         
+    Parameters:
 
-{%- macro bigquery__sat_v0(src_pk, src_hashdiff, src_payload, src_eff, src_ldts, src_source, source_model) -%}
+    parent_hashkey::string          Name of the hashkey column inside the stage of the object that this satellite is attached to.
 
-{%- set source_cols = dbtvault.expand_column_list(columns=[src_pk, src_hashdiff, src_ldts, src_source, src_payload, src_eff]) -%}
-{%- set rank_cols = dbtvault.expand_column_list(columns=[src_pk, src_hashdiff, src_ldts]) -%}
-{%- set pk_cols = dbtvault.expand_column_list(columns=[src_pk]) -%}
+                                    Examples:
+                                        'hk_account_h'          The satellite would be attached to the hub account, which has the
+                                                                column 'hk_account_h' as a hashkey column.
 
-WITH
-{%- if is_incremental() %}
-target AS (
-    SELECT
-        {{ src_pk|lower() }},
-        {{ src_hashdiff['source_column'] }}
-    FROM {{ this }}
-    WHERE {{ src_pk|lower() }} IN (
-        SELECT {{ src_pk|lower() }} 
-        FROM {{ ref(source_model) }}
-        WHERE {{ src_ldts }} > (
-            SELECT 
-                MAX({{ src_ldts }}) FROM {{ this }}
-            WHERE {{ src_ldts }} != '9999-12-31 23:59:59 UTC'
-            )
-        )
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ src_pk|lower() }} ORDER BY {{ src_ldts }} DESC) = 1
-    ),
-{% endif %}
+                                        'hk_account_contact_l'  The satellite would be attached to the link between account and contact,
+                                                                which has the column 'hk_account_contact_l' as a hashkey column.
 
-base AS (
+    src_hashdiff::string            Name of the hashdiff column of this satellite, that was created inside the staging area and is
+                                    calculated out of the entire payload of this satellite. The stage must hold one hashdiff per
+                                    satellite entity.
 
-    SELECT
-        {{ src_pk|lower() }},
-        {{ src_hashdiff['source_column'] }},
-        {{ src_ldts }},
-        {{ src_source }},
-    {%- if is_incremental() -%}
-        ROW_NUMBER() OVER(PARTITION BY {{ src_pk|lower() }} ORDER BY {{ src_ldts }}) as rn,
-    {%- endif -%}
-    {%- for col in src_payload %}
-        {{ col }}
-        {{- ',' if not loop.last -}}
-    {%- endfor %}
-    FROM {{ ref(source_model) }}
-    {%- if is_incremental() %}
-    WHERE {{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM {{ this }})
-    {%- endif -%}
-QUALIFY CASE
-            WHEN {{ src_hashdiff['source_column'] }} = LAG({{ src_hashdiff['source_column'] }}) OVER(PARTITION BY {{ src_pk|lower() }} ORDER BY {{ src_ldts }}) THEN FALSE
-            ELSE TRUE
-        END
+                                    Examples:
+                                        'hd_account_data_sfdc_s'    Since we recommend naming the hashdiff column similar to the name
+                                                                    of the satellite entity, just with a prefix, this would be the
+                                                                    hashdiff column of the data satellite for account.
 
-)
+    src_payload::list of strings    A list of all the descriptive attributes that should be included in this satellite. Needs to be the
+                                    columns that are feeded into the hashdiff calculation of this satellite.
 
-SELECT 
-    {{ src_pk|lower() }},
-    {{ src_hashdiff['source_column'] }},
-    {{ src_ldts }},
-    {{ src_source }},
-    {%- for col in src_payload %}
-        {{ col }}
-        {{- ',' if not loop.last -}}
-    {%- endfor %}
-FROM base
-WHERE {{ src_pk|lower() }} != 'ffffffffffffffffffffffffffffffff'
-{%- if is_incremental() %}
-    AND NOT EXISTS (SELECT 1 
-                    FROM target
-                    WHERE target.{{ src_pk|lower() }} = base.{{ src_pk|lower() }}
-                        AND target.{{ src_hashdiff['source_column'] }} = base.{{ src_hashdiff['source_column'] }}
-                        AND base.rn = 1)
-{%- endif -%}                        
- 
+                                    Examples:
+                                        ['name', 'address', 'country', 'phone', 'email']    This satellite would hold the columns 'name',
+                                                                                            'address', 'country', 'phone' and 'email', coming
+                                                                                            out of the underlying staging area.
+
+    source_model::string            Name of the underlying staging model, must be available inside dbt as a model.
+
+                                    Examples:
+                                        'stage_account'     This satellite is loaded out of the stage for account.
+
+    src_ldts::string                Name of the ldts column inside the source model. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+                                    Needs to use the same column name as defined as alias inside the staging model.
+
+    src_rsrc::string                Name of the rsrc column inside the source model. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+                                    Needs to use the same column name as defined as alias inside the staging model.
+
+
+
+#}
+
+{%- macro sat_v0(parent_hashkey, src_hashdiff, src_payload, source_model, src_ldts=none, src_rsrc=none) -%}
+
+    {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
+
+    {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
+    {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
+
+    {{ adapter.dispatch('sat_v0', 'datavault4dbt')(parent_hashkey=parent_hashkey,
+                                         src_hashdiff=src_hashdiff,
+                                         src_payload=src_payload,
+                                         src_ldts=src_ldts,
+                                         src_rsrc=src_rsrc,
+                                         source_model=source_model) }}
+
 {%- endmacro -%}
