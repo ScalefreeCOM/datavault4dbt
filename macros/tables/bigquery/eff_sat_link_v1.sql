@@ -1,13 +1,11 @@
-{%- macro default__eff_sat_link_v1(eff_sat_link_v0, link_hashkey, driving_key, secondary_fks, src_ldts, src_rsrc, eff_from_alias, eff_to_alias) -%}
+{%- macro default__eff_sat_link_v1(eff_sat_link_v0, link_hashkey, src_ldts, src_rsrc, eff_from_alias, eff_to_alias, add_is_current_flag) -%}
 
-{%- set source_cols = datavault4dbt.expand_column_list(columns=[link_hashkey, driving_key, secondary_fks, src_rsrc, src_ldts, 'is_active']) -%}
-{%- set final_cols = datavault4dbt.expand_column_list(columns=[link_hashkey, driving_key, secondary_fks, src_rsrc, 'effective_from', 'effective_to']) -%}
-
-{%- set driving_key = datavault4dbt.expand_column_list(columns=[driving_key]) -%}
-{%- set secondary_fks = datavault4dbt.expand_column_list(columns=[secondary_fks]) -%}
+{%- set source_cols = datavault4dbt.expand_column_list(columns=[link_hashkey, src_rsrc, src_ldts, 'is_active']) -%}
+{%- set final_cols = datavault4dbt.expand_column_list(columns=[link_hashkey, src_rsrc, 'effective_from', 'effective_to']) -%}
 
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
@@ -22,16 +20,14 @@ source_data AS (
 
     SELECT
         {{ datavault4dbt.prefix(source_cols, 'sat_v0') }}
-    FROM {{ source_relation }} AS sat_v0  
+    FROM {{ source_relation }} AS sat_v0
 
 ),
 
 eff_ranges AS (
 
-    SELECT 
+    SELECT
         {{ link_hashkey }},
-        {{ datavault4dbt.print_list(driving_key) }},
-        {{ datavault4dbt.print_list(secondary_fks) }},
         {{ src_rsrc }},
         is_active,
         {{ src_ldts }} AS {{ eff_from_alias }},
@@ -42,14 +38,19 @@ eff_ranges AS (
 
 records_to_select AS (
 
-    SELECT 
-        {{ datavault4dbt.print_list(final_cols) }},
+    SELECT
+        {{ datavault4dbt.print_list(final_cols) }}
+        {%- if add_is_current_flag %},
+            CASE WHEN {{ eff_to_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            THEN TRUE
+            ELSE FALSE
+            END AS {{ is_current_col_alias }}
+        {% endif %}
     FROM eff_ranges
     WHERE is_active = true
 
 )
 
 SELECT * FROM records_to_select
-        
-{%- endmacro -%}
 
+{%- endmacro -%}

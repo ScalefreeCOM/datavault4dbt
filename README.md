@@ -1,31 +1,32 @@
-Welcome to the dbt package datavault4dbt by Scalefree International GmbH!
+# datavault4dbt by [Scalefree International GmbH](https://www.scalefree.com)
 
-### Included Macros
-- Staging Area (For Hashing, prejoins and ghost records)
-- Hubs, Links & Satellites (allowing multiple deltas)
-- Virtualized End-Dating (in Satellites)
-- PIT Tables
-- Source Marts
-- Data Vault 2.0 related tests
+<img src="https://user-images.githubusercontent.com/78537603/191483803-8cd4fc72-54a1-45f6-ab39-d798ec83e4c9.jpg" width=50% align=right>
 
-### Requirements
+## Worked example project
+FIXME
 
-To use the macros efficiently, there are a few prerequisites you need to provide:
-- Flat & Wide source data, available within your target database
-- Load Date column that represents the arriving time in the source data storage
-- Record Source column that gives information about where the source data is coming from (e.g. the file location inside a Data Lake)
+## Supported platforms:
+Currently supported platforms are:
+* Google Bigquery
+* Exasol
+* Snowflake
 
-### Features
+We are working continuously at high pressure to adapt the package for large variety of different platforms. In the future, the package will be available for [INSERT HERE NEXT PLATFORMS].
 
-With the Scalefree version of dbtvault you will get a lot of awesome features, including:
-- A Data Vault 2.0 implementation congruent to the original Data Vault 2.0 definition by Dan Linstedt and Michael Olschimke
-- A fully auditable solution for a Data Warehouse
-- A modern insert-only approach that avoids updating data
-- A straight-forward, standardized approach to conduct agile datawarehouse development cycles
+## Installation
+Since the package is listed on [dbt Hub](https://hub.getdbt.com/), you can simply add the following lines to your packages.yml. 
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+      - package: scalefree/datavault4dbt
+        version: 0.1.0
+
+For further information on how to install packages in dbt, please visit the following link: 
+[https://docs.getdbt.com/docs/building-a-dbt-project/package-management](https://docs.getdbt.com/docs/building-a-dbt-project/package-management#how-do-i-add-a-package-to-my-project)
+
+## Usage
+The datavault4dbt package provides macros for Staging and Creation of all DataVault-Entities you need to build your own DataVault2.0 soloution. The usage of the macros is well-exemplifed in the documentation: https://github.com/ScalefreeCOM/datavault4dbt/wiki
+
+## Contributing
+[View our contribution guidelines](CONTRIBUTING.md)
+
+## License
+[Apache 2.0](LICENSE.md)

@@ -3,8 +3,8 @@
     is therefor ready for both initial loads on persistent staging areas, and incremental loads on transient staging areas.
     This version is the 0 version, because it does not include virtualized effectivity time ranges. For that you should create
     one version 1 effectivity satellite for each version 0 effectivity satellite using the eff_sat_link_v1 macro.
-    
-    Features: 
+
+    Features:
         - Calculates an 'is_active' flag, based on the assumption that only one relationship per driving key can be active at the same time
         - Delivers the base to calculate effectivity ranges in the version 1 effectivity satellite
         - Supports multiple updates per batch and therefor initial loading
@@ -12,23 +12,23 @@
         - Allows the driving key to hold mutliple keys of a relationship
 
     Parameters:
-    
+
     link_hashkey::string                        Name of the hashkey column inside the stage, that represents the primary key of the link.
 
-                                                Examples: 
+                                                Examples:
                                                     'hk_account_contact_l'  This hashkey belongs to the link between account and contact and
                                                                             was calculated before in the staging area by the stage macro.
-    
+
     driving_key::string | list of strings       Name(s) of the driving key column(s) inside staging model. Based on this column one active row
                                                 per ldts is set.
 
-                                                Examples: 
-                                                    'hk_account_h'                      With this configuration, inside the link an account 
+                                                Examples:
+                                                    'hk_account_h'                      With this configuration, inside the link an account
                                                                                         is always only connected to one contact at a time.
 
                                                     ['hk_account_h', 'hk_contact_h']    Now the combination of the account hashkey and the
                                                                                         contact hashkey would be used as a driving key. Therefor
-                                                                                        for each combination of account and contact, only one 
+                                                                                        for each combination of account and contact, only one
                                                                                         relationship to other objects exists.
 
     secondary_fks::string | list of strings     Name(s) of all other foreign keys inside the link, called secondary foreign keys. A link ´
@@ -41,7 +41,7 @@
 
                                                     ['hk_contact_h', 'hk_opportunity_h']    The link now connects three objects, out of them contact and
                                                                                             opporunity are the secondary foreign objects.
-    
+
     source_model::string                        Name of the source model that is available inside dbt. Usually this would be a staging model
                                                 that was created via the stage macro.
 
@@ -59,12 +59,11 @@
 {%- macro eff_sat_link_v0(link_hashkey, driving_key, secondary_fks, source_model, src_ldts=none, src_rsrc=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
-    
+
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
 
-
-    {{ return(adapter.dispatch('eff_sat_link_v0', 'datavault4dbt')(link_hashkey=link_hashkey, 
+    {{ return(adapter.dispatch('eff_sat_link_v0', 'datavault4dbt')(link_hashkey=link_hashkey,
                                                                     driving_key=driving_key,
                                                                     secondary_fks=secondary_fks,
                                                                     src_ldts=src_ldts,

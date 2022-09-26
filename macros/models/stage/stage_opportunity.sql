@@ -4,7 +4,7 @@
 {%- set yaml_metadata -%}
 source_table: "source_opportunity"
 source_name: "source_data"
-prejoined_columns: 
+prejoined_columns:
   contractnumber:
     src_name: "source_data"
     src_table: "source_contract"
@@ -21,7 +21,7 @@ missing_columns:
   eventbritesync__buyer__c: "STRING"
   eventbritesync__eventbriteid__c: "STRING"
   zapier_search_key__c: "STRING"
-hashed_columns: 
+hashed_columns:
   hk_opportunity_h:
     - opportunity_key__c
   hd_opportunity_data_sfdc_mrn_s:
@@ -211,7 +211,7 @@ rsrc: 'rsrc_file'
 ldts: 'edwLoadDate'
 include_source_columns: true
 derived_columns:
-  type_lalala: 
+  type_lalala:
     value: '!STAGE'
     datatype: 'STRING'
 

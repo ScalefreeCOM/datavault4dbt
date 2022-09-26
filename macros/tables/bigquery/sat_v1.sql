@@ -1,7 +1,8 @@
-{%- macro default__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias) -%}
+{%- macro default__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
 
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set source_relation = ref(sat_v0) -%}
 
@@ -16,7 +17,7 @@ WITH
 
 {# Calculate ledts based on the ldts of the earlier record. #}
 end_dated_source AS (
-    
+
     SELECT
         {{ hashkey }},
         {{ src_rsrc }},
@@ -25,10 +26,22 @@ end_dated_source AS (
         {{ hashdiff }},
         {{ datavault4dbt.print_list(source_columns_to_select) }}
     FROM {{ source_relation }}
-    WHERE {{ hashdiff }} != '{{ error_key }}'
 
 )
 
-SELECT * FROM end_dated_source
+SELECT 
+{{ hashkey }},
+{{ src_rsrc }},
+{{ src_ldts }},
+{{ ledts_alias }},
+{{ hashdiff }},
+{%- if add_is_current_flag %}
+    CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    THEN TRUE
+    ELSE FALSE
+    END AS {{ is_current_col_alias }},
+{% endif -%}
+{{ datavault4dbt.print_list(source_columns_to_select) }}
+FROM end_dated_source
 
 {%- endmacro -%}

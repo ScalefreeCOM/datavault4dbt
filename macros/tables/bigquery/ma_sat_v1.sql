@@ -1,4 +1,4 @@
-{%- macro default__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, ledts_alias) -%}
+{%- macro default__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc, ledts_alias) -%}
 
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
@@ -8,24 +8,25 @@
 {%- set exclude = datavault4dbt.expand_column_list(columns=[hashkey, hashdiff, ma_attribute, src_ldts]) -%}
 {%- set ma_attributes = datavault4dbt.expand_column_list(columns=[ma_attribute]) -%}
 
+
 {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_columns, exclude) -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
-WITH 
+WITH
 
 {# Getting everything from the underlying v0 satellite. #}
 source_satellite AS (
 
-    SELECT * 
+    SELECT *
     FROM {{ source_relation }}
 
-), 
+),
 
 {# Selecting all distinct loads per hashkey. #}
 distinct_hk_ldts AS (
 
-    SELECT DISTINCT 
+    SELECT DISTINCT
         {{ hashkey }},
         {{ src_ldts }}
     FROM source_satellite
@@ -34,8 +35,8 @@ distinct_hk_ldts AS (
 
 {# End-dating each ldts for each hashkey, based on earlier ldts per hashkey. #}
 end_dated_loads AS (
-    
-    SELECT 
+
+    SELECT
         {{ hashkey }},
         {{ src_ldts }},
         COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format['default'],end_of_all_times['default']) }}) as {{ ledts_alias }}
@@ -46,7 +47,7 @@ end_dated_loads AS (
 {# End-date each source record, based on the end-date for each load. #}
 end_dated_source AS (
 
-    SELECT 
+    SELECT
         src.{{ hashkey }},
         src.{{ src_ldts }},
         edl.{{ ledts_alias }},

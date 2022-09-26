@@ -2,15 +2,15 @@
     This macro should be used as a post hook for each PIT table, whenever a logarithmic snapshot logic is used.
     The macro deletes all records in a PIT table, that are no longer active. Deletion is no problem here because
     no actual data is deleted, only pointers to satellite entries.
-    
+
     Parameters:
         snapshot_relation::string       The name of the dbt model that creates the snapshot table / view, that has
                                         the logarithmic snapshot logic applied.
-                                        
+
     Example Usage:
 
         An example usage for applying this macro as a post hook for a PIT table would look like this inside the PIT source_models
-        config block: 
+        config block:
 
             "{{ config(post_hook="{{ datavault4dbt.clean_up_pit('control_snap_view') }}") }}"
 
@@ -26,7 +26,7 @@
 {%- macro default__clean_up_pit(snapshot_relation) -%}
 
 DELETE {{ this }} pit
-WHERE pit.sdts not in (SELECT sdts FROM {{ ref(snapshot_relation) }} snap WHERE is_active=TRUE)
+WHERE pit.sdts not in (SELECT sdts FROM {{ ref(snapshot_relation) }} snap WHERE is_active=TRUE) --paremterize "is_active"
 
 {{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
 

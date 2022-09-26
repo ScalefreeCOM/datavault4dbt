@@ -11,9 +11,9 @@
 
 WITH
 
-{# 
+{#
     Get all records from staging layer where driving key and secondary foreign keys are not null.
-    Deduplicate over HK+Driving Key uneuqls the previous (regarding src_ldts) combination. 
+    Deduplicate over HK+Driving Key uneuqls the previous (regarding src_ldts) combination.
 #}
 stage AS (
     SELECT
@@ -33,11 +33,11 @@ stage AS (
 #}
 
 latest_record AS (
-    SELECT 
+    SELECT
         {{ datavault4dbt.prefix(source_cols, 'current_records') }}
     FROM {{ this }} AS current_records
     INNER JOIN (
-        SELECT DISTINCT 
+        SELECT DISTINCT
             {{ datavault4dbt.prefix([driving_key], 'stage') }}
         FROM stage
     ) AS source_records
@@ -48,7 +48,7 @@ latest_record AS (
 
 {#
     Select only incoming records from the stage, that are newer than the latest record in the eff_sat, or when it does not exist yet.
-    Creates the src_ldts_lead for intermediate changes, and a rank column over the driving key, order by the ldts. 
+    Creates the src_ldts_lead for intermediate changes, and a rank column over the driving key, order by the ldts.
 #}
 stage_new AS (
     SELECT
@@ -87,7 +87,7 @@ deactivated_existing AS (
 {%- endif %}
 
 {#
-    Activate all rows that have a different relationship for an existing driving key OR where the driving key is not yet existing in the eff_sat 
+    Activate all rows that have a different relationship for an existing driving key OR where the driving key is not yet existing in the eff_sat
     OR is not the first new one in the incoming data (due to intermediate changes).
 #}
 
@@ -109,7 +109,7 @@ activated_new_records AS (
 ),
 
 {#
-    Deactivate all intermediate changes that are not the latest one. 
+    Deactivate all intermediate changes that are not the latest one.
 #}
 
 deactivated_intermediates AS (
@@ -138,7 +138,7 @@ final_columns_to_select AS (
 
     SELECT * FROM activated_new_records
 
-    UNION ALL 
+    UNION ALL
 
     SELECT * FROM deactivated_intermediates
 

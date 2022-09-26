@@ -2,10 +2,10 @@
 
 {%- macro default__stage(include_source_columns,
                 ldts,
-                rsrc,  
-                source_model, 
-                hashed_columns, 
-                derived_columns, 
+                rsrc,
+                source_model,
+                hashed_columns,
+                derived_columns,
                 sequence,
                 prejoined_columns,
                 missing_columns) -%}
@@ -41,7 +41,7 @@
 {%- else -%}
 
     {%- set all_source_columns = [] -%}
-{%- endif -%}   
+{%- endif -%}
 
 {%- if datavault4dbt.is_something(derived_columns) -%}
 {# Ensuring that the incoming derived_columns all have a datatype. #}
@@ -58,7 +58,7 @@
 {%- if datavault4dbt.is_attribute(rsrc) -%}
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
 {%- endif -%}
-{%- if sequence is not none -%}  
+{%- if sequence is not none -%}
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [sequence] -%}
 {%- endif -%}
 
@@ -130,7 +130,7 @@ ldts_rsrc_data AS (
 {# Filling missing columns with NULL values for schema changes #}
 missing_columns AS (
 
-  SELECT 
+  SELECT
 
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
 
@@ -148,8 +148,8 @@ missing_columns AS (
 {# Prejoining Business Keys of other source objects for Link purposes #}
 {% if datavault4dbt.is_something(prejoined_columns) %}
 
-prejoined_columns AS (  
-  
+prejoined_columns AS (
+
   SELECT
 
   {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=datavault4dbt.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
@@ -211,13 +211,14 @@ unknown_values AS (
     SELECT
     
     {{ datavault4dbt.string_to_timestamp(timestamp_format['default'],beginning_of_all_times['default']) }} as {{ ldts_alias }},
-    '{{ var("datavault4dbt.default_ghost_rec_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
+    '{{ var("datavault4dbt.default_unknown_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
-      {%- if column.name not in exclude_column_names and column.name | upper not in ['EDWLOADDATE','REC_SRC'] %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}{{"," if not loop.last }}
-      {%- endif -%}
+      {%- if column.name not in exclude_column_names %}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
+        {%- if not loop.last %},{% endif -%}
+      {% endif -%}
     {% endfor %}
 
     {%- if missing_columns is not none -%},
@@ -226,24 +227,24 @@ unknown_values AS (
         
         {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
-      
+
       {% endfor %}
     {%- endif -%}
 
     {% if prejoined_columns is not none -%}
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
-        
+
         {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
-        
+
           {% for column in pj_relation_columns -%}
 
             {% if column.name|lower == vals['bk']|lower -%},
               {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
             {%- endif -%}
-          
+
           {% endfor -%}
-        
+
         {% endfor -%}
 
     {%- endif %}
@@ -263,7 +264,7 @@ unknown_values AS (
 
     {%- for hash_column in processed_hash_columns %}
     '{{ unknown_key }}' as {{ hash_column }}{{ "," if not loop.last }}
-        
+
     {%- endfor %}
     ),
 
@@ -274,7 +275,7 @@ error_values AS (
     SELECT
     
     {{ datavault4dbt.string_to_timestamp(timestamp_format['default'],end_of_all_times['default']) }} as {{ ldts_alias }},
-    '{{ var("datavault4dbt.default_ghost_rec_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
+    '{{ var("datavault4dbt.default_error_rsrc", "ERROR") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
@@ -289,32 +290,31 @@ error_values AS (
         
         {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
-      
+
       {% endfor %}
     {%- endif -%}
 
     {% if prejoined_columns is not none -%}
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
-        
+
         {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
-        
+
           {% for column in pj_relation_columns -%}
 
             {% if column.name|lower == vals['bk']|lower -%},
               {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
             {%- endif -%}
-          
+
           {% endfor -%}
-        
+
         {% endfor -%}
 
     {%- endif %}
 
     {%- if derived_columns is not none -%}
     {# Additionally generating Ghost Records for Derived Columns #}
-      ,
-      {% for column_name, properties in derived_columns.items() -%}
+      ,{% for column_name, properties in derived_columns.items() -%}
 
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
@@ -324,7 +324,7 @@ error_values AS (
 
     {%- for hash_column in processed_hash_columns %}
     '{{ error_key }}' as {{ hash_column }}{{ "," if not loop.last }}
-        
+
     {%- endfor %}
     ),
 
@@ -343,7 +343,7 @@ columns_to_select AS (
     *
 
     FROM {{ last_cte }}
-    UNION ALL 
+    UNION ALL
     SELECT * FROM ghost_records
 )
 

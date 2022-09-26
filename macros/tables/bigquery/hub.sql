@@ -3,25 +3,32 @@
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
+{%- set rsrc_unknown = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') -%}
+{%- set rsrc_error = var('datavault4dbt.default_error_rsrc', 'ERROR') -%}
+
 {%- set ns = namespace(last_cte= "", source_included_before = {}) -%}
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
 
 {%- set business_keys = datavault4dbt.expand_column_list(columns=[business_keys]) -%}
 
-{%- for source_model in source_models.keys() %}    
+{%- for source_model in source_models.keys() %}
 
-    {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
+    {%- if 'hk_column' not in source_models[source_model].keys() -%}
+        {%- do source_models[source_model].update({'hk_column': hashkey}) -%}
+    {%- endif -%}
 
-    {%- if 'bk_columns' is not in source_models[source_model].keys() -%}
-
+    {%- if 'bk_columns' in source_models[source_model].keys() -%}
+        {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
+        {%- set bk_column_input = [bk_column_input] -%}
+        {%- do source_models[source_model].update({'bk_columns': bk_column_input}) -%}
+    {%- else -%}
         {%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
+    {%- endif -%}
 
-    {%- elif not datavault4dbt.is_list(bk_column_input) -%}
-
-        {%- set bk_list = datavault4dbt.expand_column_list(columns=[bk_column_input]) -%}
-        {%- do source_models[source_model].update({'bk_columns': bk_list}) -%}
-
+    {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
+        {%- set unique_rsrc = datavault4dbt.get_distinct_value(source_relation=ref(source_model), column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
+        {%- do source_models[source_model].update({'rsrc_static': unique_rsrc}) -%}
     {%- endif -%}
 
 {% endfor %}
@@ -39,7 +46,7 @@ WITH
 
 {% if is_incremental() -%}
 distinct_target_hashkeys AS (
-    
+
     SELECT DISTINCT
         {{ hashkey }}
     FROM {{ this }}
@@ -50,7 +57,7 @@ distinct_target_hashkeys AS (
 
     {%- set source_number = loop.index | string -%}
     {%- set rsrc_static = source_models[source_model]['rsrc_static'] -%}
-    
+
     {%- set rsrc_static_query_source -%}
         SELECT {{ this }}.{{ src_rsrc }},
         '{{ rsrc_static }}' AS rsrc_static
@@ -59,8 +66,8 @@ distinct_target_hashkeys AS (
     {% endset %}
 
     rsrc_static_{{ source_number }} AS (
-        
-        SELECT 
+
+        SELECT
             *,
             '{{ rsrc_static }}' AS rsrc_static
         FROM {{ this }}
@@ -109,7 +116,7 @@ max_ldts_per_rsrc_static_in_target AS (
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
     GROUP BY rsrc_static
 
-), 
+),
 {% endif -%}
 
 {% for source_model in source_models.keys() %}
@@ -126,9 +133,8 @@ max_ldts_per_rsrc_static_in_target AS (
 
     src_new_{{ source_number }} AS (
 
-        SELECT 
+        SELECT
             {{ hk_column }} AS {{ hashkey }},
-
             {% for bk in source_models[source_model]['bk_columns'] -%}
             {{ bk }},
             {%- endfor %}
@@ -139,7 +145,7 @@ max_ldts_per_rsrc_static_in_target AS (
         FROM {{ ref(source_model) }} src
 
         {%- if is_incremental() and ns.source_included_before[source_model] %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max 
+        INNER JOIN max_ldts_per_rsrc_static_in_target max
             ON max.rsrc_static = '{{ rsrc_static }}'
         WHERE src.{{ src_ldts }} > max.max_ldts
         {%- endif %}
@@ -197,7 +203,7 @@ earliest_hk_over_all_sources AS (
 
 records_to_insert AS (
 
-    SELECT 
+    SELECT
         {{ datavault4dbt.print_list(final_columns_to_select) }}
     FROM {{ ns.last_cte }}
 

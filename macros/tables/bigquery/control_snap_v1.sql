@@ -23,14 +23,14 @@
 {%- set ns = namespace(forever_status=FALSE) %}
 
 
-WITH 
+WITH
 
 latest_row AS (
-    
-    SELECT 
-        sdts 
-    FROM {{ v0_relation }} 
-    ORDER BY sdts DESC 
+
+    SELECT
+        sdts
+    FROM {{ v0_relation }}
+    ORDER BY sdts DESC
     LIMIT 1
 
 ),
@@ -45,15 +45,15 @@ virtual_logic AS (
         TRUE as is_active,
         {%- else %}
 
-        CASE 
-            WHEN 
+        CASE
+            WHEN
 
             {% if 'daily' in log_logic.keys() %}
                 {%- if log_logic['daily']['forever'] == 'TRUE' -%}
                     {%- set ns.forever_status = 'TRUE' -%}
                     (1=1)
                 {%- else %}
-                            
+
                     {%- set daily_duration = log_logic['daily']['duration'] -%}
                     {%- set daily_unit = log_logic['daily']['unit'] -%}
 
@@ -69,11 +69,11 @@ virtual_logic AS (
                 {%- else %}
 
                     {%- set weekly_duration = log_logic['weekly']['duration'] -%}
-                    {%- set weekly_unit = log_logic['weekly']['unit'] -%}            
-                    
+                    {%- set weekly_unit = log_logic['weekly']['unit'] -%}
+
                     (
                 (EXTRACT(DATE FROM c.sdts) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL {{ weekly_duration }} {{ weekly_unit }}) AND CURRENT_DATE() )
-                AND 
+                AND
                 (c.is_weekly = TRUE)
             )
                 {%- endif -%}
@@ -87,11 +87,11 @@ virtual_logic AS (
                 {%- else %}
 
                     {%- set monthly_duration = log_logic['monthly']['duration'] -%}
-                    {%- set monthly_unit = log_logic['monthly']['unit'] -%}            
-                    
+                    {%- set monthly_unit = log_logic['monthly']['unit'] -%}
+
                     (
                 (EXTRACT(DATE FROM c.sdts) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL {{ monthly_duration }} {{ monthly_unit }}) AND CURRENT_DATE() )
-                AND 
+                AND
                 (c.is_monthly = TRUE)
             )
                 {%- endif -%}
@@ -105,11 +105,11 @@ virtual_logic AS (
                 {%- else %}
 
                     {%- set yearly_duration = log_logic['yearly']['duration'] -%}
-                    {%- set yearly_unit = log_logic['yearly']['unit'] -%}            
-                    
+                    {%- set yearly_unit = log_logic['yearly']['unit'] -%}
+
                     (
                 (EXTRACT(DATE FROM c.sdts) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL {{ yearly_duration }} {{ yearly_unit }}) AND CURRENT_DATE() )
-                AND 
+                AND
                 (c.is_yearly = TRUE)
             )
                 {%- endif -%}

@@ -1,5 +1,4 @@
 {%- macro derived_columns_datatypes(columns, source_relation) -%}
-    
     {{- adapter.dispatch('derived_columns_datatypes', 'datavault4dbt')(columns=columns, source_relation=source_relation) -}}
 
 {%- endmacro -%}
@@ -23,7 +22,6 @@
 
             {%- if not datavault4dbt.is_attribute(column_value) -%}
             {# If the value is a static value, it is not an attribute and no datatype needs to be detected. Instead a default datatype is applied. #}
-                
                 {%- set datatype = var('datavault4dbt.default_datatype_derived_columns', 'STRING') -%}
                 {%- set value = column_value -%}
 
@@ -32,7 +30,7 @@
 
                 {%- set value = column_value -%}
 
-                
+
 
                 {%- set ns = namespace(datatype = "") -%}
 
@@ -41,7 +39,7 @@
                     {%- if source_column.name|upper == value|upper -%}
 
                        {%- set ns.datatype = source_column.dtype -%}
-                    
+
                     {%- endif -%}
 
                 {%- endfor -%}
@@ -62,8 +60,8 @@
                 {%- endif -%}
 
             {%- endif -%}
-                
-            {%- do columns.update({column_name: {'datatype': datatype, 'value': value}}) -%}
+
+            {%- do columns.update({column_name: {'datatype': datatype, 'value': value} }) -%}
 
         {%- elif column_value is mapping and not column_value.get('datatype') -%}
 
@@ -80,4 +78,3 @@
 {{ return(columns | tojson) }}
 
 {%- endmacro -%}
-
