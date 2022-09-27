@@ -97,6 +97,7 @@ max_ldts_per_rsrc_static_in_target AS
     {%- else -%}
         {%- set hk_column = source_models[source_model]['hk_column'] -%}
     {% endif %}
+
 src_new_{{ source_number }} AS 
 (
     SELECT 
@@ -109,16 +110,22 @@ src_new_{{ source_number }} AS
       '{{ rsrc_static }}' AS rsrc_static
     FROM 
        {{ ref(source_model) }} src
+
     {%- if is_incremental() and ns.source_included_before[source_model] %}
+
     INNER JOIN max_ldts_per_rsrc_static_in_target max 
     ON max.rsrc_static = '{{ rsrc_static }}'
     WHERE src.{{ src_ldts }} > max.max_ldts
+
     {%- endif %}
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ hk_column }} ORDER BY {{ src_ldts }}) = 1
+
     {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 ),
+
 {%- endfor -%}
+
 {%- if source_models.keys() | length > 1 %}
+
 source_new_union AS 
 (
     {#- Unionize the new records from all sources. #}
@@ -140,6 +147,8 @@ source_new_union AS
     {%- endfor -%}
     {%- set ns.last_cte = 'source_new_union' -%}
 ),
+{%- endif %}
+
 earliest_hk_over_all_sources AS 
 (
     {#- Deduplicate the unionized records again to only insert the earliest one. #}
@@ -150,7 +159,7 @@ earliest_hk_over_all_sources AS
     QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}) = 1
     {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 ),
-{%- endif %}
+
 records_to_insert AS 
 (
     {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the hub. #}

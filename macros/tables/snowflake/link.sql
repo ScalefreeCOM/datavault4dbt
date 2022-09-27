@@ -43,7 +43,9 @@ distinct_target_hashkeys AS
         FROM {{ this }}
         WHERE {{ src_rsrc }} LIKE '{{ rsrc_static }}'
     {% endset %}
+
 rsrc_static_{{ source_number }} AS 
+
 (        
     SELECT 
       *,
@@ -63,6 +65,7 @@ rsrc_static_{{ source_number }} AS
 
 {%- if source_models.keys() | length > 1 %}
 rsrc_static_union AS 
+
 (
     {#-  Create one unionized table over all source, will be the same as the already existing
          link, but extended by the rsrc_static column. #}
@@ -75,7 +78,9 @@ rsrc_static_union AS
     {%- endfor %}
     {%- set ns.last_cte = "rsrc_static_union".format(source_number) -%}
 ),
+
 {%- endif %}
+
 max_ldts_per_rsrc_static_in_target AS 
 (
    {#- Use the previously created CTE to calculate the max ldts per rsrc_static. #}
@@ -111,11 +116,13 @@ src_new_{{ source_number }} AS
     ON max.rsrc_static = '{{ rsrc_static }}'
     WHERE src.{{ src_ldts }} > max.max_ldts
     {%- endif %}
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
+    
     {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 ),
 {%- endfor -%}
+
 {%- if source_models.keys() | length > 1 %}
+
 source_new_union AS 
 (
     {#- Unionize the new records from all sources. #}
@@ -137,6 +144,8 @@ source_new_union AS
     {%- endfor -%}
     {%- set ns.last_cte = 'source_new_union' -%}
 ),
+{%- endif %}
+
 earliest_hk_over_all_sources AS 
 (
    {#- Deduplicate the unionized records again to only insert the earliest one. #}
@@ -147,7 +156,7 @@ earliest_hk_over_all_sources AS
     QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
     {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 ),
-{%- endif %}
+
 records_to_insert AS 
 (
     {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the link. #}
