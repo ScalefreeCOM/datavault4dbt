@@ -184,6 +184,7 @@ source_new_union AS (
     {%- set ns.last_cte = 'source_new_union' -%}
 
 ),
+{%- endif %}
 
 earliest_hk_over_all_sources AS (
 
@@ -197,7 +198,7 @@ earliest_hk_over_all_sources AS (
 
 ),
 
-{%- endif %}
+
 
 records_to_insert AS (
 
