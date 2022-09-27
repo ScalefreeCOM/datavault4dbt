@@ -73,6 +73,8 @@
 {%- macro exasol__hash(columns, alias, is_hashdiff) -%}
 
 {%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
+{%- set hash_dtype = var('dbtvault_scalefree.hash_datatype', 'HASHTYPE') -%}
+
 {%- set concat_string = var('concat_string', '||') -%}
 {%- set quote = var('quote', '"') -%}
 {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
@@ -105,7 +107,7 @@
     {%- for column in columns -%}
         CAST({{ column }} AS VARCHAR(200000) UTF8) {%- if not loop.last -%} , {% endif -%}
     {% endfor -%}, NULL) IS NULL
-    THEN CAST('{{ unknown_key }}' as HASHTYPE)
+    THEN CAST('{{ unknown_key }}' as {{ hash_dtype }})
     ELSE
 {%- endif -%}
 

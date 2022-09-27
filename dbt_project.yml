@@ -17,6 +17,7 @@ clean-targets:
 
 vars:
   dbtvault_scalefree.hash: 'MD5'
+  dbtvault_scalefree.hash_datatype: 'STRING'
   dbtvault_scalefree.beginning_of_all_times: '0001-01-01T00-00-01'
   dbtvault_scalefree.end_of_all_times: '8888-12-31T23-59-59'
   dbtvault_scalefree.timestamp_format: '%Y-%m-%dT%H-%M-%S'
