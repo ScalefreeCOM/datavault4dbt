@@ -116,6 +116,7 @@ WITH
                 rsrc_static,
                 MAX({{ src_ldts }}) as max_ldts
             FROM {{ ns.last_cte }}
+            WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
 
         ),
