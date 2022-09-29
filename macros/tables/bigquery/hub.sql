@@ -150,8 +150,6 @@ max_ldts_per_rsrc_static_in_target AS (
         WHERE src.{{ src_ldts }} > max.max_ldts
         {%- endif %}
 
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ hk_column }} ORDER BY {{ src_ldts }}) = 1
-
          {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 
     ),
@@ -186,6 +184,7 @@ source_new_union AS (
     {%- set ns.last_cte = 'source_new_union' -%}
 
 ),
+{%- endif %}
 
 earliest_hk_over_all_sources AS (
 
@@ -199,7 +198,7 @@ earliest_hk_over_all_sources AS (
 
 ),
 
-{%- endif %}
+
 
 records_to_insert AS (
 

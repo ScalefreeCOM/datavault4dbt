@@ -126,7 +126,7 @@ src_new_{{ source_number }} AS
     ON max.rsrc_static = '{{ rsrc_static }}'
     WHERE src.{{ src_ldts }} > max.max_ldts
     {%- endif %}
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
+    
     {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 ),
 {%- endfor -%}
@@ -156,6 +156,8 @@ source_new_union AS
     {%- endfor -%}
     {%- set ns.last_cte = 'source_new_union' -%}
 ),
+{%- endif %}
+
 earliest_hk_over_all_sources AS 
 (
     {#- Deduplicate the unionized records again to only insert the earliest one. #}
@@ -166,7 +168,7 @@ earliest_hk_over_all_sources AS
     QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
     {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 ),
-{%- endif %}
+
 records_to_insert AS 
 (
     {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the link. #}
