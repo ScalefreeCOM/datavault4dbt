@@ -1,4 +1,4 @@
-{%- macro default__pit(pit_type, tracked_entity, hashkey, sat_names, ldts, custom_rsrc, ledts, snapshot_relation, snapshot_trigger_column, dimension_key) -%}
+{%- macro default__pit(tracked_entity, hashkey, sat_names, ldts, ledts, snapshot_relation, snapshot_trigger_column, dimension_key, custom_rsrc=none, pit_type=none) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
@@ -27,8 +27,13 @@ existing_dimension_keys AS (
 pit_records AS (
 
     SELECT
-        {{ datavault4dbt.as_constant(pit_type) }} as type,
+        
+        {% if datavault4dbt.is_something(pit_type) -%}
+            {{ datavault4dbt.as_constant(pit_type) }} as type,
+        {%- endif %}
+        {% if datavault4dbt.is_something(custom_rsrc) -%}
         '{{ custom_rsrc }}' as {{ rsrc }},
+        {%- endif %}
         {{ datavault4dbt.hash(columns=[datavault4dbt.as_constant(pit_type), datavault4dbt.prefix([hashkey], 'te'), datavault4dbt.prefix(['sdts'], 'snap')],
                     alias=dimension_key,
                     is_hashdiff=false)   }} ,
