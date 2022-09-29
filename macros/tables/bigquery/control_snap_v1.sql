@@ -40,7 +40,7 @@ virtual_logic AS (
     SELECT
         c.sdts,
         c.replacement_sdts,
-
+        c.force_active,
         {%- if log_logic is none %}
         TRUE as is_active,
         {%- else %}
@@ -131,8 +131,6 @@ virtual_logic AS (
         c.is_weekly,
         c.is_monthly,
         c.is_yearly,
-        c.ldts,
-        c.comment,
         CASE
             WHEN EXTRACT(YEAR FROM c.sdts) = EXTRACT(YEAR FROM CURRENT_DATE()) THEN TRUE
             ELSE FALSE
@@ -148,10 +146,36 @@ virtual_logic AS (
         CASE
             WHEN EXTRACT(DATE FROM c.sdts) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 2 YEAR) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 YEAR) THEN TRUE
             ELSE FALSE
-        END AS is_last_rolling_year
+        END AS is_last_rolling_year,
+        c.comment
     FROM {{ v0_relation }} c
     LEFT JOIN latest_row l
         ON c.sdts = l.sdts
+
+),
+
+active_logic_combined AS (
+
+    SELECT 
+        sdts,
+        replacement_sdts,
+        CASE
+            WHEN force_active AND is_active THEN TRUE
+            WHEN NOT force_active OR NOT is_active THEN FALSE
+        END AS is_active,
+        is_latest, 
+        caption,
+        is_hourly,
+        is_daily,
+        is_weekly,
+        is_monthly,
+        is_yearly,
+        is_current_year,
+        is_last_year,
+        is_rolling_year,
+        is_last_rolling_year,
+        comment
+    FROM virtual_logic
 
 )
 

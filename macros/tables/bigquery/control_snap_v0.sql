@@ -27,6 +27,7 @@ enriched_timestamps AS (
 
     SELECT
         sdts,
+        TRUE as force_active,
         sdts as replacement_sdts,
         CONCAT("Snapshot ", DATE(sdts)) as caption,
         CASE
@@ -49,7 +50,6 @@ enriched_timestamps AS (
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN TRUE
             ELSE FALSE
         END as is_yearly,
-        CAST(NULL AS TIMESTAMP) as ldts,
         NULL as comment
     FROM initial_timestamps
 

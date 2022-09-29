@@ -26,11 +26,15 @@
 
         is_weekly::boolean              Captures if the day of the week of a sdts is monday.
 
-        is_monthly::boolean            Captures if a sdts is the first day of a month.
+        is_monthly::boolean             Captures if a sdts is the first day of a month.
 
         is_yearly::boolean              Captures if a sdts is the first day of a year.
 
         comment::string                 Allows users to write custom comments for each sdts. By default this column is set to NULL.
+
+        force_active::boolean           Allows users to deactivate single snapshots. Deactivating a snapshot here overwrites any logarithmic
+                                        logic that is applied in the version 1 snapshot table on top of this one. This column is automatically
+                                        set to TRUE.
 
     Parameters:
 
