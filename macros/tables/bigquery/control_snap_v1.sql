@@ -22,7 +22,6 @@
 {%- set v0_relation = ref(control_snap_v0) -%}
 {%- set ns = namespace(forever_status=FALSE) %}
 
-
 WITH
 
 latest_row AS (
@@ -44,10 +43,8 @@ virtual_logic AS (
         {%- if log_logic is none %}
         TRUE as is_active,
         {%- else %}
-
         CASE
             WHEN
-
             {% if 'daily' in log_logic.keys() %}
                 {%- if log_logic['daily']['forever'] == 'TRUE' -%}
                     {%- set ns.forever_status = 'TRUE' -%}
@@ -179,6 +176,6 @@ active_logic_combined AS (
 
 )
 
-SELECT * FROM virtual_logic
+SELECT * FROM active_logic_combined
 
 {%- endmacro -%}
