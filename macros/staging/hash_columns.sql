@@ -6,10 +6,6 @@
 
 {%- macro default__hash_columns(columns=none) -%}
 
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{#- Select hashing algorithm -#}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
-
 {%- if columns is mapping and columns is not none -%}
 
     {%- for col in columns -%}
