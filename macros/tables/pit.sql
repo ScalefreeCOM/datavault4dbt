@@ -13,7 +13,8 @@
     Parameters:
 
     pit_type::string                    String to insert into the 'pit_type' column. Allows for future implementations of other
-                                        PIT variants, like T-PITs etc. Can be set freely, something like 'PIT' could be the default. Is optional.
+                                        PIT variants, like T-PITs etc. Can be set freely, something like 'PIT' could be the default. 
+                                        Is optional, if not set, no column will be added.
 
     tracked_entity::string              Name of the tracked Hub entity. Must be available as a model inside the dbt project.
 
@@ -37,6 +38,7 @@
 
     custom_rsrc::string                 A custom string that should be inserted into the 'rsrc' column inside the PIT table. Since
                                         a PIT table is a business vault entity, the technical record source is no longer used here.
+                                        Is optional, if not defined, no column is added.
 
     ledts::string                       Name of the load-end-date column inside the satellites. Is optional, will use the global variable
                                         'datavault4dbt.ledts_alias' if not set here.
@@ -55,9 +57,6 @@
     {%- set ldts = datavault4dbt.replace_standard(ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set ledts = datavault4dbt.replace_standard(ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
     {%- set sdts = datavault4dbt.replace_standard(sdts, 'datavault4dbt.sdts_alias', 'sdts') -%}
-    {%- if pit_type is none -%}
-        {% set pit_type = '!PIT' | string %}
-    {%- endif -%}
 
     {{ return(adapter.dispatch('pit','datavault4dbt')(pit_type=pit_type,
                                                         tracked_entity=tracked_entity,
