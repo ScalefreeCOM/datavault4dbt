@@ -35,9 +35,9 @@
 {%- set all_null = [] -%}
 
 {%- if is_hashdiff -%}
-    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
+    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
 {%- else -%}
-    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
+    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
 {%- endif -%}
 
 
