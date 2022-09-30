@@ -1,8 +1,8 @@
 {%- macro exasol__pit(pit_type, tracked_entity, hashkey, sat_names, ldts, custom_rsrc, ledts, sdts, snapshot_relation, snapshot_trigger_column, dimension_key) -%}
 
-{%- set hash = var('dbtvault_scalefree.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = dbtvault_scalefree.hash_default_values(hash_function=hash) -%}
-{%- set rsrc = var('dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
+{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
 {%- if snapshot_trigger_column is defined and snapshot_trigger_column is not none -%}
     {%- set has_snapshot_trigger_col = true -%}
 {%- else -%}
@@ -10,13 +10,13 @@
 {%- endif -%}
 {%- set hashkey = hashkey | upper -%}
 {%- set dimension_key = dimension_key | upper -%}
-{%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 {%- set has_custom_rsrc = false -%}
 {%- if not(custom_rsrc is none and custom_rsrc is not string) -%}
     {%- set has_custom_rsrc = true -%}
 {%- endif -%}
-{{ dbtvault_scalefree.prepend_generated_by() }}
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
@@ -35,18 +35,18 @@ existing_dimension_keys AS (
 pit_records AS (
 
     SELECT
-        {{ dbtvault_scalefree.as_constant(pit_type) }} as type,
+        {{ datavault4dbt.as_constant(pit_type) }} as type,
         {%- if has_custom_rsrc %}
             '{{ custom_rsrc }}' as {{ rsrc }},
         {%- endif %}
-        {{ dbtvault_scalefree.hash(columns=[dbtvault_scalefree.as_constant(pit_type), dbtvault_scalefree.prefix([hashkey],'te'), dbtvault_scalefree.prefix([sdts], 'snap')],
+        {{ datavault4dbt.hash(columns=[datavault4dbt.as_constant(pit_type), datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')],
                     alias=dimension_key,
                     is_hashdiff=false)   }} ,
         te.{{ hashkey }},
         snap.{{ sdts }},
         {% for satellite in sat_names %}
             COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ unknown_key }}' AS HASHTYPE)) AS HK_{{ satellite }},
-            COALESCE({{ satellite }}.{{ ldts }}, {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
+            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
             {{- "," if not loop.last }}
         {% endfor %}
 
@@ -60,7 +60,7 @@ pit_records AS (
                 ON 1=1
             {%- endif %}
         {% for satellite in sat_names %}
-        {%- set sat_columns = dbtvault_scalefree.source_columns(ref(satellite)) %}
+        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
         LEFT JOIN {{ ref(satellite) }}
             ON
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}

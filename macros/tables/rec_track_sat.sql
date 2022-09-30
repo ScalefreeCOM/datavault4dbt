@@ -55,13 +55,13 @@
                                                                                                                 The macro will then get automatically this unique value querying the source model.
                                                                                                                 
 
-    src_ldts::string                Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
+    src_ldts::string                Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
 
-    src_rsrc::string                Name of the rsrc column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
+    src_rsrc::string                Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
 
-    src_stg::string                 Name of the source stage model. Is optional, will use the global variable  'dbtvault_scalefree.stg_alias'.
+    src_stg::string                 Name of the source stage model. Is optional, will use the global variable  'datavault4dbt.stg_alias'.
 
 #}
 
@@ -69,11 +69,11 @@
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
-    {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-    {%- set src_stg = dbtvault_scalefree.replace_standard(src_stg, 'dbtvault_scalefree.stg_alias', 'stg') -%}
+    {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
+    {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
+    {%- set src_stg = datavault4dbt.replace_standard(src_stg, 'datavault4dbt.stg_alias', 'stg') -%}
 
-    {{ return(adapter.dispatch('rec_track_sat', 'dbtvault_scalefree')(tracked_hashkey=tracked_hashkey,
+    {{ return(adapter.dispatch('rec_track_sat', 'datavault4dbt')(tracked_hashkey=tracked_hashkey,
                                                                       source_models=source_models,
                                                                       src_ldts=src_ldts,
                                                                       src_rsrc=src_rsrc,

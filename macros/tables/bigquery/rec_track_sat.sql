@@ -1,7 +1,7 @@
 {%- macro default__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg) -%}
 
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
 {%- set ns = namespace(last_cte = '', source_included_before = {}) -%}
 
@@ -14,7 +14,7 @@ distinct_concated_target AS (
     {%- set concat_columns = [tracked_hashkey, src_ldts, 'rsrc_static'] -%}
 
     SELECT
-        {{ dbtvault_scalefree.concat_ws(concat_columns) }}
+        {{ datavault4dbt.concat_ws(concat_columns) }}
     FROM {{ this }}
 
 ),
@@ -46,7 +46,7 @@ max_ldts_per_rsrc_static_in_target AS (
         rsrc_static,
         MAX({{ src_ldts }}) as max_ldts
     FROM {{ this }}
-    WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     GROUP BY rsrc_static
 
 ),
@@ -134,7 +134,7 @@ records_to_insert AS (
     FROM {{ ns.last_cte }}
 
     {%- if is_incremental() %}
-    WHERE {{ dbtvault_scalefree.concat_ws(concat_columns) }} NOT IN (SELECT * FROM distinct_concated_target)
+    WHERE {{ datavault4dbt.concat_ws(concat_columns) }} NOT IN (SELECT * FROM distinct_concated_target)
     {% endif -%}
 )
 

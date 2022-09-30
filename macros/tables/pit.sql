@@ -33,16 +33,16 @@
                                         Recommended is the name of the hashkey with a '_d' suffix.
 
     ldts::string                        Name of the ldts column inside all source models. Is optional, will use the global variable
-                                        'dbtvault_scalefree.ldts_alias'. Needs to use the same column name as defined as alias inside the staging model.
+                                        'datavault4dbt.ldts_alias'. Needs to use the same column name as defined as alias inside the staging model.
 
     custom_rsrc::string                 A custom string that should be inserted into the 'rsrc' column inside the PIT table. Since
                                         a PIT table is a business vault entity, the technical record source is no longer used here.
 
     ledts::string                       Name of the load-end-date column inside the satellites. Is optional, will use the global variable
-                                        'dbtvault_scalefree.ledts_alias' if not set here.
+                                        'datavault4dbt.ledts_alias' if not set here.
     
     sdts::string                        Name of the snapshot date timestamp column inside the snapshot table. It is optional, will use the 
-                                        global variable 'dbtvault_scalefree.sdts_alias' if not set here.
+                                        global variable 'datavault4dbt.sdts_alias' if not set here.
 
 #}
 
@@ -52,14 +52,14 @@
 
     {# Applying the default aliases as stored inside the global variables, if ldts, sdts and ledts are not set. #}
 
-    {%- set ldts = dbtvault_scalefree.replace_standard(ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- set ledts = dbtvault_scalefree.replace_standard(ledts, 'dbtvault_scalefree.ledts_alias', 'ledts') -%}
-    {%- set sdts = dbtvault_scalefree.replace_standard(sdts, 'dbtvault_scalefree.sdts_alias', 'sdts') -%}
+    {%- set ldts = datavault4dbt.replace_standard(ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
+    {%- set ledts = datavault4dbt.replace_standard(ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
+    {%- set sdts = datavault4dbt.replace_standard(sdts, 'datavault4dbt.sdts_alias', 'sdts') -%}
     {%- if pit_type is none -%}
         {% set pit_type = '!PIT' | string %}
     {%- endif -%}
 
-    {{ return(adapter.dispatch('pit','dbtvault_scalefree')(pit_type=pit_type,
+    {{ return(adapter.dispatch('pit','datavault4dbt')(pit_type=pit_type,
                                                         tracked_entity=tracked_entity,
                                                         hashkey=hashkey,
                                                         sat_names=sat_names,

@@ -1,16 +1,16 @@
 {%- macro exasol__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg) -%}
 
-{%- set end_of_all_times = var('dbtvault_scalefree.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set beginning_of_all_times = var('dbtvault_scalefree.beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set timestamp_format = var('dbtvault_scalefree.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 
 {# Setting the unknown and error ghost record value for record source column #}
-{%- set rsrc_unknown = var('dbtvault_scalefree.default_unknown_rsrc', 'SYSTEM') -%}
-{%- set rsrc_error = var('dbtvault_scalefree.default_error_rsrc', 'ERROR') -%}
+{%- set rsrc_unknown = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') -%}
+{%- set rsrc_error = var('datavault4dbt.default_error_rsrc', 'ERROR') -%}
 
 {# Setting the rsrc and stg_alias default datatype and length #}
-{%- set rsrc_default_dtype = var('dbtvault_scalefree.rsrc_default_dtype', 'VARCHAR (2000000) UTF8') -%}
-{%- set stg_default_dtype = var('dbtvault_scalefree.stg_default_dtype', 'VARCHAR (200) UTF8') -%}
+{%- set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'VARCHAR (2000000) UTF8') -%}
+{%- set stg_default_dtype = var('datavault4dbt.stg_default_dtype', 'VARCHAR (200) UTF8') -%}
 {%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
 
 {%- if source_models is not mapping -%}
@@ -30,7 +30,7 @@
     {%- endif -%}
 
     {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
-        {%- set unique_rsrc = dbtvault_scalefree.get_distinct_value(source_relation=ref(source_model), column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
+        {%- set unique_rsrc = datavault4dbt.get_distinct_value(source_relation=ref(source_model), column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
         {%- do ns.source_models_rsrc_dict.update({source_model : [unique_rsrc] } ) -%}
     {%- else -%}
 
@@ -56,7 +56,7 @@
 
 {%- set final_columns_to_select = [tracked_hashkey] + [src_ldts] + [src_rsrc] + [src_stg] -%}
 
-{{ dbtvault_scalefree.prepend_generated_by() }}
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
@@ -66,7 +66,7 @@ WITH
         {%- set concat_columns = [tracked_hashkey, src_ldts, src_rsrc] -%}
         {{ "\n" }}
         SELECT
-        {{ dbtvault_scalefree.concat_ws(concat_columns) }} as concat
+        {{ datavault4dbt.concat_ws(concat_columns) }} as concat
         FROM {{ this }}
     ),
     {%- if ns.has_rsrc_static_defined -%}
@@ -116,7 +116,7 @@ WITH
                 rsrc_static,
                 MAX({{ src_ldts }}) as max_ldts
             FROM {{ ns.last_cte }}
-            WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
 
         ),
@@ -213,12 +213,12 @@ source_new_union AS (
 records_to_insert AS (
 
     SELECT
-    {{ dbtvault_scalefree.print_list(final_columns_to_select) }}
+    {{ datavault4dbt.print_list(final_columns_to_select) }}
     FROM {{ ns.last_cte }}
-    WHERE {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, end_of_all_times) }} 
-    AND {{ src_ldts }} != {{ dbtvault_scalefree.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} 
+    AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
     {%- if is_incremental() %}
-        AND {{ dbtvault_scalefree.concat_ws(concat_columns) }} NOT IN (SELECT * FROM distinct_concated_target)
+        AND {{ datavault4dbt.concat_ws(concat_columns) }} NOT IN (SELECT * FROM distinct_concated_target)
     {% endif %}
 )
 

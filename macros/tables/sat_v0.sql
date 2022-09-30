@@ -41,10 +41,10 @@
                                     Examples:
                                         'stage_account'     This satellite is loaded out of the stage for account.
 
-    src_ldts::string                Name of the ldts column inside the source model. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
+    src_ldts::string                Name of the ldts column inside the source model. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
 
-    src_rsrc::string                Name of the rsrc column inside the source model. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
+    src_rsrc::string                Name of the rsrc column inside the source model. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
     
     ma_attribute::string|list       Multi-active attribute in case the Satellite has more than one active row per hashkey in a load date. It is optional,
@@ -55,10 +55,10 @@
 {%- macro sat_v0(parent_hashkey, src_hashdiff, src_payload, source_model, src_ldts=none, src_rsrc=none, ma_attribute=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
-    {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
+    {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
+    {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
 
-    {{ adapter.dispatch('sat_v0', 'dbtvault_scalefree')(parent_hashkey=parent_hashkey,
+    {{ adapter.dispatch('sat_v0', 'datavault4dbt')(parent_hashkey=parent_hashkey,
                                          src_hashdiff=src_hashdiff,
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,

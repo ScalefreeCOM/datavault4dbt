@@ -53,10 +53,10 @@
                                                 Examples:
                                                     'stage_account'     This satellite is loaded out of the stage for account.
 
-    src_ldts::string                            Name of the ldts column inside the source model. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
+    src_ldts::string                            Name of the ldts column inside the source model. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
-    src_rsrc::string                            Name of the rsrc column inside the source model. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
+    src_rsrc::string                            Name of the rsrc column inside the source model. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
 
@@ -65,7 +65,7 @@
 
 {%- macro ma_sat_v0(parent_hashkey, src_hashdiff, ma_attribute, src_payload, source_model, src_ldts=none, src_rsrc=none) -%}
     {{ 
-        dbtvault_scalefree.sat_v0(
+        datavault4dbt.sat_v0(
             parent_hashkey=parent_hashkey,
             src_hashdiff=src_hashdiff,
             ma_attribute=ma_attribute,

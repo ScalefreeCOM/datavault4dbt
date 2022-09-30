@@ -69,10 +69,10 @@
                                                                                                             this: 'SAP/Accounts/'. Here everything would be static over all loads and
                                                                                                             therefore the rsrc_static can be set to 'SAP/Accounts/' without any wildcards in place.
 
-    src_ldts::string            Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
+    src_ldts::string            Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
                                 Needs to use the same column name as defined as alias inside the staging model.
 
-    src_rsrc::string            Name of the rsrc column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
+    src_rsrc::string            Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                 Needs to use the same column name as defined as alias inside the staging model.
 
 #}
@@ -82,10 +82,10 @@
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
-    {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
+    {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
+    {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
 
-    {{ return(adapter.dispatch('hub', 'dbtvault_scalefree')(hashkey=hashkey,
+    {{ return(adapter.dispatch('hub', 'datavault4dbt')(hashkey=hashkey,
                                                             business_keys=business_keys,
                                                             src_ldts=src_ldts,
                                                             src_rsrc=src_rsrc,

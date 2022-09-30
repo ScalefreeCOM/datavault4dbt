@@ -1,15 +1,15 @@
 {%- macro exasol__eff_sat_link_v0(link_hashkey, driving_key, secondary_fks, src_ldts, src_rsrc, source_model) -%}
 
-{{- dbtvault_scalefree.check_required_parameters(link_hashkey=link_hashkey, driving_key=driving_key, secondary_fks=secondary_fks,
+{{- datavault4dbt.check_required_parameters(link_hashkey=link_hashkey, driving_key=driving_key, secondary_fks=secondary_fks,
                                        src_ldts=src_ldts, src_rsrc=src_rsrc,
                                        source_model=source_model) -}}
 
-{%- set source_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, src_rsrc, src_ldts]) -%}
-{%- set union_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, src_rsrc]) -%}
-{%- set final_cols = dbtvault_scalefree.expand_column_list(columns=[link_hashkey, driving_key, src_ldts, src_rsrc]) -%}
+{%- set source_cols = datavault4dbt.expand_column_list(columns=[link_hashkey, driving_key, src_rsrc, src_ldts]) -%}
+{%- set union_cols = datavault4dbt.expand_column_list(columns=[link_hashkey, driving_key, src_rsrc]) -%}
+{%- set final_cols = datavault4dbt.expand_column_list(columns=[link_hashkey, driving_key, src_ldts, src_rsrc]) -%}
 
 {%- set source_relation = ref(source_model) -%}
-{{ dbtvault_scalefree.prepend_generated_by() }}
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
@@ -20,11 +20,11 @@ WITH
 stage AS 
 (
     SELECT
-        {{ dbtvault_scalefree.prefix(source_cols, 'source_model') }}
+        {{ datavault4dbt.prefix(source_cols, 'source_model') }}
     FROM {{ source_relation }} AS source_model
-    WHERE {{ dbtvault_scalefree.multikey(driving_key, prefix='source_model', condition='IS NOT NULL') }}
-    AND {{ dbtvault_scalefree.multikey(secondary_fks, prefix='source_model', condition='IS NOT NULL') }}
-    QUALIFY CASE WHEN {{ dbtvault_scalefree.prefix([link_hashkey], 'source_model') }} = LAG({{ dbtvault_scalefree.prefix([link_hashkey], 'source_model') }}) OVER (PARTITION BY {{ dbtvault_scalefree.prefix([driving_key], 'source_model') }} ORDER BY {{ dbtvault_scalefree.prefix([src_ldts], 'source_model') }}) THEN FALSE
+    WHERE {{ datavault4dbt.multikey(driving_key, prefix='source_model', condition='IS NOT NULL') }}
+    AND {{ datavault4dbt.multikey(secondary_fks, prefix='source_model', condition='IS NOT NULL') }}
+    QUALIFY CASE WHEN {{ datavault4dbt.prefix([link_hashkey], 'source_model') }} = LAG({{ datavault4dbt.prefix([link_hashkey], 'source_model') }}) OVER (PARTITION BY {{ datavault4dbt.prefix([driving_key], 'source_model') }} ORDER BY {{ datavault4dbt.prefix([src_ldts], 'source_model') }}) THEN FALSE
                  ELSE TRUE
             END
 ),
@@ -38,15 +38,15 @@ stage AS
 latest_record AS 
 (
     SELECT
-        {{ dbtvault_scalefree.prefix(source_cols, 'current_records') }}
+        {{ datavault4dbt.prefix(source_cols, 'current_records') }}
     FROM {{ this }} AS current_records
     INNER JOIN (
         SELECT DISTINCT
-            {{ dbtvault_scalefree.prefix([driving_key], 'stage') }}
+            {{ datavault4dbt.prefix([driving_key], 'stage') }}
         FROM stage
     ) AS source_records
-        ON {{ dbtvault_scalefree.multikey(driving_key, prefix=['current_records', 'source_records'], condition='=') }}
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ dbtvault_scalefree.prefix([driving_key], 'current_records') }} ORDER BY {{ dbtvault_scalefree.prefix([src_ldts], 'current_records') }} DESC) = 1
+        ON {{ datavault4dbt.multikey(driving_key, prefix=['current_records', 'source_records'], condition='=') }}
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ datavault4dbt.prefix([driving_key], 'current_records') }} ORDER BY {{ datavault4dbt.prefix([src_ldts], 'current_records') }} DESC) = 1
 ),
 {%- endif %}
 
@@ -57,15 +57,15 @@ latest_record AS
 stage_new AS 
 (
     SELECT
-        {{ dbtvault_scalefree.prefix(source_cols, 'stage') }},
-        LEAD({{ dbtvault_scalefree.prefix([src_ldts], 'stage') }}) OVER (PARTITION BY {{ dbtvault_scalefree.prefix([driving_key], 'stage') }} ORDER BY {{ dbtvault_scalefree.prefix([src_ldts], 'stage') }}) AS src_ldts_lead,
-        ROW_NUMBER() OVER (PARTITION BY {{ dbtvault_scalefree.prefix([driving_key], 'stage') }} ORDER BY {{ dbtvault_scalefree.prefix([src_ldts], 'stage') }}) as stage_rank
+        {{ datavault4dbt.prefix(source_cols, 'stage') }},
+        LEAD({{ datavault4dbt.prefix([src_ldts], 'stage') }}) OVER (PARTITION BY {{ datavault4dbt.prefix([driving_key], 'stage') }} ORDER BY {{ datavault4dbt.prefix([src_ldts], 'stage') }}) AS src_ldts_lead,
+        ROW_NUMBER() OVER (PARTITION BY {{ datavault4dbt.prefix([driving_key], 'stage') }} ORDER BY {{ datavault4dbt.prefix([src_ldts], 'stage') }}) as stage_rank
     FROM stage
     {%- if is_incremental() %}
     LEFT JOIN latest_record
-        ON {{ dbtvault_scalefree.multikey(driving_key, prefix=['stage', 'latest_record'], condition='=') }}
-    WHERE {{ dbtvault_scalefree.prefix([src_ldts], 'stage') }} > {{ dbtvault_scalefree.prefix([src_ldts], 'latest_record') }}
-        OR {{ dbtvault_scalefree.prefix([src_ldts], 'latest_record') }} IS NULL
+        ON {{ datavault4dbt.multikey(driving_key, prefix=['stage', 'latest_record'], condition='=') }}
+    WHERE {{ datavault4dbt.prefix([src_ldts], 'stage') }} > {{ datavault4dbt.prefix([src_ldts], 'latest_record') }}
+        OR {{ datavault4dbt.prefix([src_ldts], 'latest_record') }} IS NULL
     {%- endif %}
 ),
 
@@ -79,14 +79,14 @@ deactivated_existing AS
 (
 
     SELECT
-        {{ dbtvault_scalefree.prefix(union_cols, 'latest_record') }},
-        {{ dbtvault_scalefree.prefix([src_ldts], 'stage_new') }} AS {{ src_ldts }},
+        {{ datavault4dbt.prefix(union_cols, 'latest_record') }},
+        {{ datavault4dbt.prefix([src_ldts], 'stage_new') }} AS {{ src_ldts }},
         FALSE AS is_active
     FROM latest_record
     LEFT JOIN stage_new
-        ON {{ dbtvault_scalefree.multikey(driving_key, prefix=['latest_record', 'stage_new'], condition='=') }}
-    WHERE {{ dbtvault_scalefree.prefix([link_hashkey], 'latest_record') }} != {{ dbtvault_scalefree.prefix([link_hashkey], 'stage_new') }}
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ dbtvault_scalefree.prefix([driving_key], 'stage_new') }} ORDER BY {{ dbtvault_scalefree.prefix([src_ldts], 'stage_new') }}) = 1
+        ON {{ datavault4dbt.multikey(driving_key, prefix=['latest_record', 'stage_new'], condition='=') }}
+    WHERE {{ datavault4dbt.prefix([link_hashkey], 'latest_record') }} != {{ datavault4dbt.prefix([link_hashkey], 'stage_new') }}
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ datavault4dbt.prefix([driving_key], 'stage_new') }} ORDER BY {{ datavault4dbt.prefix([src_ldts], 'stage_new') }}) = 1
 
 ),
 
@@ -101,15 +101,15 @@ activated_new_records AS
 (
 
     SELECT
-        {{ dbtvault_scalefree.prefix(union_cols, 'stage_new') }},
-        {{ dbtvault_scalefree.prefix([src_ldts], 'stage_new') }} AS {{ src_ldts }},
+        {{ datavault4dbt.prefix(union_cols, 'stage_new') }},
+        {{ datavault4dbt.prefix([src_ldts], 'stage_new') }} AS {{ src_ldts }},
         TRUE AS is_active
     FROM stage_new
     {%- if is_incremental() %}
     LEFT JOIN latest_record
-        ON {{ dbtvault_scalefree.multikey(driving_key, prefix=['stage_new', 'latest_record'], condition='=') }}
-    WHERE {{ dbtvault_scalefree.prefix([link_hashkey], 'stage_new') }} != {{ dbtvault_scalefree.prefix([link_hashkey], 'latest_record') }}
-        OR {{ dbtvault_scalefree.prefix([src_ldts], 'latest_record') }} IS NULL
+        ON {{ datavault4dbt.multikey(driving_key, prefix=['stage_new', 'latest_record'], condition='=') }}
+    WHERE {{ datavault4dbt.prefix([link_hashkey], 'stage_new') }} != {{ datavault4dbt.prefix([link_hashkey], 'latest_record') }}
+        OR {{ datavault4dbt.prefix([src_ldts], 'latest_record') }} IS NULL
         OR stage_new.stage_rank != 1
     {%- endif %}
 
@@ -123,18 +123,18 @@ deactivated_intermediates AS
 (
 
     SELECT
-        {{ dbtvault_scalefree.prefix(union_cols, 'stage_new') }},
+        {{ datavault4dbt.prefix(union_cols, 'stage_new') }},
         stage_new.src_ldts_lead AS src_ldts,
         FALSE AS is_active
     FROM stage_new
     {%- if is_incremental() %}
     LEFT JOIN latest_record
-        ON {{ dbtvault_scalefree.multikey(driving_key, prefix=['stage_new', 'latest_record'], condition='=') }}
-    WHERE {{ dbtvault_scalefree.prefix([link_hashkey], 'stage_new') }} != {{ dbtvault_scalefree.prefix([link_hashkey], 'latest_record') }}
-        OR {{ dbtvault_scalefree.prefix([src_ldts], 'latest_record') }} IS NULL
+        ON {{ datavault4dbt.multikey(driving_key, prefix=['stage_new', 'latest_record'], condition='=') }}
+    WHERE {{ datavault4dbt.prefix([link_hashkey], 'stage_new') }} != {{ datavault4dbt.prefix([link_hashkey], 'latest_record') }}
+        OR {{ datavault4dbt.prefix([src_ldts], 'latest_record') }} IS NULL
         OR stage_new.stage_rank != 1
     {%- endif %}
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ dbtvault_scalefree.prefix([driving_key], 'stage_new') }} ORDER BY {{ dbtvault_scalefree.prefix([src_ldts], 'stage_new') }} DESC) != 1
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ datavault4dbt.prefix([driving_key], 'stage_new') }} ORDER BY {{ datavault4dbt.prefix([src_ldts], 'stage_new') }} DESC) != 1
 
 ),
 

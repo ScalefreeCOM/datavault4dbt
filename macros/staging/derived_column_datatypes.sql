@@ -1,6 +1,6 @@
 {%- macro derived_columns_datatypes(columns, source_relation) -%}
 
-    {{- adapter.dispatch('derived_columns_datatypes', 'dbtvault_scalefree')(columns=columns, source_relation=source_relation) -}}
+    {{- adapter.dispatch('derived_columns_datatypes', 'datavault4dbt')(columns=columns, source_relation=source_relation) -}}
 
 {%- endmacro -%}
 
@@ -21,10 +21,10 @@
         {%- if not (column_value is mapping) and column_value is string -%}
         {# This is the case where no datatype is defined and one must be detected based on the input value. #}
 
-            {%- if not dbtvault_scalefree.is_attribute(column_value) -%}
+            {%- if not datavault4dbt.is_attribute(column_value) -%}
             {# If the value is a static value, it is not an attribute and no datatype needs to be detected. Instead a default datatype is applied. #}
 
-                {%- set datatype = var('dbtvault_scalefree.default_datatype_derived_columns', 'STRING') -%}
+                {%- set datatype = var('datavault4dbt.default_datatype_derived_columns', 'STRING') -%}
                 {%- set value = column_value -%}
 
             {%- else -%}

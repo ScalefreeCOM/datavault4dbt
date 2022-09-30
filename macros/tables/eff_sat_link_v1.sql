@@ -19,10 +19,10 @@
     link_hashkey::string                        Name of the hashkey column inside the v0 effectivity satellite. Must be the same as
                                                 in the v0 effectivity satellite.
 
-    src_ldts::string                            Name of the ldts column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.ldts_alias'.
+    src_ldts::string                            Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
-    src_rsrc::string                            Name of the rsrc column inside the source models. Is optional, will use the global variable 'dbtvault_scalefree.rsrc_alias'.
+    src_rsrc::string                            Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
     eff_from_alias::string                      Desired alias of the effective_from column. Is optional, will use the global variable 'dbtvault_scalfree.eff_from_alias' if not set here.
@@ -38,12 +38,12 @@
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
-    {%- set src_ldts = dbtvault_scalefree.replace_standard(src_ldts, 'dbtvault_scalefree.ldts_alias', 'ldts') -%}
-    {%- set src_rsrc = dbtvault_scalefree.replace_standard(src_rsrc, 'dbtvault_scalefree.rsrc_alias', 'rsrc') -%}
-    {%- set eff_from_alias = dbtvault_scalefree.replace_standard(eff_from_alias, 'dbtvault_scalefree.eff_from_alias', 'effective_from') -%}
-    {%- set eff_to_alias = dbtvault_scalefree.replace_standard(eff_to_alias, 'dbtvault_scalefree.eff_to_alias', 'effective_to') -%}
+    {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
+    {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
+    {%- set eff_from_alias = datavault4dbt.replace_standard(eff_from_alias, 'datavault4dbt.eff_from_alias', 'effective_from') -%}
+    {%- set eff_to_alias = datavault4dbt.replace_standard(eff_to_alias, 'datavault4dbt.eff_to_alias', 'effective_to') -%}
 
-    {{ return(adapter.dispatch('eff_sat_link_v1', 'dbtvault_scalefree')(eff_sat_link_v0=eff_sat_link_v0,
+    {{ return(adapter.dispatch('eff_sat_link_v1', 'datavault4dbt')(eff_sat_link_v0=eff_sat_link_v0,
                                                                         link_hashkey=link_hashkey,
                                                                         src_ldts=src_ldts,
                                                                         src_rsrc=src_rsrc,

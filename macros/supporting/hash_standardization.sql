@@ -1,5 +1,5 @@
 {% macro attribute_standardise() %}
-        {{- adapter.dispatch('attribute_standardise', 'dbtvault_scalefree')() -}}
+        {{- adapter.dispatch('attribute_standardise', 'datavault4dbt')() -}}
 {% endmacro %}
 
 {%- macro default__attribute_standardise() -%}
@@ -26,7 +26,7 @@ CONCAT('"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS VARCHAR(20000) UTF
 
 {%- macro concattenated_standardise(case_sensitive, hash_alg, all_null, zero_key, alias) -%}
 
-{{ return(adapter.dispatch('concattenated_standardise', 'dbtvault_scalefree')(case_sensitive=case_sensitive,
+{{ return(adapter.dispatch('concattenated_standardise', 'datavault4dbt')(case_sensitive=case_sensitive,
                                                                               hash_alg=hash_alg,
                                                                               all_null=all_null,
                                                                               zero_key=zero_key,

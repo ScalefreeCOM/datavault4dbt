@@ -12,14 +12,14 @@
         An example usage for applying this macro as a post hook for a PIT table would look like this inside the PIT source_models
         config block:
 
-            "{{ config(post_hook="{{ dbtvault_scalefree.clean_up_pit('control_snap_view') }}") }}"
+            "{{ config(post_hook="{{ datavault4dbt.clean_up_pit('control_snap_view') }}") }}"
 
 #}
 
 
 {%- macro clean_up_pit(snapshot_relation) -%}
 
-{{ return(adapter.dispatch('clean_up_pit', 'dbtvault_scalefree')(snapshot_relation=snapshot_relation)) }}
+{{ return(adapter.dispatch('clean_up_pit', 'datavault4dbt')(snapshot_relation=snapshot_relation)) }}
 
 {%- endmacro -%}
 
