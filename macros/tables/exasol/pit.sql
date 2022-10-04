@@ -6,8 +6,8 @@
 {%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
 {%- set hashkey = hashkey | upper -%}
 {%- set dimension_key = dimension_key | upper -%}
-{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01 00:00:01') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS') -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -41,7 +41,7 @@ pit_records AS (
         snap.{{ sdts }},
         {% for satellite in sat_names %}
             COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ unknown_key }}' AS {{ hash_dtype }})) AS HK_{{ satellite }},
-            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
+            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], beginning_of_all_times['exasol']) }}) AS {{ ldts }}_{{ satellite }}
             {{- "," if not loop.last }}
         {% endfor %}
 
