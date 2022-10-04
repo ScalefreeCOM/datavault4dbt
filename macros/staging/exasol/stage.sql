@@ -264,7 +264,7 @@ ldts_rsrc_data AS (
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
     SELECT
-    {{ datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ load_datetime_col_name }},
+    {{ datavault4dbt.string_to_timestamp( timestamp_format['exasol'] , beginning_of_all_times['exasol']) }} as {{ load_datetime_col_name }},
     '{{ unknown_value_rsrc }}' as {{ record_source_col_name }}
 
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%},
@@ -323,7 +323,7 @@ unknown_values AS (
 {# Creating Ghost Record for error case, based on datatype #}
 error_values AS (
     SELECT
-    {{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ load_datetime_col_name }},
+    {{ datavault4dbt.string_to_timestamp( timestamp_format['exasol'] , end_of_all_times['exasol']) }} as {{ load_datetime_col_name }},
     '{{ error_value_rsrc }}' as {{ record_source_col_name }}
 
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%},
