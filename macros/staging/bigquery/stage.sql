@@ -191,16 +191,14 @@ derived_columns AS (
 
 {% if datavault4dbt.is_something(multi_active_key) %}
 
-{%- set main_hashkey['main_hashkey_column'] = hashed_columns[multi_active_key['main_hashkey_column']] -%}
-{%- set processed_main_hashkey = datavault4dbt.process_hash_column_excludes(main_hashkey) %}
-
 {# Hash calculation for multi-active source data. #}
 ma_hashdiff_prep AS (
 
     SELECT
 
-      {{- datavault4dbt.hash_columns(columns=processed_main_hashkey) | indent(4) }},
-      {{ ldts_alias }},
+      {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+      {{- datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }},
+      {{ ldts_alias }}
 
     FROM {{ last_cte }}
 
