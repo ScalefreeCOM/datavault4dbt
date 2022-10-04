@@ -1,4 +1,4 @@
-{%- macro default__control_snap_v1(control_snap_v0, log_logic=none) -%}
+{%- macro default__control_snap_v1(control_snap_v0, log_logic, sdts_alias) -%}
 
 {#
 
