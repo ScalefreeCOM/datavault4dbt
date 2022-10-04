@@ -21,7 +21,8 @@
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
 
 {#- Select hashing algorithm -#}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash, hash_datatype=hash_dtype) -%}
 
 {%- set attribute_standardise = attribute_standardise() %}
 
@@ -34,9 +35,9 @@
 {%- set all_null = [] -%}
 
 {%- if is_hashdiff -%}
-    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concat_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
+    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
 {%- else -%}
-    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concat_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, unknown_key=unknown_key) -%}
+    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
 {%- endif -%}
 
 
