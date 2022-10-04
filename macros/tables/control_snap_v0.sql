@@ -57,6 +57,7 @@
     {%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
     {{ return(adapter.dispatch('control_snap_v0', 'datavault4dbt')(start_date=start_date,
-                                                                        daily_snapshot_time=daily_snapshot_time)) }}
+                                                                        daily_snapshot_time=daily_snapshot_time,
+                                                                        sdts_alias=sdts_alias)) }}
 
 {%- endmacro -%}
