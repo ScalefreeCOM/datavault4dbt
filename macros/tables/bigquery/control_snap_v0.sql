@@ -1,4 +1,4 @@
-{%- macro default__control_snap_v0(start_date, daily_snapshot_time) -%}
+{%- macro default__control_snap_v0(start_date, daily_snapshot_time, sdts_alias) -%}
 
 {%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
