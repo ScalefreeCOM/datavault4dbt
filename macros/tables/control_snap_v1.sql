@@ -57,12 +57,19 @@
                                                 {'daily': {'duration': 90,              This would keep daily snapshots for 90
                                                            'unit': 'DAY'},              days, and monthly snapshots forever.
                                                  'monthly': {'forever': 'TRUE'}}
+                                                 
+           sdts_alias::string               Defines the name of the snapshot date timestamp column inside the snapshot_table. 
+                                            It is optional, if not set will use the global variable `datavault4dbt.sdts_alias` 
+                                            set inside dbt_project.yml
 
 #}
 
-{%- macro control_snap_v1(control_snap_v0, log_logic=none) -%}
+{%- macro control_snap_v1(control_snap_v0, log_logic=none, sdts_alias=none) -%}
+
+{%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
 {{ return(adapter.dispatch('control_snap_v1', 'datavault4dbt')(control_snap_v0=control_snap_v0,
-                                                                    log_logic=log_logic)) }}
+                                                                    log_logic=log_logic,
+                                                                    sdts_alias=sdts_alias)) }}
 
 {%- endmacro -%}
