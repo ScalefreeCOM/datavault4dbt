@@ -189,6 +189,28 @@ derived_columns AS (
 {# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
 {% if datavault4dbt.is_something(hashed_columns) and hashed_columns is mapping -%}
 
+{% if datavault4dbt.is_something(multi_active_key) %}
+
+{%- set main_hashkey['main_hashkey_column'] = hashed_columns[multi_active_key['main_hashkey_column']] -%}
+{%- set processed_main_hashkey = datavault4dbt.process_hash_column_excludes(main_hashkey) %}
+
+{# Hash calculation for multi-active source data. #}
+ma_hashdiff_prep AS (
+
+    SELECT
+
+      {{- datavault4dbt.hash_columns(columns=processed_main_hashkey) | indent(4) }},
+      {{ ldts_alias }},
+
+    FROM {{ last_cte }}
+
+)
+
+
+
+{% else %}
+
+{# Hash calculation for single-active source data. #}
 hashed_columns AS (
 
     SELECT
@@ -202,6 +224,8 @@ hashed_columns AS (
     {%- set last_cte = "hashed_columns" -%}
     {%- set final_columns_to_select = final_columns_to_select + hashed_column_names %}
 ),
+
+{%- endif -%}
 {%- endif -%}
 
 {# Creating Ghost Record for unknown case, based on datatype #}
