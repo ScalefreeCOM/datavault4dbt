@@ -1,4 +1,4 @@
-{%- macro hash(columns=none, alias=none, is_hashdiff=false) -%}
+{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none) -%}
 
     {%- if is_hashdiff is none -%}
         {%- set is_hashdiff = false -%}
@@ -6,11 +6,12 @@
 
     {{- adapter.dispatch('hash', 'datavault4dbt')(columns=columns,
                                              alias=alias,
-                                             is_hashdiff=is_hashdiff) -}}
+                                             is_hashdiff=is_hashdiff,
+                                             multi_active_key=multi_active_key) -}}
 
 {%- endmacro %}
 
-{%- macro default__hash(columns, alias, is_hashdiff) -%}
+{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -34,7 +35,9 @@
 
 {%- set all_null = [] -%}
 
-{%- if is_hashdiff -%}
+{%- if is_hashdiff  and datavault4dbt.is_something(multi_active_key) -%}
+    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key, multi_active_key=multi_active_key) -%}
+{%- elif is_hashdiff -%}
     {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
 {%- else -%}
     {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
