@@ -47,10 +47,14 @@
                                         Examples:
                                             '07:30:00'      The snapshots inside this table would all have the time '07:30:00'.
                                             '23:00:00'      The snapshots inside this table would all have the time '23:00:00'.
+                                                    
+        sdts_alias::string              Defines the name of the snapshot date timestamp column inside the snapshot_table. It is optional,
+                                        if not set will use the global variable `datavault4dbt.sdts_alias` set inside dbt_project.yml
 
 #}
 
-{%- macro control_snap_v0(start_date, daily_snapshot_time) -%}
+{%- macro control_snap_v0(start_date, daily_snapshot_time, sdts_alias=none) -%}
+    {%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
     {{ return(adapter.dispatch('control_snap_v0', 'datavault4dbt')(start_date=start_date,
                                                                         daily_snapshot_time=daily_snapshot_time)) }}
