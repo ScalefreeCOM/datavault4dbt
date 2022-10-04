@@ -35,16 +35,11 @@ source_data AS (
 latest_entries_in_sat AS (
 
     SELECT
-        {{ datavault4dbt.print_list(source_cols) }}
-    FROM {{ source_relation }}
-
-    {%- if is_incremental() %}
-    WHERE {{ src_ldts }} > (
-        SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-    )
-    {%- endif %}
+        {{ parent_hashkey }},
+        {{ src_hashdiff }}
+    FROM 
+        {{ this }}
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 
 
