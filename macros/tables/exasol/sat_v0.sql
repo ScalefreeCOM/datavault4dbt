@@ -5,9 +5,9 @@
 
 {%- set ma_attribute = [] if not ma_attribute else ma_attribute -%}
 {%- set partition_by_columns = datavault4dbt.expand_column_list(columns=[parent_hashkey, ma_attribute]) -%}
-{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01 00:00:01') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31 23:59:59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS') -%}
 {%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
 {%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
     {% set ns.src_hashdiff = src_hashdiff["source_column"] %}
@@ -38,7 +38,7 @@ source_data AS (
     WHERE {{ src_ldts }} > (
         SELECT
             MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], end_of_all_times['exasol']) }}
     )
     {%- endif %}
 ),
