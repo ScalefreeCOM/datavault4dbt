@@ -191,6 +191,26 @@ derived_columns AS (
 
 {% if datavault4dbt.is_something(multi_active_key) %}
 
+{%- set tmp_ns = namespace(main_hashkey_list=[]) -%}
+
+{%- for column in hashed_columns -%}
+  {%- if column == main_hashkey_column -%}
+    {%- set ns.main_hashkey_list = [column] -%}
+  {%- endif -%}
+{%- endfor -%}
+
+main_hashkey_generation AS (
+
+  SELECT 
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
+    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(ns.main_hashkey_list) -%}
+      {{- datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
+  FROM {{ last_cte }}
+
+),
+
+
+
 {# Hash calculation for multi-active source data. #}
 ma_hashdiff_prep AS (
 
@@ -202,7 +222,20 @@ ma_hashdiff_prep AS (
 
     FROM {{ last_cte }}
 
-)
+),
+
+hashed_columns AS (
+
+    SELECT 
+    --TODO: Alle Hashkeys, die keine Hashdiff und nicht der Main-Hashkey sind, generieren. Hashdiffs und Main-Hashdiff Selecten. Alles andere nicht-
+    --      gehashede selecten
+
+    FROM main_hashkey_generation
+    LEFT JOIN ma_hashdiff_prep 
+      ON main_hashkey_generation.main_hashkey_column
+      AND main_hashkey_generation.{{ ldts_alias }} = ma_hashdiff_prep.{{ ldts_alias }}
+
+),
 
 
 
