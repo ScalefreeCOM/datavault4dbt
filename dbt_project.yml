@@ -18,9 +18,9 @@ clean-targets:
 vars:
   datavault4dbt.hash: 'MD5'
   datavault4dbt.hash_datatype: 'STRING'
-  datavault4dbt.beginning_of_all_times: {"default":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01T00-00-01"}
-  datavault4dbt.end_of_all_times: {"default":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31T23-59-59"}
-  datavault4dbt.timestamp_format: {"default":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-MM-DDTHH-MI-SS"}
+  datavault4dbt.beginning_of_all_times: {"default":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01"}
+  datavault4dbt.end_of_all_times: {"default":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31 23:59:59"}
+  datavault4dbt.timestamp_format: {"default":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-mm-dd HH:MI:SS"}
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   datavault4dbt.ldts_alias: 'ldts'
