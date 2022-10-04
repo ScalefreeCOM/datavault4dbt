@@ -2,7 +2,7 @@
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'HASHTYPE') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash, hash_datatype=hash_dtype) -%}
+{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
 {%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
 {%- set hashkey = hashkey | upper -%}
 {%- set dimension_key = dimension_key | upper -%}
