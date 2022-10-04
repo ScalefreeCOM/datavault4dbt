@@ -87,11 +87,23 @@
                                             {'legacy_account_uuid': 'INT64',        Two additional columns are added to the source table holding NULL values. The column 'legacy_account_uuid' will
                                              'shipping_address'   : 'STRING'}       have the datatype 'INT64' and the column 'shipping_address' will have the datatype 'STRING'.
 
+    multi_active_config::dictionary     If the source data holds multi-active data, define here the column(s) holding the multi-active key and the main hashkey column. If the source data is multi-active but has no natural multi-active
+                                        key, create one using the row_number SQL function (or similar) one layer before. Then insert the name of that artificial column into the multi-active-key parameter.
+                                        The combination of the multi-active key(s), the main-hashkey and the ldts column should be unique in the final result satellite. 
+                                        If not set, the stage will be treated as a single-active stage. 
+
+                                        Example: 
+                                            {'multi_active_key': 'phonetype',               This source data has a column called 'phonetype' that holds the multi-active key. 'hk_contact_h' is defined as the main hashkey. 
+                                             'main_hashkey_column': 'hk_contact_h'}         That means, that the combination of main_hashkey, ldts and'phonetype' is unique inside the source system.    
+
+                                            {'multi_active_key': ['phonetype', 'company'],  This source data comes with two multi-active keys. The combination of those two, the main_hashkey and ldts is unique 
+                                             'main_hashkey_column': 'hk_contact_h'}         inside the source system.          
+
   #}
 
 
 
-  {%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none) -%}
+  {%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none, multi_active_key=none) -%}
     
     {{ return(adapter.dispatch('stage', 'datavault4dbt')(include_source_columns=include_source_columns,
                                         ldts=ldts,
@@ -101,6 +113,7 @@
                                         derived_columns=derived_columns,
                                         sequence=sequence,
                                         prejoined_columns=prejoined_columns,
-                                        missing_columns=missing_columns)) }}
+                                        missing_columns=missing_columns,
+                                        multi_active_key=multi_active_key)) }}
 
 {%- endmacro -%}
