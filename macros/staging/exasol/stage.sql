@@ -114,6 +114,7 @@
   {# Getting the input columns for the additional columns #}
   {%- set derived_input_columns = datavault4dbt.extract_input_columns(derived_columns) -%}
   {%- set hashed_input_columns = datavault4dbt.expand_column_list(datavault4dbt.extract_input_columns(hashed_columns)) -%}
+  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, derived_column_names) -%}
   {%- set prejoined_input_columns = datavault4dbt.extract_input_columns(prejoined_columns) -%}
   {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
   {%- set source_columns_to_select = only_include_from_source -%}
