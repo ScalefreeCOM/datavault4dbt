@@ -51,6 +51,7 @@
             {%- set unknown_key = "TO_BINARY(REPEAT('0',64))" -%}
             {%- set error_key = "TO_BINARY(REPEAT('f',64))" -%}        
         {%- endif -%}   
+    {%- endif -%}
 
     {{ return([hash_alg, unknown_key, error_key]) }}
 
