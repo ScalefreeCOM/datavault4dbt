@@ -284,6 +284,7 @@ unknown_values AS (
       {% endfor %}
     {% endif %}
 
+    {% if datavault4dbt.is_something(hashed_columns) -%}
       ,{%- for hash_column in processed_hash_columns %}
         CAST('{{ unknown_key }}' as HASHTYPE) as "{{ hash_column }}"
         {%- if not loop.last %},{% endif %}
