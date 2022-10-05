@@ -6,8 +6,9 @@
 
 {%- endmacro %}
 
-{%- macro default__hash_columns(columns=none, multi_active_key=none, main_hashkey_column=none) -%}
-
+{%- macro default__hash_columns(columns, multi_active_key, main_hashkey_column) -%}
+{{ log(test) }}
+{#
 {%- if columns is mapping and columns is not none -%}
 
     {%- for col in columns -%}
@@ -62,4 +63,5 @@
     {%- endfor -%}
 
 {%- endif %}
+#}
 {%- endmacro -%}

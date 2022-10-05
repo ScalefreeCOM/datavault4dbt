@@ -194,12 +194,12 @@ derived_columns AS (
 
 {%- set tmp_ns = namespace(main_hashkey_list=[], remaining_hashed_columns=[], hashdiff_names=[]) -%}
 
-{%- for column in hashed_columns -%}
-  {%- if column == main_hashkey_column and not hash_columns[column].is_hashdiff -%}
+{%- for column in hashed_columns.keys() -%}
+  {%- if column == main_hashkey_column and not hashed_columns[column].is_hashdiff -%}
     {%- set ns.main_hashkey_list = [hashed_columns[column]] -%}
-  {% elif column != main_hashkey_column and not hash_columns[column].is_hashdiff -%}
+  {% elif column != main_hashkey_column and not hashed_columns[column].is_hashdiff -%}
     {%- do ns.remaining_hashed_columns.append(hashed_columns[column]) -%}
-  {%- elif hash_columns[column].is_hashdiff -%}
+  {%- elif hashed_columns[column].is_hashdiff -%}
     {%- do ns.hashdiff_names.append(column) -%}
   {%- endif -%}
 {%- endfor -%}

@@ -105,7 +105,7 @@
 
   {%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none, multi_active_config=none) -%}
     
-    {{ return(adapter.dispatch('stage', 'datavault4dbt')(include_source_columns=include_source_columns,
+    {{- adapter.dispatch('stage', 'datavault4dbt')(include_source_columns=include_source_columns,
                                         ldts=ldts,
                                         rsrc=rsrc,
                                         source_model=source_model,
@@ -114,6 +114,6 @@
                                         sequence=sequence,
                                         prejoined_columns=prejoined_columns,
                                         missing_columns=missing_columns,
-                                        multi_active_config=multi_active_config)) }}
+                                        multi_active_config=multi_active_config) -}}
 
 {%- endmacro -%}
