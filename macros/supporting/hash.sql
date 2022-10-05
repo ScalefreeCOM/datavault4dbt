@@ -12,7 +12,7 @@
 {%- endmacro %}
 
 {%- macro default__hash(columns, alias, is_hashdiff, multi_active_key) -%}
-
+{{ log("hash", True) }}
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
 {%- set quote = var('quote', '"') -%}
@@ -25,7 +25,7 @@
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
 {%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash, hash_datatype=hash_dtype) -%}
 
-{%- set attribute_standardise = attribute_standardise() %}
+{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
 
 
 {#- If single column to hash -#}
@@ -36,13 +36,15 @@
 {%- set all_null = [] -%}
 
 {%- if is_hashdiff  and datavault4dbt.is_something(multi_active_key) -%}
-    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key, multi_active_key=multi_active_key) -%}
+    {%- set std_dict = fromjson(datavault4dbt.multi_active_concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key, multi_active_key=multi_active_key)) -%}
 {%- elif is_hashdiff -%}
-    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key)) -%}
 {%- else -%}
-    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key)) -%}
 {%- endif -%}
 
+    {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
+    {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
 
 {{ standardise_prefix }}
 

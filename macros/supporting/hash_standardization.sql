@@ -37,6 +37,8 @@ CONCAT('\'', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- macro default__concattenated_standardise(case_sensitive, hash_alg, all_null, zero_key, alias) -%}
 
+{%- set dict_result = {} -%}
+
 {%- if case_sensitive -%}
     {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
     {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')))), '{}') AS {}".format(all_null | join(""),zero_key, alias)-%}
@@ -45,7 +47,9 @@ CONCAT('\'', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
     {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')))), '{}') AS {}".format(all_null | join(""),zero_key, alias)-%}
 {%- endif -%}
 
-{{ return((standardise_prefix, standardise_suffix)) }}
+{%- do dict_result.update({"standardise_suffix": standardise_suffix, "standardise_prefix": standardise_prefix }) -%}
+
+{{ return(dict_result | tojson ) }}
 
 {%- endmacro -%}
 
@@ -92,26 +96,29 @@ CONCAT('\'', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- endmacro -%}
 
-{%- macro multi_active_concattenated_standardise(case_sensitive, hash_alg, all_null, zero_key, alias) -%}
+{%- macro multi_active_concattenated_standardise(case_sensitive, hash_alg, all_null, zero_key, alias, multi_active_key) -%}
 
-{{ return(adapter.dispatch('concattenated_standardise', 'datavault4dbt')(case_sensitive=case_sensitive,
+{{ adapter.dispatch('multi_active_concattenated_standardise', 'datavault4dbt')(case_sensitive=case_sensitive,
                                                                               hash_alg=hash_alg,
                                                                               all_null=all_null,
                                                                               zero_key=zero_key,
-                                                                              alias=alias) )}}
+                                                                              alias=alias,
+                                                                              multi_active_key=multi_active_key) }}
 
 {%- endmacro -%}
 
 {%- macro default__multi_active_concattenated_standardise(case_sensitive, hash_alg, all_null, zero_key, alias, multi_active_key) -%}
-
+{%- set dict_result = {} -%}
 {%- if case_sensitive -%}
     {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
-    {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}'))) ORDER BY {})), '{}') AS {}".format(all_null | join(""),multi_active_key,zero_key, alias)-%}
+    {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')) ORDER BY {}))), '{}') AS {}".format(all_null | join(""),multi_active_key,zero_key, alias)-%}
 {%- else -%}
     {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
-    {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')) ORDER BY {}))), '{}') AS {}".format(all_null | join(""),multi_active_key,zero_key, alias)-%}
+    {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}') ORDER BY {})))), '{}') AS {}".format(all_null | join(""),multi_active_key,zero_key, alias)-%}
 {%- endif -%}
 
-{{ return((standardise_prefix, standardise_suffix)) }}
+{%- do dict_result.update({"standardise_suffix": standardise_suffix, "standardise_prefix": standardise_prefix }) -%}
+
+{{ return(dict_result | tojson ) }}
 
 {%- endmacro -%}
