@@ -1,4 +1,4 @@
-{%- macro hash(columns=none, alias=none, is_hashdiff=false) -%}
+{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none) -%}
 
     {%- if is_hashdiff is none -%}
         {%- set is_hashdiff = false -%}
@@ -6,12 +6,13 @@
 
     {{- adapter.dispatch('hash', 'datavault4dbt')(columns=columns,
                                              alias=alias,
-                                             is_hashdiff=is_hashdiff) -}}
+                                             is_hashdiff=is_hashdiff,
+                                             multi_active_key=multi_active_key) -}}
 
 {%- endmacro %}
 
-{%- macro default__hash(columns, alias, is_hashdiff) -%}
-
+{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key) -%}
+{{ log("hash", True) }}
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
 {%- set quote = var('quote', '"') -%}
@@ -22,9 +23,12 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash, hash_datatype=hash_dtype) -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = attribute_standardise() %}
+{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
 
 
 {#- If single column to hash -#}
@@ -34,12 +38,16 @@
 
 {%- set all_null = [] -%}
 
-{%- if is_hashdiff -%}
-    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
+{%- if is_hashdiff  and datavault4dbt.is_something(multi_active_key) -%}
+    {%- set std_dict = fromjson(datavault4dbt.multi_active_concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key, multi_active_key=multi_active_key)) -%}
+{%- elif is_hashdiff -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key)) -%}
 {%- else -%}
-    {%- set standardise_prefix, standardise_suffix = datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key) -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key)) -%}
 {%- endif -%}
 
+    {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
+    {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
 
 {{ standardise_prefix }}
 
@@ -82,7 +90,11 @@
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
 
 {#- Select hashing algorithm -#}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
 
 {%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
 

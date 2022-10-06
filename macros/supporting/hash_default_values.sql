@@ -6,6 +6,8 @@
 
 {%- macro default__hash_default_values(hash_function, hash_datatype) -%}
 
+    {%- set dict_result = {} -%}
+
     {%- if hash_function == 'MD5' and hash_datatype == 'STRING' -%}
         {%- set hash_alg = 'MD5' -%}
         {%- set unknown_key = '00000000000000000000000000000000' -%}
@@ -20,12 +22,16 @@
         {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
     {%- endif -%}
 
-    {{ return([hash_alg, unknown_key, error_key]) }}
+    {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}
+
+    {{ return(dict_result | tojson ) }}
 
 {%- endmacro -%}
 
 
 {%- macro snowflake__hash_default_values(hash_function, hash_datatype) -%}
+
+    {%- set dict_result = {} -%}
 
     {%- if hash_function == 'MD5' and hash_datatype == 'STRING' -%}
         {%- set hash_alg = 'MD5' -%}
@@ -51,13 +57,18 @@
             {%- set unknown_key = "TO_BINARY(REPEAT('0',64))" -%}
             {%- set error_key = "TO_BINARY(REPEAT('f',64))" -%}        
         {%- endif -%}   
+    {%- endif -%}
 
-    {{ return([hash_alg, unknown_key, error_key]) }}
+    {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}
+
+    {{ return(dict_result | tojson ) }}
 
 {%- endmacro -%}
 
 
 {%- macro exasol__hash_default_values(hash_function) -%}
+
+    {%- set dict_result = {} -%}
 
     {%- if hash_function == 'MD5' -%}
         {%- set hash_alg = 'HASHTYPE_MD5' -%}
@@ -73,6 +84,9 @@
         {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
     {%- endif -%}
 
-    {{ return([hash_alg, unknown_key, error_key]) }}
+    {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}
+
+    {{ return(dict_result | tojson ) }}
+
 
 {%- endmacro -%}
