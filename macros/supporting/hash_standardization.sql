@@ -113,6 +113,11 @@ CONCAT('\'', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- macro default__multi_active_concattenated_standardise(case_sensitive, hash_alg, all_null, zero_key, alias, multi_active_key) -%}
 {%- set dict_result = {} -%}
+
+{%- if multi_active_key is list -%}
+    {%- set multi_active_key = multi_active_key|join(", ") -%}
+{%- endif -%}
+
 {%- if case_sensitive -%}
     {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
     {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')) ORDER BY {}))), '{}') AS {}".format(all_null | join(""),multi_active_key,zero_key, alias)-%}

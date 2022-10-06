@@ -7,14 +7,13 @@
 {%- endmacro %}
 
 {%- macro default__hash_columns(columns, multi_active_key, main_hashkey_column) -%}
-{{ log("hash_columns" + columns|string, True) }}
 
 {%- if columns is mapping and columns is not none -%}
 
     {%- for col in columns -%}
 
         {%- if datavault4dbt.is_something(multi_active_key) -%}
-            {{ log("is_multi_active_key", True) }}
+            
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
 
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
@@ -33,7 +32,7 @@
         {{- ",\n" if not loop.last -}}
 
         {%- else -%}          
-            {{ log("is_not_multi_active_key", True) }}
+            
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
 
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
