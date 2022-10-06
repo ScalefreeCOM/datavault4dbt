@@ -2,8 +2,8 @@
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31 23:59:59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 
 {%- if source_models is not mapping -%}
     {%- if execute -%}
@@ -185,8 +185,6 @@ src_new_{{ source_number }} AS (
         WHERE src.{{ src_ldts }} > max.max_ldts
     {%- endif %}
 
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
-
     {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 
     ),
@@ -228,6 +226,8 @@ source_new_union AS (
 
 ),
 
+{%- endif %}
+
 earliest_hk_over_all_sources AS (
 {# Deduplicate the unionized records again to only insert the earliest one. #}
 
@@ -240,8 +240,6 @@ earliest_hk_over_all_sources AS (
     {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 
 ),
-
-{%- endif %}
 
 records_to_insert AS (
 {# Select everything from the previous CTE, if its incremental then filter for hashkeys that are not already in the link. #}

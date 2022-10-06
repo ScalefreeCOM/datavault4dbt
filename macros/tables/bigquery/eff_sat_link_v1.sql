@@ -8,7 +8,11 @@
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
 
 {%- set source_relation = ref(eff_sat_link_v0) -%}
 
@@ -19,7 +23,7 @@ WITH
 source_data AS (
 
     SELECT
-        {{ dbtvault.prefix(source_cols, 'sat_v0') }}
+        {{ datavault4dbt.prefix(source_cols, 'sat_v0') }}
     FROM {{ source_relation }} AS sat_v0
 
 ),

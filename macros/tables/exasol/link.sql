@@ -7,7 +7,9 @@
         {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
     {%- endif %}
 
-{%- endif -%}
+            {%- else -%}
+                {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
+            {%- endif -%}
 
 {%- if source_models is not mapping -%}
     {%- if execute -%}
@@ -182,8 +184,6 @@ WITH
         WHERE src.{{ src_ldts }} > max.max_ldts
     {%- endif %}
 
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
-
         {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 
     ),
@@ -216,6 +216,8 @@ source_new_union AS (
 
 ),
 
+{%- endif %}
+
 earliest_hk_over_all_sources AS (
 
     SELECT
@@ -227,8 +229,6 @@ earliest_hk_over_all_sources AS (
     {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 
 ),
-
-{%- endif %}
 
 records_to_insert AS (
 

@@ -5,7 +5,11 @@
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
 
 {%- set source_relation = ref(sat_v0) -%}
 {%- set all_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
@@ -44,8 +48,7 @@ end_dated_loads AS (
     SELECT
         {{ hashkey }},
         {{ src_ldts }},
-        {{- datavault4dbt.print_list(ma_attributes, indent=10) }},
-        COALESCE(LEAD(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }}, {{ ", ".join(ma_attributes) }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format['exasol'] , end_of_all_times['exasol']) }}) as {{ ledts_alias }}
+        COALESCE(LEAD(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }}
     FROM distinct_hk_ldts
 
 ),
@@ -71,9 +74,6 @@ end_dated_source AS (
     LEFT JOIN end_dated_loads edl
         ON src.{{ hashkey }} = edl.{{ hashkey }}
         AND src.{{ src_ldts }} = edl.{{ src_ldts }}
-        {%- for ma in ma_attributes %}
-        AND src.{{ ma }} = edl.{{ ma }}
-        {%- endfor %}
 
 )
 

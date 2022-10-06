@@ -111,7 +111,7 @@ max_ldts_per_rsrc_static_in_target AS (
         rsrc_static,
         MAX({{ src_ldts }}) as max_ldts
     FROM {{ ns.last_cte }}
-    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
     GROUP BY rsrc_static
 
 ),
@@ -144,8 +144,6 @@ max_ldts_per_rsrc_static_in_target AS (
             ON max.rsrc_static = '{{ rsrc_static }}'
         WHERE src.{{ src_ldts }} > max.max_ldts
         {%- endif %}
-
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
 
          {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 
@@ -183,6 +181,8 @@ source_new_union AS (
 
 ),
 
+{%- endif %}
+
 earliest_hk_over_all_sources AS (
     {# Deduplicate the unionized records again to only insert the earliest one. #}
 
@@ -195,8 +195,6 @@ earliest_hk_over_all_sources AS (
     {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 
 ),
-
-{%- endif %}
 
 records_to_insert AS (
     {# Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the link. #}

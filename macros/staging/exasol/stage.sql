@@ -128,9 +128,14 @@
 {%- set derived_columns_with_datatypes_DICT = fromjson(derived_columns_with_datatypes) -%}
 
 {#- Select hashing algorithm -#}
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
 
 {# Select timestamp and format variables #}
 
@@ -248,9 +253,6 @@ ldts_rsrc_data AS (
   hashed_columns AS (
 
     SELECT
-    {% if final_columns_to_select | length > 0 -%}
-      {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
-    {% endif %}
 
     {%- set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
 
@@ -265,8 +267,6 @@ ldts_rsrc_data AS (
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
     SELECT
-    {{ datavault4dbt.string_to_timestamp( timestamp_format['exasol'] , beginning_of_all_times['exasol']) }} as {{ load_datetime_col_name }},
-    '{{ unknown_value_rsrc }}' as {{ record_source_col_name }}
 
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%},
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
@@ -299,7 +299,7 @@ unknown_values AS (
 
         {%- endfor -%}
 
-    {%- endif -%}
+        {%- endfor -%}
 
     {%- if datavault4dbt.is_something(derived_columns) -%},
       {# Additionally generating Ghost Records for Derived Columns #}
@@ -324,8 +324,9 @@ unknown_values AS (
 {# Creating Ghost Record for error case, based on datatype #}
 error_values AS (
     SELECT
-    {{ datavault4dbt.string_to_timestamp( timestamp_format['exasol'] , end_of_all_times['exasol']) }} as {{ load_datetime_col_name }},
-    '{{ error_value_rsrc }}' as {{ record_source_col_name }}
+
+    {{ dbtvault_scalefree.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ load_datetime_col_name }},
+    '{{ error_value_rsrc }}' as {{ record_source_col_name }},
 
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%},
     {# Generating Ghost Records for Source Columns #}

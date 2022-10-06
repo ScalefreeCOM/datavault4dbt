@@ -46,7 +46,7 @@ max_ldts_per_rsrc_static_in_target AS (
         rsrc_static,
         MAX({{ src_ldts }}) as max_ldts
     FROM {{ this }}
-    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
     GROUP BY rsrc_static
 
 ),

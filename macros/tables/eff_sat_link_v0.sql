@@ -63,14 +63,11 @@
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
 
-
-
-
-    {{ return(adapter.dispatch('eff_sat_link_v0', 'datavault4dbt')(link_hashkey=link_hashkey,
+    {{ adapter.dispatch('eff_sat_link_v0', 'datavault4dbt')(link_hashkey=link_hashkey,
                                                                     driving_key=driving_key,
                                                                     secondary_fks=secondary_fks,
                                                                     src_ldts=src_ldts,
                                                                     src_rsrc=src_rsrc,
-                                                                    source_model=source_model)) }}
+                                                                    source_model=source_model) }}
 
 {%- endmacro -%}

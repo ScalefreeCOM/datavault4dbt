@@ -1,10 +1,14 @@
 {%- macro default__pit(pit_type, tracked_entity, hashkey, sat_names, ldts, custom_rsrc, ledts, sdts, snapshot_relation, snapshot_trigger_column, dimension_key) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
-{%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
 
 {%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+
 
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -26,16 +30,21 @@ existing_dimension_keys AS (
 pit_records AS (
 
     SELECT
-        {{ datavault4dbt.as_constant(pit_type) }} as type,
+        
+        {% if datavault4dbt.is_something(pit_type) -%}
+            {{ datavault4dbt.as_constant(pit_type) }} as type,
+        {%- endif %}
+        {% if datavault4dbt.is_something(custom_rsrc) -%}
         '{{ custom_rsrc }}' as {{ rsrc }},
+        {%- endif %}
         {{ datavault4dbt.hash(columns=[datavault4dbt.as_constant(pit_type), datavault4dbt.prefix([hashkey], 'te'), datavault4dbt.prefix(['sdts'], 'snap')],
                     alias=dimension_key,
                     is_hashdiff=false)   }} ,
         te.{{ hashkey }},
         snap.sdts,
         {% for satellite in sat_names %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ zero_key }}' AS STRING)) AS hk_{{ satellite }},
-            COALESCE({{ satellite }}.{{ ldts }}, CAST('{{ beginning_of_all_times }}' AS {{ datavault4dbt.type_timestamp() }})) AS {{ ldts }}_{{ satellite }}
+            COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ unknown_key }}' AS {{ hash_dtype }})) AS hk_{{ satellite }},
+            COALESCE({{ satellite }}.{{ ldts }}, CAST('{{ beginning_of_all_times['default'] }}' AS {{ datavault4dbt.type_timestamp() }})) AS {{ ldts }}_{{ satellite }}
             {{- "," if not loop.last }}
         {% endfor %}
 

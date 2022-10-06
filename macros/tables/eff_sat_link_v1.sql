@@ -25,9 +25,9 @@
     src_rsrc::string                            Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                                 Needs to use the same column name as defined as alias inside the staging model.
 
-    eff_from_alias::string                      Desired alias of the effective_from column. Is optional, will use the global variable 'dbtvault_scalfree.eff_from_alias' if not set here.
+    eff_from_alias::string                      Desired alias of the effective_from column. Is optional, will use the global variable 'datavault4dbt.eff_from_alias' if not set here.
 
-    eff_to_alias::string                        Desired alias of the effective_to column. Is optional, will use the global variable 'dbtvault_scalfree.eff_to_alias' if not set here.
+    eff_to_alias::string                        Desired alias of the effective_to column. Is optional, will use the global variable 'datavault4dbt.eff_to_alias' if not set here.
 
     add_is_current_flag::boolean                Optional parameter to add a new column to the v1 sat based on the effective_to column. Default is false. If
                                                 set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if the effective_to time stamp is equal to the variable end of all times. If its not, then the record is not current therefore it

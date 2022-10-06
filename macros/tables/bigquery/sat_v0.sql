@@ -1,7 +1,11 @@
 {%- macro default__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model, ma_attribute) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
 
 {%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
@@ -26,28 +30,23 @@ source_data AS (
     WHERE {{ src_ldts }} > (
         SELECT
             MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
     )
     {%- endif %}
 ),
 
 {# Get the latest record for each parent hashkey in existing sat, if incremental. #}
+{%- if is_incremental() %}
 latest_entries_in_sat AS (
 
     SELECT
-        {{ datavault4dbt.print_list(source_cols) }}
-    FROM {{ source_relation }}
-
-    {%- if is_incremental() %}
-    WHERE {{ src_ldts }} > (
-        SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-    )
-    {%- endif %}
+        {{ parent_hashkey }},
+        {{ src_hashdiff }}
+    FROM 
+        {{ this }}
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
-
-
+{%- endif %}
 
 {#
     Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each hashkey.

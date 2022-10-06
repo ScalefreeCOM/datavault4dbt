@@ -23,6 +23,11 @@
         {%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
     {%- endif -%}
 
+    {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
+        {%- set unique_rsrc = datavault4dbt.get_distinct_value(source_relation=ref(source_model), column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
+        {%- do source_models[source_model].update({'rsrc_static': unique_rsrc}) -%}
+    {%- endif -%}
+
 {% endfor %}
 
 {%- if not (source_models is iterable and source_models is not string) -%}
@@ -105,7 +110,7 @@ max_ldts_per_rsrc_static_in_target AS (
         rsrc_static,
         MAX({{ src_ldts }}) as max_ldts
     FROM {{ ns.last_cte }}
-    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
     GROUP BY rsrc_static
 
 ),
@@ -142,8 +147,6 @@ max_ldts_per_rsrc_static_in_target AS (
         WHERE src.{{ src_ldts }} > max.max_ldts
         {%- endif %}
 
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ hk_column }} ORDER BY {{ src_ldts }}) = 1
-
          {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 
     ),
@@ -178,6 +181,7 @@ source_new_union AS (
     {%- set ns.last_cte = 'source_new_union' -%}
 
 ),
+{%- endif %}
 
 earliest_hk_over_all_sources AS (
 
@@ -191,7 +195,7 @@ earliest_hk_over_all_sources AS (
 
 ),
 
-{%- endif %}
+
 
 records_to_insert AS (
 

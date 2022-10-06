@@ -26,7 +26,16 @@
 {%- macro default__clean_up_pit(snapshot_relation) -%}
 
 DELETE {{ this }} pit
-WHERE pit.sdts not in (SELECT sdts FROM {{ ref(snapshot_relation) }} snap WHERE is_active=TRUE)
+WHERE pit.sdts not in (SELECT sdts FROM {{ ref(snapshot_relation) }} snap WHERE is_active=TRUE) --paremterize "is_active"
+
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+
+{%- endmacro -%}
+
+{%- macro snowflake__clean_up_pit(snapshot_relation) -%}
+
+DELETE FROM {{ this }} pit
+WHERE pit.sdts NOT IN (SELECT sdts FROM {{ ref(snapshot_relation) }} snap WHERE is_active=TRUE)
 
 {{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
 

@@ -1,6 +1,6 @@
 {#
     This macro creates a Hub entity based on one or more stage models. The macro requires an input source model similar to the output
-    of the dbtvault-scalefree stage macro. So by default the stage models would be used as source models for hubs.
+    of the datavault4dbt stage macro. So by default the stage models would be used as source models for hubs.
 
     Features:
         - Loadable by multiple sources
