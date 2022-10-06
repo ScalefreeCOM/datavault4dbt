@@ -85,7 +85,10 @@
 {#- Select hashing algorithm and datatype -#}
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype) -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
 
 {%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
@@ -293,11 +296,11 @@ unknown_values AS (
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
       {% endif -%}
-    {% endfor %}
+    {% endfor -%}
 
     {%- if datavault4dbt.is_something(missing_columns) -%},
     {# Additionally generating ghost record for missing columns #}
-      {% for col, dtype in missing_columns.items() %}
+      {%- for col, dtype in missing_columns.items() %}
         
         {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
@@ -313,31 +316,29 @@ unknown_values AS (
 
           {% for column in pj_relation_columns -%}
 
-            {% if column.name|lower == vals['bk']|lower -%},
+            {% if column.name|lower == vals['bk']|lower -%}
               {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
+              
             {%- endif -%}
 
-          {% endfor -%}
-
+          {%- endfor -%}
+          {%- if not loop.last %},{% endif %}
         {% endfor -%}
 
     {%- endif %}
 
-    {%- if datavault4dbt.is_something(derived_columns) -%}
+    {%- if datavault4dbt.is_something(derived_columns) -%},
     {# Additionally generating Ghost Records for Derived Columns #}
-      ,
       {% for column_name, properties in derived_columns.items() -%}
-
-        
 
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
 
-      {% endfor %},
+      {% endfor %}
     {% endif %}
 
-    {%- if datavault4dbt.is_something(hashed_columns) %}
-    ,{%- for hash_column in hashed_column_names %}
+    {%- if datavault4dbt.is_something(hashed_columns) %},
+    {%- for hash_column in hashed_column_names %}
     '{{ unknown_key }}' as {{ hash_column }}{{ "," if not loop.last }}
 
     {%- endfor %}
@@ -363,7 +364,7 @@ error_values AS (
 
     {%- if datavault4dbt.is_something(missing_columns) -%},
     {# Additionally generating ghost record for missing columns #}
-      {% for col, dtype in missing_columns.items() %}
+      {% for col, dtype in missing_columns.items() -%}
         
         {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
@@ -379,28 +380,29 @@ error_values AS (
 
           {% for column in pj_relation_columns -%}
 
-            {% if column.name|lower == vals['bk']|lower -%},
+            {% if column.name|lower == vals['bk']|lower -%}
               {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
+              
             {%- endif -%}
 
-          {% endfor -%}
-
+          {%- endfor -%}
+          {%- if not loop.last %},{% endif %}
         {% endfor -%}
 
     {%- endif %}
 
-    {%- if datavault4dbt.is_something(derived_columns) -%}
+    {%- if datavault4dbt.is_something(derived_columns) -%},
     {# Additionally generating Ghost Records for Derived Columns #}
-      ,{% for column_name, properties in derived_columns.items() -%}
+      {% for column_name, properties in derived_columns.items() -%}
 
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
 
-      {% endfor %},
+      {% endfor %}
     {% endif %}
 
-    {%- if datavault4dbt.is_something(hashed_columns) %}
-    ,{%- for hash_column in hashed_column_names %}
+    {%- if datavault4dbt.is_something(hashed_columns) %},
+    {%- for hash_column in hashed_column_names %}
     '{{ error_key }}' as {{ hash_column }}{{ "," if not loop.last }}
 
     {%- endfor %}

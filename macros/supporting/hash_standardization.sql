@@ -56,6 +56,8 @@ CONCAT('\'', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- macro snowflake__concattenated_standardise(case_sensitive, hash_alg, all_null, zero_key, alias) -%}
 
+{%- set dict_result = {} -%}
+
 {%- if case_sensitive -%}
     {%- set standardise_prefix = "IFNULL(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
     {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS STRING), '{}'))), {}) AS {}".format(all_null | join(""),zero_key, alias)-%}
@@ -64,7 +66,9 @@ CONCAT('\'', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
     {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS STRING), '{}'))), {}) AS {}".format(all_null | join(""),zero_key, alias)-%}
 {%- endif -%}
 
-{{ return((standardise_prefix, standardise_suffix)) }}
+{%- do dict_result.update({"standardise_suffix": standardise_suffix, "standardise_prefix": standardise_prefix }) -%}
+
+{{ return(dict_result | tojson ) }}
 
 {%- endmacro -%}
 
