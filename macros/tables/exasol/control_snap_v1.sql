@@ -38,6 +38,7 @@ latest_row AS
     SELECT
         c.{{ sdts_alias }},
         c.replacement_sdts,
+        c.force_active,
         {%- if log_logic is none %}
         TRUE AS is_active,
         {%- else %}
@@ -120,10 +121,29 @@ latest_row AS
     FROM {{ v0_relation }} c
     LEFT JOIN latest_row l
     ON c.{{ sdts_alias }} = l.{{ sdts_alias }}
+),
+active_logic_combined AS (
+        {{ sdts_alias }},
+        replacement_sdts,
+        CASE
+            WHEN force_active AND is_active THEN TRUE
+            WHEN NOT force_active OR NOT is_active THEN FALSE
+        END AS is_active,
+        is_latest, 
+        caption,
+        is_hourly,
+        is_daily,
+        is_weekly,
+        is_monthly,
+        is_yearly,
+        is_current_year,
+        is_last_year,
+        is_rolling_year,
+        is_last_rolling_year,
+        comment
+    FROM virtual_logic
+
 )
-SELECT 
-    * 
-FROM 
-    virtual_logic
+SELECT * FROM active_logic_combined
 
 {%- endmacro -%}
