@@ -1,6 +1,6 @@
 {%- macro exasol__control_snap_v0(start_date, daily_snapshot_time, sdts_alias) -%}
 
-{%- set timestamp_format = var('datavault4dbt.timestamp_format','YYYY-MM-DDTHH:MI:SS') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format','YYYY-MM-DD HH:MI:SS') -%}
 {%- set date_format_std = 'YYYY-mm-dd' -%}
 {%- set daily_snapshot_time = '0001-01-01 ' ~ daily_snapshot_time -%}
 
