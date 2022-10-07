@@ -25,6 +25,7 @@ initial_timestamps AS
 (
     SELECT
         sdts as "{{ sdts_alias }}",
+        TRUE as force_active,
         sdts AS replacement_sdts,
         CONCAT('Snapshot ', DATE_TRUNC('day', sdts)) AS caption,
         CASE
