@@ -8,7 +8,8 @@
                 derived_columns,
                 sequence,
                 prejoined_columns,
-                missing_columns) -%}
+                missing_columns,
+                multi_active_config) -%}
 
 {% if (source_model is none) and execute %}
 
@@ -34,12 +35,12 @@
 
     {%- set source_relation = source(source_name, source_table_name) -%}
     {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
+
 {%- elif source_model is not mapping and source_model is not none -%}
 
     {%- set source_relation = ref(source_model) -%}
     {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
 {%- else -%}
-
     {%- set all_source_columns = [] -%}
 {%- endif -%}
 
@@ -192,6 +193,24 @@ derived_columns AS (
 {# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
 {% if datavault4dbt.is_something(hashed_columns) and hashed_columns is mapping -%}
 
+{% if datavault4dbt.is_something(multi_active_config) %}
+
+hashed_columns AS (
+
+    SELECT
+
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
+
+    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+    {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }}
+
+    FROM {{ last_cte }}
+    {%- set last_cte = "hashed_columns" -%}
+    {%- set final_columns_to_select = final_columns_to_select + hashed_column_names %}
+),
+
+{% else %}
+
 hashed_columns AS (
 
     SELECT
@@ -205,6 +224,8 @@ hashed_columns AS (
     {%- set last_cte = "hashed_columns" -%}
     {%- set final_columns_to_select = final_columns_to_select + hashed_column_names %}
 ),
+
+{%- endif -%}
 {%- endif -%}
 
 {# Creating Ghost Record for unknown case, based on datatype #}
@@ -218,7 +239,7 @@ unknown_values AS (
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
-      {%- if column.name not in exclude_column_names %}
+      {%- if column.name|lower not in exclude_column_names|map("lower") %}
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }},
       {%- endif -%}
     {% endfor %}
@@ -265,7 +286,7 @@ unknown_values AS (
     {% endif %}
 
     {%- for hash_column in processed_hash_columns %}
-    '{{ unknown_key }}' as {{ hash_column }}{{ "," if not loop.last }}
+    {{ unknown_key }} as {{ hash_column }}{{ "," if not loop.last }}
 
     {%- endfor %}
     ),
@@ -281,7 +302,7 @@ error_values AS (
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
-      {%- if column.name not in exclude_column_names %}
+      {%- if column.name|lower not in exclude_column_names|map("lower") %}
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }},
       {%- endif -%}
     {% endfor %}
@@ -326,7 +347,7 @@ error_values AS (
     {% endif %}
 
     {%- for hash_column in processed_hash_columns %}
-    '{{ error_key }}' as {{ hash_column }}{{ "," if not loop.last }}
+    {{ error_key }} as {{ hash_column }}{{ "," if not loop.last }}
 
     {%- endfor %}
     ),
