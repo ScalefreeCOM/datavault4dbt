@@ -291,7 +291,7 @@ ldts_rsrc_data AS (
           {{ ldts_alias }}
 
         FROM {{ last_cte }}
-        GROUP BY {{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
+        GROUP BY local.{{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
 
     ),
 
