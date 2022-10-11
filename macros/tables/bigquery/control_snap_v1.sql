@@ -22,6 +22,8 @@
 {%- set v0_relation = ref(control_snap_v0) -%}
 {%- set ns = namespace(forever_status=FALSE) %}
 
+{%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
+
 
 WITH
 
@@ -42,7 +44,7 @@ virtual_logic AS (
         c.replacement_sdts,
 
         {%- if log_logic is none %}
-        TRUE as is_active,
+        TRUE as {{ snapshot_trigger_column }},
         {%- else %}
 
         CASE
@@ -117,7 +119,7 @@ virtual_logic AS (
             THEN TRUE
             ELSE FALSE
 
-        END AS is_active,
+        END AS {{ snapshot_trigger_column }},
         {%- endif %}
 
         CASE

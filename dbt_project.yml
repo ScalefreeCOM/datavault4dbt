@@ -47,6 +47,7 @@ vars:
     datavault4dbt.unknown_value__VARCHAR_ghost_record: '(unknown)'
     datavault4dbt.unknown_value_alt__VARCHAR_ghost_record: 'u'
     datavault4dbt.error_value_alt__VARCHAR_ghost_record: 'e'
+    datavault4dbt.snapshot_trigger_column: 'is_active'
 
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
