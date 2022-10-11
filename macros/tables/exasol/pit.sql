@@ -8,6 +8,11 @@
 {%- set dimension_key = dimension_key | upper -%}
 {%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01 00:00:01') -%}
 {%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS') -%}
+{%- if datavault4dbt.is_something(pit_type) -%}
+    {%- set hashed_cols = [pit_type, datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+{%- else -%}
+    {%- set hashed_cols = [datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+{%- endif -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -34,7 +39,7 @@ pit_records AS (
         {% if datavault4dbt.is_something(custom_rsrc) -%}
         '{{ custom_rsrc }}' as {{ rsrc }},
         {%- endif %}
-        {{ datavault4dbt.hash(columns=[datavault4dbt.as_constant(pit_type), datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')],
+        {{ datavault4dbt.hash(columns=hashed_cols,
                     alias=dimension_key,
                     is_hashdiff=false)   }} ,
         te.{{ hashkey }},
