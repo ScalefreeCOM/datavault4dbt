@@ -113,7 +113,7 @@
 
         CASE WHEN COALESCE(
         {%- for column in columns -%}
-            "{{ column }}" {%- if not loop.last -%} , {% endif -%}
+            CAST({{ column }} AS VARCHAR(200000) UTF8) {%- if not loop.last -%} , {% endif -%}
         {% endfor -%}, NULL) IS NULL
         THEN CAST('{{ unknown_key }}' as {{ hash_dtype }})
         ELSE
