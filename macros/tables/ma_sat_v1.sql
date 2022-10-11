@@ -57,9 +57,13 @@
     ledts_alias::string                         Desired alias for the load end date column. Is optional, will use the global variable 'datavault4dbt.ledts_alias' if
                                                 set here.
 
+    add_is_current_flag::boolean                Optional parameter to add a new column to the v1 sat based on the load end date timestamp (ledts). Default is false. If
+                                                set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if the load
+                                                end date time stamp is equal to the variable end of all times. If its not, then the record is not current therefore it
+                                                will be set to false.
 #}
 
-{%- macro ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts=none, src_rsrc=none, ledts_alias=none) -%}
+{%- macro ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts=none, src_rsrc=none, ledts_alias=none, add_is_current_flag=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
 
@@ -73,6 +77,7 @@
                                          ma_attribute=ma_attribute,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
-                                         ledts_alias=ledts_alias) }}
+                                         ledts_alias=ledts_alias,
+                                         add_is_current_flag=add_is_current_flag) }}
 
 {%- endmacro -%}
