@@ -46,13 +46,10 @@
 
     src_rsrc::string                Name of the rsrc column inside the source model. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
-    
-    ma_attribute::string|list       Multi-active attribute in case the Satellite has more than one active row per hashkey in a load date. It is optional,
-                                    and it should only be used for creating multi-active satellites
 
 #}
 
-{%- macro sat_v0(parent_hashkey, src_hashdiff, src_payload, source_model, src_ldts=none, src_rsrc=none, ma_attribute=none) -%}
+{%- macro sat_v0(parent_hashkey, src_hashdiff, src_payload, source_model, src_ldts=none, src_rsrc=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
@@ -63,7 +60,6 @@
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
-                                         source_model=source_model,
-                                         ma_attribute=ma_attribute) 
+                                         source_model=source_model) 
     }}
 {%- endmacro -%}
