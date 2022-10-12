@@ -1,12 +1,5 @@
 {%- macro default__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
 
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
-{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
-{%- set hash_alg = hash_default_values['hash_alg'] -%}
-{%- set unknown_key = hash_default_values['unknown_key'] -%}
-{%- set error_key = hash_default_values['error_key'] -%}
-
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}

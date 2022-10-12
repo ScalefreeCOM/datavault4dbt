@@ -52,22 +52,47 @@
 
 {%- endif -%}
 
-{%- set ldts_rsrc_input_column_names = [] -%}
-{%- if datavault4dbt.is_attribute(ldts) -%}
-  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts]  -%}
-{%- endif -%}
-{%- if datavault4dbt.is_attribute(rsrc) -%}
-  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
-{%- endif -%}
-{%- if sequence is not none -%}
-  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [sequence] -%}
-{%- endif -%}
 
 {%- set ldts = datavault4dbt.as_constant(ldts) -%}
 {%- set rsrc = datavault4dbt.as_constant(rsrc) -%}
 
 {%- set ldts_alias = var('datavault4dbt.ldts_alias', 'ldts') -%}
 {%- set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
+{%- set copy_input_columns = var('datavault4dbt.copy_rsrc_ldts_input_columns', false) -%}
+
+{%- set ldts_rsrc_input_column_names = [] -%}
+{%- if datavault4dbt.is_attribute(ldts) -%}
+
+  {%- if not copy_input_columns -%}
+      {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts]  -%}
+  {%- else -%}
+    
+    {%- if ldts == ldts_alias -%}
+      {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts]  -%}
+    {%- endif -%}
+
+  {%- endif %}
+
+{%- endif -%}
+
+{%- if datavault4dbt.is_attribute(rsrc) -%}
+
+  {%- if not copy_input_columns -%}
+    {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
+  {%- else -%}
+  
+    {%- if rsrc == rsrc_alias -%}
+      {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
+    {%- endif -%}
+
+  {%- endif -%}
+
+{%- endif %}
+
+{%- if sequence is not none -%}
+  {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [sequence] -%}
+{%- endif -%}
+
 
 {%- set derived_column_names = datavault4dbt.extract_column_names(derived_columns) -%}
 {%- set hashed_column_names = datavault4dbt.extract_column_names(hashed_columns) -%}
@@ -94,6 +119,13 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{# Setting the error/unknown value for the record source  for the ghost records#}
+{% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
+{% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+
+{# Setting the rsrc default datatype and length #}
+{% set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'STRING') %}
+
 WITH
 
 {# Selecting everything that we need from the source relation. #}
@@ -114,7 +146,7 @@ ldts_rsrc_data AS (
   SELECT
 
   {{ ldts }} AS {{ ldts_alias }},
-  {{ rsrc }} AS {{ rsrc_alias }},
+  CAST( {{ rsrc }} as {{ rsrc_default_dtype }} ) AS {{ rsrc_alias }},
   {% if sequence is not none -%}
     {{ sequence }} AS edwSequence,
     {%- set alias_columns = alias_columns + ['edwSequence'] -%}
@@ -286,7 +318,7 @@ unknown_values AS (
     SELECT
     
     {{ datavault4dbt.string_to_timestamp(timestamp_format,beginning_of_all_times) }} as {{ ldts_alias }},
-    '{{ var("datavault4dbt.default_unknown_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
+    '{{ unknown_value_rsrc }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
@@ -350,7 +382,7 @@ error_values AS (
     SELECT
     
     {{ datavault4dbt.string_to_timestamp(timestamp_format,end_of_all_times) }} as {{ ldts_alias }},
-    '{{ var("datavault4dbt.default_error_rsrc", "ERROR") }}' as {{ rsrc_alias }},
+    '{{ error_value_rsrc }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}

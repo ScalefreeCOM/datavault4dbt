@@ -7,6 +7,8 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
+{%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
+
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 
 {{ datavault4dbt.prepend_generated_by() }}

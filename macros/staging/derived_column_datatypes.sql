@@ -24,7 +24,7 @@
             {%- if not datavault4dbt.is_attribute(column_value) -%}
             {# If the value is a static value, it is not an attribute and no datatype needs to be detected. Instead a default datatype is applied. #}
 
-                {%- set datatype = var('datavault4dbt.default_datatype_derived_columns', 'STRING') -%}
+                {%- set datatype = var('datavault4dbt.derived_columns_default_dtype', 'STRING') -%}
                 {%- set value = column_value -%}
 
             {%- else -%}

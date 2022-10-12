@@ -50,6 +50,7 @@ vars:
   datavault4dbt.default_error_rsrc: 'ERROR'
   datavault4dbt.rsrc_default_dtype: 'VARCHAR (200) UTF8'
   datavault4dbt.stg_default_dtype: 'VARCHAR (200) UTF8'
+  datavault4dbt.derived_columns_default_dtype: STRING
 
   #Datatype specific default values
   datavault4dbt.error_value__STRING: '(error)'
