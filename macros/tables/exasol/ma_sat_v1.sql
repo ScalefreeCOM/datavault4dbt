@@ -36,7 +36,6 @@ distinct_hk_ldts AS (
 
     SELECT DISTINCT
         {{ hashkey }},
-        {{- datavault4dbt.print_list(ma_attributes, indent=10) }},
         {{ src_ldts }}
     FROM source_satellite
 
@@ -48,7 +47,7 @@ end_dated_loads AS (
     SELECT
         {{ hashkey }},
         {{ src_ldts }},
-        COALESCE(LEAD(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }}
+        COALESCE(LEAD(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format['exasol'] , end_of_all_times['exasol']) }}) as {{ ledts_alias }}
     FROM distinct_hk_ldts
 
 ),
