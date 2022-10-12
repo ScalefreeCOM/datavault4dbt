@@ -3,12 +3,12 @@
 {%- set source_cols = datavault4dbt.expand_column_list(columns=[link_hashkey, src_rsrc, src_ldts, 'is_active']) -%}
 {%- set final_cols = datavault4dbt.expand_column_list(columns=[link_hashkey, src_rsrc, eff_from_alias, eff_to_alias]) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-MM-DDTHH-MI-SS') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31 23:59:59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-MM-DD HH:MI:SS') -%}
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'HASHTYPE') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
