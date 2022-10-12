@@ -57,9 +57,9 @@
     ledts_alias::string                         Desired alias for the load end date column. Is optional, will use the global variable 'datavault4dbt.ledts_alias' if
                                                 set here.
 
-    add_is_current_flag::boolean                Optional parameter to add a new column to the v1 sat based on the load end date time column. Default is false. If
-                                                set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if the 
-                                                load end date time stamp is equal to the variable end of all times. If its not, then the record is not current therefore it
+    add_is_current_flag::boolean                Optional parameter to add a new column to the v1 sat based on the load end date timestamp (ledts). Default is false. If
+                                                set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if the load
+                                                end date time stamp is equal to the variable end of all times. If its not, then the record is not current therefore it
                                                 will be set to false.
 
 #}
@@ -73,12 +73,12 @@
     {%- set ledts_alias = datavault4dbt.replace_standard(ledts_alias, 'datavault4dbt.ledts_alias', 'ledts') -%}
 
     {{ adapter.dispatch('ma_sat_v1', 'datavault4dbt')(sat_v0=sat_v0,
-                                                            hashkey=hashkey,
-                                                            hashdiff=hashdiff,
-                                                            ma_attribute=ma_attribute,
-                                                            src_ldts=src_ldts,
-                                                            src_rsrc=src_rsrc,
-                                                            ledts_alias=ledts_alias,
-                                                            add_is_current_flag=add_is_current_flag) }}
+                                                      hashkey=hashkey,
+                                                      hashdiff=hashdiff,
+                                                      ma_attribute=ma_attribute,
+                                                      src_ldts=src_ldts,
+                                                      src_rsrc=src_rsrc,
+                                                      ledts_alias=ledts_alias,
+                                                      add_is_current_flag=add_is_current_flag) }}
 
 {%- endmacro -%}

@@ -36,7 +36,7 @@ SELECT
 {{ ledts_alias }},
 {{ hashdiff }},
 {%- if add_is_current_flag %}
-    CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
     THEN TRUE
     ELSE FALSE
     END AS {{ is_current_col_alias }},

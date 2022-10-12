@@ -2,6 +2,7 @@
 
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set source_relation = ref(sat_v0) -%}
 {%- set all_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
@@ -52,6 +53,12 @@ end_dated_source AS (
         src.{{ src_ldts }},
         edl.{{ ledts_alias }},
         src.{{ hashdiff }},
+        {%- if add_is_current_flag %}
+            CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
+            THEN TRUE
+            ELSE FALSE
+            END AS {{ is_current_col_alias }},
+        {% endif -%}        
         {{ datavault4dbt.print_list(ma_attributes) }},
         {{ datavault4dbt.print_list(source_columns_to_select) }}
     FROM source_satellite AS src

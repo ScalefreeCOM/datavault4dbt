@@ -217,8 +217,6 @@ main_hashkey_generation AS (
 
 ),
 
-
-
 {# Hash calculation for multi-active source data. #}
 ma_hashdiff_prep AS (
 
@@ -292,7 +290,7 @@ unknown_values AS (
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
-      {%- if column.name not in exclude_column_names %}
+      {%- if column.name|lower not in exclude_column_names|map("lower") %}
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
       {% endif -%}
@@ -356,7 +354,7 @@ error_values AS (
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
     {%- for column in all_columns -%}
-      {%- if column.name not in exclude_column_names %}
+      {%- if column.name|lower not in exclude_column_names|map("lower") %}
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
       {%- endif -%}
