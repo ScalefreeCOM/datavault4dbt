@@ -90,9 +90,9 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 WITH
 
@@ -234,7 +234,7 @@ unknown_values AS (
 
     SELECT
 
-    {{ datavault4dbt.string_to_timestamp( timestamp_format['snowflake'] , beginning_of_all_times['snowflake']) }} as {{ ldts_alias }},
+    {{ datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ ldts_alias }},
     '{{ var("datavault4dbt.default_unknown_rsrc", "SYSTEM") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
@@ -297,7 +297,7 @@ error_values AS (
 
     SELECT
 
-    {{ datavault4dbt.string_to_timestamp( timestamp_format['snowflake'] , end_of_all_times['snowflake']) }} as {{ ldts_alias }},
+    {{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ ldts_alias }},
     '{{ var("datavault4dbt.default_error_rsrc", "ERROR") }}' as {{ rsrc_alias }},
 
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}

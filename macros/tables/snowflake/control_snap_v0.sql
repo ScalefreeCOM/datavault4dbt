@@ -1,12 +1,12 @@
 {%- macro snowflake__control_snap_v0(start_date, daily_snapshot_time) -%}
 
-{%- set timestamp_format = var('datavault4dbt.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 WITH 
 initial_timestamps AS 
 (
     SELECT
-        DATEADD(DAY, SEQ4(), {{ datavault4dbt.string_to_timestamp(timestamp_format['snowflake'], start_date | replace('00:00:00','') ~ daily_snapshot_time) }})::TIMESTAMP AS sdts
+        DATEADD(DAY, SEQ4(), {{ datavault4dbt.string_to_timestamp(timestamp_format, start_date | replace('00:00:00','') ~ daily_snapshot_time) }})::TIMESTAMP AS sdts
     FROM 
         TABLE(GENERATOR(ROWCOUNT => 100000))
     WHERE 

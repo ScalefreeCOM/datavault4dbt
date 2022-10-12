@@ -1,7 +1,8 @@
 {%- macro exasol__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31 23:59:59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS') -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
@@ -47,7 +48,7 @@ end_dated_loads AS (
     SELECT
         {{ hashkey }},
         {{ src_ldts }},
-        COALESCE(LEAD(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format['exasol'] , end_of_all_times['exasol']) }}) as {{ ledts_alias }}
+        COALESCE(LEAD(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }}
     FROM distinct_hk_ldts
 
 ),
@@ -62,7 +63,7 @@ end_dated_source AS (
         src.{{ src_ldts }},
         edl.{{ ledts_alias }},
         {%- if add_is_current_flag %}
-            CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], end_of_all_times['exasol']) }}
+            CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             THEN TRUE
             ELSE FALSE
             END AS {{ is_current_col_alias }},

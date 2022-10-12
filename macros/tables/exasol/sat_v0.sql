@@ -7,10 +7,12 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01 00:00:01') -%}
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31 23:59:59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS') -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
 {%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
+
 {%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
     {% set ns.src_hashdiff = src_hashdiff["source_column"] %}
     {% set ns.hdiff_alias = src_hashdiff["alias"] %}
@@ -40,7 +42,7 @@ source_data AS (
     WHERE {{ src_ldts }} > (
         SELECT
             MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], end_of_all_times['exasol']) }}
+        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
 ),

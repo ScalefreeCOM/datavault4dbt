@@ -1,8 +1,8 @@
 {%- macro default__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model) -%}
 
-{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01 00:00:01') -%}
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31 23:59:59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS.FF3') -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- set source_cols = datavault4dbt.expand_column_list(columns=[parent_hashkey, src_hashdiff, src_ldts, src_rsrc, src_ma_key, src_payload]) -%}
 
@@ -22,7 +22,7 @@ source_data AS (
     WHERE {{ src_ldts }} > (
         SELECT
             MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], end_of_all_times['exasol']) }}
+        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
 

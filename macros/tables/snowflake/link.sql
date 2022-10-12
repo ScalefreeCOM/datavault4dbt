@@ -6,9 +6,10 @@
     {%- endif %}
 {%- endif -%}
 
-{%- set ns = namespace(last_cte= "", source_included_before = {}) -%}
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times','8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
+{%- set ns = namespace(last_cte= "", source_included_before = {}) -%} 
+
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apple the values set in the link_hashkey and foreign_hashkeys variable. #}
 {%- for source_model in source_models.keys() %}    
@@ -89,7 +90,7 @@ max_ldts_per_rsrc_static_in_target AS
         MAX({{ src_ldts }}) AS max_ldts
     FROM 
         {{ ns.last_cte }}
-    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     GROUP BY rsrc_static
 ), 
 {% endif -%}

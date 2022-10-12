@@ -1,7 +1,7 @@
 {%- macro snowflake__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times','8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- set source_cols = datavault4dbt.expand_column_list(columns=[parent_hashkey, src_hashdiff, src_ldts, src_rsrc, src_payload]) -%}
 {%- set source_relation = ref(source_model) -%}
@@ -23,7 +23,7 @@ source_data AS
             MAX({{ src_ldts }}) 
         FROM 
            {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }}
+        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
 )

@@ -1,8 +1,8 @@
 {%- macro exasol__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31 23:59:59') -%}
-{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01 00:00:01') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS') -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {# Setting the unknown and error ghost record value for record source column #}
 {%- set rsrc_unknown = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') -%}
@@ -116,7 +116,7 @@ WITH
                 rsrc_static,
                 MAX({{ src_ldts }}) as max_ldts
             FROM {{ ns.last_cte }}
-            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], end_of_all_times['exasol']) }}
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
 
         ),
@@ -215,8 +215,8 @@ records_to_insert AS (
     SELECT
     {{ datavault4dbt.print_list(final_columns_to_select) }}
     FROM {{ ns.last_cte }}
-    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], end_of_all_times['exasol']) }} 
-    AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], beginning_of_all_times['exasol']) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} 
+    AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
     {%- if is_incremental() %}
         AND {{ datavault4dbt.concat_ws(concat_columns) }} NOT IN (SELECT * FROM distinct_concated_target)
     {% endif %}

@@ -1,9 +1,15 @@
 {%- macro default__hub(hashkey, business_keys, src_ldts, src_rsrc, source_models) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set ns = namespace(last_cte= "", source_included_before = {}) -%}
+{%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
+
+{%- if source_models is not mapping -%}
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model.") }}
+    {%- endif %}
+{%- endif -%}
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
 
@@ -110,7 +116,7 @@ max_ldts_per_rsrc_static_in_target AS (
         rsrc_static,
         MAX({{ src_ldts }}) as max_ldts
     FROM {{ ns.last_cte }}
-    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     GROUP BY rsrc_static
 
 ),

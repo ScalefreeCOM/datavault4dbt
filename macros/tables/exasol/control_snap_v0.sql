@@ -1,6 +1,7 @@
 {%- macro exasol__control_snap_v0(start_date, daily_snapshot_time, sdts_alias) -%}
 
-{%- set timestamp_format = var('datavault4dbt.timestamp_format','YYYY-MM-DD HH:MI:SS') -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
 {%- set date_format_std = 'YYYY-mm-dd' -%}
 {%- set daily_snapshot_time = '0001-01-01 ' ~ daily_snapshot_time -%}
 
@@ -8,12 +9,12 @@ WITH
 initial_timestamps AS 
 (
     select
-    add_days(ADD_MINUTES(ADD_HOURS(DATE_TRUNC('day', DATE '{{ start_date }}' ), EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], daily_snapshot_time) }}) ),
-                                                        EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], daily_snapshot_time) }}) 
+    add_days(ADD_MINUTES(ADD_HOURS(DATE_TRUNC('day', DATE '{{ start_date }}' ), EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) ),
+                                                        EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) 
                                                     ), level-1) as sdts
     from dual
-    connect by level <= days_between(ADD_MINUTES(ADD_HOURS(CURRENT_DATE(), EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], daily_snapshot_time) }}) ),
-                                                        EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], daily_snapshot_time) }}) 
+    connect by level <= days_between(ADD_MINUTES(ADD_HOURS(CURRENT_DATE(), EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) ),
+                                                        EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) 
                                                     ), TO_DATE('{{ start_date}}', '{{ date_format_std }}')
                                     )+1
     {%- if is_incremental() %}

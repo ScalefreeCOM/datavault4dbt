@@ -1,7 +1,8 @@
 {%- macro snowflake__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times','8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format','%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set source_relation = ref(sat_v0) -%}
@@ -19,7 +20,7 @@ end_dated_source AS
         {{ hashkey }},
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD({{ src_ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format['snowflake'], end_of_all_times['snowflake']) }}) AS {{ ledts_alias }},
+        COALESCE(LEAD({{ src_ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts_alias }},
         {{ hashdiff }},
         {{ datavault4dbt.print_list(source_columns_to_select) | lower }}
     FROM {{ source_relation }}
@@ -32,7 +33,7 @@ SELECT
 {{ ledts_alias }},
 {{ hashdiff }},
 {%- if add_is_current_flag %}
-    CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format['default'], end_of_all_times['default']) }}
+    CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     THEN TRUE
     ELSE FALSE
     END AS {{ is_current_col_alias }},
