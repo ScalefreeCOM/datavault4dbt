@@ -1,9 +1,6 @@
-
-# Name your project! Project names should contain only lowercase characters
-# and underscores. A good package name should reflect your organization's
-# name or the intended use of these models
-name: 'datavault4dbt'
-version: '1.0.0'
+name: datavault4dbt
+version: 0.8.3
+require-dbt-version: [">=1.0.0", "<2.0.0"]
 config-version: 2
 
 # This setting configures which "profile" dbt uses for this project.
@@ -32,7 +29,9 @@ vars:
   datavault4dbt.rsrc_alias: 'rsrc'
   datavault4dbt.ledts_alias: 'ledts'
   datavault4dbt.snapshot_trigger_column: 'is_active'
-  datavault4dbt.sdts_alias: 'sdts'  
+  datavault4dbt.sdts_alias: 'sdts'
+  datavault4dbt.stg_alias: 'stg'
+  datavault4dbt.is_current_col_alias: 'IS_CURRENT'
 
   #Hash Configuration
   datavault4dbt.hash: 'MD5'
@@ -40,15 +39,19 @@ vars:
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   
+  #Stage Configuration
+  datavault4dbt.copy_rsrc_ldts_input_columns: false  
+  
   #Ghost Record Configuration  
-  datavault4dbt.beginning_of_all_times: {"default":"0001-01-01T00-00-01","snowflake":"1582-01-01T00:00:01"}
-  datavault4dbt.end_of_all_times: {"default":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59"}
-  datavault4dbt.timestamp_format: {"default":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS"}
+  datavault4dbt.beginning_of_all_times: {"default":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01"}
+  datavault4dbt.end_of_all_times: {"default":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31 23:59:59"}
+  datavault4dbt.timestamp_format: {"default":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-mm-dd HH:MI:SS"}
   datavault4dbt.default_unknown_rsrc: 'SYSTEM'
   datavault4dbt.default_error_rsrc: 'ERROR'
+  datavault4dbt.rsrc_default_dtype: 'VARCHAR (200) UTF8'
+  datavault4dbt.stg_default_dtype: 'VARCHAR (200) UTF8'
 
   #Datatype specific default values
-  datavault4dbt.rsrc_default_dtype: 'VARCHAR (200) UTF8'
   datavault4dbt.error_value__VARCHAR_ghost_record: '(error)'
   datavault4dbt.error_value_alt__VARCHAR_ghost_record: 'e'
   datavault4dbt.unknown_value__VARCHAR_ghost_record: '(unknown)'

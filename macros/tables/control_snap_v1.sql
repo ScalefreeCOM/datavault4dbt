@@ -6,7 +6,8 @@
     keep weekly snaphots for the past 6 months, monthly snapshots for the past 3 years, and yearly snapshots for
     ever. This procedure strongly reduces the number of active snapshots, and therefor also the number of rows,
     and the required computation inside all PITs and Bridges. This logic is optional and would be captured in a
-    boolean column called 'is_active'.
+    boolean column called 'is_active'. It is overwritten by the force_active column in the v0 snapshot table.
+    If a sdts is deactivated there, the log_logic does not reactivate it.
 
     Whenever a logarithmic snapshot logic is used and picked up by PIT tables, a logic is required that deletes
     records out of PIT tables, that are no longer active. For this a post_hook called "clean_up_pit" is provided
@@ -57,12 +58,19 @@
                                                 {'daily': {'duration': 90,              This would keep daily snapshots for 90
                                                            'unit': 'DAY'},              days, and monthly snapshots forever.
                                                  'monthly': {'forever': 'TRUE'}}
+                                                 
+           sdts_alias::string               Defines the name of the snapshot date timestamp column inside the snapshot_table. 
+                                            It is optional, if not set will use the global variable `datavault4dbt.sdts_alias` 
+                                            set inside dbt_project.yml
 
 #}
 
-{%- macro control_snap_v1(control_snap_v0, log_logic=none) -%}
+{%- macro control_snap_v1(control_snap_v0, log_logic=none, sdts_alias=none) -%}
 
-{{ return(adapter.dispatch('control_snap_v1', 'datavault4dbt')(control_snap_v0=control_snap_v0,
-                                                                    log_logic=log_logic)) }}
+{%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}
+
+{{ adapter.dispatch('control_snap_v1', 'datavault4dbt')(control_snap_v0=control_snap_v0,
+                                                                    log_logic=log_logic,
+                                                                    sdts_alias=sdts_alias) }}
 
 {%- endmacro -%}

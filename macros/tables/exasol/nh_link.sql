@@ -140,7 +140,7 @@ WITH
                 rsrc_static,
                 MAX({{ src_ldts }}) as max_ldts
             FROM {{ ns.last_cte }}
-            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], end_of_all_times['exasol']) }}
             GROUP BY rsrc_static
 
         ),

@@ -1,8 +1,8 @@
 
 {%- macro exasol__hub(hashkey, business_keys, src_ldts, src_rsrc, source_models) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31 23:59:59') -%}
+{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS') -%}
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
@@ -80,7 +80,7 @@ WITH
         {% for source_model in source_models.keys() %}
          {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
             {%- set source_number = loop.index | string -%}
-            {%- set rsrc_statics = source_models[source_model]['rsrc_static'] -%}
+            {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
 
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
@@ -143,7 +143,7 @@ WITH
                 rsrc_static,
                 MAX({{ src_ldts }}) as max_ldts
             FROM {{ ns.last_cte }}
-            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format['exasol'], end_of_all_times['exasol']) }}
             GROUP BY rsrc_static
 
         ),
@@ -155,7 +155,7 @@ WITH
     {%- set source_number = loop.index | string -%}
 
     {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = source_models[source_model]['rsrc_static'] %}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
     {%- endif -%}
 
     {%- set hk_column = source_models[source_model]['hk_column'] -%}

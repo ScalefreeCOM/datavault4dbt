@@ -1,4 +1,4 @@
-{%- macro default__pit(tracked_entity, hashkey, sat_names, ldts, ledts, snapshot_relation, snapshot_trigger_column, dimension_key, custom_rsrc=none, pit_type=none) -%}
+{%- macro default__pit(pit_type, tracked_entity, hashkey, sat_names, ldts, custom_rsrc, ledts, sdts, snapshot_relation, snapshot_trigger_column, dimension_key) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
@@ -7,9 +7,8 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
-
 {%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+
 
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -69,8 +68,7 @@ pit_records AS (
 
 records_to_insert AS (
 
-    SELECT
-        *
+    SELECT *
     FROM pit_records
     {%- if is_incremental() %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)

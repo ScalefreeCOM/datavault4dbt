@@ -40,25 +40,30 @@
                                         a PIT table is a business vault entity, the technical record source is no longer used here.
                                         Is optional, if not defined, no column is added.
 
-    ledts::string                      Name of the load-end-date column inside the satellites. Is optional, will use the global variable
-                                       'datavault4dbt.ledts_alias' if not set here.
+    ledts::string                       Name of the load-end-date column inside the satellites. Is optional, will use the global variable
+                                        'datavault4dbt.ledts_alias' if not set here.
+    
+    sdts::string                        Name of the snapshot date timestamp column inside the snapshot table. It is optional, will use the 
+                                        global variable 'datavault4dbt.sdts_alias' if not set here.
 
 #}
 
 
 
-{%- macro pit(tracked_entity, hashkey, sat_names, snapshot_relation, snapshot_trigger_column, dimension_key,pit_type=none, ldts=none, custom_rsrc=none, ledts=none) -%}
+{%- macro pit(tracked_entity, hashkey, sat_names, snapshot_relation, dimension_key, snapshot_trigger_column=none, ldts=none, custom_rsrc=none, ledts=none, sdts=none, pit_type=none) -%}
 
-    {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
+    {# Applying the default aliases as stored inside the global variables, if ldts, sdts and ledts are not set. #}
 
     {%- set ldts = datavault4dbt.replace_standard(ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set ledts = datavault4dbt.replace_standard(ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
+    {%- set sdts = datavault4dbt.replace_standard(sdts, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
     {{ return(adapter.dispatch('pit','datavault4dbt')(pit_type=pit_type,
                                                         tracked_entity=tracked_entity,
                                                         hashkey=hashkey,
                                                         sat_names=sat_names,
                                                         ldts=ldts,
+                                                        sdts=sdts,
                                                         custom_rsrc=custom_rsrc,
                                                         ledts=ledts,
                                                         snapshot_relation=snapshot_relation,

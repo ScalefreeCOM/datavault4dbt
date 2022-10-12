@@ -13,24 +13,21 @@
     {%- for col in columns -%}
 
         {%- if datavault4dbt.is_something(multi_active_key) -%}
-            
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
-
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
                                 is_hashdiff=columns[col]['is_hashdiff'],
                                 multi_active_key=multi_active_key,
                                 main_hashkey_column=main_hashkey_column) -}}
 
-            {%- elif columns[col] is not mapping and col == main_hashkey_column -%}
-
+            {%- elif columns[col] is not mapping and (col|upper) == (main_hashkey_column | upper) -%}
                 {{- datavault4dbt.hash(columns=columns[col],
                                 alias=col,
                                 is_hashdiff=false) -}}  
 
             {%- endif -%}
 
-        {{- ",\n" if not loop.last -}}
+            {{- ", \n" if not loop.last -}}
 
         {%- else -%}          
             

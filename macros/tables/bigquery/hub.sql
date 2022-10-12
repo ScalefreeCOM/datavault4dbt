@@ -3,9 +3,6 @@
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
 {%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
 
-{%- set rsrc_unknown = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') -%}
-{%- set rsrc_error = var('datavault4dbt.default_error_rsrc', 'ERROR') -%}
-
 {%- set ns = namespace(last_cte= "", source_included_before = {}) -%}
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}

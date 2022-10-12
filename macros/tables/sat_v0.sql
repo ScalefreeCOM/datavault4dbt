@@ -1,4 +1,4 @@
-{#
+{#-
     This macro creates a standard satellite version 0, meaning that it should be materialized as an incremental table. It should be
     applied 'on top' of the staging layer, and is either connected to a Hub or a Link. On top of each version 0 satellite, a version
     1 satellite should be created, using the sat_v1 macro. This extends the v0 satellite by a virtually calculated load end date.
@@ -47,14 +47,11 @@
     src_rsrc::string                Name of the rsrc column inside the source model. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
 
-
-
 #}
 
 {%- macro sat_v0(parent_hashkey, src_hashdiff, src_payload, source_model, src_ldts=none, src_rsrc=none) -%}
 
-    {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
-
+    {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
 
@@ -63,6 +60,6 @@
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
-                                         source_model=source_model) }}
-
+                                         source_model=source_model) 
+    }}
 {%- endmacro -%}

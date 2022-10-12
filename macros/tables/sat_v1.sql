@@ -1,4 +1,4 @@
-{#
+{#-
     This macro calculates a virtualized load end date on top of a version 0 satellite. This column is generated for
     usage in the PIT tables, and only virtualized to follow the insert-only approach. Usually one version 1 sat would
     be created for each version 0 sat. A version 1 satellite should be materialized as a view by default.
