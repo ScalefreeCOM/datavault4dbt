@@ -1,4 +1,4 @@
-{%- macro exasol__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model, ma_attribute) -%}
+{%- macro exasol__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
@@ -7,8 +7,6 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set ma_attribute = [] if not ma_attribute else ma_attribute -%}
-{%- set partition_by_columns = datavault4dbt.expand_column_list(columns=[parent_hashkey, ma_attribute]) -%}
 {%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01 00:00:01') -%}
 {%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31 23:59:59') -%}
 {%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-dd HH:MI:SS') -%}
@@ -21,7 +19,7 @@
     {% set ns.hdiff_alias = src_hashdiff  %}
 {%- endif -%}
 
-{%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, ma_attribute, src_payload]) -%}
+{%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_payload]) -%}
 
 {%- set source_relation = ref(source_model) -%}
 
@@ -55,7 +53,7 @@ latest_entries_in_sat AS (
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }}
     FROM {{ this }}
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ datavault4dbt.print_list(partition_by_columns) }} ORDER BY {{ src_ldts }} DESC) = 1
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1
 
     ),
 
@@ -72,12 +70,12 @@ deduplicated_numbered_source AS (
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}
     {% if is_incremental() -%}
-     , ROW_NUMBER() OVER(PARTITION BY {{ datavault4dbt.print_list(partition_by_columns) }} ORDER BY {{ src_ldts }}) as rn
+     , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
     FROM source_data
     QUALIFY
         CASE
-            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {{ datavault4dbt.print_list(partition_by_columns) }} ORDER BY {{ src_ldts }}) THEN FALSE
+            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
             ELSE TRUE
         END
 ),
