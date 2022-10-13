@@ -1,4 +1,3 @@
-
 {%- macro exasol__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
@@ -7,9 +6,9 @@
         {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
     {%- endif %}
 
-            {%- else -%}
-                {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
-            {%- endif -%}
+{%- else -%}
+    {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
+{%- endif -%}
 
 {%- if source_models is not mapping -%}
     {%- if execute -%}
@@ -74,9 +73,11 @@ WITH
 {% if is_incremental() %}
 {# Get all distinct link hashkeys out of the existing link for later incremental logic. #}
     distinct_target_hashkeys AS (
+        
         SELECT DISTINCT
         {{ link_hashkey }}
         FROM {{ this }}
+
     ),
     {%- if ns.has_rsrc_static_defined -%}
         {% for source_model in source_models.keys() %}
@@ -156,6 +157,8 @@ WITH
 {% endif -%}
 
 {% for source_model in source_models.keys() %}
+{#  Select all deduplicated records from each source, and filter for records that are newer
+    than the max ldts inside the existing link, if incremental. #}
 
     {%- set source_number = loop.index | string -%}
 
@@ -192,6 +195,7 @@ WITH
 {%- if source_models.keys() | length > 1 %}
 
 source_new_union AS (
+{# Unionize the new records from all sources. #}
 
     {%- for source_model in source_models.keys() -%}
 
@@ -219,6 +223,7 @@ source_new_union AS (
 {%- endif %}
 
 earliest_hk_over_all_sources AS (
+    {# Deduplicate the unionized records again to only insert the earliest one. #}
 
     SELECT
         lcte.*
@@ -231,6 +236,7 @@ earliest_hk_over_all_sources AS (
 ),
 
 records_to_insert AS (
+    {# Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the link. #}
 
     SELECT
         {{ datavault4dbt.print_list(final_columns_to_select) | indent(4) }}
