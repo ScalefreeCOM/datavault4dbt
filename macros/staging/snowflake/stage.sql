@@ -294,7 +294,7 @@ unknown_values AS (
           {% for column in pj_relation_columns -%}
 
             {% if column.name|lower == vals['bk']|lower -%},
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='unknown') }}
             {%- endif -%}
 
           {% endfor -%}
@@ -357,7 +357,7 @@ error_values AS (
           {% for column in pj_relation_columns -%}
 
             {% if column.name|lower == vals['bk']|lower -%},
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='error') }}
             {%- endif -%}
 
           {% endfor -%}
