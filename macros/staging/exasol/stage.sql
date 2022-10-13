@@ -365,19 +365,21 @@ unknown_values AS (
     {%- endif -%}
 
     {%- if datavault4dbt.is_something(prejoined_columns) -%},
-      {# Additionally generating ghost records for Prejoined columns #}
-      {%- for col, vals in prejoined_columns.items() %}
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table'])) %}
+      {# Additionally generating ghost records for the prejoined attributes#}
+      {% for col, vals in prejoined_columns.items() %}
 
-          {%- for column in pj_relation_columns -%}
-            {% if column.name|lower == vals['bk']|lower -%},
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
-            {% endif -%}
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
+
+          {% for column in pj_relation_columns -%}
+
+            {% if column.name|lower == vals['bk']|lower -%}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='unknown') }}
+            {%- endif -%}
+
           {%- endfor -%}
-
-        {%- endfor -%}
-
-        {%- endif -%}
+            {%- if not loop.last %},{% endif %}
+        {% endfor -%}
+    {%- endif %}
 
     {%- if datavault4dbt.is_something(derived_columns) -%},
       {# Additionally generating Ghost Records for Derived Columns #}
@@ -425,17 +427,17 @@ error_values AS (
     {%- endif -%}
 
     {%- if datavault4dbt.is_something(prejoined_columns) -%},
-    {# Additionally generating ghost records for the Prejoined columns #}
+      {# Additionally generating ghost records for the Prejoined columns #}
       {%- for col, vals in prejoined_columns.items() %}
-        {% set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) %}
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
 
         {% for column in pj_relation_columns -%}
-          {%- if column.name|lower == vals['bk']|lower -%}
-            {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
-          {% endif %}
+          {% if column.name|lower == vals['bk']|lower -%}
+            {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='error') -}}
+          {%- endif -%}
         {%- endfor -%}
-
-      {%- endfor -%}
+          {%- if not loop.last -%},{%- endif %}
+      {% endfor -%}
 
     {%- endif -%}
 
