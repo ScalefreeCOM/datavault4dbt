@@ -201,9 +201,7 @@ source_new_union AS (
 
 ),
 
-
 {%- endif -%}
-
 
 {#
     Selecting everything, either from the unionized data, or from the single CTE (if single source). Checking against the existing
