@@ -1,4 +1,4 @@
-{%- macro default__control_snap_v1(control_snap_v0, log_logic=none) -%}
+{%- macro default__control_snap_v1(control_snap_v0, log_logic, sdts_alias) -%}
 
 {# Sample intervals
    {%-set log_logic = {'daily': {'duration': 3,
@@ -22,6 +22,8 @@
 {%- set v0_relation = ref(control_snap_v0) -%}
 {%- set ns = namespace(forever_status=FALSE) %}
 
+{%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
+
 WITH
 
 latest_row AS (
@@ -41,7 +43,7 @@ virtual_logic AS (
         c.replacement_sdts,
         c.force_active,
         {%- if log_logic is none %}
-        TRUE as is_active,
+        TRUE as {{ snapshot_trigger_column }},
         {%- else %}
         CASE
             WHEN
@@ -114,7 +116,7 @@ virtual_logic AS (
             THEN TRUE
             ELSE FALSE
 
-        END AS is_active,
+        END AS {{ snapshot_trigger_column }},
         {%- endif %}
 
         CASE

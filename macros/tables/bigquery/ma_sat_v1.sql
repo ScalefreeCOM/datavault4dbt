@@ -1,11 +1,13 @@
-{%- macro default__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc, ledts_alias) -%}
+{%- macro default__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', '%Y-%m-%dT%H-%M-%S') -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set source_relation = ref(sat_v0) -%}
 {%- set all_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
-{%- set exclude = datavault4dbt.expand_column_list(columns=[hashkey, hashdiff, ma_attribute, src_ldts]) -%}
+{%- set exclude = datavault4dbt.expand_column_list(columns=[hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc]) -%}
 {%- set ma_attributes = datavault4dbt.expand_column_list(columns=[ma_attribute]) -%}
 
 
@@ -18,8 +20,8 @@ WITH
 {# Getting everything from the underlying v0 satellite. #}
 source_satellite AS (
 
-    SELECT *
-    FROM {{ source_relation }}
+    SELECT src.*
+    FROM {{ source_relation }} as src
 
 ),
 
@@ -39,7 +41,7 @@ end_dated_loads AS (
     SELECT
         {{ hashkey }},
         {{ src_ldts }},
-        COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format['default'],end_of_all_times['default']) }}) as {{ ledts_alias }}
+        COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format,end_of_all_times) }}) as {{ ledts_alias }}
     FROM distinct_hk_ldts
 
 ),
@@ -49,11 +51,18 @@ end_dated_source AS (
 
     SELECT
         src.{{ hashkey }},
+        src.{{ hashdiff }},
+        src.{{ src_rsrc }},
         src.{{ src_ldts }},
         edl.{{ ledts_alias }},
-        src.{{ hashdiff }},
-        {{ datavault4dbt.print_list(ma_attributes) }},
-        {{ datavault4dbt.print_list(source_columns_to_select) }}
+        {%- if add_is_current_flag %}
+            CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            THEN TRUE
+            ELSE FALSE
+            END AS {{ is_current_col_alias }},
+        {% endif %}
+        {{- datavault4dbt.print_list(ma_attributes, indent=10, src_alias='src') }},
+        {{- datavault4dbt.print_list(source_columns_to_select, indent=10, src_alias='src') }}
     FROM source_satellite AS src
     LEFT JOIN end_dated_loads edl
         ON src.{{ hashkey }} = edl.{{ hashkey }}

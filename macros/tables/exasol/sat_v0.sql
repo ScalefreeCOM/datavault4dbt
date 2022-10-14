@@ -1,12 +1,11 @@
 {%- macro exasol__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
 
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
 {%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
+
 {%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
     {% set ns.src_hashdiff = src_hashdiff["source_column"] %}
     {% set ns.hdiff_alias = src_hashdiff["alias"] %}
@@ -14,6 +13,7 @@
     {% set ns.src_hashdiff = src_hashdiff %}
     {% set ns.hdiff_alias = src_hashdiff  %}
 {%- endif -%}
+
 {%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_payload]) -%}
 
 {%- set source_relation = ref(source_model) -%}
@@ -40,18 +40,17 @@ source_data AS (
     {%- endif %}
 ),
 
-{% if is_incremental() -%}
 {# Get the latest record for each parent hashkey in existing sat, if incremental. #}
+{%- if is_incremental() %}
 latest_entries_in_sat AS (
 
     SELECT
         {{ parent_hashkey }},
-        {{ ns.hdiff_alias }}
-    FROM {{ this }}
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1
-
-    ),
-
+        {{ src_hashdiff }}
+    FROM 
+        {{ this }}
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
+),
 {%- endif %}
 
 {#
@@ -65,7 +64,7 @@ deduplicated_numbered_source AS (
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}
     {% if is_incremental() -%}
-     , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) as rn
+     , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
     FROM source_data
     QUALIFY

@@ -1,18 +1,16 @@
 
 {#
-    This macro calulates the load end dates for multi active data, based on a multi active attribute. It must be based on a regular
-    version 0 satellite, that would then hold multiple records per hashkey+ldts combination. You have to identify one or more attributes
-    inside the source, that in combination with the hashkey/business key will uniquely identify a record.
+    This macro calulates the load end dates for multi active data, based on a multi active attribute. It must be based on a version 0
+    multi-active satellite, that would then hold multiple records per hashkey+ldts combination.
 
     Features:
-        - Applies a multi-active logic on top of a regular version 0 satellite
         - Calculates virtualized load-end-dates to correctly identify multiple active records per batch
         - Enforces insert-only approach by view materialization
         - Allows multiple attributes to be used as the multi-active-attribute
 
     Parameters:
 
-    sat_v0::string                              Name of the underlying version 0 satellite.
+    sat_v0::string                              Name of the underlying version 0 multi-active satellite.
 
                                                 Examples:
                                                     'contact_phonenumber_0_s'   This satellite would be the version 1 satellite of the underlying
@@ -29,7 +27,7 @@
                                                                             which has the column 'hk_order_contact_l' as a hashkey column.
 
     hashdiff::string                            Name of the hashdiff column inside the underlying version 0 satellite. Needs to be similar to the
-                                                'src_hashdiff' pararmeter inside the sat_v0 model. Must include the ma_attribute in calculation.
+                                                'src_hashdiff' parameter inside the sat_v0 model. Must not include the ma_attribute in calculation.
 
                                                 Examples:
                                                     'hd_contact_phonenumber_s'      Since we recommend naming the hashdiff column similar to the name
@@ -59,22 +57,28 @@
     ledts_alias::string                         Desired alias for the load end date column. Is optional, will use the global variable 'datavault4dbt.ledts_alias' if
                                                 set here.
 
+    add_is_current_flag::boolean                Optional parameter to add a new column to the v1 sat based on the load end date timestamp (ledts). Default is false. If
+                                                set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if the load
+                                                end date time stamp is equal to the variable end of all times. If its not, then the record is not current therefore it
+                                                will be set to false.
+
 #}
 
-{%- macro ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts=none, src_rsrc=none, ledts_alias=none) -%}
+{%- macro ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts=none, src_rsrc=none, ledts_alias=none, add_is_current_flag=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
 
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
-    {%- set src_ledts = datavault4dbt.replace_standard(src_ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
+    {%- set ledts_alias = datavault4dbt.replace_standard(ledts_alias, 'datavault4dbt.ledts_alias', 'ledts') -%}
 
     {{ adapter.dispatch('ma_sat_v1', 'datavault4dbt')(sat_v0=sat_v0,
-                                         hashkey=hashkey,
-                                         hashdiff=hashdiff,
-                                         ma_attribute=ma_attribute,
-                                         src_ldts=src_ldts,
-                                         src_rsrc=src_rsrc,
-                                         ledts_alias=ledts_alias) }}
+                                                      hashkey=hashkey,
+                                                      hashdiff=hashdiff,
+                                                      ma_attribute=ma_attribute,
+                                                      src_ldts=src_ldts,
+                                                      src_rsrc=src_rsrc,
+                                                      ledts_alias=ledts_alias,
+                                                      add_is_current_flag=add_is_current_flag) }}
 
 {%- endmacro -%}

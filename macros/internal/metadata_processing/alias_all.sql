@@ -10,7 +10,7 @@
 
     {%- for column in columns -%}
         {{ datavault4dbt.alias(alias_config=column, prefix=prefix) }}
-        {%- if not loop.last -%} , {% endif -%}
+        {% if not loop.last -%} , {% endif -%}
     {%- endfor -%}
 
 {%- elif columns is string -%}

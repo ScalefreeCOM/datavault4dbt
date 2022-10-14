@@ -1,10 +1,9 @@
-{%- macro exasol__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc, ledts_alias) -%}
+{%- macro exasol__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
 
-{%- set end_of_all_times = var('datavault4dbt.end_of_all_times', '8888-12-31T23-59-59') -%}
-{%- set timestamp_format = var('datavault4dbt.timestamp_format', 'YYYY-mm-ddTHH-MI-SS') -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set source_relation = ref(sat_v0) -%}
 {%- set all_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
@@ -56,8 +55,14 @@ end_dated_source AS (
         src.{{ src_rsrc }},
         src.{{ src_ldts }},
         edl.{{ ledts_alias }},
-        {{ datavault4dbt.print_list(ma_attributes) }},
-        {{ datavault4dbt.print_list(source_columns_to_select) }}
+        {%- if add_is_current_flag %}
+            CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            THEN TRUE
+            ELSE FALSE
+            END AS {{ is_current_col_alias }},
+        {% endif %}
+        {{- datavault4dbt.print_list(ma_attributes, indent=10, src_alias='src') }},
+        {{- datavault4dbt.print_list(source_columns_to_select, indent=10, src_alias='src') }}
     FROM source_satellite AS src
     LEFT JOIN end_dated_loads edl
         ON src.{{ hashkey }} = edl.{{ hashkey }}

@@ -2,10 +2,15 @@
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype) -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
+
+
 {%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
 
-{%- set beginning_of_all_times = var('datavault4dbt.beginning_of_all_times', '0001-01-01T00-00-01') -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -39,7 +44,7 @@ pit_records AS (
         snap.sdts,
         {%- for satellite in sat_names %}
         COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ unknown_key }} AS {{ hash_dtype }})) AS hk_{{ satellite }},
-        COALESCE({{ satellite }}.{{ ldts }}, CAST('{{ beginning_of_all_times['snowflake'] }}' AS {{ datavault4dbt.type_timestamp() }})) AS {{ ldts }}_{{ satellite }}
+        COALESCE({{ satellite }}.{{ ldts }}, CAST('{{ beginning_of_all_times }}' AS {{ datavault4dbt.type_timestamp() }})) AS {{ ldts }}_{{ satellite }}
         {{- "," if not loop.last }}
         {%- endfor %}
     

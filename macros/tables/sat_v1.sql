@@ -1,4 +1,4 @@
-{#
+{#-
     This macro calculates a virtualized load end date on top of a version 0 satellite. This column is generated for
     usage in the PIT tables, and only virtualized to follow the insert-only approach. Usually one version 1 sat would
     be created for each version 0 sat. A version 1 satellite should be materialized as a view by default.
@@ -37,6 +37,7 @@
 
     ledts_alias::string             Desired alias for the load end date column. Is optional, will use the global variable 'datavault4dbt.ledts_alias' if
                                     set here.
+                                    
     add_is_current_flag::boolean    Optional parameter to add a new column to the v1 sat based on the load end date timestamp (ledts). Default is false. If
                                     set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if the load
                                     end date time stamp is equal to the variable end of all times. If its not, then the record is not current therefore it
