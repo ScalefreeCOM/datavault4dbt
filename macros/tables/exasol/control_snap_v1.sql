@@ -12,6 +12,7 @@
                                 'unit': 'YEAR'} } %} 
 
 #}
+
 {%- if log_logic is not none %}
     {%- for interval in log_logic.keys() %}
         {%- if 'forever' not in log_logic[interval].keys() -%}
@@ -23,24 +24,28 @@
 {%- set v0_relation = ref(control_snap_v0) -%}
 {%- set ns = namespace(forever_status=FALSE) %}
 
-WITH 
-latest_row AS 
-(    
-    SELECT 
-        {{ sdts_alias }} 
-    FROM 
-       {{ v0_relation }} 
+{%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
+
+WITH
+
+latest_row AS (
+
+    SELECT
+        {{ sdts_alias }}
+    FROM {{ v0_relation }}
     ORDER BY {{ sdts_alias }} DESC
     LIMIT 1
-)
-, virtual_logic AS 
-(
+
+),
+
+virtual_logic AS (
+
     SELECT
         c.{{ sdts_alias }},
         c.replacement_sdts,
         c.force_active,
         {%- if log_logic is none %}
-        TRUE AS is_active,
+        TRUE as {{ snapshot_trigger_column }},
         {%- else %}
         CASE 
             WHEN
@@ -55,7 +60,8 @@ latest_row AS
                 {%- endif -%}   
             {%- endif %}
 
-            {%- if 'weekly' in log_logic.keys() %} OR 
+            {%- if 'weekly' in log_logic.keys() %}
+            OR
                 {%- if log_logic['weekly']['forever'] == 'TRUE' -%}
                     {%- set ns.forever_status = 'TRUE' -%}
               (c.is_weekly = TRUE)
@@ -89,19 +95,20 @@ latest_row AS
             {% endif %}
             THEN TRUE
             ELSE FALSE
-        END AS is_active,
+
+        END AS {{ snapshot_trigger_column }},
         {%- endif %}
         CASE
             WHEN l.{{ sdts_alias }} IS NULL THEN FALSE
             ELSE TRUE
         END AS is_latest,
+
         c.caption,
         c.is_hourly,
         c.is_daily,
         c.is_weekly,
         c.is_monthly,
         c.is_yearly,
-        c.comment,
         CASE
             WHEN EXTRACT(YEAR FROM c.{{ sdts_alias }}) = EXTRACT(YEAR FROM CURRENT_DATE) THEN TRUE
             ELSE FALSE
@@ -117,18 +124,23 @@ latest_row AS
         CASE
             WHEN DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_YEARS(CURRENT_DATE,-2) AND ADD_YEARS(CURRENT_DATE,-1) THEN TRUE
             ELSE FALSE
-        END AS is_last_rolling_year
+        END AS is_last_rolling_year,
+        c.comment
     FROM {{ v0_relation }} c
     LEFT JOIN latest_row l
-    ON c.{{ sdts_alias }} = l.{{ sdts_alias }}
+        ON c.{{ sdts_alias }} = l.{{ sdts_alias }}
+
 ),
+
 active_logic_combined AS (
+
+    SELECT 
         {{ sdts_alias }},
         replacement_sdts,
         CASE
-            WHEN force_active AND is_active THEN TRUE
-            WHEN NOT force_active OR NOT is_active THEN FALSE
-        END AS is_active,
+            WHEN force_active AND {{ snapshot_trigger_column }} THEN TRUE
+            WHEN NOT force_active OR NOT {{ snapshot_trigger_column }} THEN FALSE
+        END AS {{ snapshot_trigger_column }},
         is_latest, 
         caption,
         is_hourly,
@@ -144,6 +156,7 @@ active_logic_combined AS (
     FROM virtual_logic
 
 )
+
 SELECT * FROM active_logic_combined
 
 {%- endmacro -%}
