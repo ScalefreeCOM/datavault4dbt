@@ -10,6 +10,7 @@
         snapshot_trigger_column::string The name of the boolean column inside the snapshot tables, that activate/deactivate
                                         single snapshots. If not set, the name defined inside the global variable
                                         'datavault4dbt.snapshot_trigger_column' is used.
+                                        
         sdts::string                    The name of the snapshot date timestamp column inside the snapshot table. If not set,
                                         the name defined inside the global variable 'datavault4dbt.sdts_alias' is used.
 
