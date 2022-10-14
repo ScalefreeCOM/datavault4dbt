@@ -18,7 +18,7 @@ initial_timestamps AS (
         INTERVAL 1 DAY)) AS sdts
 
     {%- if is_incremental() %}
-    WHERE sdts > (SELECT MAX(sdts) FROM {{ this }})
+    WHERE sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif -%}
 
 ),
@@ -26,7 +26,7 @@ initial_timestamps AS (
 enriched_timestamps AS (
 
     SELECT
-        sdts,
+        sdts as {{ sdts_alias }},
         TRUE as force_active,
         sdts as replacement_sdts,
         CONCAT("Snapshot ", DATE(sdts)) as caption,

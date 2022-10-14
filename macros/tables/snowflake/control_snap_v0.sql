@@ -13,15 +13,15 @@ initial_timestamps AS (
     WHERE 
         sdts <= CURRENT_TIMESTAMP
     {%- if is_incremental() %}
-    AND sdts > (SELECT MAX(sdts) FROM {{ this }})
+    AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}
 
 ),
 
 enriched_timestamps AS (
-    
+
     SELECT
-        sdts,
+        sdts as {{ sdts_alias }},
         TRUE as force_active,
         sdts AS replacement_sdts,
         CONCAT('Snapshot ', DATE(sdts)) AS caption,
@@ -47,6 +47,7 @@ enriched_timestamps AS (
         END AS is_yearly,
         NULL AS comment
     FROM initial_timestamps
+
 )
 
 SELECT * FROM enriched_timestamps

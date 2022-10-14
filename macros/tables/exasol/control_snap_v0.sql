@@ -53,9 +53,7 @@ initial_timestamps AS
     FROM 
         initial_timestamps
 )
-SELECT 
-  * 
-FROM 
-  enriched_timestamps
+
+SELECT * FROM enriched_timestamps
 
 {%- endmacro -%}
