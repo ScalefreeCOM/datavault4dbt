@@ -35,12 +35,12 @@
 
     {%- set source_relation = source(source_name, source_table_name) -%}
     {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
+
 {%- elif source_model is not mapping and source_model is not none -%}
 
     {%- set source_relation = ref(source_model) -%}
     {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
 {%- else -%}
-
     {%- set all_source_columns = [] -%}
 {%- endif -%}
 
@@ -342,6 +342,7 @@ hashed_columns AS (
 
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
+
     SELECT
 
     {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} as {{ load_datetime_col_name }},
@@ -468,9 +469,11 @@ ghost_records AS (
     UNION ALL
     SELECT * FROM error_values
 ),
+
 {%- if not include_source_columns -%}
   {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select, exclude_columns_list=source_columns_to_select) %}
 {%- endif -%}
+
 {# Combining the two ghost records with the regular data #}
 columns_to_select AS (
 
@@ -479,7 +482,9 @@ columns_to_select AS (
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
 
     FROM {{ last_cte }}
+
     UNION ALL
+    
     SELECT
 
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
