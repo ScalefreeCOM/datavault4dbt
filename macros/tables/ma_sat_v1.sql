@@ -1,6 +1,6 @@
 
 {#
-    This macro calulates the load end dates for multi active data, based on a multi active attribute. It must be based on a version 0
+    This macro calculates the load end dates for multi active data, based on a multi active attribute. It must be based on a version 0
     multi-active satellite, that would then hold multiple records per hashkey+ldts combination.
 
     Features:
@@ -14,7 +14,7 @@
 
                                                 Examples:
                                                     'contact_phonenumber_0_s'   This satellite would be the version 1 satellite of the underlying
-                                                                                version 0 phonenumber satellite for contacts.
+                                                                                version 0 phone number satellite for contacts.
 
     hashkey::string                             Name of the parent hashkey column inside the version 0 satellite. Would either be the hashkey of a
                                                 hub or a link. Needs to be similar to the 'parent_hashkey' parameter inside the sat_v0 model.
@@ -32,18 +32,18 @@
                                                 Examples:
                                                     'hd_contact_phonenumber_s'      Since we recommend naming the hashdiff column similar to the name
                                                                                     of the satellite entity, just with a prefix, this would be the
-                                                                                    hashdiff column of the phonenumber satellite for contacts.
+                                                                                    hashdiff column of the phone number satellite for contacts.
 
     ma_attribute::string|list of strings        Name of the multi active attribute inside the v0 satellite. This needs to be identified under the
                                                 requirement that the combination of hashkey + ldts + ma_attribute is unique over the entire stage / satellite.
 
                                                 Examples:
-                                                    'phone_type'            Phone numbers are a good example for multi active data. One person could have an unlimited
+                                                    'phone_type'            Phone numbers are a good example of multi active data. One person could have an unlimited
                                                                             number of phone numbers, i. e. a mobile phone number, a home phone number, and a work phone
-                                                                            number. Therefor a contact has one active phone number per type per ldts and the phone_type
+                                                                            number. therefore a contact has one active phone number per type per ldts and the phone_type
                                                                             uniquely identifies a record inside a hashkey+ldts combination.
 
-                                                    ['phone_type', 'iid']   If a contact could have multiple mobile phonenumbers, the phone_type alone would not be
+                                                    ['phone_type', 'iid']   If a contact could have multiple mobile phone numbers, the phone_type alone would not be
                                                                             enough to uniquely identify a record inside a hashkey+ldts combination. Additionally the attribute
                                                                             iid, which is an increasing identifier within a phone_type, is added as a ma_attribute.
 

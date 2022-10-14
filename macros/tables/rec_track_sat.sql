@@ -1,14 +1,14 @@
 {#
     This macro creates a Record Tracking Satellite and is most commonly used to track the appearances of hashkeys (calculated out of business keys)
-    inside one or multiple source systems. This can either be the hashkey of a hub, or the hashkey of a link. Therefor Record Tracking Satellites can
-    be build both for Hubs and Links. Typically if a hub is loaded from three sources, the corresponding Record Tracking Satellite would track
+    inside one or multiple source systems. This can either be the hashkey of a hub, or the hashkey of a link. therefore Record Tracking Satellites can
+    be built both for Hubs and Links. Typically if a hub is loaded from three sources, the corresponding Record Tracking Satellite would track
     the same three sources, since they apparently share the same business definition. For each source a rsrc_static must be defined, and optionally
     the name of the hashkey column inside that source, if it deviates between sources.
 
     Features:
         - Tracks the appearance of a specific hashkey in one or more staging areas
         - Allows source mappings for deviations between the hashkey name inside the stages and the target
-        - Supports mutliple updates per batch and therefor initial loading
+        - Supports multiple updates per batch and therefore initial loading
         - Using a dynamic high-water-mark to optimize loading performance of multiple loads
         - Can either track link- or hub-hashkeys
 
@@ -31,9 +31,9 @@
 
                                         {'stage_contact': {'rsrc_static': '*/SALESFORCE/Contact/*'},            This tracks the appearance of one hub hashkey that is loaded from the two source
                                         'stage_partner': {'hk_column': 'hk_partner_h',                          models "stage_contact" and "stage_partner". For "stage_account" no 'hk_column' is defined,
-                                                          'rsrc_static': '*/SALESFORCE/Partners/*'}}            and therefor the input of the upper level variable 'tracked_hashkey' will be used.
+                                                          'rsrc_static': '*/SALESFORCE/Partners/*'}}            and therefore the input of the upper level variable 'tracked_hashkey' will be used.
                                                                                                                 For "stage_partner" the name of the hashkey column differs from the upper level definition
-                                                                                                                and therefor this other name is set under the variable 'hk_column.'
+                                                                                                                and therefore this other name is set under the variable 'hk_column.'
 
                                                                                                                 The 'rsrc_static' attribute defines a STRING or a list of strings that will always be 
                                                                                                                 the same over all loads of one source.
@@ -47,7 +47,7 @@
                                                                                                                 the variable part of the rsrc values.
                                                                                                                 If my rsrc would be the same over all loads, then it might look something like
                                                                                                                 this: 'SAP/Accounts/'. Here everything would be static over all loads and
-                                                                                                                therefor I would set rsrc_static to 'SAP/Accounts/' without any wildcards in place.
+                                                                                                                therefore I would set rsrc_static to 'SAP/Accounts/' without any wildcards in place.
                                                                                                                 If the rsrc_static is defined as solely the wildcard '*' for any source then 
                                                                                                                 this record source performance lookup will not be executed. 
                                                                                                                 If the rsrc_static is not set in one of the source models, then the assumption is made that

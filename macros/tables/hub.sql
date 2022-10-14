@@ -4,7 +4,7 @@
 
     Features:
         - Loadable by multiple sources
-        - Supports multiple updates per batch and therefor initial loading
+        - Supports multiple updates per batch and therefore initial loading
         - Can use a dynamic high-water-mark to optimize loading performance of multiple loads
         - Allows source mappings for deviations between source column names and hub column names
 
@@ -22,7 +22,7 @@
                                                 parameter then.
 
                                                 Examples:
-                                                    'account_key'                       This hub only has one business key and therefor only one is defined here.
+                                                    'account_key'                       This hub only has one business key and therefore only one is defined here.
 
                                                     ['account_key', 'account_number']   This hub has two business keys which are both defined here.
 
@@ -38,14 +38,14 @@
 
                                     {'stage_account': {'bk_columns': 'account_key',                         This would create a hub loaded from two sources, which also is not uncommon.
                                                        'rsrc_static': '*/SAP/Accounts/*'},                  It again uses the model 'stage_account' but in this case the hashkey 'hk_account_h'
-                                     'stage_partner': {'bk_columns': 'partner_key',                         inside it was only calculated out of one business key. Therefor you see that
-                                                       'rsrc_static': '*/SALESFORCE/Partners/*',            'bk_columns' can either be a string or a list. It just have to match exactly the
+                                     'stage_partner': {'bk_columns': 'partner_key',                         inside it was only calculated out of one business key. therefore you see that
+                                                       'rsrc_static': '*/SALESFORCE/Partners/*',            'bk_columns' can either be a string or a list. It just has to match exactly the
                                                        'hk_column': 'hk_partner_h'}}                        attributes that were used to calculate the hashkey inside that source.
                                                                                                             Additionally the model 'stage_partner' is used, with the assumption that both sources
-                                                                                                            share the same definition of an account, just under different names. Therefor
+                                                                                                            share the same definition of an account, just under different names. Therefore
                                                                                                             a different business key column is defined as 'bk_columns', but the number of
                                                                                                             business key columns must be the same over all sources, which is the case here.
-                                                                                                            The hashkey column inside this stage is called 'hk_partner_h' and is therefor defined
+                                                                                                            The hashkey column inside this stage is called 'hk_partner_h' and is therefore defined
                                                                                                             under 'hk_column'. If it would not be defined, the macro would always search for
                                                                                                             a column called similar to the 'hashkey' parameter defined one level above.
 

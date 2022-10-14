@@ -18,7 +18,7 @@
                                             '!SAP.Accounts'                                 Uses the static string 'SAP.Customers' as rsrc.
                                             'CONCAT(source_system, '||', source_object)'    Applies the SQL function 'CONCAT' to concatenate two source columns.
 
-    source_model::string | dictionary   Can be just a string holding the name of the refered dbt model to use as a source. But if the 'source' functionality inside
+    source_model::string | dictionary   Can be just a string holding the name of the referred dbt model to use as a source. But if the 'source' functionality inside
                                         the .yml file is used, it must be a dictionary with 'source_name': 'source_table'.
 
                                         Examples:
@@ -26,7 +26,7 @@
                                             {'source_data': 'source_account'}       The source model that you want to use for the stage is available as a source defined inside the .yml file
                                                                                     with the name 'source_data', and you select the table 'source_account' out of that source.
 
-    include_source_columns::boolean     Defines if all columns from the refered source table should be included in the result table, or if only the added columns should
+    include_source_columns::boolean     Defines if all columns from the referred source table should be included in the result table, or if only the added columns should
                                         be part of the result table. By default the source columns should be included.
 
     hashed_columns::dictionary          Defines the names and input for all hashkeys and hashdiffs to create. The key of each hash column is the name of the hash column.
@@ -45,7 +45,7 @@
 
                                         Examples:
                                             {'conversion_duration': {'value': 'TIMESTAMP_DIFF(conversion_date, created_date, DAY)',     Creates three derived columns. The column 'conversion_duration' calculates
-                                                                     'datatype': 'INT64'},                                              the amount of days between two columns available inside the source data.
+                                                                     'datatype': 'INT64'},                                              the number of days between two columns available inside the source data.
                                              'country_isocode':     {'value': '!GER',                                                   The column 'country_isocode' inserts the static string 'EUR' for all rows.
                                                                      'datatype': 'STRING'},                                             The column 'account_name' duplicates an already existing column and gives
                                              'account_name':        {'value': 'name',                                                   it another name. More derived columns can be added as other keys of
@@ -58,12 +58,12 @@
                                             'edwSequence'       Uses the column 'edwSequence' that is available inside the source data.
 
     prejoined_columns::dictionary       Defines information about information that needs to be prejoined. Most commonly used to create links, when the source data does not
-                                        hold the Business Key, but the technical key of the refered object. The values of the dict are the aliases you want to give the prejoined
+                                        hold the Business Key, but the technical key of the referred object. The values of the dict are the aliases you want to give the prejoined
                                         columns. Typically, but not always, this should be the same as the name of the prejoined column inside the prejoined entity. For each prejoined column
-                                        a few things need to be defined inside another dictionary now. 'src_name' holding the name of the source of the prejoined entity, as defined
-                                        in the .yml file. 'src_table' holds the name of the prejoined table, as defined inside the .yml file. 'bk' Holds the name of the business key column
+                                        a few things need to be defined inside another dictionary now. 'src_name' holds the name of the source of the prejoined entity, as defined
+                                        in the .yml file. 'src_table' holds the name of the prejoined table, as defined inside the .yml file. 'bk' holds the name of the business key column
                                         inside the prejoined table. 'this_column_name' holds the name of the column inside the original source data, that refers to the prejoined table.
-                                        'ref_column_name' holds the name of the column, that is refered by 'this_column_name' inside the prejoined table.
+                                        'ref_column_name' holds the name of the column, that is referred by 'this_column_name' inside the prejoined table.
 
                                         Example:
                                             {'contractnumber':  {'src_name': 'source_data',                 Prejoins with two other entities to extract one Business Key each. Creates a
@@ -94,7 +94,7 @@
 
                                         Example: 
                                             {'multi_active_key': 'phonetype',               This source data has a column called 'phonetype' that holds the multi-active key. 'hk_contact_h' is defined as the main hashkey. 
-                                             'main_hashkey_column': 'hk_contact_h'}         That means, that the combination of main_hashkey, ldts and'phonetype' is unique inside the source system.    
+                                             'main_hashkey_column': 'hk_contact_h'}         That means, that the combination of main_hashkey, ldts and 'phonetype' is unique inside the source system.    
 
                                             {'multi_active_key': ['phonetype', 'company'],  This source data comes with two multi-active keys. The combination of those two, the main_hashkey and ldts is unique 
                                              'main_hashkey_column': 'hk_contact_h'}         inside the source system.          

@@ -62,10 +62,10 @@
 WITH
 
 {%- if is_incremental() -%}
-{# Get all distinct link hashkeys out of the existing link for later incremental logic. #}
+{# Get all link hashkeys out of the existing link for later incremental logic. #}
     distinct_target_hashkeys AS (
 
-        SELECT DISTINCT
+        SELECT
         {{ link_hashkey }}
         FROM {{ this }}
 
@@ -116,7 +116,7 @@ WITH
         {%- if source_models.keys() | length > 1 %}
 
         rsrc_static_union AS (
-            {#  Create one unionized table over all source, will be the same as the already existing
+            {#  Create one unionized table over all sources. It will be the same as the already existing
                 nh_link, but extended by the rsrc_static column. #}
 
             {% for source_model in source_models.keys() %}

@@ -1,12 +1,12 @@
 {#
-    This macro creates a PIT table to gather snapshot based information of one hub and its surrounding satellites.
-    For this macro to work, a snapshot table is required, that has a trigger collumn to identify which snapshots
+    This macro creates a PIT table to gather snapshot based information about one hub and its surrounding satellites.
+    For this macro to work, a snapshot table is required, that has a trigger column to identify which snapshots
     to include in the PIT table. The easiest way to create such a snapshot table is to use the control_snap macros
     provided by this package.
 
     Features:
         - Tracks the active satellite entries for each entry in a Hub for each snapshot
-        - Strongly improves performance if upstream queries requires many JOIN operations
+        - Strongly improves performance if upstream queries require many JOIN operations
         - Creates a unique dimension key to optimize loading performance of incremental loads
         - Allows to insert a static string as record source column, matching business vault definition of a record source
 
@@ -18,7 +18,7 @@
 
     tracked_entity::string              Name of the tracked Hub entity. Must be available as a model inside the dbt project.
 
-    hashkey::string                     The name of the hashkey column inside the previously refered Hub entity.
+    hashkey::string                     The name of the hashkey column inside the previously referred Hub entity.
 
     sat_names::list of strings          A list of all the satellites that should be included in this PIT table. Can only be satellites
                                         that are attached to the tracked Hub, and should typically include all those satellites.

@@ -6,7 +6,7 @@
     If a stage model is defined as multi-active, all satellites out of that stage model need to be implemented as multi-active satellites.
 
     Features:
-        - Can handle multiple updates per batch, without loosing intermediate changes. Therefor initial loading is supported.
+        - Can handle multiple updates per batch, without losing intermediate changes. therefore initial loading is supported.
         - Using a dynamic high-water-mark to optimize loading performance of multiple loads
 
     Parameters:
@@ -41,7 +41,7 @@
                                                                             is treated as the multi-active key.
 
     src_payload::list of strings            A list of all the descriptive attributes that should be included in this satellite. Needs to be the
-                                            columns that are feeded into the hashdiff calculation of this satellite. Do not include the multi-active
+                                            columns that are fed into the hashdiff calculation of this satellite. Do not include the multi-active
                                             key in the payload of a multi-active satellite, it is included automatically!
 
                                             Examples:

@@ -1,4 +1,4 @@
-{# This is the default version of the stage macro , designed for Snowflake. #}
+{# This is the default version of the stage macro, designed for Snowflake. #}
 
 {%- macro snowflake__stage(include_source_columns,
                 ldts,

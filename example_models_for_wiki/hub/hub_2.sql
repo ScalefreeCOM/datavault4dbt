@@ -40,7 +40,7 @@ source_models:
     share the same definition of an account, just under different names. Therefor
     a different business key column is defined as 'bk_columns', but the number of
     business key columns must be the same over all sources, which is the case here. 
-    The hashkey column inside this stage is called 'hk_partner_h' and is therefor defined
+    The hashkey column inside this stage is called 'hk_partner_h' and is therefore defined
     under 'hk_column'. If it would not be defined, the macro would always search for
     a column called similar to the 'hashkey' parameter defined one level above.
 
