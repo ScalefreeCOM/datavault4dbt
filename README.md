@@ -1,5 +1,7 @@
 # datavault4dbt by [Scalefree International GmbH](https://www.scalefree.com)
 
+![datavault4dbt-logo_keyvisual](https://user-images.githubusercontent.com/81677440/195860893-435b5faa-71f1-4e01-969d-3593a808daa8.png)
+
 [<img src="https://user-images.githubusercontent.com/78537603/191483803-8cd4fc72-54a1-45f6-ab39-d798ec83e4c9.jpg" width=50% align=right>](https://www.scalefree.com)
 
 ---
