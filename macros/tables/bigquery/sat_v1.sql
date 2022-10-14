@@ -21,28 +21,28 @@ end_dated_source AS (
 
     SELECT
         {{ hashkey }},
+        {{ hashdiff }},
         {{ src_rsrc }},
         {{ src_ldts }},
         COALESCE(LEAD(TIMESTAMP_SUB({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }},
-        {{ hashdiff }},
         {{ datavault4dbt.print_list(source_columns_to_select) }}
     FROM {{ source_relation }}
 
 )
 
-SELECT 
-{{ hashkey }},
-{{ src_rsrc }},
-{{ src_ldts }},
-{{ ledts_alias }},
-{{ hashdiff }},
-{%- if add_is_current_flag %}
-    CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-    THEN TRUE
-    ELSE FALSE
-    END AS {{ is_current_col_alias }},
-{% endif -%}
-{{ datavault4dbt.print_list(source_columns_to_select) }}
+SELECT
+    {{ hashkey }},
+    {{ hashdiff }},
+    {{ src_rsrc }},
+    {{ src_ldts }},
+    {{ ledts_alias }},
+    {%- if add_is_current_flag %}
+        CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+        THEN TRUE
+        ELSE FALSE
+        END AS {{ is_current_col_alias }},
+    {% endif -%}
+    {{ datavault4dbt.print_list(source_columns_to_select) }}
 FROM end_dated_source
 
 {%- endmacro -%}
