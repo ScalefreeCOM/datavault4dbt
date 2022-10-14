@@ -9,7 +9,9 @@
 
         snapshot_trigger_column::string The name of the boolean column inside the snapshot tables, that activate/deactivate
                                         single snapshots. If not set, the name defined inside the global variable
-                                        'datavault4dbt.snapshot_trigger_column' is used. 
+                                        'datavault4dbt.snapshot_trigger_column' is used.
+        sdts::string                    The name of the snapshot date timestamp column inside the snapshot table. If not set,
+                                        the name defined inside the global variable 'datavault4dbt.sdts_alias' is used.
 
     Example Usage:
 
@@ -21,8 +23,11 @@
 #}
 
 
-{%- macro clean_up_pit(snapshot_relation, snapshot_trigger_column=none) -%}
+{%- macro clean_up_pit(snapshot_relation, snapshot_trigger_column=none, sdts=none) -%}
 
+{%- if not datavault4dbt.is_something(sdts) -%}
+    {%- set sdts = var('datavault4dbt.sdts_alias', 'sdts') -%}
+{%- endif -%}
 {%- if not datavault4dbt.is_something(snapshot_trigger_column) -%}
     {%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
 {%- endif -%}
@@ -31,28 +36,28 @@
 
 {%- endmacro -%}
 
-{%- macro default__clean_up_pit(snapshot_relation, snapshot_trigger_column) -%}
+{%- macro default__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
 DELETE {{ this }} pit
-WHERE pit.sdts not in (SELECT sdts FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
+WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
 {{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
 
 {%- endmacro -%}
 
-{%- macro snowflake__clean_up_pit(snapshot_relation, snapshot_trigger_column) -%}
+{%- macro snowflake__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
 DELETE FROM {{ this }} pit
-WHERE pit.sdts NOT IN (SELECT sdts FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
+WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
 {{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
 
 {%- endmacro -%}
 
-{%- macro exasol__clean_up_pit(snapshot_relation, snapshot_trigger_column) -%}
+{%- macro exasol__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
 DELETE FROM {{ this }} pit
-WHERE pit.sdts NOT IN (SELECT sdts FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
+WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
 {{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
 
