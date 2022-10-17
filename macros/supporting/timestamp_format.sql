@@ -8,6 +8,7 @@
 {%- macro default__timestamp_format() %}
 
 {%- set global_var = var('datavault4dbt.timestamp_format', none) -%}
+{%- set timestamp_format = '' -%}
 
 {%- if global_var is mapping -%}
     {%- if 'bigquery' in global_var.keys()|map('lower') -%}
@@ -31,6 +32,7 @@
 {%- macro snowflake__timestamp_format() %}
 
 {%- set global_var = var('datavault4dbt.timestamp_format', none) -%}
+{%- set timestamp_format = '' -%}
 
 {%- if global_var is mapping -%}
     {%- if 'snowflake' in global_var.keys()|map('lower') -%}
@@ -54,6 +56,7 @@
 {%- macro exasol__timestamp_format() %}
 
 {%- set global_var = var('datavault4dbt.timestamp_format', none) -%}
+{%- set timestamp_format = '' -%}
 
 {%- if global_var is mapping -%}
     {%- if 'exasol' in global_var.keys()|map('lower') -%}

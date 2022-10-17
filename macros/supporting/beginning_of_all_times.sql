@@ -8,6 +8,7 @@
 {%- macro default__beginning_of_all_times() %}
 
 {%- set global_var = var('datavault4dbt.beginning_of_all_times', none) -%}
+{%- set beginning_of_all_times = '' -%}
 
 {%- if global_var is mapping -%}
     {%- if 'bigquery' in global_var.keys()|map('lower') -%}
@@ -31,6 +32,7 @@
 {%- macro snowflake__beginning_of_all_times() %}
 
 {%- set global_var = var('datavault4dbt.beginning_of_all_times', none) -%}
+{%- set beginning_of_all_times = '' -%}
 
 {%- if global_var is mapping -%}
     {%- if 'snowflake' in global_var.keys()|map('lower') -%}
@@ -54,6 +56,7 @@
 {%- macro exasol__beginning_of_all_times() %}
 
 {%- set global_var = var('datavault4dbt.beginning_of_all_times', none) -%}
+{%- set beginning_of_all_times = '' -%}
 
 {%- if global_var is mapping -%}
     {%- if 'exasol' in global_var.keys()|map('lower') -%}
