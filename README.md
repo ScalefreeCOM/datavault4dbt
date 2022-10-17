@@ -19,7 +19,7 @@ We are working continuously at high pressure to adapt the package for large vari
 Since the package is listed on [dbt Hub](https://hub.getdbt.com/), you can simply add the following lines to your packages.yml. 
 
       - package: scalefree/datavault4dbt
-        version: 0.1.0
+        version: 1.0.0
 
 For further information on how to install packages in dbt, please visit the following link: 
 [https://docs.getdbt.com/docs/building-a-dbt-project/package-management](https://docs.getdbt.com/docs/building-a-dbt-project/package-management#how-do-i-add-a-package-to-my-project)
@@ -41,5 +41,6 @@ The datavault4dbt package provides macros for Staging and Creation of all DataVa
 
 [<img src="https://user-images.githubusercontent.com/81677440/195876189-7bb21215-26f1-428a-9a0f-5fb333a2747f.jpg" width=50% align=right>](https://www.scalefree.com)
 
-
+## Contact
+For questions, feedback, etc. reach out to us via datavault4dbt@scalefree.com!
 
