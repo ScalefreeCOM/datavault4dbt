@@ -1,6 +1,6 @@
 {%- macro timestamp_format() %}
 
-    return({{ adapter.dispatch('datavault4dbt', 'timestamp_format')() }})
+    {{ return(adapter.dispatch('timestamp_format', 'datavault4dbt')()) }}
 
 {%- endmacro -%}
 

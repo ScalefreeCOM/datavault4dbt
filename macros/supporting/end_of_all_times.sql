@@ -1,6 +1,6 @@
 {%- macro end_of_all_times() %}
 
-    return({{ adapter.dispatch('datavault4dbt', 'end_of_all_times')() }})
+    {{ return(adapter.dispatch('end_of_all_times', 'datavault4dbt')()) }}
 
 {%- endmacro -%}
 
