@@ -15,9 +15,10 @@
         {% set timestamp_format = global_var['bigquery'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_format' to a dictionary, but have not included the adapter you use (bigquery) as a key. Applying the default value." -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_format' to a dictionary, but have not included the adapter you use (bigquery) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set timestamp_format = "%Y-%m-%dT%H-%M-%S" -%}
+    {% endif %}
 {%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
     {%- set timestamp_format = global_var -%}
 {%- else -%}
@@ -39,9 +40,10 @@
         {% set timestamp_format = global_var['snowflake'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_format' to a dictionary, but have not included the adapter you use (snowflake) as a key. Applying the default value." -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_format' to a dictionary, but have not included the adapter you use (snowflake) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set timestamp_format = "YYYY-MM-DDTHH24:MI:SS" -%}
+    {% endif %}
 {%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
     {%- set timestamp_format = global_var -%}
 {%- else -%}
@@ -63,9 +65,10 @@
         {% set timestamp_format = global_var['exasol'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_format' to a dictionary, but have not included the adapter you use (exasol) as a key. Applying the default value." -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_format' to a dictionary, but have not included the adapter you use (exasol) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set timestamp_format = "YYYY-mm-dd HH:MI:SS" -%}
+    {% endif %}
 {%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
     {%- set timestamp_format = global_var -%}
 {%- else -%}
