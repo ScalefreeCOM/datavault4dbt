@@ -130,7 +130,7 @@ WITH
             UNION ALL
             {% endif -%}
             {%- endfor %}
-            {%- set ns.last_cte = "rsrc_static_union".format(source_number) -%}
+            {%- set ns.last_cte = "rsrc_static_union" -%}
         ),
 
         {%- endif %}
