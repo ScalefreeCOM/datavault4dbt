@@ -64,7 +64,7 @@
         {%- else -%}
         
             {%- if datavault4dbt.is_expression(obj) -%}
-
+            
                 {{- return(false) -}}
 
             {%- else -%}
