@@ -2,7 +2,11 @@
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'HASHTYPE') -%}
-{%- set hash_alg, unknown_key, error_key = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
+
 {%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
 {%- set hashkey = hashkey | upper -%}
 {%- set dimension_key = dimension_key | upper -%}
@@ -35,6 +39,7 @@ existing_dimension_keys AS (
 pit_records AS (
 
     SELECT
+        
         {% if datavault4dbt.is_something(pit_type) -%}
             {{ datavault4dbt.as_constant(pit_type) }} as type,
         {%- endif %}
@@ -47,7 +52,7 @@ pit_records AS (
         te.{{ hashkey }},
         snap.{{ sdts }},
         {% for satellite in sat_names %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ unknown_key }}' AS {{ hash_dtype }})) AS HK_{{ satellite }},
+            COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ unknown_key }}' AS {{ hash_dtype }})) AS hk_{{ satellite }},
             COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
             {{- "," if not loop.last }}
         {% endfor %}
@@ -78,11 +83,12 @@ pit_records AS (
 
 records_to_insert AS (
 
-    SELECT DISTINCT *    
+    SELECT *
     FROM pit_records
     {%- if is_incremental() %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
-    {% endif %}
+    {% endif -%}
+
 )
 
 SELECT * FROM records_to_insert

@@ -1,4 +1,4 @@
-{%- macro default__pit(pit_type, tracked_entity, hashkey, sat_names, ldts, custom_rsrc, ledts, sdts, snapshot_relation, snapshot_trigger_column, dimension_key) -%}
+{%- macro default__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key,snapshot_trigger_column=none, custom_rsrc=none, pit_type=none) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
@@ -10,6 +10,13 @@
 {%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{%- if datavault4dbt.is_something(pit_type) -%}
+    {%- set hashed_cols = [pit_type, datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+{%- else -%}
+    {%- set hashed_cols = [datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+{%- endif -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -37,32 +44,38 @@ pit_records AS (
         {% if datavault4dbt.is_something(custom_rsrc) -%}
         '{{ custom_rsrc }}' as {{ rsrc }},
         {%- endif %}
-        {{ datavault4dbt.hash(columns=[datavault4dbt.as_constant(pit_type), datavault4dbt.prefix([hashkey], 'te'), datavault4dbt.prefix(['sdts'], 'snap')],
+        {{ datavault4dbt.hash(columns=hashed_cols,
                     alias=dimension_key,
                     is_hashdiff=false)   }} ,
         te.{{ hashkey }},
-        snap.sdts,
+        snap.{{ sdts }},
         {% for satellite in sat_names %}
             COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ unknown_key }}' AS {{ hash_dtype }})) AS hk_{{ satellite }},
-            COALESCE({{ satellite }}.{{ ldts }}, CAST('{{ beginning_of_all_times }}' AS {{ datavault4dbt.type_timestamp() }})) AS {{ ldts }}_{{ satellite }}
+            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
             {{- "," if not loop.last }}
-        {% endfor %}
+        {%- endfor %}
 
     FROM
             {{ ref(tracked_entity) }} te
         FULL OUTER JOIN
             {{ ref(snapshot_relation) }} snap
-            ON snap.{{ snapshot_trigger_column }} = true
+            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
+                ON snap.{{ snapshot_trigger_column }} = true
+            {% else -%}
+                ON 1=1
+            {%- endif %}
         {% for satellite in sat_names %}
         {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
         LEFT JOIN {{ ref(satellite) }}
             ON
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
                 {%- if ledts|string in sat_columns %}
-                    AND snap.sdts BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
+                    AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
                 {%- endif -%}
         {% endfor %}
-    WHERE snap.{{ snapshot_trigger_column }}
+    {%- if datavault4dbt.is_something(snapshot_trigger_column) -%}
+        WHERE snap.{{ snapshot_trigger_column }}
+    {%- endif %}
 
 ),
 
