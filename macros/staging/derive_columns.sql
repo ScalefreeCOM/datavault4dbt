@@ -15,7 +15,7 @@
 
 {%- if columns is mapping and columns is not none -%}
 
-    {#- Add aliases of derived columns to excludes and full SQL to includes -#}
+    {#- Add aliases of derived columns to exclude and full SQL to include -#}
     {%- for col in columns -%}
 
         {%- if datavault4dbt.is_list(columns[col]['value']) -%}

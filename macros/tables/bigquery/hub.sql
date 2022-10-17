@@ -71,10 +71,10 @@ WITH
 
 
 {% if is_incremental() -%}
-{# Get all distinct target hashkeys out of the existing hub for later incremental logic. #}
+{# Get all target hashkeys out of the existing hub for later incremental logic. #}
     distinct_target_hashkeys AS (
 
-        SELECT DISTINCT
+        SELECT
             {{ hashkey }}
         FROM {{ this }}
 
@@ -125,7 +125,7 @@ WITH
         {%- if source_models.keys() | length > 1 %}
 
         rsrc_static_union AS (
-            {#  Create one unionized table over all source, will be the same as the already existing
+            {#  Create one unionized table over all sources, will be the same as the already existing
                 hub, but extended by the rsrc_static column. #}
             {% for source_model in source_models.keys() %}
             {%- set source_number = loop.index | string -%}

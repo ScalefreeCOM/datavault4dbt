@@ -1,5 +1,4 @@
-{{ config(materialized='incremental',
-          unique_key=['hk_account_h', 'hd_account_s', 'ldts']) }}
+{{ config(materialized='incremental') }}
 
 {%- set yaml_metadata -%}
 parent_hashkey: 'hk_account_h'

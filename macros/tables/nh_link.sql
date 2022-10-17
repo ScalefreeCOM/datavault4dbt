@@ -1,13 +1,13 @@
 {#
     This macro creates a non-historized (former transactional) link entity, connecting two or more entities, or a transactional fact of one entity. It can be loaded by one or
-    more source staging tables, if multiple sources share the same buisness definitions. If multiple sources are used, it is requried that they all have the same
+    more source staging tables, if multiple sources share the same business definitions. If multiple sources are used, it is requried that they all have the same
     number of foreign keys inside, otherwise they would not share the same business definition of that non-historized link.
 
     In the background a non-historized link uses exactly the same loading logic as a regular link, but adds the descriptive attributes as additional payload.
 
     Parameters:
 
-    link_hashkey::string                    Name of the non-historized link hashkey column inside the stage. Should got calculated out of all business keys inside
+    link_hashkey::string                    Name of the non-historized link hashkey column inside the stage. Should get calculated out of all business keys inside
                                             the link.
 
                                             Examples:
@@ -18,7 +18,7 @@
                                             be available inside the stage area.
 
                                             Examples:
-                                                ['hk_transaction_h', 'hk_account_h']    The non-historized link between transaction and account needs to containt both the
+                                                ['hk_transaction_h', 'hk_account_h']    The non-historized link between transaction and account needs to contain both the
                                                                                         hashkey of transaction and account to enable joins to the corresponding hub entities.
 
     payload::list of strings                A list of all the descriptive attributes that should be the payload of this non-historized link. If the names differ between source
@@ -41,10 +41,10 @@
 
                                                 {'stage_account': {'rsrc_static': '*/SAP/Accounts/*'},                  This would create a link loaded from two sources, which also is not uncommon.
                                                  'stage_partner': {'fk_columns': ['hk_partner_h', 'hk_customer_h'],     The source model 'stage_account' has no 'fk_columns' and 'link_hk' defined,
-                                                                   'rsrc_static': '*/SALESFORCE/Partners/*',            therefor it uses the values set in the upper-level variables 'link_hashkey'
-                                                                   'link_hk': 'hk_partner_customer_l',                  and 'foreign_hashkeys'. Aditionally the model 'stage_partner' is used, with
+                                                                   'rsrc_static': '*/SALESFORCE/Partners/*',            therefore it uses the values set in the upper-level variables 'link_hashkey'
+                                                                   'link_hk': 'hk_partner_customer_l',                  and 'foreign_hashkeys'. Additionally the model 'stage_partner' is used, with
                                                                    'payload': ['currency_code', 'amount',               the assumption that both sources share the same definition of an account, just
-                                                                               'intended_use', 'date']}}                under different names. Therefor a different link hashkey column is defined as
+                                                                               'intended_use', 'date']}}                under different names. therefore a different link hashkey column is defined as
                                                                                                                         'link_hk', but the number of foreign key columns defined in 'fk_columns' must be
                                                                                                                         the same over all sources, which is the case here. 'payload' is also set to names
                                                                                                                         that differ from the payload defined in the upper level. Important here is that the

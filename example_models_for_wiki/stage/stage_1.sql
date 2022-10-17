@@ -22,7 +22,7 @@ derived_columns:
         datatype: 'STRING'
     account_name:
         value: 'name'
-        datatype: 'String'
+        datatype: 'STRING'
 prejoined_columns:
     contractnumber:
         src_name: 'source_data'

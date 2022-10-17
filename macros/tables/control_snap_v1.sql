@@ -1,10 +1,10 @@
 {#
     This macro creates a view that extends an existing control_snap_v0 table by dynamically changing information.
-    These information include a logic to implement logarithmic snapshots. That means that the further i look into
+    This information include a logic to implement logarithmic snapshots. That means that the further i look into
     the past, the more coarsely the snapshots should be granulated. For example i want to keep daily snapshots
-    for the past 30 days, but i am not interested in daily snapshots for the past 10 years, and therefor i only
-    keep weekly snaphots for the past 6 months, monthly snapshots for the past 3 years, and yearly snapshots for
-    ever. This procedure strongly reduces the number of active snapshots, and therefor also the number of rows,
+    for the past 30 days, but i am not interested in daily snapshots for the past 10 years, and therefore I only
+    keep weekly snaphots for the past 6 months, monthly snapshots for the past 3 years, and yearly snapshots forever. 
+    This procedure strongly reduces the number of active snapshots, and therefore also the number of rows,
     and the required computation inside all PITs and Bridges. This logic is optional and would be captured in a
     boolean column called 'is_active'. It is overwritten by the force_active column in the v0 snapshot table.
     If a sdts is deactivated there, the log_logic does not reactivate it.
@@ -18,9 +18,9 @@
         is_latest::boolean                  Captures if a sdts is the latest one inside the snapshot table. There
                                             is always only one snapshot inside the view, that has TRUE here.
 
-        is_current_year::boolean            Captures if a sdts is part of the current calender year.
+        is_current_year::boolean            Captures if a sdts is part of the current calendar year.
 
-        is_last_year::boolean               Captures if a sdts is part of the last calender year.
+        is_last_year::boolean               Captures if a sdts is part of the last calendar year.
 
         is_rolling_year::boolean            Captures if a sdts is inside the past year, starting from the current date.
 
@@ -52,8 +52,8 @@
                                                 'weekly': {'duration': 1,               years and yearly snapshots forever.
                                                             'unit': 'YEAR'},            If 'forever' is not defined here, it
                                                 'monthly': {'duration': 5,              is automatically set to 'FALSE'.
-                                                            'unit': 'YEAR'},            Therefor it could have been left out
-                                                'yearly': {'forever': 'TRUE'} }         in the configurtaion for daily snapshots.
+                                                            'unit': 'YEAR'},            therefore it could have been left out
+                                                'yearly': {'forever': 'TRUE'} }         in the configuration for daily snapshots.
 
                                                 {'daily': {'duration': 90,              This would keep daily snapshots for 90
                                                            'unit': 'DAY'},              days, and monthly snapshots forever.

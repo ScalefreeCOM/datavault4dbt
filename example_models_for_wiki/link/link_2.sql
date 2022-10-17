@@ -30,4 +30,4 @@ source_models:
 
 ---------------------------------------------------------------------------
 For Description please transfer everything from the original macro file. Multi Source Link, with the second link having different column names.
-Therefor "link_hk" and "fk_columns" is defined for that source. -> Source mapping
+therefore "link_hk" and "fk_columns" is defined for that source. -> Source mapping

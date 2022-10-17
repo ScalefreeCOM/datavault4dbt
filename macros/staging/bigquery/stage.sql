@@ -1,4 +1,4 @@
-{# This is the default version of the stage macro , designed for Google BigQuery. #}
+{# This is the default version of the stage macro, designed for Google BigQuery. #}
 
 {%- macro default__stage(include_source_columns,
                 ldts,

@@ -5,7 +5,7 @@
     Each satellite can only be loaded by one source model, since we typically recommend a satellite split by source system.
 
     Features:
-        - Can handle multiple updates per batch, without loosing intermediate changes. Therefor initial loading is supported.
+        - Can handle multiple updates per batch, without losing intermediate changes. therefore initial loading is supported.
         - Using a dynamic high-water-mark to optimize loading performance of multiple loads
 
     Parameters:
@@ -29,7 +29,7 @@
                                                                     hashdiff column of the data satellite for account.
 
     src_payload::list of strings    A list of all the descriptive attributes that should be included in this satellite. Needs to be the
-                                    columns that are feeded into the hashdiff calculation of this satellite.
+                                    columns that are fed into the hashdiff calculation of this satellite.
 
                                     Examples:
                                         ['name', 'address', 'country', 'phone', 'email']    This satellite would hold the columns 'name',
