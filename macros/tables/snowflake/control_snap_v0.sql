@@ -3,8 +3,9 @@
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 WITH 
-initial_timestamps AS 
-(
+
+initial_timestamps AS (
+    
     SELECT
         DATEADD(DAY, SEQ4(), {{ datavault4dbt.string_to_timestamp(timestamp_format, start_date | replace('00:00:00','') ~ daily_snapshot_time) }})::TIMESTAMP AS sdts
     FROM 
@@ -12,13 +13,16 @@ initial_timestamps AS
     WHERE 
         sdts <= CURRENT_TIMESTAMP
     {%- if is_incremental() %}
-    AND sdts > (SELECT MAX(sdts) FROM {{ this }})
+    AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}
-)
-, enriched_timestamps AS 
-(
+
+),
+
+enriched_timestamps AS (
+
     SELECT
-        sdts,
+        sdts as {{ sdts_alias }},
+        TRUE as force_active,
         sdts AS replacement_sdts,
         CONCAT('Snapshot ', DATE(sdts)) AS caption,
         CASE
@@ -42,12 +46,10 @@ initial_timestamps AS
             ELSE FALSE
         END AS is_yearly,
         NULL AS comment
-    FROM 
-        initial_timestamps
+    FROM initial_timestamps
+
 )
-SELECT 
-  * 
-FROM 
-  enriched_timestamps
+
+SELECT * FROM enriched_timestamps
 
 {%- endmacro -%}

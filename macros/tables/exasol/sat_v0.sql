@@ -40,18 +40,17 @@ source_data AS (
     {%- endif %}
 ),
 
-{% if is_incremental() -%}
 {# Get the latest record for each parent hashkey in existing sat, if incremental. #}
+{%- if is_incremental() %}
 latest_entries_in_sat AS (
 
     SELECT
         {{ parent_hashkey }},
-        {{ ns.hdiff_alias }}
-    FROM {{ this }}
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1
-
-    ),
-
+        {{ src_hashdiff }}
+    FROM 
+        {{ this }}
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
+),
 {%- endif %}
 
 {#
@@ -70,7 +69,7 @@ deduplicated_numbered_source AS (
     FROM source_data
     QUALIFY
         CASE
-            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
+            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) THEN FALSE
             ELSE TRUE
         END
 ),
