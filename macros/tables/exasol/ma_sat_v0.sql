@@ -1,4 +1,4 @@
-{%- macro default__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model) -%}
+{%- macro exasol__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
