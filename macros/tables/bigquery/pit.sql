@@ -73,7 +73,7 @@ pit_records AS (
                     AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
                 {%- endif -%}
         {% endfor %}
-    {%- if datavault4dbt.is_something(snapshot_trigger_column) -%}
+    {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
         WHERE snap.{{ snapshot_trigger_column }}
     {%- endif %}
 
