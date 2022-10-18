@@ -16,10 +16,11 @@ We are working continuously at high pressure to adapt the package for large vari
 
 
 ## Installation
-Since the package is listed on [dbt Hub](https://hub.getdbt.com/), you can simply add the following lines to your packages.yml. 
+Datavault4dbt is not yet listed on dbt Hub, but we are working hard to get it there. Until then, you can still experience datavault4dbt by installing via Git. Just add the following lines to your packages.yml: 
 
-      - package: scalefree/datavault4dbt
-        version: 1.0.0
+      packages:
+        - git: "https://github.com/ScalefreeCOM/datavault4dbt.git"
+          revision: 1.0.0
 
 For further information on how to install packages in dbt, please visit the following link: 
 [https://docs.getdbt.com/docs/building-a-dbt-project/package-management](https://docs.getdbt.com/docs/building-a-dbt-project/package-management#how-do-i-add-a-package-to-my-project)
