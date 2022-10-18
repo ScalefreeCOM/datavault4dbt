@@ -78,7 +78,7 @@ WITH
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT 
-                    {{ hk_column }} as {{ tracked_hashkey }},
+                    {{ tracked_hashkey }},
                     {{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }}
