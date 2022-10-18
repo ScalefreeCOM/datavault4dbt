@@ -81,8 +81,6 @@
 
                 {%- if ns.datatype != "" -%}
 
-                    {{ log("datatype for value "~value~" is "~ns.datatype, true)}}
-
                     {%- set datatype = ns.datatype -%}
 
                 {%- else -%}
