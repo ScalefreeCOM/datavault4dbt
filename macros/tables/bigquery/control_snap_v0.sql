@@ -2,6 +2,10 @@
 
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{%- if not datavault4dbt.is_something(sdts_alias) -%}
+    {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
+{%- endif -%}
+
 WITH
 
 initial_timestamps AS (
