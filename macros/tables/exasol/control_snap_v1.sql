@@ -4,8 +4,6 @@
    {%-set log_logic = {'daily': {'duration': 3,
                                 'unit': 'MONTH',
                                 'forever': 'FALSE'},
-                      'weekly': {'duration': 1,
-                                 'unit': 'YEAR'},
                       'monthly': {'duration': 5,
                                   'unit': 'YEAR'},
                       'yearly': {'duration': 10,
@@ -60,22 +58,11 @@ virtual_logic AS (
                 {%- endif -%}   
             {%- endif %}
 
-            {%- if 'weekly' in log_logic.keys() %}
+            {%- if 'monthly' in log_logic.keys() %}
             OR
-                {%- if log_logic['weekly']['forever'] == 'TRUE' -%}
+                {%- if log_logic['monthly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-              (c.is_weekly = TRUE)
-                {%- else %} 
-                    {%- set weekly_duration = log_logic['weekly']['duration'] -%}
-                    {%- set weekly_unit = log_logic['weekly']['unit'] %}            
-              ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ weekly_unit }}S(CURRENT_DATE, -{{ weekly_duration }}) AND CURRENT_DATE) AND (c.is_weekly = TRUE))
-                {%- endif -%}
-            {% endif -%}
-
-            {%- if 'monthly' in log_logic.keys() %} OR
-                {%- if log_logic['monthly']['forever'] == 'TRUE' -%}
-                    {%- set ns.forever_status = 'TRUE' %}
-              (c.is_monthly = TRUE)
+                    (c.is_monthly = TRUE)
                 {%- else %}
                     {%- set monthly_duration = log_logic['monthly']['duration'] -%}
                     {%- set monthly_unit = log_logic['monthly']['unit'] %}            
@@ -83,10 +70,11 @@ virtual_logic AS (
                 {%- endif -%}
             {% endif -%}
 
-            {%- if 'yearly' in log_logic.keys() %} OR 
-                {%- if log_logic['yearly']['forever'] == 'TRUE' -%}
-                    {%- set ns.forever_status = 'TRUE' %}
-              (c.is_yearly = TRUE)
+            {%- if 'yearly' in log_logic.keys() %}
+            OR
+                {%- if log_logic['yearly']['forever'] is true -%}
+                    {%- set ns.forever_status = 'TRUE' -%}
+                    (c.is_yearly = TRUE)
                 {%- else %}
                     {%- set yearly_duration = log_logic['yearly']['duration'] -%}
                     {%- set yearly_unit = log_logic['yearly']['unit'] %}                    
