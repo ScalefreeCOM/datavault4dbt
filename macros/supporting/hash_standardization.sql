@@ -130,7 +130,7 @@ CONCAT('\'', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- if case_sensitive -%}
     {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
-    {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}')) ORDER BY {}))), '{}') AS {}".format(all_null | join(""),multi_active_key,zero_key, alias)-%}
+    {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}') ORDER BY {})))), '{}') AS {}".format(all_null | join(""),multi_active_key,zero_key, alias)-%}
 {%- else -%}
     {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
     {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '{}') ORDER BY {})))), '{}') AS {}".format(all_null | join(""),multi_active_key,zero_key, alias)-%}
