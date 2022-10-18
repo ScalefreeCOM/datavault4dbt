@@ -115,20 +115,18 @@
   {# Getting the input columns for the additional columns #}
   {%- set derived_input_columns = datavault4dbt.extract_input_columns(derived_columns) -%}
   {%- set hashed_input_columns = datavault4dbt.expand_column_list(datavault4dbt.extract_input_columns(hashed_columns)) -%}
-  {{ log("derived col names: "~derived_column_names, true) }}
   {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, derived_column_names) -%}    {# Excluding the names of the derived columns. #}
   {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, prejoined_column_names) -%}  {# Excluding the names of the prejoined columns. #}
   {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, missing_column_names) -%}  {# Excluding the names of the missing columns. #}
   {%- set prejoined_input_columns = datavault4dbt.extract_input_columns(prejoined_columns) -%}
-   {{ log("hashed input cols: "~ hashed_input_columns, true) }}
 
   {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
   {%- if datavault4dbt.is_something(multi_active_config) -%}
     {%- set only_include_from_source = only_include_from_source + datavault4dbt.expand_column_list([multi_active_config['multi_active_key']]) -%}
   {%- endif -%}
   {%- set source_columns_to_select = only_include_from_source -%}
-  {{ log("source cols to select: "~ source_columns_to_select, true) }}
 {%- endif-%}
+
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 
@@ -475,12 +473,9 @@ ghost_records AS (
     UNION ALL
     SELECT * FROM error_values
 ),
-{{ log("final cols to select before if: "~ final_columns_to_select, true) }}
-{{ log("source cols to select: "~ source_columns_to_select, true ) }}
 {%- if not include_source_columns -%}
   {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select, exclude_columns_list=source_columns_to_select) %}
 {%- endif -%}
-{{ log("final cols to select: "~ final_columns_to_select, true) }}
 {# Combining the two ghost records with the regular data #}
 columns_to_select AS (
 
