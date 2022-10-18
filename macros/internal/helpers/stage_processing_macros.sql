@@ -14,7 +14,7 @@
 
         {%- for col in columns_list -%}
 
-            {%- if col|upper not in exclude_columns_list -%}
+            {%- if col|lower not in exclude_columns_list|map('lower') -%}
                 {%- do columns_to_select.append(col) -%}
             {%- endif -%}
 
