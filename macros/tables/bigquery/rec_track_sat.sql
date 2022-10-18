@@ -13,6 +13,9 @@
 {%- set stg_default_dtype = var('datavault4dbt.stg_default_dtype', 'VARCHAR (200) UTF8') -%}
 {%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
 
+{# If no specific hk_column is defined for each source, we apply the values set in the tracked_hashkey input variable. #}
+{# If no rsrc_static parameter is defined in a source model then it is assumed that the record source column for that source is always static  #}
+{# If rsrc_static in any of the models is defined as the wild card '*' then the record source performance look up won't be executed #}
 {%- if source_models is not mapping -%}
     {%- set source_models = {source_models: {}} -%}
 {%- endif -%}

@@ -8,7 +8,11 @@ WITH
 initial_timestamps AS (
     
     SELECT
-        DATEADD(DAY, SEQ4(), {{ datavault4dbt.string_to_timestamp(timestamp_format, start_date) }})::TIMESTAMP AS sdts
+        DATEADD(DAY, SEQ4(), 
+        TIMESTAMPADD(SECOND, EXTRACT(SECOND FROM TO_TIME('{{ daily_snapshot_time }}')), 
+            TIMESTAMPADD(MINUTE, EXTRACT(MINUTE FROM TO_TIME('{{ daily_snapshot_time }}')), 
+                TIMESTAMPADD(HOUR, EXTRACT(HOUR FROM TO_TIME('{{ daily_snapshot_time }}')), TO_DATE('{{ start_date }}', 'YYYY-MM-DD')))
+                ))::TIMESTAMP AS sdts
     FROM 
         TABLE(GENERATOR(ROWCOUNT => 100000))
     WHERE 
