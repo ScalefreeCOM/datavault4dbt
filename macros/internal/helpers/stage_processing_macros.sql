@@ -55,6 +55,8 @@
                 {# Do nothing. No source column required. #}    
             {%- elif value is mapping and value.is_hashdiff -%}
                 {%- do extracted_input_columns.append(value['columns']) -%}
+            {%- elif value is mapping and 'this_column_name' in value.keys() -%}
+                {%- do extracted_input_columns.append(value['this_column_name']) -%}
             {%- else -%}
                 {%- do extracted_input_columns.append(value) -%}
             {%- endif -%}
