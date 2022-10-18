@@ -9,8 +9,8 @@
 {%- set rsrc_error = var('datavault4dbt.default_error_rsrc', 'ERROR') -%}
 
 {# Setting the rsrc and stg_alias default datatype and length #}
-{%- set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'VARCHAR (2000000) UTF8') -%}
-{%- set stg_default_dtype = var('datavault4dbt.stg_default_dtype', 'VARCHAR (200) UTF8') -%}
+{%- set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'STRING') -%}
+{%- set stg_default_dtype = var('datavault4dbt.stg_default_dtype', 'STRING') -%}
 {%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
 
 {%- if source_models is not mapping -%}
@@ -28,18 +28,15 @@
     {%- endif -%}
 
     {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
-        {%- set unique_rsrc = datavault4dbt.get_distinct_value(source_relation=ref(source_model), column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
-        {%- do ns.source_models_rsrc_dict.update({source_model : [unique_rsrc] } ) -%}
+        {%- set ns.has_rsrc_static_defined = false -%}
     {%- else -%}
 
         {%- if not (source_models[source_model]['rsrc_static'] is iterable and source_models[source_model]['rsrc_static'] is not string) -%}
 
             {%- if source_models[source_model]['rsrc_static'] == '' or source_models[source_model]['rsrc_static'] is none -%}
                 {%- if execute -%}
-                    {{ exceptions.raise_compiler_error("rsrc_static must not be an empty string ") }}
+                    {{ exceptions.raise_compiler_error("If rsrc_static is defined -> it must not be an empty string ") }}
                 {%- endif %}
-            {%- elif source_models[source_model]['rsrc_static'] == '*'-%}
-                {%- set ns.has_rsrc_static_defined = false -%}
             {%- else -%}
                 {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
             {%- endif -%}
