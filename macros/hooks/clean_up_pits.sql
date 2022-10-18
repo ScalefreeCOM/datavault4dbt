@@ -33,7 +33,7 @@
     {%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
 {%- endif -%}
 
-{{ return(adapter.dispatch('clean_up_pit', 'datavault4dbt')(snapshot_relation=snapshot_relation, snapshot_trigger_column=snapshot_trigger_column)) }}
+{{ return(adapter.dispatch('clean_up_pit', 'datavault4dbt')(snapshot_relation=snapshot_relation, snapshot_trigger_column=snapshot_trigger_column, sdts=sdts)) }}
 
 {%- endmacro -%}
 

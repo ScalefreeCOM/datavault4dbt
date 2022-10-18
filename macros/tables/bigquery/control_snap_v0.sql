@@ -2,6 +2,10 @@
 
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{%- if not datavault4dbt.is_something(sdts_alias) -%}
+    {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
+{%- endif -%}
+
 WITH
 
 initial_timestamps AS (
@@ -9,7 +13,11 @@ initial_timestamps AS (
     SELECT sdts
     FROM
         UNNEST(GENERATE_TIMESTAMP_ARRAY(
-            {{ datavault4dbt.string_to_timestamp(timestamp_format, start_date) }},
+            TIMESTAMP_ADD(
+                TIMESTAMP_ADD(
+                    TIMESTAMP(PARSE_DATE('%Y-%m-%d', '{{ start_date }}')),
+                INTERVAL EXTRACT(HOUR FROM TIME '{{ daily_snapshot_time }}') HOUR),
+            INTERVAL EXTRACT(MINUTE FROM TIME '{{ daily_snapshot_time }}') MINUTE),
             TIMESTAMP_ADD(
                 TIMESTAMP_ADD(
                     TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY),
