@@ -5,12 +5,6 @@
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
-{%- if source_models is not mapping -%}
-    {%- if execute -%}
-        {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model.") }}
-    {%- endif %}
-{%- endif -%}
-
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
 {%- set business_keys = datavault4dbt.expand_column_list(columns=[business_keys]) -%}
 
@@ -18,7 +12,11 @@
 {# If no specific hk_column is defined for each source, we apply the values set in the hashkey variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
-{%- for source_model in source_models.keys() %}
+{%- if source_models is not mapping -%}
+    {%- set source_models = {source_models: {}} -%}
+{%- endif -%}
+
+{%- for source_model in source_models.keys() -%}
 
     {%- if 'hk_column' not in source_models[source_model].keys() -%}
         {%- do source_models[source_model].update({'hk_column': hashkey}) -%}
@@ -58,11 +56,7 @@
 
     {%- endif -%}
 
-{% endfor %}
-
-{%- if not (source_models is iterable and source_models is not string) -%}
-    {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model, having the keys 'rsrc_static' and 'bk_column' and optional 'hk_column'.") }}
-{%- endif -%}
+{%- endfor -%}
 
 {%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] -%}
 
@@ -136,7 +130,7 @@ WITH
             UNION ALL
             {% endif -%}
             {%- endfor %}
-            {%- set ns.last_cte = "rsrc_static_union".format(source_number) -%}
+            {%- set ns.last_cte = "rsrc_static_union" -%}
         ),
 
         {%- endif %}

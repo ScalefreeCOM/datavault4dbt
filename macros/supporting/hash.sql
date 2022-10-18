@@ -80,7 +80,7 @@
 
 {%- endmacro -%}
 
-{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key) -%}
+{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
 
     {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
     {%- set concat_string = var('concat_string', '||') -%}
