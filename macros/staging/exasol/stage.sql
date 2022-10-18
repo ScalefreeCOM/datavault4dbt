@@ -57,7 +57,7 @@
       {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts]  -%}
   {%- else -%}
     
-    {%- if ldts == ldts_alias -%}
+    {%- if ldts|lower == ldts_alias|lower -%}
       {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts]  -%}
     {%- endif -%}
 
@@ -71,7 +71,7 @@
     {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
   {%- else -%}
   
-    {%- if rsrc == rsrc_alias -%}
+    {%- if rsrc|lower == rsrc_alias|lower -%}
       {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
     {%- endif -%}
 
@@ -98,12 +98,13 @@
 {%- set columns_without_excluded_columns = [] -%}
 {%- set final_columns_to_select = [] -%}
 
+
 {%- if include_source_columns -%}
   {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_source_columns, exclude_column_names) | list -%}
 
   {%- for column in all_columns -%}
 
-    {%- if column.name not in exclude_column_names %}
+    {%- if column.name|lower not in exclude_column_names|map('lower') %}
       {%- do columns_without_excluded_columns.append(column) -%}
     {%- endif -%}
 
@@ -114,12 +115,18 @@
   {# Getting the input columns for the additional columns #}
   {%- set derived_input_columns = datavault4dbt.extract_input_columns(derived_columns) -%}
   {%- set hashed_input_columns = datavault4dbt.expand_column_list(datavault4dbt.extract_input_columns(hashed_columns)) -%}
-  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, derived_column_names) -%}
+  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, derived_column_names) -%}    {# Excluding the names of the derived columns. #}
+  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, prejoined_column_names) -%}  {# Excluding the names of the prejoined columns. #}
+  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, missing_column_names) -%}  {# Excluding the names of the missing columns. #}
   {%- set prejoined_input_columns = datavault4dbt.extract_input_columns(prejoined_columns) -%}
-  {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
-  {%- set source_columns_to_select = only_include_from_source -%}
 
+  {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
+  {%- if datavault4dbt.is_something(multi_active_config) -%}
+    {%- set only_include_from_source = only_include_from_source + datavault4dbt.expand_column_list([multi_active_config['multi_active_key']]) -%}
+  {%- endif -%}
+  {%- set source_columns_to_select = only_include_from_source -%}
 {%- endif-%}
+
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 
@@ -198,7 +205,7 @@ missing_columns AS (
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
   {%- endif %}
   {%- for col, dtype in missing_columns.items() %}
-    CAST(NULL as {{ dtype }}) as "{{ col }}"{% if not loop.last %},{% endif -%}
+    CAST(NULL as {{ dtype }}) as "{{ col | upper }}"{% if not loop.last %},{% endif -%}
 
   {% endfor %}
 
@@ -255,7 +262,7 @@ derived_columns AS (
 {%- set tmp_ns = namespace(main_hashkey_dict={}, remaining_hashed_columns={}, hashdiff_names=[]) -%}
 
 {%- for column in hashed_columns.keys() -%}
-  {%- if column == multi_active_config['main_hashkey_column'] and not hashed_columns[column].is_hashdiff -%}
+  {%- if column | lower == multi_active_config['main_hashkey_column']| lower and not hashed_columns[column].is_hashdiff -%}
     {%- do tmp_ns.main_hashkey_dict.update({column: hashed_columns[column]}) -%}
   {% elif column != multi_active_config['main_hashkey_column'] and not hashed_columns[column].is_hashdiff -%}
     {%- do tmp_ns.remaining_hashed_columns.update({column: hashed_columns[column]}) -%}
@@ -286,7 +293,7 @@ ma_hashdiff_prep AS (
       {{ ldts_alias }}
 
     FROM {{ last_cte }}
-    GROUP BY {{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
+    GROUP BY local.{{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
 
 ),
 
@@ -357,7 +364,7 @@ unknown_values AS (
     {%- if datavault4dbt.is_something(missing_columns) -%},
     {# Additionally generating ghost record for missing columns #}
       {%- for col, dtype in missing_columns.items() %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='unknown') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=col|upper, datatype=dtype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
       {%- endfor -%}
     {%- endif -%}
@@ -419,7 +426,7 @@ error_values AS (
     {%- if datavault4dbt.is_something(missing_columns) -%},
     {# Additionally generating ghost record for Missing columns #}
       {%- for col, dtype in missing_columns.items() %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=dtype, ghost_record_type='error') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=col|upper, datatype=dtype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
       {%- endfor -%}
     {%- endif -%}

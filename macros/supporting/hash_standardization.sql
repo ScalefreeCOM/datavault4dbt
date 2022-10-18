@@ -154,18 +154,18 @@ CONCAT('\'', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
         {%- set standardise_prefix = "NULLIF({}(LISTAGG(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'{}') ORDER BY {})), '{}') AS {} ".format(all_null | join(""), multi_active_key, zero_key, alias) -%}
+            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'{}')) WITHIN GROUP (ORDER BY {})), '{}') AS {} ".format(all_null | join(""), multi_active_key, zero_key, alias) -%}
         {%- else -%}
-            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'{}') ORDER BY {})), '{}')".format(all_null | join(""), multi_active_key, zero_key, alias) -%}
+            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'{}')) WITHIN GROUP (ORDER BY {})), '{}')".format(all_null | join(""), multi_active_key, zero_key, alias) -%}
         {%- endif -%}
 
     {%- else -%}
         {%- set standardise_prefix = "NULLIF({}(LISTAGG(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(CONCAT(".format(hash_alg) -%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '{}') ORDER BY {})), '{}') AS {} ".format(all_null | join(""), multi_active_key, zero_key , alias) -%}
+            {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '{}')) WITHIN GROUP (ORDER BY {})), '{}') AS {} ".format(all_null | join(""), multi_active_key, zero_key , alias) -%}
         {%- else %}
-            {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '{}') ORDER BY {})), '{}')".format(all_null | join(""),  multi_active_key, zero_key) -%}
+            {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '{}')) WITHIN GROUP (ORDER BY {})), '{}')".format(all_null | join(""),  multi_active_key, zero_key) -%}
         {%- endif -%}
 
     {%- endif -%}
