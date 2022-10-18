@@ -14,9 +14,7 @@
 {%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
 
 {%- if source_models is not mapping -%}
-    {%- if execute -%}
-        {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model.") }}
-    {%- endif %}
+    {%- set source_models = {source_models: {}} -%}
 {%- endif -%}
 
 
@@ -80,7 +78,7 @@ WITH
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT 
-                    {{ hk_column }} as {{ tracked_hashkey }},
+                    {{ tracked_hashkey }},
                     {{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }}
