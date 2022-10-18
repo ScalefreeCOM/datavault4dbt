@@ -84,9 +84,9 @@ WITH
 
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
-                    SELECT {{ this }}.{{ src_rsrc }},
+                    SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -96,9 +96,9 @@ WITH
 
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
-                    SELECT {{ this }}.*,
+                    SELECT t.*,
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
