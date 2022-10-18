@@ -1,9 +1,10 @@
-{%- macro snowflake__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias) -%}
+{%- macro snowflake__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
+{%- set ledts_alias = var('datavault4dbt.ledts_alias', 'ledts') -%}
 
 {%- set source_relation = ref(sat_v0) -%}
 

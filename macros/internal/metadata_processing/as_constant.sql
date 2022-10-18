@@ -14,15 +14,7 @@
         
         {%- else -%}
         
-            {%- if datavault4dbt.is_expression(column_str) -%}
-
-                {{- return(column_str) -}}
-
-            {%- else -%}
-
-                {{- return(datavault4dbt.escape_column_names(column_str)) -}}
-
-            {%- endif -%}
+            {{- return(column_str) -}}
 
         {%- endif -%}
     {%- else -%}

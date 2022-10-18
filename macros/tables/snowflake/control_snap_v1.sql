@@ -1,4 +1,4 @@
-{%- macro snowflake__control_snap_v1(control_snap_v0, log_logic=none) -%}
+{%- macro snowflake__control_snap_v1(control_snap_v0, log_logic, sdts_alias) -%}
 
 {# Sample intervals
    {%-set log_logic = {'daily': {'duration': 3,
@@ -48,7 +48,7 @@ virtual_logic AS (
         CASE 
             WHEN
             {% if 'daily' in log_logic.keys() %}
-                {%- if log_logic['daily']['forever'] == 'TRUE' -%}
+                {%- if log_logic['daily']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
                   (1=1)
                 {%- else %}                            
@@ -59,7 +59,7 @@ virtual_logic AS (
             {%- endif %}
 
             {%- if 'weekly' in log_logic.keys() %} OR 
-                {%- if log_logic['weekly']['forever'] == 'TRUE' -%}
+                {%- if log_logic['weekly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
               (c.is_weekly = TRUE)
                 {%- else %} 
@@ -70,7 +70,7 @@ virtual_logic AS (
             {% endif -%}
 
             {%- if 'monthly' in log_logic.keys() %} OR
-                {%- if log_logic['monthly']['forever'] == 'TRUE' -%}
+                {%- if log_logic['monthly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' %}
               (c.is_monthly = TRUE)
                 {%- else %}
@@ -81,7 +81,7 @@ virtual_logic AS (
             {% endif -%}
 
             {%- if 'yearly' in log_logic.keys() %} OR 
-                {%- if log_logic['yearly']['forever'] == 'TRUE' -%}
+                {%- if log_logic['yearly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' %}
               (c.is_yearly = TRUE)
                 {%- else %}

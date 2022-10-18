@@ -8,7 +8,6 @@
 
 {%- set source_relation = ref(source_model) -%}
 
-
 WITH
 
 {# Selecting all source data, that is newer than latest data in sat if incremental #}
