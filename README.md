@@ -87,7 +87,7 @@ The datavault4dbt package provides macros for Staging and Creation of all DataVa
 ## License
 [Apache 2.0](LICENSE.md)
 
-[<img src="https://user-images.githubusercontent.com/81677440/196627704-e230a88f-270a-44b2-a07d-dcd06694bd48.jpg">](https://www.scalefree.com)
+[<img src="https://user-images.githubusercontent.com/81677440/196627704-e230a88f-270a-44b2-a07d-dcd06694bd48.jpg" width = 75%>](https://www.scalefree.com)
 
 ## Contact
 For questions, feedback, etc. reach out to us via datavault4dbt@scalefree.com!
