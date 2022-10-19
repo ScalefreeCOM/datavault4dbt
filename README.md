@@ -16,7 +16,7 @@
 - Snapshot Control
 
 ### Features
-With datavault4dbt you will get a lot of awesome features like:
+With datavault4dbt you will get a lot of awesome features, including:
 - A Data Vault 2.0 implementation congruent to the original Data Vault 2.0 definition by Dan Linstedt
 - Ready for both Persistent Staging Areas and Transient Staging Areas, due to the allowance of multiple deltas in all macros, without loosing any intermediate changes- Enforcing standards in naming conventions by implementing [global variables](Global-variables.md) for technical columns    
 - A fully auditable solution for a Data Warehouse
