@@ -1,6 +1,4 @@
 {%- macro process_columns_to_select(columns_list=none, exclude_columns_list=none) -%}
-    {{ log("exclude cols list : "~ exclude_columns_list, true) }}
-    {{ log("cols list: "~ columns_list, true ) }}
     {% set exclude_columns_list = exclude_columns_list | map('upper') | list %}
     {% set columns_to_select = [] %}
 
@@ -11,7 +9,6 @@
     {%- endif -%}
 
     {%- if datavault4dbt.is_something(columns_list) and datavault4dbt.is_something(exclude_columns_list) -%}
-        {{ log("inside col list: "~ columns_list, true) }}
         {%- for col in columns_list -%}
 
             {%- if col|lower not in exclude_columns_list | map('lower') -%}
@@ -23,7 +20,6 @@
         {% set columns_to_select = columns_list %}
     {%- endif -%}
 
-    {{ log("cols to select: "~ columns_to_select, true) }}
     {%- do return(columns_to_select) -%}
 
 {%- endmacro -%}
