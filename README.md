@@ -12,7 +12,7 @@
 - Multi-Active Satellites
 - Virtualized End-Dating (in Satellites)
 - PIT Tables
-  - Hook for Cleaning up PITs
+  - Hook for Cleaning up PITs 
 - Snapshot Control
 
 ### Features
