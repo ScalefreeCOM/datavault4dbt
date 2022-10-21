@@ -19,8 +19,7 @@
 
 
 {# If no specific hk_column is defined for each source, we apply the values set in the tracked_hashkey input variable. #}
-{# If no rsrc_static parameter is defined in a source model then it is assumed that the record source column for that source is always static  #}
-{# If rsrc_static in any of the models is defined as the wild card '*' then the record source performance look up won't be executed #}
+{# If no rsrc_static parameter is defined in a source model then the record source performance look up wont be executed  #}
 {%- for source_model in source_models.keys() %}
 
     {%- if 'hk_column' not in source_models[source_model].keys() -%}
@@ -28,18 +27,15 @@
     {%- endif -%}
 
     {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
-        {%- set unique_rsrc = datavault4dbt.get_distinct_value(source_relation=ref(source_model), column_name=src_rsrc, exclude_values=[rsrc_unknown, rsrc_error]) -%}
-        {%- do ns.source_models_rsrc_dict.update({source_model : [unique_rsrc] } ) -%}
+        {%- set ns.has_rsrc_static_defined = false -%}
     {%- else -%}
 
         {%- if not (source_models[source_model]['rsrc_static'] is iterable and source_models[source_model]['rsrc_static'] is not string) -%}
 
             {%- if source_models[source_model]['rsrc_static'] == '' or source_models[source_model]['rsrc_static'] is none -%}
                 {%- if execute -%}
-                    {{ exceptions.raise_compiler_error("rsrc_static must not be an empty string ") }}
+                    {{ exceptions.raise_compiler_error("If rsrc_static is defined -> it must not be an empty string ") }}
                 {%- endif %}
-            {%- elif source_models[source_model]['rsrc_static'] == '*'-%}
-                {%- set ns.has_rsrc_static_defined = false -%}
             {%- else -%}
                 {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
             {%- endif -%}
