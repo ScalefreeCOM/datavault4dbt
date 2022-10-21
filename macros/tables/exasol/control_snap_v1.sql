@@ -94,7 +94,6 @@ virtual_logic AS (
         c.caption,
         c.is_hourly,
         c.is_daily,
-        c.is_weekly,
         c.is_monthly,
         c.is_yearly,
         CASE
@@ -133,7 +132,6 @@ active_logic_combined AS (
         caption,
         is_hourly,
         is_daily,
-        is_weekly,
         is_monthly,
         is_yearly,
         is_current_year,
