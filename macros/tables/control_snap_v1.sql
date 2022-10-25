@@ -45,6 +45,9 @@
 
                                             The duration is always counted from the current date.
 
+                                            EXASOL: Due to a missing "DAY OF WEEK" Function in Exasol, is_weekly is currently
+                                                    not supported and needs to be left out of the log_logic definition.
+
                                             Examples:
                                                 {'daily': {'duration': 3,               This configuration would keep daily
                                                             'unit': 'MONTH',            snapshots for 3 months, weekly snapshots
