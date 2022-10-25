@@ -19,8 +19,7 @@
 
 
 {# If no specific hk_column is defined for each source, we apply the values set in the tracked_hashkey input variable. #}
-{# If no rsrc_static parameter is defined in a source model then it is assumed that the record source column for that source is always static  #}
-{# If rsrc_static in any of the models is defined as the wild card '*' then the record source performance look up won't be executed #}
+{# If no rsrc_static parameter is defined in a source model then the record source performance look up wont be executed  #}
 {%- for source_model in source_models.keys() %}
 
     {%- if 'hk_column' not in source_models[source_model].keys() -%}
