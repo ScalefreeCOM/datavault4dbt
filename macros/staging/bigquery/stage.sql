@@ -54,12 +54,11 @@
 
 {%- set ldts_rsrc_input_column_names = [] -%}
 {%- if datavault4dbt.is_attribute(ldts) -%}
-
   {%- if not copy_input_columns -%}
       {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts]  -%}
   {%- else -%}
     
-    {%- if ldts == ldts_alias -%}
+    {%- if ldts|lower == ldts_alias|lower -%}
       {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [ldts]  -%}
     {%- endif -%}
 
@@ -73,7 +72,7 @@
     {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
   {%- else -%}
   
-    {%- if rsrc == rsrc_alias -%}
+    {%- if rsrc|lower == rsrc_alias|lower -%}
       {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [rsrc] -%}
     {%- endif -%}
 
@@ -100,12 +99,13 @@
 {%- set columns_without_excluded_columns = [] -%}
 {%- set final_columns_to_select = [] -%}
 
+
 {%- if include_source_columns -%}
   {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_source_columns, exclude_column_names) | list -%}
 
   {%- for column in all_columns -%}
 
-    {%- if column.name not in exclude_column_names %}
+    {%- if column.name|lower not in exclude_column_names|map('lower') %}
       {%- do columns_without_excluded_columns.append(column) -%}
     {%- endif -%}
 
@@ -116,12 +116,15 @@
   {# Getting the input columns for the additional columns #}
   {%- set derived_input_columns = datavault4dbt.extract_input_columns(derived_columns) -%}
   {%- set hashed_input_columns = datavault4dbt.expand_column_list(datavault4dbt.extract_input_columns(hashed_columns)) -%}
-  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, derived_column_names) -%}
+  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, derived_column_names) -%}    {# Excluding the names of the derived columns. #}
+  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, prejoined_column_names) -%}  {# Excluding the names of the prejoined columns. #}
+  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, missing_column_names) -%}  {# Excluding the names of the missing columns. #}
   {%- set prejoined_input_columns = datavault4dbt.extract_input_columns(prejoined_columns) -%}
   {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
   {%- set source_columns_to_select = only_include_from_source -%}
 
 {%- endif-%}
+
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 

@@ -7,14 +7,6 @@
         {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
     {%- endif %}
 
-{%- else -%}
-    {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
-{%- endif -%}
-
-{%- if source_models is not mapping -%}
-    {%- if execute -%}
-        {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary") }}
-    {%- endif %}
 {%- endif -%}
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
@@ -25,6 +17,10 @@
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
+{%- if source_models is not mapping -%}
+    {%- set source_models = {source_models: {}} -%}
+{%- endif -%}
+
 {%- for source_model in source_models.keys() %}
 
     {%- if 'fk_columns' not in source_models[source_model].keys() -%}
@@ -89,9 +85,9 @@ WITH
 
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
-                    SELECT {{ this }}.{{ src_rsrc }},
+                    SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -101,9 +97,9 @@ WITH
 
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
-                    SELECT {{ this }}.*,
+                    SELECT t.*,
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL

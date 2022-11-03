@@ -33,7 +33,7 @@
     {%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
 {%- endif -%}
 
-{{ return(adapter.dispatch('clean_up_pit', 'datavault4dbt')(snapshot_relation=snapshot_relation, snapshot_trigger_column=snapshot_trigger_column)) }}
+{{ return(adapter.dispatch('clean_up_pit', 'datavault4dbt')(snapshot_relation=snapshot_relation, snapshot_trigger_column=snapshot_trigger_column, sdts=sdts)) }}
 
 {%- endmacro -%}
 
@@ -42,7 +42,9 @@
 DELETE {{ this }} pit
 WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
+{%- if execute -%}
 {{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
 
 {%- endmacro -%}
 
@@ -51,7 +53,9 @@ WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }}
 DELETE FROM {{ this }} pit
 WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
+{%- if execute -%}
 {{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
 
 {%- endmacro -%}
 
@@ -60,7 +64,9 @@ WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }}
 DELETE FROM {{ this }} pit
 WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
+{%- if execute -%}
 {{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
 
 {%- endmacro -%}
 

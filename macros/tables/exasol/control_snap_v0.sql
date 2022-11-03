@@ -1,10 +1,9 @@
 {%- macro exasol__control_snap_v0(start_date, daily_snapshot_time, sdts_alias) -%}
 
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
-
 {%- set date_format_std = 'YYYY-mm-dd' -%}
 {%- set daily_snapshot_time = '0001-01-01 ' ~ daily_snapshot_time -%}
-
+{%- set last_cte = '' -%}
 WITH 
 initial_timestamps AS 
 (
@@ -17,11 +16,24 @@ initial_timestamps AS
                                                         EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) 
                                                     ), TO_DATE('{{ start_date}}', '{{ date_format_std }}')
                                     )+1
-    {%- if is_incremental() %}
-    WHERE sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
-    {%- endif %}
     order by local.sdts
+
+    {%- set last_cte = 'initial_timestamps' -%}
 )
+
+
+{%- if is_incremental() %}
+, incremental_cte AS (
+    SELECT 
+        src.* 
+    FROM initial_timestamps src
+
+    WHERE src.sdts > (SELECT MAX(t."{{ sdts_alias }}") FROM {{ this }} t)
+    {%- set last_cte = 'incremental_cte' -%}
+
+)
+{%- endif %}
+
 , enriched_timestamps AS 
 (
     SELECT
@@ -51,7 +63,7 @@ initial_timestamps AS
         END AS is_yearly,
         NULL AS comment
     FROM 
-        initial_timestamps
+        {{ last_cte }}
 )
 
 SELECT * FROM enriched_timestamps

@@ -5,14 +5,14 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- if source_models is not mapping -%}
-    {%- if execute -%}
-        {{ exceptions.raise_compiler_error("source_models is not mapping. source_models must be defined as a dictionary!") }}
-    {%- endif %}
-{%- endif -%}
 {# If no specific link_hk, fk_columns, or payload are defined for each source, we apply the values set in the link_hashkey, foreign_hashkeys, and payload variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
+
+{%- if source_models is not mapping -%}
+    {%- set source_models = {source_models: {}} -%}
+{%- endif -%}
+
 {%- for source_model in source_models.keys() %}
 
     {%- if 'fk_columns' not in source_models[source_model].keys() -%}
@@ -79,9 +79,9 @@ WITH
 
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
-                    SELECT {{ this }}.{{ src_rsrc }},
+                    SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -91,9 +91,9 @@ WITH
 
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
-                    SELECT {{ this }}.*,
+                    SELECT t.*,
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL

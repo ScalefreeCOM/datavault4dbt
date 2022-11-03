@@ -4,8 +4,6 @@
    {%-set log_logic = {'daily': {'duration': 3,
                                 'unit': 'MONTH',
                                 'forever': 'FALSE'},
-                      'weekly': {'duration': 1,
-                                 'unit': 'YEAR'},
                       'monthly': {'duration': 5,
                                   'unit': 'YEAR'},
                       'yearly': {'duration': 10,
@@ -60,7 +58,7 @@ virtual_logic AS (
                 {%- endif -%}   
             {%- endif %}
 
-            {%- if 'weekly' in log_logic.keys() %}
+            {%- if 'monthly' in log_logic.keys() %}
             OR
                 {%- if log_logic['weekly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
@@ -90,10 +88,11 @@ virtual_logic AS (
                 {%- endif -%}
             {% endif -%}
 
-            {%- if 'yearly' in log_logic.keys() %} OR 
-                {%- if log_logic['yearly']['forever'] == 'TRUE' -%}
-                    {%- set ns.forever_status = 'TRUE' %}
-              (c.is_yearly = TRUE)
+            {%- if 'yearly' in log_logic.keys() %}
+            OR
+                {%- if log_logic['yearly']['forever'] is true -%}
+                    {%- set ns.forever_status = 'TRUE' -%}
+                    (c.is_yearly = TRUE)
                 {%- else %}
                     {%- set yearly_duration = log_logic['yearly']['duration'] -%}
                     {%- set yearly_unit = log_logic['yearly']['unit'] %}

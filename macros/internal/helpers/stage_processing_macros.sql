@@ -1,7 +1,5 @@
 {%- macro process_columns_to_select(columns_list=none, exclude_columns_list=none) -%}
-
     {% set exclude_columns_list = exclude_columns_list | map('upper') | list %}
-
     {% set columns_to_select = [] %}
 
     {% if not datavault4dbt.is_list(columns_list) or not datavault4dbt.is_list(exclude_columns_list)  %}
@@ -11,15 +9,15 @@
     {%- endif -%}
 
     {%- if datavault4dbt.is_something(columns_list) and datavault4dbt.is_something(exclude_columns_list) -%}
-
         {%- for col in columns_list -%}
 
-            {%- if col|upper not in exclude_columns_list -%}
+            {%- if col|lower not in exclude_columns_list | map('lower') -%}
                 {%- do columns_to_select.append(col) -%}
             {%- endif -%}
 
         {%- endfor -%}
-
+    {%- elif datavault4dbt.is_something(columns_list) and not datavault4dbt.is_something(exclude_columns_list) %}
+        {% set columns_to_select = columns_list %}
     {%- endif -%}
 
     {%- do return(columns_to_select) -%}
@@ -55,6 +53,8 @@
                 {# Do nothing. No source column required. #}    
             {%- elif value is mapping and value.is_hashdiff -%}
                 {%- do extracted_input_columns.append(value['columns']) -%}
+            {%- elif value is mapping and 'this_column_name' in value.keys() -%}
+                {%- do extracted_input_columns.append(value['this_column_name']) -%}
             {%- else -%}
                 {%- do extracted_input_columns.append(value) -%}
             {%- endif -%}

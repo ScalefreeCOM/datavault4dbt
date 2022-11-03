@@ -5,21 +5,18 @@
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
-{%- if source_models is not mapping -%}
-    {%- if execute -%}
-        {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model.") }}
-    {%- endif %}
-{%- endif -%}
-
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
-
 {%- set business_keys = datavault4dbt.expand_column_list(columns=[business_keys]) -%}
 
 {# If no specific bk_columns is defined for each source, we apply the values set in the business_keys variable. #}
 {# If no specific hk_column is defined for each source, we apply the values set in the hashkey variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
-{%- for source_model in source_models.keys() %}
+{%- if source_models is not mapping -%}
+    {%- set source_models = {source_models: {}} -%}
+{%- endif -%}
+
+{%- for source_model in source_models.keys() -%}
 
     {%- if 'hk_column' not in source_models[source_model].keys() -%}
         {%- do source_models[source_model].update({'hk_column': hashkey}) -%}
@@ -33,8 +30,10 @@
         {%- endif -%}
 
         {%- do source_models[source_model].update({'bk_columns': bk_column_input}) -%}
-    {%- else -%}
-        {%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
+    {%- elif not datavault4dbt.is_list(bk_column_input) -%}
+        {%- set bk_list = datavault4dbt.expand_column_list(columns=[bk_column_input]) -%}
+        {%- do source_models[source_model].update({'bk_columns': bk_list}) -%}
+    {%- else -%}{%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
     {%- endif -%}
 
     {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
@@ -57,18 +56,13 @@
 
     {%- endif -%}
 
-{% endfor %}
-
-{%- if not (source_models is iterable and source_models is not string) -%}
-    {{ exceptions.raise_compiler_error("Invalid Source Model definition. Needs to be defined as dictionary for each source model, having the keys 'rsrc_static' and 'bk_column' and optional 'hk_column'.") }}
-{%- endif -%}
+{%- endfor -%}
 
 {%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH
-
 
 {% if is_incremental() -%}
 {# Get all target hashkeys out of the existing hub for later incremental logic. #}
@@ -87,9 +81,9 @@ WITH
 
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
-                    SELECT {{ this }}.{{ src_rsrc }},
+                    SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -100,9 +94,9 @@ WITH
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT 
-                    {{ this }}.*,
+                    t.*,
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -125,7 +119,7 @@ WITH
         {%- if source_models.keys() | length > 1 %}
 
         rsrc_static_union AS (
-            {#  Create one unionized table over all sources, will be the same as the already existing
+            {#  Create one unionized table over all sources. It will be the same as the already existing
                 hub, but extended by the rsrc_static column. #}
             {% for source_model in source_models.keys() %}
             {%- set source_number = loop.index | string -%}
@@ -136,7 +130,7 @@ WITH
             UNION ALL
             {% endif -%}
             {%- endfor %}
-            {%- set ns.last_cte = "rsrc_static_union".format(source_number) -%}
+            {%- set ns.last_cte = "rsrc_static_union" -%}
         ),
 
         {%- endif %}
@@ -228,6 +222,7 @@ source_new_union AS (
 
 earliest_hk_over_all_sources AS (
 
+    {#- Deduplicate the unionized records again to only insert the earliest one. #}
     SELECT
         lcte.*
     FROM {{ ns.last_cte }} AS lcte
@@ -239,7 +234,7 @@ earliest_hk_over_all_sources AS (
 ),
 
 records_to_insert AS (
-
+    {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the hub. #}
     SELECT
         {{ datavault4dbt.print_list(final_columns_to_select) }}
     FROM {{ ns.last_cte }}

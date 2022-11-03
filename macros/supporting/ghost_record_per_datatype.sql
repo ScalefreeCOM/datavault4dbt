@@ -52,7 +52,10 @@
 {%- set error_value_alt__STRING = var('datavault4dbt.error_value_alt__STRING', 'e')  -%}
 {%- set format_date = var('datavault4dbt.format_date', 'YYYY-mm-dd') -%}
 {%- set hash = var('datavault4dbt.hash', 'MD5')-%}
-{%- set hash_alg, unknown_value__HASHTYPE, error_value__HASHTYPE = datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_default_values =  datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_alg= hash_default_values['hash_alg'] -%}
+{%- set unknown_value__HASHTYPE = hash_default_values['unknown_key'] -%}
+{%- set  error_value__HASHTYPE = hash_default_values['error_key'] -%}
 
 {%- if ghost_record_type == 'unknown' -%}
 
