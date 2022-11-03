@@ -26,24 +26,27 @@
 
                 {%- set datatype = var('datavault4dbt.derived_columns_default_dtype', 'STRING') -%}
                 {%- set value = column_value -%}
+                {%- set col_size = "" -%}
 
             {%- else -%}
             {# The value is an attribute and therefore the datatype gets detected out of the source relation. #}
 
                 {%- set value = column_value -%}
 
-                {%- set ns = namespace(datatype = "") -%}
+                {%- set ns = namespace(datatype = "", col_size="") -%}
 
                 {%- for source_column in all_source_columns -%}
-
                     {%- if source_column.name|upper == value|upper -%}
 
-                       {%- set ns.datatype = source_column.dtype -%}
+                        {%- set ns.datatype = source_column.dtype -%}
 
+                        {% if datavault4dbt.is_something(source_column.char_size) %}
+                            {%- set ns.col_size = source_column.char_size -%}
+                        {%- endif -%}
                     {%- endif -%}
 
                 {%- endfor -%}
-
+                {%- set col_size = ns.col_size | int-%}
                 {%- if ns.datatype != "" -%}
 
                     {%- set datatype = ns.datatype -%}
@@ -61,20 +64,23 @@
 
             {%- endif -%}
 
-            {%- do columns.update({column_name: {'datatype': datatype, 'value': value} }) -%}
+            {%- do columns.update({column_name: {'datatype': datatype, 'value': value, 'col_size': col_size} }) -%}
         
         {%- elif column_value is mapping and not column_value.get('datatype') -%}
 
                 {%- set value = column_value['value'] -%}
 
-                {%- set ns = namespace(datatype = "") -%}
+                {%- set ns = namespace(datatype = "", col_size="") -%}
 
                 {%- for source_column in all_source_columns -%}
 
                     {%- if source_column.name|upper == value|upper -%}
 
-                       {%- set ns.datatype = source_column.dtype -%}
+                        {%- set ns.datatype = source_column.dtype -%}
 
+                        {% if datavault4dbt.is_something(source_column.char_size) %}
+                            {%- set ns.col_size = source_column.char_size -%}
+                        {%- endif -%}
                     {%- endif -%}
 
                 {%- endfor -%}
@@ -90,12 +96,31 @@
                         {{ exceptions.raise_compiler_error("Could not find the derived_column input column " + value + " inside the source relation " + source_relation|string + ". Try setting it manually with the key 'datatype'." ) }}
                     {%- else -%}
                         {%- set datatype = "" -%}
+                        {%- set col_size = "" -%}
+
                     {%- endif -%}
 
                 {%- endif -%}
+                {%- set col_size = ns.col_size | int-%}
+                {%- do columns.update({column_name: {'datatype': datatype, 'value': value, "col_size": col_size} }) -%}
+        {%- elif column_value is mapping and not column_value.get('col_size') -%}
 
-                {%- do columns.update({column_name: {'datatype': datatype, 'value': value} }) -%}
+            {%- set value = column_value['value'] -%}
+            {%- set datatype = column_value['datatype'] -%}
+            {%- set ns = namespace(col_size = "") -%}
 
+            {%- for source_column in all_source_columns -%}
+
+                {%- if source_column.name|upper == value|upper -%}
+
+                    {%- set ns.col_size = source_column.char_size | int -%}
+                {%- endif -%}
+
+            {%- endfor -%}
+
+            {%- set col_size = ns.col_size -%}
+
+            {%- do columns.update({column_name: {'datatype': datatype, 'value': value, 'col_size': col_size} }) -%}
         {%- endif -%}
 
     {%- endfor -%}
