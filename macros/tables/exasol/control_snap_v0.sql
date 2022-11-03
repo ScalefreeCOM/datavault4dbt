@@ -37,10 +37,10 @@ initial_timestamps AS
             WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 AND EXTRACT(HOUR FROM sdts) = 0 THEN TRUE
             ELSE FALSE
         END AS is_daily,
-        CASE
-            WHEN TO_CHAR(sdts, 'DAY', 'NLS_DATE_LANGUAGE=ENG') = 'MONDAY' THEN TRUE
+        CASE 
+            WHEN to_char(sdts, 'ID') = '1' THEN TRUE
             ELSE FALSE
-        END AS is_weekly,
+        END AS is_weekly, 
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 THEN TRUE
             ELSE FALSE
