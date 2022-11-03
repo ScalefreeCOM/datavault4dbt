@@ -40,7 +40,7 @@ initial_timestamps AS
         sdts as "{{ sdts_alias }}",
         TRUE as force_active,
         sdts AS replacement_sdts,
-        CONCAT('Snapshot ', DATE_TRUNC('day', sdts)) AS caption,
+        CONCAT('Snapshot ', DATE_TRUNC('day', TO_DATE(sdts))) AS caption,
         CASE
             WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 THEN TRUE
             ELSE FALSE
