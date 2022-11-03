@@ -355,7 +355,7 @@ unknown_values AS (
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%},
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
       {%- for column in columns_without_excluded_columns %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, col_size=column.char_size, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
       {%- endfor -%}
 
@@ -378,7 +378,7 @@ unknown_values AS (
           {% for column in pj_relation_columns -%}
 
             {% if column.name|lower == vals['bk']|lower -%}
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='unknown') }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, col_size=column.char_size, ghost_record_type='unknown') }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -389,7 +389,7 @@ unknown_values AS (
     {%- if datavault4dbt.is_something(derived_columns) -%},
     {# Additionally generating Ghost Records for Derived Columns #}
       {%- for column_name, properties in derived_columns_with_datatypes_DICT.items() %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, col_size=properties.col_size, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
       {%- endfor -%}
 
@@ -417,7 +417,7 @@ error_values AS (
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%},
     {# Generating Ghost Records for Source Columns #}
       {%- for column in columns_without_excluded_columns %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, col_size=column.char_size, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
       {%- endfor -%}
 
@@ -439,7 +439,7 @@ error_values AS (
 
         {% for column in pj_relation_columns -%}
           {% if column.name|lower == vals['bk']|lower -%}
-            {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='error') -}}
+            {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, col_size=column.char_size, ghost_record_type='error') -}}
           {%- endif -%}
         {%- endfor -%}
           {%- if not loop.last -%},{%- endif %}
@@ -450,7 +450,7 @@ error_values AS (
     {%- if datavault4dbt.is_something(derived_columns) %},
     {# Additionally generating Ghost Records for Derived Columns #}
       {%- for column_name, properties in derived_columns_with_datatypes_DICT.items() %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, col_size=properties.col_size, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 
