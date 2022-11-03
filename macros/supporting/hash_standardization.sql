@@ -156,7 +156,7 @@ CONCAT('\'', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
         {%- if alias is not none -%}
             {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'{}')) WITHIN GROUP (ORDER BY {})), '{}') AS {} ".format(all_null | join(""), multi_active_key, zero_key, alias) -%}
         {%- else -%}
-            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'{}')) WITHIN GROUP (ORDER BY {})), '{}')".format(all_null | join(""), multi_active_key, zero_key, alias) -%}
+            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'{}')) WITHIN GROUP (ORDER BY {})), '{}')".format(all_null | join(""), multi_active_key, zero_key) -%}
         {%- endif -%}
 
     {%- else -%}
