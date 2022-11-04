@@ -13,7 +13,9 @@
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- if datavault4dbt.is_something(pit_type) -%}
-    {%- set hashed_cols = [pit_type, datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+    {%- set quote = "'" -%}
+    {%- set pit_type_quoted = quote + pit_type + quote -%}
+    {%- set hashed_cols = [pit_type_quoted, datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- else -%}
     {%- set hashed_cols = [datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- endif -%}
@@ -39,7 +41,7 @@ pit_records AS (
     SELECT
         
         {% if datavault4dbt.is_something(pit_type) -%}
-            {{ datavault4dbt.as_constant(pit_type) }} as type,
+            '{{ datavault4dbt.as_constant(pit_type) }}' as type,
         {%- endif %}
         {% if datavault4dbt.is_something(custom_rsrc) -%}
         '{{ custom_rsrc }}' as {{ rsrc }},
@@ -50,7 +52,7 @@ pit_records AS (
         te.{{ hashkey }},
         snap.{{ sdts }},
         {%- for satellite in sat_names %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ unknown_key }} AS {{ hash_dtype }})) AS hk_{{ satellite }},
+            COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ unknown_key }}' AS {{ hash_dtype }})) AS hk_{{ satellite }},
             COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
             {{- "," if not loop.last }}
         {%- endfor %}
@@ -72,7 +74,7 @@ pit_records AS (
                 {%- if ledts|string|lower in sat_columns|map('lower') %}
                     AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
                 {%- else %}
-                    AND {{ satellite }}.{{ ldts }} > snap.{{ sdts }}
+                    AND {{ satellite }}.{{ ldts }} >= snap.{{ sdts }}
                 {%- endif -%}
         {% endfor %}
     {% if datavault4dbt.is_something(snapshot_trigger_column) %}
