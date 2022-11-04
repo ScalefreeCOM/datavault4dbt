@@ -72,7 +72,7 @@ pit_records AS (
                 {% if ledts|string|lower in sat_columns|map('lower') %}
                     AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
                 {%- else -%}
-                    AND {{ satellite }}.{{ ldts }} > snap.{{ sdts }}
+                    AND {{ satellite }}.{{ ldts }} >= snap.{{ sdts }}
                 {%- endif -%}
         {% endfor %}
     {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
