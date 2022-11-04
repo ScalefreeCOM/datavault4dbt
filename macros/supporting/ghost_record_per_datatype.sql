@@ -1,11 +1,12 @@
-{%- macro ghost_record_per_datatype(column_name, datatype, ghost_record_type) -%}
+{%- macro ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size=none) -%}
 
 {{ return(adapter.dispatch('ghost_record_per_datatype', 'datavault4dbt')(column_name=column_name,
                                                                             datatype=datatype,
-                                                                            ghost_record_type=ghost_record_type)) }}
+                                                                            ghost_record_type=ghost_record_type,
+                                                                            col_size=col_size)) }}
 {%- endmacro -%}
 
-{%- macro default__ghost_record_per_datatype(column_name, datatype, ghost_record_type) -%}
+{%- macro default__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -36,7 +37,7 @@
 {%- endif -%}
 {%- endmacro -%}
 
-{%- macro exasol__ghost_record_per_datatype(column_name, datatype, ghost_record_type) -%}
+{%- macro exasol__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -60,9 +61,17 @@
 {%- if ghost_record_type == 'unknown' -%}
 
         {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as "{{ column_name }}"
-        {%- elif datatype == 'VARCHAR' -%} CAST('{{ unknown_value_alt__STRING }}' as VARCHAR(2000000) UTF8) as "{{ column_name }}"
         {%- elif datatype.upper().startswith('VARCHAR') -%}
-            {%- set unknown_dtype_length = datatype.split(")")[0].split("(")[1] | int -%}
+            {%- if col_size is not none -%}
+                {%- set unknown_dtype_length = col_size | int -%}
+                {%- if '(' not in datatype -%}
+                    {%- set datatype = datatype ~ "(" ~ (unknown_dtype_length|string) ~ ") UTF8" -%}
+                {%- endif -%}
+            {%- else -%}
+                {%- set inside_parenthesis =  datatype.split(")")[0] |string -%}
+                {%- set inside_parenthesis = inside_parenthesis.split("(")[1]-%}
+                {%- set unknown_dtype_length = inside_parenthesis | int -%}
+            {%- endif -%}
             {%- if unknown_dtype_length < unknown_value__STRING|length -%}
                 CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
             {%- else -%}
@@ -80,16 +89,24 @@
 {%- elif ghost_record_type == 'error' -%}
 
         {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as "{{ column_name }}"
-        {%- elif datatype == 'VARCHAR' -%} CAST('{{ error_value_alt__STRING }}' as VARCHAR(2000000) UTF8) as "{{ column_name }}"
         {%- elif datatype.upper().startswith('VARCHAR') -%}
-            {%- set error_dtype_length = datatype.split(")")[0].split("(")[1] | int -%}
+            {%- if col_size is not none -%}
+                {%- set error_dtype_length = col_size | int -%}
+                {%- if '(' not in datatype -%}
+                    {%- set datatype = datatype ~ "(" ~ (error_dtype_length|string) ~ ") UTF8" -%}
+                {%- endif -%}
+            {%- else -%}
+                {%- set inside_parenthesis =  datatype.split(")")[0] |string -%}
+                {%- set inside_parenthesis = inside_parenthesis.split("(")[1]-%}
+                {%- set error_dtype_length = inside_parenthesis | int -%}
+            {%- endif -%}
             {%- if error_dtype_length < error_value__STRING|length  -%}
                 CAST('{{ error_value_alt__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
             {%- else -%}
                 CAST('{{ error_value__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
             {%- endif -%}
         {%- elif datatype.upper().startswith('CHAR') -%} CAST('{{ error_value_alt__STRING }}' as {{ datatype }}) as "{{ column_name }}"
-        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('-1' as {{datatype}}) as "{{ column_name }}"
+        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('-1' as {{ datatype }}) as "{{ column_name }}"
         {%- elif datatype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as "{{ column_name }}"
         {%- elif datatype == 'BOOLEAN' %} FALSE as "{{ column_name }}"
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ format_date }}' ) as "{{ column_name }}"
@@ -109,7 +126,7 @@
 
 
 
-{%- macro snowflake__ghost_record_per_datatype(column_name, datatype, ghost_record_type) -%}
+{%- macro snowflake__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}

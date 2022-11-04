@@ -40,7 +40,7 @@ initial_timestamps AS
         sdts as "{{ sdts_alias }}",
         TRUE as force_active,
         sdts AS replacement_sdts,
-        CONCAT('Snapshot ', DATE_TRUNC('day', sdts)) AS caption,
+        CONCAT('Snapshot ', DATE_TRUNC('day', TO_DATE(sdts))) AS caption,
         CASE
             WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 THEN TRUE
             ELSE FALSE
@@ -49,6 +49,10 @@ initial_timestamps AS
             WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 AND EXTRACT(HOUR FROM sdts) = 0 THEN TRUE
             ELSE FALSE
         END AS is_daily,
+        CASE 
+            WHEN to_char(sdts, 'ID') = '1' THEN TRUE
+            ELSE FALSE
+        END AS is_weekly, 
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 THEN TRUE
             ELSE FALSE

@@ -60,13 +60,31 @@ virtual_logic AS (
 
             {%- if 'monthly' in log_logic.keys() %}
             OR
-                {%- if log_logic['monthly']['forever'] is true -%}
+                {%- if log_logic['weekly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-                    (c.is_monthly = TRUE)
+                    (c.is_weekly = TRUE)
+                {%- else %}
+
+                    {%- set weekly_duration = log_logic['weekly']['duration'] -%}
+                    {%- set weekly_unit = log_logic['weekly']['unit'] -%}
+
+                    ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ weekly_unit}}S(CURRENT_DATE, -{{ weekly_duration }}) AND CURRENT_DATE)
+                    AND
+                    (c.is_weekly = TRUE))
+                {%- endif -%}
+            {% endif -%}
+
+            {%- if 'monthly' in log_logic.keys() %} OR
+                {%- if log_logic['monthly']['forever'] == 'TRUE' -%}
+                    {%- set ns.forever_status = 'TRUE' %}
+              (c.is_monthly = TRUE)
                 {%- else %}
                     {%- set monthly_duration = log_logic['monthly']['duration'] -%}
-                    {%- set monthly_unit = log_logic['monthly']['unit'] %}            
-              ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ monthly_unit }}S(CURRENT_DATE, -{{ monthly_duration }}) AND CURRENT_DATE) AND (c.is_monthly = TRUE))
+                    {%- set monthly_unit = log_logic['monthly']['unit'] %}
+
+                    ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ monthly_unit }}S(CURRENT_DATE, -{{ monthly_duration }}) AND CURRENT_DATE) 
+                    AND 
+                    (c.is_monthly = TRUE))
                 {%- endif -%}
             {% endif -%}
 
@@ -77,8 +95,11 @@ virtual_logic AS (
                     (c.is_yearly = TRUE)
                 {%- else %}
                     {%- set yearly_duration = log_logic['yearly']['duration'] -%}
-                    {%- set yearly_unit = log_logic['yearly']['unit'] %}                    
-              ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ yearly_unit }}S(CURRENT_DATE, - {{ yearly_duration }}) AND CURRENT_DATE) AND (c.is_yearly = TRUE))
+                    {%- set yearly_unit = log_logic['yearly']['unit'] %}
+
+                    ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ yearly_unit }}S(CURRENT_DATE, - {{ yearly_duration }}) AND CURRENT_DATE) 
+                    AND 
+                    (c.is_yearly = TRUE))
                 {%- endif -%}
             {% endif %}
             THEN TRUE
@@ -94,6 +115,7 @@ virtual_logic AS (
         c.caption,
         c.is_hourly,
         c.is_daily,
+        c.is_weekly,
         c.is_monthly,
         c.is_yearly,
         CASE
@@ -132,6 +154,7 @@ active_logic_combined AS (
         caption,
         is_hourly,
         is_daily,
+        is_weekly,
         is_monthly,
         is_yearly,
         is_current_year,
