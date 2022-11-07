@@ -68,7 +68,7 @@
 
     {%- if loop.last -%}
 
-        {{ standardise_suffix | indent(4) }}
+        {{ standardise_suffix | replace('[ALL_NULL]', all_null | join("")) | indent(4) }}
 
     {%- else -%}
 
@@ -141,7 +141,7 @@
 
         {%- if loop.last -%}
 
-            {{ standardise_suffix | indent(4) }}
+            {{ standardise_suffix | replace('[ALL_NULL]', all_null | join("")) | indent(4) }}
 
         {%- else -%}
 
