@@ -111,14 +111,8 @@
     {%- elif is_hashdiff -%}
         {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key)) -%}
     {%- else -%}
-        {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=none, zero_key=unknown_key)) -%}
+        {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, alias=alias, zero_key=unknown_key)) -%}
 
-        CASE WHEN COALESCE(
-        {%- for column in columns -%}
-            CAST({{ column }} AS VARCHAR(200000) UTF8) {%- if not loop.last -%} , {% endif -%}
-        {% endfor -%}, NULL) IS NULL
-        THEN CAST('{{ unknown_key }}' as {{ hash_dtype }})
-        ELSE
     {%- endif -%}
 
     {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
@@ -150,9 +144,5 @@
         {%- endif -%}
 
     {%- endfor -%}
-
-    {% if not is_hashdiff -%}
-    {{- "\n END " -}} {%- if alias is not none -%} {{" AS " }} "{{ alias }}" {%- endif -%}
-    {%- endif -%}
 
 {%- endmacro -%}
