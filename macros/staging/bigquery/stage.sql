@@ -80,7 +80,7 @@
 
 {%- endif %}
 
-{%- if sequence is not none -%}
+{%- if datavault4dbt.is_something(sequence) -%}
   {%- set ldts_rsrc_input_column_names = ldts_rsrc_input_column_names + [sequence] -%}
 {%- endif -%}
 
@@ -177,7 +177,7 @@ ldts_rsrc_data AS (
   SELECT
     {{ ldts }} AS {{ load_datetime_col_name}},
     CAST( {{ rsrc }} as {{ rsrc_default_dtype }} ) AS {{ record_source_col_name }}
-    {%- if sequence is not none %},
+    {%- if datavault4dbt.is_something(sequence) %},
       {{ sequence }} AS edwSequence
       {%- set alias_columns = alias_columns + ['edwSequence'] -%}
     {% endif -%}
