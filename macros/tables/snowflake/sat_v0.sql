@@ -46,7 +46,7 @@ latest_entries_in_sat AS (
 
     SELECT
         {{ parent_hashkey }},
-        {{ src_hashdiff }}
+        {{ ns.hdiff_alias }}
     FROM 
         {{ this }}
     QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
