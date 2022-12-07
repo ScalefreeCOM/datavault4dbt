@@ -106,7 +106,7 @@
   {%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none, multi_active_config=none) -%}
     
     {# If include_source_columns is passed but its empty then it is set with the default value (true) #}
-    {%- if not datavault4dbt.is_something(include_source_columns) -%}
+    {%- if include_source_columns is none or include_source_columns == "" -%}
       {%- set include_source_columns = true -%}
     {%- endif -%}
 
