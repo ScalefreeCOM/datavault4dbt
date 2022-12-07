@@ -65,13 +65,13 @@ pit_records AS (
                 ON 1=1
             {%- endif %}
         {% for satellite in sat_names %}
-        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
+        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
         LEFT JOIN {{ ref(satellite) }}
             ON
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
                 {% if ledts|string|lower in sat_columns|map('lower') %}
                     AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
-                {%- else -%}
+                {%- else %}
                     AND {{ satellite }}.{{ ldts }} >= snap.{{ sdts }}
                 {%- endif -%}
         {% endfor %}
