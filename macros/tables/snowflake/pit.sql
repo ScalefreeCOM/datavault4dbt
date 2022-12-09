@@ -85,7 +85,7 @@ pit_records AS (
 
 records_to_insert AS (
 
-    SELECT *
+    SELECT DISTINCT *
     FROM pit_records
     {%- if is_incremental() %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
