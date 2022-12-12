@@ -10,6 +10,7 @@
 {%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- if datavault4dbt.is_something(pit_type) -%}
@@ -68,14 +69,20 @@ pit_records AS (
             {%- endif %}
         {% for satellite in sat_names %}
         {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
+        {%- if ledts|string|lower in sat_columns|map('lower') %}
         LEFT JOIN {{ ref(satellite) }}
+        {%- else %}
+        LEFT JOIN (
+            SELECT
+                {{ hashkey }},
+                {{ ldts }},
+                COALESCE(LEAD({{ ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
+            FROM {{ ref(satellite) }}
+        ) {{ satellite }}
+        {% endif %}
             ON
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
-                {%- if ledts|string|lower in sat_columns|map('lower') %}
-                    AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
-                {%- else %}
-                    AND {{ satellite }}.{{ ldts }} >= snap.{{ sdts }}
-                {%- endif -%}
+                AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
     {% if datavault4dbt.is_something(snapshot_trigger_column) %}
         WHERE snap.{{ snapshot_trigger_column }}
