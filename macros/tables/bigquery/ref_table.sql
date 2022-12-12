@@ -74,7 +74,7 @@ WITH
                     SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} LIKE '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
@@ -84,10 +84,10 @@ WITH
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT 
-                    t.*,
+                    t.{{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} LIKE '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
@@ -96,6 +96,7 @@ WITH
             ),
 
             {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
+            {{ log('rsrc_static_query: ' ~ rsrc_static_query_source, true)}}
             {%- set source_in_target = true -%}
 
             {% if not rsrc_static_result %}
@@ -165,6 +166,8 @@ WITH
             {{ src_ldts }},
             {{ src_rsrc }}
         FROM {{ ref(source_model) }} src
+
+        {{ log('ns rsrc_static dict: ' ~ ns.source_included_before, true)}}
 
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_model] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
