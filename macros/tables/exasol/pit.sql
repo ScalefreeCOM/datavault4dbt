@@ -76,7 +76,7 @@ pit_records AS (
             SELECT
                 {{ hashkey }},
                 {{ ldts }},
-                COALESCE(LEAD(ADD_SECONDS({{ ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) AS ledts
+                COALESCE(LEAD(ADD_SECONDS({{ ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) AS {{ ledts }}
             FROM {{ ref(satellite) }}
         ) {{ satellite }}
         {% endif %}
