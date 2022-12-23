@@ -15,6 +15,8 @@
 
 {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_columns, exclude) -%}
 
+-- depends_on: ref({{ ref_sat_v0 }})
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH

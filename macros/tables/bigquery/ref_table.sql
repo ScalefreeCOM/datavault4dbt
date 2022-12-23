@@ -1,246 +1,113 @@
-{%- macro default__ref_table(ref_keys, payload, src_ldts, src_rsrc, source_models) -%}
+{%- macro default__ref_table(ref_hub, ref_satellites, src_ldts, src_rsrc, historized, snapshot_trigger_column='is_active', snapshot_relation=none) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
+{%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
+{%- set ledts_alias = var('datavault4dbt.ledts_alias', 'ledts') -%}
 
-{%- set ref_keys = datavault4dbt.expand_column_list(columns=[ref_keys]) -%}
-{%- set payload = datavault4dbt.expand_column_list(columns=[payload]) -%}
+{%- set hub_columns = adapter.get_columns_in_relation(ref(ref_hub)) -%}
+{%- set hub_columns_to_exclude = [src_ldts, src_rsrc] -%}
+{%- set ref_key_cols = datavault4dbt.process_columns_to_select(hub_columns, hub )%}
 
-{# If no specific ref_keys is defined for each source, we apply the values set in the ref_keys variable. #}
-{# If no specific payload is defined for each source, we apply the values set in the payload variable. #}
-{# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
-{# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
-{%- if source_models is not mapping -%}
-    {%- set source_models = {source_models: {}} -%}
+{%- set sat_columns_to_exclude = [src_ldts, src_rsrc, ledts_alias] -%}
+
+{%- if not datavault4dbt.is_list(ref_satellites) -%}
+    {%- set ref_satellites = [ref_satellites] -%}
 {%- endif -%}
 
-{%- for source_model in source_models.keys() -%}
 
-    {%- if 'ref_keys' not in source_models[source_model].keys() -%}
-        {%- do source_models[source_model].update({'ref_keys': ref_keys}) -%}
-    {%- endif -%}
+WITH 
 
-    {%- if 'payload' not in source_models[source_model].keys() -%}
-        {%- do source_models[source_model].update({'payload': payload}) -%}
-    {%- endif -%}
+{%- if historized in ['full', 'latest'] -%}
 
-    {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
-        {%- set ns.has_rsrc_static_defined = false -%}
-    {%- else -%}
+load_dates AS (
 
-        {%- if not (source_models[source_model]['rsrc_static'] is iterable and source_models[source_model]['rsrc_static'] is not string) -%}
+    {%- for satellite in ref_satellites -%}
 
-            {%- if source_models[source_model]['rsrc_static'] == '' or source_models[source_model]['rsrc_static'] is none -%}
-                {%- if execute -%}
-                    {{ exceptions.raise_compiler_error("If rsrc_static is defined -> it must not be an empty string ") }}
-                {%- endif %}
-            {%- else -%}
-                {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
-            {%- endif -%}
+    SELECT distinct 
+        {{ src_ldts }}
+    FROM {{ ref(satellite) }}
+    {% if not loop.last -%} UNION {%- endif %}
 
-        {%- elif source_models[source_model]['rsrc_static'] is iterable -%}
-            {%- do ns.source_models_rsrc_dict.update({source_model : source_models[source_model]['rsrc_static'] } ) -%}
-        {%- endif -%}
-
-    {%- endif -%}
-
-{%- endfor -%}
-
-{%- set final_columns_to_select = ref_keys + payload + [src_ldts] + [src_rsrc] -%}
-
-{{ datavault4dbt.prepend_generated_by() }}
-
-WITH
-
-{% if is_incremental() -%}
-{# Get all target ref_keys out of the existing ref_table for later incremental logic. #}
-    distinct_target_ref_keys AS (
-
-        SELECT
-            {{ datavault4dbt.concat_ws(ref_keys) }}
-        FROM {{ this }}
-
-    ),
-    {%- if ns.has_rsrc_static_defined -%}
-        {% for source_model in source_models.keys() %}
-         {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
-            {%- set source_number = loop.index | string -%}
-            {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
-
-            {%- set rsrc_static_query_source -%}
-                {%- for rsrc_static in rsrc_statics -%}
-                    SELECT t.{{ src_rsrc }},
-                    '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }} t
-                    WHERE {{ src_rsrc }} LIKE '{{ rsrc_static }}'
-                    {%- if not loop.last %}
-                        UNION ALL
-                    {% endif -%}
-                {%- endfor -%}
-            {% endset %}
-
-            rsrc_static_{{ source_number }} AS (
-                {%- for rsrc_static in rsrc_statics -%}
-                    SELECT 
-                    t.{{ src_ldts }},
-                    '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }} t
-                    WHERE {{ src_rsrc }} LIKE '{{ rsrc_static }}'
-                    {%- if not loop.last %}
-                        UNION ALL
-                    {% endif -%}
-                {%- endfor -%}
-                {%- set ns.last_cte = "rsrc_static_{}".format(source_number) -%}
-            ),
-
-            {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
-            {{ log('rsrc_static_query: ' ~ rsrc_static_query_source, true)}}
-            {%- set source_in_target = true -%}
-
-            {% if not rsrc_static_result %}
-                {%- set source_in_target = false -%}
-            {% endif %}
-
-            {%- do ns.source_included_before.update({source_model: source_in_target}) -%}
-
-        {% endfor -%}
-
-        {%- if source_models.keys() | length > 1 %}
-
-        rsrc_static_union AS (
-            {#  Create one unionized table over all sources. It will be the same as the already existing
-                hub, but extended by the rsrc_static column. #}
-            {% for source_model in source_models.keys() %}
-            {%- set source_number = loop.index | string -%}
-
-            SELECT rsrc_static_{{ source_number }}.* FROM rsrc_static_{{ source_number }}
-
-            {%- if not loop.last %}
-            UNION ALL
-            {% endif -%}
-            {%- endfor %}
-            {%- set ns.last_cte = "rsrc_static_union" -%}
-        ),
-
-        {%- endif %}
-
-        max_ldts_per_rsrc_static_in_target AS (
-        {# Use the previously created CTE to calculate the max load date timestamp per rsrc_static. #}
-            SELECT
-                rsrc_static,
-                MAX({{ src_ldts }}) as max_ldts
-            FROM {{ ns.last_cte }}
-            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-            GROUP BY rsrc_static
-
-        ),
-    {%- endif %}
-{% endif -%}
-
-{% for source_model in source_models.keys() %}
-
-    {%- set source_number = loop.index | string -%}
-
-    {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
-    {%- endif -%}
-{# 
-    {%- if 'ref_keys' not in source_models[source_model].keys() %}
-        {%- set ref_key_columns = ref_keys -%}
-    {%- else -%}
-        {%- set ref_key_columns = source_models[source_model]['ref_keys'] -%}
-    {% endif %} #}
-
-    src_new_{{ source_number }} AS (
-
-        SELECT
-            {% for ref_key in source_models[source_model]['ref_keys'] -%}
-            {{ ref_key}},
-            {% endfor -%}
-            {% for payload_col in source_models[source_model]['payload'] -%}
-            {{ payload_col }},
-            {% endfor -%}
-
-            {{ src_ldts }},
-            {{ src_rsrc }}
-        FROM {{ ref(source_model) }} src
-
-        {{ log('ns rsrc_static dict: ' ~ ns.source_included_before, true)}}
-
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_model] %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max ON
-        ({%- for rsrc_static in rsrc_statics -%}
-            max.rsrc_static = '{{ rsrc_static }}'
-            {%- if not loop.last -%} OR
-            {% endif -%}
-        {%- endfor %})
-        WHERE src.{{ src_ldts }} > max.max_ldts
-    {%- endif %}
-
-         {%- set ns.last_cte = "src_new_{}".format(source_number) %}
-
-    ),
-{%- endfor -%}
-
-{%- if source_models.keys() | length > 1 %}
-
-source_new_union AS (
-
-    {%- for source_model in source_models.keys() -%}
-
-    {%- set source_number = loop.index | string -%}
-
-    SELECT
-        {% for ref_key in source_models[source_model]['ref_keys'] -%}
-            {{ ref_key }} AS {{ ref_keys[loop.index - 1] }},
-        {% endfor -%}
-
-        {% for payload_col in source_models[source_model]['payload'] -%}
-            {{ payload_col }} AS {{ payload[loop.index - 1] }},
-        {% endfor -%}
-
-        {{ src_ldts }},
-        {{ src_rsrc }}
-    FROM src_new_{{ source_number }}
-
-    {%- if not loop.last %}
-    UNION ALL
-    {% endif -%}
-
-    {%- endfor -%}
-
-    {%- set ns.last_cte = 'source_new_union' -%}
+    {%- endfor %}
 
 ),
 
 {%- endif %}
 
-earliest_ref_key_over_all_sources AS (
+ref_table AS (
 
-    {#- Deduplicate the unionized records to only insert the earliest one. #}
     SELECT
-        lcte.*
-    FROM {{ ns.last_cte }} AS lcte
+    {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=ref_key_cols, prefix_str='h')) }},
+    ld.{{ date_column }},
+    h.{{ src_rsrc }},
 
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY {%- for ref_key in ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) = 1
+    {%- for satellite in ref_satellites %}
 
-    {%- set ns.last_cte = 'earliest_ref_key_over_all_sources' -%}
+    {%- set sat_alias = 's_' + loop.index|string -%}
+    {%- set sat_columns = [] -%}
+        
+        {%- if datavault4dbt.is_list(ref_satellites) %}
+            {%- set all_sat_columns = adapter.get_columns_in_relation(ref(satellite)) -%}
+            {%- set sat_columns = datavault4dbt.process_columns_to_select(all_sat_columns, sat_columns_to_exclude) -%}
+        {%- elif ref_satellites is mapping -%}
+            {%- if ref_satellites[satellite] is mapping and 'include' in ref_satellites[satellite].keys() -%}
+                {%- set sat_columns = ref_satellites[satellite][include] -%}
+            {%- elif ref_satellites[satellite] is mapping and 'exclude' in ref_satellites[satellite].keys() -%}
+                {%- set all_sat_columns = adapter.get_columns_in_relation(ref(satellite)) -%}
+                {%- set sat_columns = datavault4dbt.process_columns_to_select(all_sat_columns, ref_satellites[satellite]['exclude']) -%}
+            {%- elif datavault4dbt.is_list(ref_satellites[satellite]) -%}
+                {%- set sat_columns = ref_satellites[satellite] -%}
+            {%- else -%}
+                {{ exceptions.raise_compiler_error("Invalid definition of ref_satellites. Either a list of satellite names, or a dictionary of satellites, where the key is the satellite name and the value is either a list of columns to select, or another dictionary, with include or exclude as the key, and a list of columns to include/exclude as the value.") }}
+            {%- endif -%}
+        {%- endif -%}
 
-),
-
-records_to_insert AS (
-    {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the hub. #}
-    SELECT
-        {{ datavault4dbt.print_list(final_columns_to_select) }}
-    FROM {{ ns.last_cte }}
-
-    {%- if is_incremental() %}
-    WHERE {{ datavault4dbt.concat_ws(ref_keys) }} NOT IN (SELECT * FROM distinct_target_ref_keys)
+    {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=sat_columns, prefix_str=sat_alias)) }}
+    {%- if not loop.last -%} ,
     {% endif -%}
-)
 
-SELECT * FROM records_to_insert
+    {% endfor -%} 
+
+    FROM {{ ref(ref_hub) }} h
+
+    {%- if historized in ['full', 'latest'] -%}
+    
+        {%- set date_column = src_ldts -%}
+
+    INNER JOIN load_dates ld
+        ON {{ datavault4dbt.multikey(columns=src_ldts, prefix=['h', 'ld'], condition='>=') }}
+
+    {% elif snapshot_relation is not none %}
+
+        {%- set date_column = snapshot_trigger_column -%}
+
+    FULL OUTER JOIN {{ ref(snapshot_relation) }} ld
+        ON ld.{{ snapshot_trigger_column }} = true
+    
+    {%- else -%}
+
+        {{ exceptions.raise_compiler_error("If 'historized' is set to 'snapshot', the parameter 'snapshot_relation' must be set. Insert the name of your snapshot v1 view.") }}
+    
+    {%- endif -%}        
+
+    {% for satellite in ref_satellites %}
+
+        {%- set sat_alias = 's_' + loop.index|string -%}
+
+    LEFT JOIN {{ ref(satellite) }} {{ sat_alias }}
+        ON {{ datavault4dbt.multikey(columns=ref_key_cols, prefix=['h', sat_alias], condition='=') }}
+        AND  ld.{{ date_column }} BETWEEN {{ sat_alias }}.{{ src_ldts }} AND {{ sat_alias }}.{{ ledts_alias }}
+    
+    {% endfor %}
+
+    {%- if historized == 'latest' -%}
+    WHERE ld.{{ src_ldts }} = (SELECT MAX({{ src_ldts }}) FROM ld)
+    {%- endif -%}
+
+) 
+
+SELECT * FROM ref_table
 
 {%- endmacro -%}
