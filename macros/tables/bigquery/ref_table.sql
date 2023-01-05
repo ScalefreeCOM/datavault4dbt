@@ -13,7 +13,7 @@
 {%- set hub_columns_to_exclude = [src_ldts, src_rsrc] -%}
 {%- set ref_key_cols = datavault4dbt.process_columns_to_select(columns_list=hub_columns, exclude_columns_list=hub_columns_to_exclude )%}
 
-{%- set sat_columns_to_exclude = [src_ldts, src_rsrc, ledts_alias] -%}
+{%- set sat_columns_to_exclude = [src_ldts, src_rsrc, ledts_alias, ref_key_cols] -%}
 
 {%- if not datavault4dbt.is_list(ref_satellites) -%}
     {%- set ref_satellites = [ref_satellites] -%}
@@ -42,11 +42,11 @@ load_dates AS (
 ref_table AS (
 
     SELECT
-    {{ datavault4dbt.prefix(columns=ref_key_cols, prefix_str='h') }},
+    {{ datavault4dbt.print_list(list_to_print=ref_key_cols, indent=2, src_alias='h') }},
     ld.{{ src_ldts }},
     h.{{ src_rsrc }},
 
-    {%- for satellite in ref_satellites %}
+    {% for satellite in ref_satellites %}
 
     {%- set sat_alias = 's_' + loop.index|string -%}
     {%- set sat_columns = [] -%}
@@ -67,20 +67,20 @@ ref_table AS (
             {%- endif -%}
         {%- endif -%}
 
-    {{ datavault4dbt.prefix(columns=sat_columns, prefix_str=sat_alias) }}
+    {{ datavault4dbt.print_list(list_to_print=sat_columns, indent=2, src_alias=sat_alias) }}
     {%- if not loop.last -%} ,
     {% endif -%}
 
-    {% endfor -%} 
+    {% endfor %} 
 
     FROM {{ ref(ref_hub) }} h
 
-    {%- if historized in ['full', 'latest'] -%}
+    {% if historized in ['full', 'latest'] -%}
     
         {%- set date_column = src_ldts -%}
 
     INNER JOIN load_dates ld
-        ON {{ datavault4dbt.multikey(columns=src_ldts, prefix=['h', 'ld'], condition='>=') }}
+        ON h.{{ src_ldts }} >= ld.{{ src_ldts }}
 
     {% elif snapshot_relation is not none %}
 
@@ -89,7 +89,7 @@ ref_table AS (
     FULL OUTER JOIN {{ ref(snapshot_relation) }} ld
         ON ld.{{ snapshot_trigger_column }} = true
     
-    {%- else -%}
+    {% else -%}
 
         {{ exceptions.raise_compiler_error("If 'historized' is set to 'snapshot', the parameter 'snapshot_relation' must be set. Insert the name of your snapshot v1 view.") }}
     
@@ -106,7 +106,7 @@ ref_table AS (
     {% endfor %}
 
     {%- if historized == 'latest' -%}
-    WHERE ld.{{ src_ldts }} = (SELECT MAX({{ src_ldts }}) FROM ld)
+    WHERE ld.{{ src_ldts }} = (SELECT MAX({{ src_ldts }}) FROM load_dates)
     {%- endif -%}
 
 ) 
