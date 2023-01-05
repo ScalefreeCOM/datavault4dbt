@@ -3,12 +3,15 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{%- set ref_hub_relation = ref(ref_hub) -%}
+
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 {%- set ledts_alias = var('datavault4dbt.ledts_alias', 'ledts') -%}
-
-{%- set hub_columns = adapter.get_columns_in_relation(ref(ref_hub)) -%}
+{{ log('ref_hub_relation: ' ~ ref_hub_relation, true) }}
+{%- set hub_columns = datavault4dbt.source_columns(ref_hub_relation) -%}
+{{ log('hub_columns: ' ~ datavault4dbt.source_columns(ref_hub_relation), true) }}
 {%- set hub_columns_to_exclude = [src_ldts, src_rsrc] -%}
-{%- set ref_key_cols = datavault4dbt.process_columns_to_select(hub_columns, hub )%}
+{%- set ref_key_cols = datavault4dbt.process_columns_to_select(columns_list=hub_columns, exclude_columns_list=hub_columns_to_exclude )%}
 
 {%- set sat_columns_to_exclude = [src_ldts, src_rsrc, ledts_alias] -%}
 
@@ -19,7 +22,7 @@
 
 WITH 
 
-{%- if historized in ['full', 'latest'] -%}
+{% if historized in ['full', 'latest'] -%}
 
 load_dates AS (
 
@@ -39,8 +42,8 @@ load_dates AS (
 ref_table AS (
 
     SELECT
-    {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=ref_key_cols, prefix_str='h')) }},
-    ld.{{ date_column }},
+    {{ datavault4dbt.prefix(columns=ref_key_cols, prefix_str='h') }},
+    ld.{{ src_ldts }},
     h.{{ src_rsrc }},
 
     {%- for satellite in ref_satellites %}
@@ -49,13 +52,13 @@ ref_table AS (
     {%- set sat_columns = [] -%}
         
         {%- if datavault4dbt.is_list(ref_satellites) %}
-            {%- set all_sat_columns = adapter.get_columns_in_relation(ref(satellite)) -%}
+            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
             {%- set sat_columns = datavault4dbt.process_columns_to_select(all_sat_columns, sat_columns_to_exclude) -%}
         {%- elif ref_satellites is mapping -%}
             {%- if ref_satellites[satellite] is mapping and 'include' in ref_satellites[satellite].keys() -%}
                 {%- set sat_columns = ref_satellites[satellite][include] -%}
             {%- elif ref_satellites[satellite] is mapping and 'exclude' in ref_satellites[satellite].keys() -%}
-                {%- set all_sat_columns = adapter.get_columns_in_relation(ref(satellite)) -%}
+                {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
                 {%- set sat_columns = datavault4dbt.process_columns_to_select(all_sat_columns, ref_satellites[satellite]['exclude']) -%}
             {%- elif datavault4dbt.is_list(ref_satellites[satellite]) -%}
                 {%- set sat_columns = ref_satellites[satellite] -%}
@@ -64,7 +67,7 @@ ref_table AS (
             {%- endif -%}
         {%- endif -%}
 
-    {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=sat_columns, prefix_str=sat_alias)) }}
+    {{ datavault4dbt.prefix(columns=sat_columns, prefix_str=sat_alias) }}
     {%- if not loop.last -%} ,
     {% endif -%}
 
