@@ -40,7 +40,7 @@
     {%- set error_key = '' -%}
 
 
-    {{ log('hash datatype: ' ~ hash_datatype, true) }}
+    {{ log('hash datatype: ' ~ hash_datatype, false) }}
 
     {%- if hash_function == 'MD5' and hash_datatype == 'STRING' -%}
         {%- set hash_alg = 'MD5' -%}

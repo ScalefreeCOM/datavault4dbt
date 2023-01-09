@@ -39,7 +39,7 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- set dict_result = {} -%}
 
-{%- if datatype = 'STRING' -%}
+{%- if datatype == 'STRING' -%}
 
     {%- if case_sensitive -%}
         {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
@@ -80,7 +80,7 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- set dict_result = {} -%}
 
-{{ log('datatype: ' ~ datatype, true)}}
+{{ log('datatype: ' ~ datatype, false)}}
 
 {%- if 'VARCHAR' in datatype or 'CHAR' in datatype or 'STRING' in datatype or 'TEXT' in datatype %}
 
@@ -189,7 +189,7 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
     {%- set multi_active_key = multi_active_key|join(", ") -%}
 {%- endif -%}
 
-{%- if datatype = 'STRING' -%}
+{%- if datatype == 'STRING' -%}
 
     {%- if case_sensitive -%}
         {%- set standardise_prefix = "IFNULL(TO_HEX(LOWER({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
