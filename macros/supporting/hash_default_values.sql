@@ -44,8 +44,8 @@
             {%- set error_key = "ffffffffffffffffffffffffffffffffffffffff" -%}
         {%- elif hash_datatype == 'BINARY' -%}
             {%- set hash_alg = 'SHA1_BINARY' -%}
-            {%- set unknown_key = "TO_BINARY(0000000000000000000000000000000000000000)" -%}
-            {%- set error_key = "TO_BINARY(ffffffffffffffffffffffffffffffffffffffff)" -%}        
+            {%- set unknown_key = "TO_BINARY('0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "TO_BINARY('ffffffffffffffffffffffffffffffffffffffff')" -%}        
         {%- endif -%}
     {%- elif hash_function == 'SHA2' or hash_function == 'SHA2_HEX' -%}
         {%- if hash_datatype == 'STRING' -%}
@@ -54,8 +54,8 @@
             {%- set error_key = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" -%}
         {%- elif hash_datatype == 'BINARY' -%}
             {%- set hash_alg = 'SHA2_BINARY' -%}
-            {%- set unknown_key = "TO_BINARY(0000000000000000000000000000000000000000000000000000000000000000)" -%}
-            {%- set error_key = "TO_BINARY(ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)" -%}        
+            {%- set unknown_key = "TO_BINARY('0000000000000000000000000000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "TO_BINARY('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}        
         {%- endif -%}   
     {%- endif -%}
 
