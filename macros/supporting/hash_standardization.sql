@@ -80,6 +80,8 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- set dict_result = {} -%}
 
+{{ log('datatype: ' ~ datatype, true)}}
+
 {%- if 'VARCHAR' in datatype or 'CHAR' in datatype or 'STRING' in datatype or 'TEXT' in datatype %}
 
     {%- if case_sensitive -%}
