@@ -131,7 +131,7 @@
             {%- set column_str = datavault4dbt.as_constant(column) -%}
         {%- endif -%}
 
-        {{- "\n NULLIF(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+        {{- "\n NVL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
         {{- ",'{}',".format(concat_string) if not loop.last -}}
 
         {%- if loop.last -%}
