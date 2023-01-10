@@ -11,15 +11,15 @@
     {%- set unknown_key = '' -%}
     {%- set error_key = '' -%}
 
-    {%- if hash_function == 'MD5' and hash_datatype == 'STRING' -%}
+    {%- if hash_function == 'MD5' -%}
         {%- set hash_alg = 'MD5' -%}
         {%- set unknown_key = '!00000000000000000000000000000000' -%}
         {%- set error_key = '!ffffffffffffffffffffffffffffffff' -%}
-    {%- elif hash_function == 'SHA' or hash_function == 'SHA1' and hash_datatype == 'STRING' -%}
+    {%- elif hash_function == 'SHA' or hash_function == 'SHA1' -%}
         {%- set hash_alg = 'SHA1' -%}
         {%- set unknown_key = '!0000000000000000000000000000000000000000' -%}
         {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
-    {%- elif hash_function == 'SHA2' or hash_function == 'SHA256' and hash_datatype == 'STRING' -%}
+    {%- elif hash_function == 'SHA2' or hash_function == 'SHA256' -%}
         {%- set hash_alg = 'SHA256' -%}
         {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
         {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
