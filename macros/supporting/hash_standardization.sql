@@ -141,22 +141,25 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
+{%- macro exasol__concattenated_standardise(case_sensitive, hash_alg, zero_key, alias) -%}
+{%- set dict_result = {} -%}
+
 {%- if case_sensitive -%}
-    {%- set standardise_prefix = "NULLIF({}(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
+    {%- set standardise_prefix = "NVL({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
 
     {%- if alias is not none -%}
-        {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'[ALL_NULL]')), {}) AS {} ".format(zero_key, alias) -%}
+        {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'[ALL_NULL]')), '{}') AS {} ".format(zero_key, alias) -%}
     {%- else -%}
-        {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'[ALL_NULL]')), {})".format(zero_key, alias) -%}
+        {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'[ALL_NULL]')), '{}')".format(zero_key, alias) -%}
     {%- endif -%}
 
 {%- else -%}
-    {%- set standardise_prefix = "NULLIF({}(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(CONCAT(".format(hash_alg) -%}
+    {%- set standardise_prefix = "NVL({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg) -%}
 
     {%- if alias is not none -%}
-        {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '[ALL_NULL]')), {}) AS {} ".format(zero_key, alias) -%}
+        {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '[ALL_NULL]')), '{}') AS {} ".format(zero_key, alias) -%}
     {%- else %}
-        {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '[ALL_NULL]')), {})".format(zero_key) -%}
+        {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '[ALL_NULL]')), '{}')".format(zero_key) -%}
     {%- endif -%}
 
 {%- endif -%}
