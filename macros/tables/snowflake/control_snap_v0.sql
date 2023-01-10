@@ -39,7 +39,7 @@ enriched_timestamps AS (
             ELSE FALSE
         END AS is_daily,
         CASE
-            WHEN EXTRACT(DAYOFWEEK FROM  sdts) = 2 THEN TRUE
+            WHEN EXTRACT(DAYOFWEEK FROM  sdts) = 1 THEN TRUE
             ELSE FALSE
         END AS is_weekly,
         CASE
