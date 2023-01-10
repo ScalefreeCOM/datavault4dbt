@@ -398,7 +398,7 @@ unknown_values AS (
     {%- if datavault4dbt.is_something(processed_hash_columns) -%},
 
       {%- for hash_column in processed_hash_columns %}
-        CAST('{{ unknown_key }}' as {{ hash_dtype }}) as "{{ hash_column }}"
+        CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }}) as "{{ hash_column }}"
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 
@@ -459,7 +459,7 @@ error_values AS (
     {%- if datavault4dbt.is_something(processed_hash_columns) -%},
 
       {%- for hash_column in processed_hash_columns %}
-        CAST('{{ error_key }}' as {{ hash_dtype }}) as "{{ hash_column }}"
+        CAST({{ datavault4dbt.as_constant(column_str=error_key) }} as {{ hash_dtype }}) as "{{ hash_column }}"
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 
