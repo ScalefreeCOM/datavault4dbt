@@ -31,6 +31,7 @@ latest_row AS (
     SELECT
         {{ sdts_alias }}
     FROM {{ v0_relation }}
+    WHERE {{ sdts_alias }} <= dateadd("day", 1, date_trunc(day, sysdate())) - INTERVAL '1 SECOND'
     ORDER BY {{ sdts_alias }} DESC
     LIMIT 1
 
@@ -126,6 +127,7 @@ virtual_logic AS (
     FROM {{ v0_relation }} c
     LEFT JOIN latest_row l
     ON c.{{ sdts_alias }} = l.{{ sdts_alias }}
+    WHERE c.{{ sdts_alias }} <= dateadd("day", 1, date_trunc(day, sysdate())) - INTERVAL '1 SECOND'
 ),
 
 active_logic_combined AS (
