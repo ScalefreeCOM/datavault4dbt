@@ -138,8 +138,9 @@
 
 {%- if ghost_record_type == 'unknown' -%}
      {%- if datatype in ['TIMESTAMP_NTZ','TIMESTAMP'] %}{{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} AS {{ column_name }}
-     {% elif datatype in ['STRING', 'VARCHAR'] %}'(unknown)' AS {{ column_name }}
-     {%- elif datatype.upper().startswith('VARCHAR(') -%}
+     {%- elif datatype in ['STRING', 'VARCHAR'] %}'{{ unknown_value__STRING }}' AS {{ column_name }}
+     {%- elif datatype == 'CHAR' %}CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
+     {%- elif datatype.upper().startswith('VARCHAR(') or datatype.upper().startswith('CHAR(') -%}
             {%- if col_size is not none -%}
                 {%- set unknown_dtype_length = col_size | int -%}
                 {%- if '(' not in datatype -%}
@@ -155,14 +156,15 @@
             {%- else -%}
                 CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
             {%- endif -%}
-     {% elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}0 AS {{ column_name }}
-     {% elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ column_name }}
-     {% else %}NULL AS {{ column_name }}
+     {%- elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}0 AS {{ column_name }}
+     {%- elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ column_name }}
+     {%- else %}NULL AS {{ column_name }}
      {% endif %}
 {%- elif ghost_record_type == 'error' -%}
      {%- if datatype in ['TIMESTAMP_NTZ','TIMESTAMP'] %}{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} AS {{ column_name }}
-     {% elif datatype in ['STRING','VARCHAR'] %}'(error)' AS {{ column_name }}
-     {%- elif datatype.upper().startswith('VARCHAR(') -%}
+     {%- elif datatype in ['STRING','VARCHAR'] %}'{{ error_value__STRING }}' AS {{ column_name }}
+     {%- elif datatype == 'CHAR' %}CAST('{{ error_value_alt__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
+     {%- elif datatype.upper().startswith('VARCHAR(')  or datatype.upper().startswith('CHAR(') -%}
             {%- if col_size is not none -%}
                 {%- set error_dtype_length = col_size | int -%}
                 {%- if '(' not in datatype -%}
