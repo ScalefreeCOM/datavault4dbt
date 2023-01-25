@@ -131,17 +131,55 @@
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+{%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
+{%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
+{%- set unknown_value_alt__STRING = var('datavault4dbt.unknown_value_alt__STRING', 'u')  -%}
+{%- set error_value_alt__STRING = var('datavault4dbt.error_value_alt__STRING', 'e')  -%}
 
 {%- if ghost_record_type == 'unknown' -%}
      {%- if datatype in ['TIMESTAMP_NTZ','TIMESTAMP'] %}{{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} AS {{ column_name }}
-     {% elif datatype in ['STRING','VARCHAR'] %}'(unknown)' AS {{ column_name }}
-     {% elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}0 AS {{ column_name }}
-     {% elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ column_name }}
-     {% else %}NULL AS {{ column_name }}
+     {%- elif datatype in ['STRING', 'VARCHAR'] %}'{{ unknown_value__STRING }}' AS {{ column_name }}
+     {%- elif datatype == 'CHAR' %}CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
+     {%- elif datatype.upper().startswith('VARCHAR(') or datatype.upper().startswith('CHAR(') -%}
+            {%- if col_size is not none -%}
+                {%- set unknown_dtype_length = col_size | int -%}
+                {%- if '(' not in datatype -%}
+                    {%- set datatype = datatype ~ "(" ~ (unknown_dtype_length|string) ~ ")" -%}
+                {%- endif -%}
+            {%- else -%}
+                {%- set inside_parenthesis =  datatype.split(")")[0] |string -%}
+                {%- set inside_parenthesis = inside_parenthesis.split("(")[1]-%}
+                {%- set unknown_dtype_length = inside_parenthesis | int -%}
+            {%- endif -%}
+            {%- if unknown_dtype_length < unknown_value__STRING|length -%}
+                CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
+            {%- else -%}
+                CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
+            {%- endif -%}
+     {%- elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}0 AS {{ column_name }}
+     {%- elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ column_name }}
+     {%- else %}NULL AS {{ column_name }}
      {% endif %}
 {%- elif ghost_record_type == 'error' -%}
      {%- if datatype in ['TIMESTAMP_NTZ','TIMESTAMP'] %}{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} AS {{ column_name }}
-     {% elif datatype in ['STRING','VARCHAR'] %}'(error)' AS {{ column_name }}
+     {%- elif datatype in ['STRING','VARCHAR'] %}'{{ error_value__STRING }}' AS {{ column_name }}
+     {%- elif datatype == 'CHAR' %}CAST('{{ error_value_alt__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
+     {%- elif datatype.upper().startswith('VARCHAR(')  or datatype.upper().startswith('CHAR(') -%}
+            {%- if col_size is not none -%}
+                {%- set error_dtype_length = col_size | int -%}
+                {%- if '(' not in datatype -%}
+                    {%- set datatype = datatype ~ "(" ~ (error_dtype_length|string) ~ ")" -%}
+                {%- endif -%}
+            {%- else -%}
+                {%- set inside_parenthesis =  datatype.split(")")[0] |string -%}
+                {%- set inside_parenthesis = inside_parenthesis.split("(")[1]-%}
+                {%- set error_dtype_length = inside_parenthesis | int -%}
+            {%- endif -%}
+            {%- if error_dtype_length < error_value__STRING|length  -%}
+                CAST('{{ error_value_alt__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
+            {%- else -%}
+                CAST('{{ error_value__STRING }}' as {{ datatype }} ) as "{{ column_name }}"
+            {%- endif -%}
      {% elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}-1 AS {{ column_name }}
      {% elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ column_name }}
      {% else %}NULL AS {{ column_name }}
