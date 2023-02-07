@@ -54,7 +54,13 @@
             {%- elif value is mapping and value.is_hashdiff -%}
                 {%- do extracted_input_columns.append(value['columns']) -%}
             {%- elif value is mapping and 'this_column_name' in value.keys() -%}
-                {%- do extracted_input_columns.append(value['this_column_name']) -%}
+                {%- if datavault4dbt.is_list(value['this_column_name'])-%}
+                    {%- for column in value['this_column_name'] -%}
+                        {%- do extracted_input_columns.append(column) -%}
+                    {%- endfor -%}
+                {%- else -%}
+                    {%- do extracted_input_columns.append(value['this_column_name']) -%}
+                {%- endif -%}
             {%- else -%}
                 {%- do extracted_input_columns.append(value) -%}
             {%- endif -%}

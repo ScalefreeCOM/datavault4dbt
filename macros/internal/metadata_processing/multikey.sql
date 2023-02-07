@@ -1,4 +1,4 @@
-{%- macro multikey(columns, prefix=none, condition=none, operator='AND') -%}
+{%- macro multikey(columns, prefix=none, condition=none, operator='AND', right_columns=none) -%}
 
     {{- adapter.dispatch('multikey', 'datavault4dbt')(columns=columns, prefix=prefix, condition=condition, operator=operator) -}}
 
@@ -14,10 +14,25 @@
         {%- set columns = [columns] -%}
     {%- endif -%}
 
+    {%- if right_columns is none -%}
+        {%- set right_columns = columns -%}
+    {%- elif right_columns is string -%}
+        {%- set right_columns = [right_columns] -%}
+    {%- elif right_columns|length <> columns|length -%}
+        {%- set error_message -%}
+      Multikey Error: If right_columns are defined, it must be the same length as columns. 
+      Got: 
+        Columns: {{ columns }} with length {{ columns|length }}
+        right_columns: {{ right_columns }} with length {{ right_columns|length }}
+        {%- endset -%}
+
+        {{- do exceptions.raise_compiler_error(error_message) -}}
+    {%- endif -%}
+
     {%- if condition in ['<>', '!=', '='] -%}
         {%- for col in columns -%}
             {%- if prefix -%}
-                {{- datavault4dbt.prefix([col], prefix[0], alias_target='target') }} {{ condition }} {{ datavault4dbt.prefix([col], prefix[1]) -}}
+                {{- datavault4dbt.prefix([col], prefix[0], alias_target='target') }} {{ condition }} {{ datavault4dbt.prefix([right_column[loop.index0]], prefix[1]) -}}
             {%- endif %}
             {%- if not loop.last %} {{ operator }} {% endif -%}
         {% endfor -%}

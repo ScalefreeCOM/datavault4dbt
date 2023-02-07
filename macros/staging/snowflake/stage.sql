@@ -231,9 +231,9 @@ prejoined_columns AS (
   {%- for col, vals in prejoined_columns.items() %}
 
     {%- if ['src_name', 'src_table'] in vals.keys() -%}
-    left join {{ source(vals['src_name']|string, vals['src_table']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
+    {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
     {%- elif 'ref_model' in vals.keys() -%}
-    left join {{ ref(vals['ref_model']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
+    {%- set relation = ref(vals['ref_model']) -%}
     {%- else -%}
       {%- set error_message -%}
       Prejoin error: Invalid target entity definition. Allowed are: 
@@ -242,16 +242,16 @@ prejoined_columns AS (
       extracted_column_alias:
         ref_model: model_name
         bk: extracted_column_name
-        this_column_name: join_column_in_this_model
-        ref_column_name: join_column_in_ref_model
+        this_column_name: join_columns_in_this_model
+        ref_column_name: join_columns_in_ref_model
       OR
       [SOURCES STYLE]
       extracted_column_alias:
         src_name: name_of_ref_source
         src_table: name_of_ref_table
         bk: extracted_column_name
-        this_column_name: join_column_in_this_model
-        ref_column_name: join_column_in_ref_model
+        this_column_name: join_columns_in_this_model
+        ref_column_name: join_columns_in_ref_model
 
       Got: 
       {{ col }}: {{ vals }}
@@ -259,6 +259,12 @@ prejoined_columns AS (
 
     {{- do exceptions.raise_compiler_error(error_message) -}}
     {%- endif -%}
+
+    {%- set operator = vals['operator'] -%}
+    {%- set prejoin_prefix = pj_{{loop.index}}|string -%}
+
+    left join {{ relation }} as pj_{{loop.index}} 
+      on {{ datavault4dbt.multikey(columns=vals['this_column_name'], prefix=['lcte', prejoin_prefix], condition='=', operator=operator, right_columns=vals['ref_column_name']) }}
 
   {% endfor %}
 
