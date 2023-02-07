@@ -229,7 +229,37 @@ prejoined_columns AS (
   FROM {{ last_cte }} lcte
 
   {%- for col, vals in prejoined_columns.items() %}
+
+    {%- if ['src_name', 'src_table'] in vals.keys() -%}
     left join {{ source(vals['src_name']|string, vals['src_table']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
+    {%- elif 'ref_model' in vals.keys() -%}
+    left join {{ ref(vals['ref_model']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
+    {%- else -%}
+      {%- set error_message -%}
+      Prejoin error: Invalid target entity definition. Allowed are: 
+      e.g.
+      [REF STYLE]
+      extracted_column_alias:
+        ref_model: model_name
+        bk: extracted_column_name
+        this_column_name: join_column_in_this_model
+        ref_column_name: join_column_in_ref_model
+      OR
+      [SOURCES STYLE]
+      extracted_column_alias:
+        src_name: name_of_ref_source
+        src_table: name_of_ref_table
+        bk: extracted_column_name
+        this_column_name: join_column_in_this_model
+        ref_column_name: join_column_in_ref_model
+
+      Got: 
+      {{ col }}: {{ vals }}
+      {%- endset -%}
+
+    {{- do exceptions.raise_compiler_error(error_message) -}}
+    {%- endif -%}
+
   {% endfor %}
 
   {% set last_cte = "prejoined_columns" -%}
@@ -325,7 +355,13 @@ unknown_values AS (
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
 
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
+        {%- if ['src_name', 'src_table'] in vals.keys() -%}
+          {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+        {%- elif 'ref_model' in vals.keys() -%}
+          {%- set relation = ref(vals['ref_model']) -%}
+        {%- endif -%}
+
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
 
           {% for column in pj_relation_columns -%}
 
@@ -387,7 +423,13 @@ error_values AS (
     {# Additionally generating ghost records for the prejoined attributes #}
       {%- for col, vals in prejoined_columns.items() %}
 
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
+        {%- if ['src_name', 'src_table'] in vals.keys() -%}
+          {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+        {%- elif 'ref_model' in vals.keys() -%}
+          {%- set relation = ref(vals['ref_model']) -%}
+        {%- endif -%}
+
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
 
         {% for column in pj_relation_columns -%}
           {% if column.name|lower == vals['bk']|lower -%}
