@@ -87,8 +87,6 @@
 
     {%- endfor -%}
 
-    {{ log('ns_source_model_list: ' ~ ns_source_models.source_model_list_tmp, true) }}
-
     {%- do dict_result.update({"source_model_list": ns_source_models.source_model_list_tmp ,"has_rsrc_static_defined": ns_source_models.has_rsrc_static_defined, "source_models_rsrc_dict": ns_source_models.source_models_rsrc_dict}) -%}
      
 
