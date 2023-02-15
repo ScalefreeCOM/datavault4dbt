@@ -5,10 +5,10 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+
 {# If no specific link_hk, fk_columns, or payload are defined for each source, we apply the values set in the link_hashkey, foreign_hashkeys, and payload variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
-
 {%- if source_models is not mapping -%}
     {%- set source_models = {source_models: {}} -%}
 {%- endif -%}
@@ -78,6 +78,7 @@ WITH
             {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
 
             {%- set rsrc_static_query_source -%}
+                SELECT count(*) FROM (
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT {{ this }}.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
@@ -87,6 +88,7 @@ WITH
                         UNION ALL
                     {% endif -%}
                 {%- endfor -%}
+                )
             {% endset %}
 
             rsrc_static_{{ source_number }} AS (
@@ -102,12 +104,19 @@ WITH
                 {%- set ns.last_cte = "rsrc_static_{}".format(source_number) -%}
             ),
 
-            {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
             {%- set source_in_target = true -%}
+            
+            {%- if execute -%}
+                {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
 
-            {% if not rsrc_static_result %}
-                {%- set source_in_target = false -%}
-            {% endif %}
+                {%- set row_count = rsrc_static_result.columns[0].values()[0] -%}
+
+                {{ log('row_count for '~source_model~' is '~row_count, false) }}
+
+                {%- if row_count == 0 -%}
+                    {%- set source_in_target = false -%}
+                {%- endif -%}
+            {%- endif -%}
 
             {%- do ns.source_included_before.update({source_model: source_in_target}) -%}
 
@@ -138,7 +147,7 @@ WITH
 
             SELECT
                 rsrc_static,
-                MAX({{ src_ldts }}) as max_ldts
+                MAX({{ src_ldts }}) AS max_ldts
             FROM {{ ns.last_cte }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
