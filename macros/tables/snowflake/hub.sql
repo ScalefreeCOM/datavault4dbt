@@ -3,7 +3,7 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{{ log('source_models'~source_models, true) }}
+{{ log('source_models'~source_models, false) }}
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
@@ -22,7 +22,7 @@
 {%- set source_models = source_model_values['source_model_list'] -%}
 {%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
-
+{{ log('source_models: '~source_models, true) }}
 
 {%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] -%}
 
@@ -44,6 +44,8 @@ WITH
          {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
             {%- set source_number = source_model.id | string -%}
             {%- set rsrc_statics = ns.source_models_rsrc_dict.id -%}
+
+            {{log('rsrc_statics: '~rsrc_statics, true) }}
 
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
@@ -70,8 +72,10 @@ WITH
                 {%- endfor -%}
                 {%- set ns.last_cte = "rsrc_static_{}".format(source_number) -%}
             ),
-
-            {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
+        
+            {%- if execute -%}
+                {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
+            {%- endif -%}
             {%- set source_in_target = true -%}
 
             {% if not rsrc_static_result %}
