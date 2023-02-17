@@ -22,7 +22,7 @@
 {%- set source_models = source_model_values['source_model_list'] -%}
 {%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
-{{ log('source_models: '~source_models, true) }}
+{{ log('source_models: '~source_models, false) }}
 
 {%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] -%}
 
@@ -43,9 +43,9 @@ WITH
         {% for source_model in source_models %}
          {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
             {%- set source_number = source_model.id | string -%}
-            {%- set rsrc_statics = ns.source_models_rsrc_dict.id -%}
+            {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number] -%}
 
-            {{log('rsrc_statics: '~rsrc_statics, true) }}
+            {{log('rsrc_statics: '~ rsrc_statics, false) }}
 
             {%- set rsrc_static_query_source -%}
                 SELECT count(*) FROM (
@@ -60,6 +60,8 @@ WITH
                 {%- endfor -%}
                 )
             {% endset %}
+
+            {{ log('rsrc static query: '~rsrc_static_query_source, false) }}
 
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
