@@ -9,6 +9,7 @@
                                                             src_ldts=src_ldts,
                                                             src_rsrc=src_rsrc,
                                                             ref_satellites=ref_satellites,
-                                                            historized=historized)) }}
+                                                            historized=historized,
+                                                            snapshot_relation=snapshot_relation)) }}
 
 {%- endmacro -%}
