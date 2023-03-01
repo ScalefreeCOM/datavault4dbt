@@ -137,6 +137,7 @@
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+{{ log('hash_function: ' ~ hash, false)}}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
@@ -340,7 +341,7 @@ unknown_values AS (
     {%- if datavault4dbt.is_something(derived_columns) -%},
     {# Additionally generating Ghost Records for Derived Columns #}
       {%- for column_name, properties in derived_columns_with_datatypes_DICT.items() %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, col_size=properties.col_size, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
       {%- endfor -%}
 
@@ -349,7 +350,7 @@ unknown_values AS (
     {%- if datavault4dbt.is_something(processed_hash_columns) -%},
 
       {%- for hash_column in processed_hash_columns %}
-        CAST('{{ unknown_key }}' as {{ hash_dtype }}) as {{ hash_column }}
+        CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }}) as {{ hash_column }}
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 
@@ -401,7 +402,7 @@ error_values AS (
     {%- if datavault4dbt.is_something(derived_columns) %},
     {# Additionally generating Ghost Records for Derived Columns #}
       {%- for column_name, properties in derived_columns_with_datatypes_DICT.items() %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, col_size=properties.col_size, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 
@@ -410,7 +411,7 @@ error_values AS (
     {%- if datavault4dbt.is_something(processed_hash_columns) -%},
 
       {%- for hash_column in processed_hash_columns %}
-        CAST('{{ error_key }}' as {{ hash_dtype }}) as {{ hash_column }}
+        CAST({{ datavault4dbt.as_constant(column_str=error_key) }} as {{ hash_dtype }}) as {{ hash_column }}
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 

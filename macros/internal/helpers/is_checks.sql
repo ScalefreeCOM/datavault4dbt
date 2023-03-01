@@ -41,7 +41,7 @@
 {%- macro is_expression(obj) -%}
 
     {%- if obj is string -%}
-        {%- if (obj | first == "'" and obj | last == "'") or ("(" in obj and ")" in obj) or "::" in obj -%}
+        {%- if (obj | first == "'" and obj | last == "'") or ("(" in obj and ")" in obj) or "::" in obj or "||" in obj -%}
             {%- do return(true) -%}
         {%- else -%}
             {%- do return(false) -%}

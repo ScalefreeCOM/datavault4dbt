@@ -12,6 +12,7 @@
 {%- set dimension_key = dimension_key | upper -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- if datavault4dbt.is_something(pit_type) -%}
@@ -52,7 +53,7 @@ pit_records AS (
         te.{{ hashkey }},
         snap.{{ sdts }},
         {% for satellite in sat_names %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ unknown_key }}' AS {{ hash_dtype }})) AS hk_{{ satellite }},
+            COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite }},
             COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
             {{- "," if not loop.last }}
         {%- endfor %}
@@ -67,15 +68,21 @@ pit_records AS (
                 ON 1=1
             {%- endif %}
         {% for satellite in sat_names %}
-        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
+        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
+        {%- if ledts|string|lower in sat_columns|map('lower') %}
         LEFT JOIN {{ ref(satellite) }}
+        {%- else %}
+        LEFT JOIN (
+            SELECT
+                {{ hashkey }},
+                {{ ldts }},
+                COALESCE(LEAD(ADD_SECONDS({{ ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) AS {{ ledts }}
+            FROM {{ ref(satellite) }}
+        ) {{ satellite }}
+        {% endif %}
             ON
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
-                {% if ledts|string|lower in sat_columns|map('lower') %}
-                    AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
-                {%- else -%}
-                    AND {{ satellite }}.{{ ldts }} >= snap.{{ sdts }}
-                {%- endif -%}
+                AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
     {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
         WHERE snap.{{ snapshot_trigger_column }}
@@ -85,7 +92,7 @@ pit_records AS (
 
 records_to_insert AS (
 
-    SELECT *
+    SELECT DISTINCT *
     FROM pit_records
     {%- if is_incremental() %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)

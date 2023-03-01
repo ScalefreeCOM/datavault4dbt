@@ -7,19 +7,22 @@
 {%- macro default__hash_default_values(hash_function, hash_datatype) -%}
 
     {%- set dict_result = {} -%}
+    {%- set hash_alg = '' -%}
+    {%- set unknown_key = '' -%}
+    {%- set error_key = '' -%}
 
-    {%- if hash_function == 'MD5' and hash_datatype == 'STRING' -%}
+    {%- if hash_function == 'MD5' -%}
         {%- set hash_alg = 'MD5' -%}
-        {%- set unknown_key = '00000000000000000000000000000000' -%}
-        {%- set error_key = 'ffffffffffffffffffffffffffffffff' -%}
-    {%- elif hash_function == 'SHA' or hash_function == 'SHA1' and hash_datatype == 'STRING' -%}
+        {%- set unknown_key = '!00000000000000000000000000000000' -%}
+        {%- set error_key = '!ffffffffffffffffffffffffffffffff' -%}
+    {%- elif hash_function == 'SHA' or hash_function == 'SHA1' -%}
         {%- set hash_alg = 'SHA1' -%}
-        {%- set unknown_key = '0000000000000000000000000000000000000000' -%}
-        {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffff' -%}
-    {%- elif hash_function == 'SHA2' or hash_function == 'SHA256' and hash_datatype == 'STRING' -%}
+        {%- set unknown_key = '!0000000000000000000000000000000000000000' -%}
+        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
+    {%- elif hash_function == 'SHA2' or hash_function == 'SHA256' -%}
         {%- set hash_alg = 'SHA256' -%}
-        {%- set unknown_key = '0000000000000000000000000000000000000000000000000000000000000000' -%}
-        {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
+        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
     {%- endif -%}
 
     {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}
@@ -32,30 +35,36 @@
 {%- macro snowflake__hash_default_values(hash_function, hash_datatype) -%}
 
     {%- set dict_result = {} -%}
+    {%- set hash_alg = '' -%}
+    {%- set unknown_key = '' -%}
+    {%- set error_key = '' -%}
+
+
+    {{ log('hash datatype: ' ~ hash_datatype, false) }}
 
     {%- if hash_function == 'MD5' and hash_datatype == 'STRING' -%}
         {%- set hash_alg = 'MD5' -%}
-        {%- set unknown_key = "00000000000000000000000000000000" -%}
-        {%- set error_key = "ffffffffffffffffffffffffffffffff" -%}
-    {%- elif hash_function == 'SHA1' or hash_function == 'SHA1_HEX' -%} 
-        {%- if hash_datatype == 'STRING' -%}
+        {%- set unknown_key = '!00000000000000000000000000000000' -%}
+        {%- set error_key = '!ffffffffffffffffffffffffffffffff' -%}
+    {%- elif hash_function == 'SHA1' or hash_function == 'SHA1_HEX' or hash_function == 'SHA' -%} 
+        {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
             {%- set hash_alg = 'SHA1' -%}
-            {%- set unknown_key = "0000000000000000000000000000000000000000" -%}
-            {%- set error_key = "ffffffffffffffffffffffffffffffffffffffff" -%}
-        {%- elif hash_datatype == 'BINARY' -%}
+            {%- set unknown_key = '!0000000000000000000000000000000000000000' -%}
+            {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- elif 'BINARY' in hash_datatype -%}
             {%- set hash_alg = 'SHA1_BINARY' -%}
-            {%- set unknown_key = "TO_BINARY(0000000000000000000000000000000000000000)" -%}
-            {%- set error_key = "TO_BINARY(ffffffffffffffffffffffffffffffffffffffff)" -%}        
+            {%- set unknown_key = "TO_BINARY('0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "TO_BINARY('ffffffffffffffffffffffffffffffffffffffff')" -%}        
         {%- endif -%}
     {%- elif hash_function == 'SHA2' or hash_function == 'SHA2_HEX' -%}
-        {%- if hash_datatype == 'STRING' -%}
+        {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
             {%- set hash_alg = 'SHA2' -%}
-            {%- set unknown_key = "0000000000000000000000000000000000000000000000000000000000000000" -%}
-            {%- set error_key = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" -%}
-        {%- elif hash_datatype == 'BINARY' -%}
+            {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
+            {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- elif 'BINARY' in hash_datatype -%}
             {%- set hash_alg = 'SHA2_BINARY' -%}
-            {%- set unknown_key = "TO_BINARY(0000000000000000000000000000000000000000000000000000000000000000)" -%}
-            {%- set error_key = "TO_BINARY(ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)" -%}        
+            {%- set unknown_key = "TO_BINARY('0000000000000000000000000000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "TO_BINARY('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}        
         {%- endif -%}   
     {%- endif -%}
 
@@ -69,19 +78,22 @@
 {%- macro exasol__hash_default_values(hash_function, hash_datatype=none) -%}
 
     {%- set dict_result = {} -%}
+    {%- set hash_alg = '' -%}
+    {%- set unknown_key = '' -%}
+    {%- set error_key = '' -%}
 
     {%- if hash_function == 'MD5' -%}
         {%- set hash_alg = 'HASHTYPE_MD5' -%}
-        {%- set unknown_key = '00000000000000000000000000000000' -%}
-        {%- set error_key = 'ffffffffffffffffffffffffffffffff' -%}
+        {%- set unknown_key = '!00000000000000000000000000000000' -%}
+        {%- set error_key = '!ffffffffffffffffffffffffffffffff' -%}
     {%- elif (hash_function == 'SHA' or hash_function == 'SHA1') -%}
         {%- set hash_alg = 'HASHTYPE_SHA1' -%}
-        {%- set unknown_key = '0000000000000000000000000000000000000000' -%}
-        {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- set unknown_key = '!0000000000000000000000000000000000000000' -%}
+        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
     {%- elif (hash_function == 'SHA2' or hash_function == 'SHA256') -%}
         {%- set hash_alg = 'HASHTYPE_SHA256' -%}
-        {%- set unknown_key = '0000000000000000000000000000000000000000000000000000000000000000' -%}
-        {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
+        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
     {%- endif -%}
 
     {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}

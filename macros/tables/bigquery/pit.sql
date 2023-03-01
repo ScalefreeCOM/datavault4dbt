@@ -7,15 +7,22 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
+{%- if hash_dtype == 'BYTES' -%}
+    {%- set hashkey_string = 'TO_HEX({})'.format(datavault4dbt.prefix([hashkey],'te')) -%}
+{%- else -%}
+    {%- set hashkey_string = datavault4dbt.prefix([hashkey],'te') -%}
+{%- endif -%}
+
 {%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- if datavault4dbt.is_something(pit_type) -%}
-    {%- set hashed_cols = [pit_type, datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+    {%- set hashed_cols = [pit_type, hashkey_string, datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- else -%}
-    {%- set hashed_cols = [datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+    {%- set hashed_cols = [hashkey_string, datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- endif -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -50,7 +57,7 @@ pit_records AS (
         te.{{ hashkey }},
         snap.{{ sdts }},
         {% for satellite in sat_names %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST('{{ unknown_key }}' AS {{ hash_dtype }})) AS hk_{{ satellite }},
+            COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite }},
             COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
             {{- "," if not loop.last }}
         {%- endfor %}
@@ -65,15 +72,21 @@ pit_records AS (
                 ON 1=1
             {%- endif %}
         {% for satellite in sat_names %}
-        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
+        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
+        {%- if ledts|string|lower in sat_columns|map('lower') %}
         LEFT JOIN {{ ref(satellite) }}
+        {%- else %}
+        LEFT JOIN (
+            SELECT
+                {{ hashkey }},
+                {{ ldts }},
+                COALESCE(LEAD(TIMESTAMP_SUB({{ ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
+            FROM {{ ref(satellite) }}
+        ) {{ satellite }}
+        {% endif %}
             ON
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
-                {% if ledts|string|lower in sat_columns|map('lower') %}
-                    AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
-                {%- else -%}
-                    AND {{ satellite }}.{{ ldts }} >= snap.{{ sdts }}
-                {%- endif -%}
+                AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
     {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
         WHERE snap.{{ snapshot_trigger_column }}
@@ -83,7 +96,7 @@ pit_records AS (
 
 records_to_insert AS (
 
-    SELECT *
+    SELECT DISTINCT *
     FROM pit_records
     {%- if is_incremental() %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)

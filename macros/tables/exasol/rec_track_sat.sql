@@ -71,6 +71,22 @@ WITH
             {%- set hk_column = source_models[source_model]['hk_column'] -%}
             {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
 
+            {%- set rsrc_static_query_source_count -%}
+                SELECT count(*) FROM (
+                {%- for rsrc_static in rsrc_statics -%}
+                    SELECT 
+                    {{ tracked_hashkey }},
+                    {{ src_ldts }},
+                    '{{ rsrc_static }}' AS rsrc_static
+                    FROM {{ this }}
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    {%- if not loop.last %} 
+                        UNION ALL
+                    {% endif -%}
+                {%- endfor -%}
+                )
+            {% endset %}
+
             {%- set rsrc_static_query_source -%}
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT 
@@ -87,12 +103,19 @@ WITH
 
             {{ rsrc_static_query_source }}  
 
-            {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
             {%- set source_in_target = true -%}
+            
+            {%- if execute -%}
+                {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
 
-            {% if not rsrc_static_result %}
-                {%- set source_in_target = false -%}
-            {% endif %}
+                {%- set row_count = rsrc_static_result.columns[0].values()[0] -%}
+
+                {{ log('row_count for '~source_model~' is '~row_count, false) }}
+
+                {%- if row_count == 0 -%}
+                    {%- set source_in_target = false -%}
+                {%- endif -%}
+            {%- endif -%}
 
             {%- do ns.source_included_before.update({source_model: source_in_target}) -%}
             {# Unionize over all sources #}
