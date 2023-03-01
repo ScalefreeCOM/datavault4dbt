@@ -1,3 +1,34 @@
+{#
+Example model:
+
+{{ config(materialized='incremental',
+          schema='Core') }}
+
+{%- set yaml_metadata -%}
+source_models: stg_nation
+ref_keys: N_NATIONKEY
+{%- endset -%}      
+
+{% set metadata_dict = fromyaml(yaml_metadata) %}
+
+{{ datavault4dbt.ref_hub(source_models=metadata_dict['source_models'],
+                     ref_keys=metadata_dict['ref_keys']) }}
+
+#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 {%- macro ref_hub(ref_keys, source_models, src_ldts=none, src_rsrc=none) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}

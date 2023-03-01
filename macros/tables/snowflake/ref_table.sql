@@ -14,11 +14,21 @@
 {%- set hub_columns_to_exclude = [src_ldts, src_rsrc] -%}
 {%- set ref_key_cols = datavault4dbt.process_columns_to_select(columns_list=hub_columns, exclude_columns_list=hub_columns_to_exclude )%}
 {{ log('ref_key_cols: ' ~ ref_key_cols, true) }}
-{%- set sat_columns_to_exclude = [src_ldts, src_rsrc, ledts_alias] + ref_key_cols -%}
+{%- set sat_columns_to_exclude = [src_ldts, src_rsrc, ledts_alias, is_current_col_alias] + ref_key_cols -%}
 {{ log('sat_columns_to_exclude: '~ sat_columns_to_exclude, true) }}
 
-{%- if not datavault4dbt.is_list(ref_satellites) -%}
+{%- set ref_satellites_dict = {} -%}
+
+{%- if not datavault4dbt.is_list(ref_satellites) and not ref_satellites is mapping -%}
     {%- set ref_satellites = [ref_satellites] -%}
+{%- endif -%}
+
+{%- if datavault4dbt.is_list(ref_satellites) -%}
+    {%- for ref_satellite in ref_satellites -%}
+        {%- do ref_satellites_dict.update({ref_satellite:{}}) -%}
+    {%- endfor -%}
+{%- else -%}
+    {%- set ref_satellites_dict = ref_satellites -%}
 {%- endif -%}
 
 
@@ -30,53 +40,47 @@ WITH
 
 load_dates AS (
 
-    {{ log('ref_satellites: '~ ref_satellites, true) }}
+    {{ log('ref_satellites: '~ ref_satellites, true) -}}
 
-    {%- for satellite in ref_satellites -%}
-
+    {% for satellite in ref_satellites_dict.keys() -%}
     SELECT distinct 
         {{ src_ldts }}
     FROM {{ ref(satellite|string) }}
-    {% if not loop.last -%} UNION {%- endif %}
-
+    {% if not loop.last -%} UNION {% endif %}
     {%- endfor %}
-
 ),
 
 {% elif snapshot_relation is not none %}
-
     {%- set date_column = sdts_alias -%}
-
 {%- endif %}
 
 ref_table AS (
 
     SELECT
     {{ datavault4dbt.print_list(list_to_print=ref_key_cols, indent=2, src_alias='h') }},
-    ld.{{ date_column }},
-    h.{{ src_rsrc }},
+        ld.{{ date_column }},
+        h.{{ src_rsrc }},
 
-    {% for satellite in ref_satellites %}
+    {%- for satellite in ref_satellites_dict.keys() %}
 
     {%- set sat_alias = 's_' + loop.index|string -%}
-    {%- set sat_columns = [] -%}
+    {%- set sat_columns_pre = [] -%}
         
-        {%- if datavault4dbt.is_list(ref_satellites) %}
+        {%- if ref_satellites_dict[satellite] is mapping and 'include' in ref_satellites_dict[satellite].keys() -%}
+            {%- set sat_columns_pre = ref_satellites_dict[satellite]['include'] -%}
+        {%- elif ref_satellites_dict[satellite] is mapping and 'exclude' in ref_satellites_dict[satellite].keys() -%}
             {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
-            {%- set sat_columns = datavault4dbt.process_columns_to_select(all_sat_columns, sat_columns_to_exclude) -%}
-            {{ log('sat_columns: '~ sat_columns, true) }}
-        {%- elif ref_satellites is mapping -%}
-            {%- if ref_satellites[satellite] is mapping and 'include' in ref_satellites[satellite].keys() -%}
-                {%- set sat_columns = ref_satellites[satellite][include] -%}
-            {%- elif ref_satellites[satellite] is mapping and 'exclude' in ref_satellites[satellite].keys() -%}
-                {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
-                {%- set sat_columns = datavault4dbt.process_columns_to_select(all_sat_columns, ref_satellites[satellite]['exclude']) -%}
-            {%- elif datavault4dbt.is_list(ref_satellites[satellite]) -%}
-                {%- set sat_columns = ref_satellites[satellite] -%}
-            {%- else -%}
-                {{ exceptions.raise_compiler_error("Invalid definition of ref_satellites. Either a list of satellite names, or a dictionary of satellites, where the key is the satellite name and the value is either a list of columns to select, or another dictionary, with include or exclude as the key, and a list of columns to include/exclude as the value.") }}
-            {%- endif -%}
+            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, ref_satellites_dict[satellite]['exclude']) -%}
+        {%- elif datavault4dbt.is_list(ref_satellites_dict[satellite]) -%}
+            {%- set sat_columns_pre = ref_satellites_dict[satellite] -%}
+        {%- else -%}
+            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
+            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, sat_columns_to_exclude) -%}
         {%- endif -%}
+
+    {%- set sat_columns = datavault4dbt.process_columns_to_select(sat_columns_pre, sat_columns_to_exclude) -%}
+    
+    {{- log('sat_columns: '~ sat_columns, true) -}}
 
     {{ datavault4dbt.print_list(list_to_print=sat_columns, indent=2, src_alias=sat_alias) }}
     {%- if not loop.last -%} ,
@@ -102,7 +106,7 @@ ref_table AS (
     
     {%- endif -%}        
 
-    {% for satellite in ref_satellites %}
+    {% for satellite in ref_satellites_dict.keys() %}
 
         {%- set sat_alias = 's_' + loop.index|string -%}
 
