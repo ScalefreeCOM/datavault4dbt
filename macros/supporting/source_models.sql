@@ -1,4 +1,4 @@
-{%- macro source_model_processing(source_models, parameters, set_rsrc_static=true, business_keys=none) -%}
+{%- macro source_model_processing(source_models, parameters, set_rsrc_static=true, business_keys=none, reference_keys=none) -%}
 
     {%- set ns_source_models = namespace(source_model_list = [], source_model_list_tmp=[], source_model_dict = {}, source_model_input = [], has_rsrc_static_defined=true, source_models_rsrc_dict = {}) -%}
 
@@ -82,6 +82,24 @@
             {%- endif -%}
 
         {%- endif -%}
+
+        {%- if ref_keys is not none -%}
+
+            {%- if 'ref_keys' in source_model.keys() -%}
+                {%- set ref_column_input = source_model['ref_keys'] -%}
+
+                {%- if not (ref_column_input is iterable and ref_column_input is not string) -%}
+                    {%- set ref_column_input = [ref_column_input] -%}
+                {%- endif -%}
+
+                {%- do source_model.update({'ref_keys': ref_column_input}) -%}
+            {%- elif not datavault4dbt.is_list(ref_column_input) -%}
+                {%- set rk_list = datavault4dbt.expand_column_list(columns=[ref_column_input]) -%}
+                {%- do source_model.update({'ref_keys': rk_list}) -%}
+            {%- else -%}{%- do source_model.update({'ref_keys': ref_keys}) -%}
+            {%- endif -%}
+
+        {%- endif -%}        
 
         {%- do ns_source_models.source_model_list_tmp.append(source_model) -%}
 
