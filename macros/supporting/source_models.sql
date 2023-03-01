@@ -1,4 +1,4 @@
-{%- macro source_model_processing(source_models, parameters, set_rsrc_static=true, business_keys=none, reference_keys=none) -%}
+{%- macro source_model_processing(source_models, set_rsrc_static=true, parameters={}, business_keys=none, reference_keys=none) -%}
 
     {%- set ns_source_models = namespace(source_model_list = [], source_model_list_tmp=[], source_model_dict = {}, source_model_input = [], has_rsrc_static_defined=true, source_models_rsrc_dict = {}) -%}
 
