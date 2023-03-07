@@ -4,6 +4,8 @@
 
     {%- set dict_result = {} -%}
 
+    {{ log('ref_keys: '~reference_keys, true)}}
+
     {%- if source_models is mapping -%}
 
         {%- for source_model in source_models.keys() -%}
@@ -17,9 +19,13 @@
 
     {%- elif not datavault4dbt.is_list(source_models) -%}
 
-        {%- for parameter, input in parameters.items() -%}
-            {% do ns_source_models.source_model_dict.update({parameter: input}) %}
-        {%- endfor -%}
+        {%- if parameters.keys()|length > 0 -%}
+
+            {%- for parameter, input in parameters.items() -%}
+                {% do ns_source_models.source_model_dict.update({parameter: input}) %}
+            {%- endfor -%}
+
+        {%- endif -%}
 
         {%- do ns_source_models.source_model_list.append(ns_source_models.source_model_dict) -%}
 
@@ -33,13 +39,17 @@
 
         {%- do source_model.update({'id': loop.index}) -%}
 
-        {%- for parameter, input in parameters.items() -%}
+        {%- if parameters.keys()|length > 0 -%}
+            
+            {%- for parameter, input in parameters.items() -%}
 
-            {%- if parameter not in source_model.keys() -%}
-                {%- do source_model.update({parameter: input}) -%}
-            {%- endif -%}
+                {%- if parameter not in source_model.keys() -%}
+                    {%- do source_model.update({parameter: input}) -%}
+                {%- endif -%}
 
-        {%- endfor -%}
+            {%- endfor -%}
+
+        {%- endif -%}
 
         {%- if set_rsrc_static -%}
 
@@ -66,6 +76,7 @@
         {%- endif -%}
 
         {%- if business_keys is not none -%}
+            {%- set bk_column_input = business_keys -%}
 
             {%- if 'bk_columns' in source_model.keys() -%}
                 {%- set bk_column_input = source_model['bk_columns'] -%}
@@ -83,7 +94,8 @@
 
         {%- endif -%}
 
-        {%- if ref_keys is not none -%}
+        {%- if reference_keys is not none -%}
+            {%- set ref_column_input = reference_keys -%}
 
             {%- if 'ref_keys' in source_model.keys() -%}
                 {%- set ref_column_input = source_model['ref_keys'] -%}
@@ -96,7 +108,7 @@
             {%- elif not datavault4dbt.is_list(ref_column_input) -%}
                 {%- set rk_list = datavault4dbt.expand_column_list(columns=[ref_column_input]) -%}
                 {%- do source_model.update({'ref_keys': rk_list}) -%}
-            {%- else -%}{%- do source_model.update({'ref_keys': ref_keys}) -%}
+            {%- else -%}{%- do source_model.update({'ref_keys': ref_column_input}) -%}
             {%- endif -%}
 
         {%- endif -%}        
@@ -107,6 +119,7 @@
 
     {%- do dict_result.update({"source_model_list": ns_source_models.source_model_list_tmp ,"has_rsrc_static_defined": ns_source_models.has_rsrc_static_defined, "source_models_rsrc_dict": ns_source_models.source_models_rsrc_dict}) -%}
      
+     {{log('dict_result: '~ dict_result, true)}}
 
     {{ return(dict_result | tojson) }}
 
