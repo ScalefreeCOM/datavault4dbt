@@ -13,12 +13,12 @@
 {%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
     {%- set source_models = {source_models: {}} -%}
 {%- endif -%}
-{{ log('source_model_processing: '~ datavault4dbt.source_model_processing(source_models=source_models, parameters={'test':'test'}, reference_keys=ref_keys), true)}}
+
 {%- set source_model_values = fromjson(datavault4dbt.source_model_processing(source_models=source_models, parameters={'test':'test'}, reference_keys=ref_keys)) -%}
 {%- set source_models = source_model_values['source_model_list'] -%}
 {%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
-{{ log('source_models: '~source_models, true) }}
+{{ log('source_models: '~source_models, false) }}
 
 {%- set final_columns_to_select = ref_keys + [src_ldts] + [src_rsrc] -%}
 

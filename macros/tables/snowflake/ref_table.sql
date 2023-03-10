@@ -8,14 +8,14 @@
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 {%- set ledts_alias = var('datavault4dbt.ledts_alias', 'ledts') -%}
 {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
-{{ log('ref_hub_relation: ' ~ ref_hub_relation, true) }}
+{{ log('ref_hub_relation: ' ~ ref_hub_relation, false) }}
 {%- set hub_columns = datavault4dbt.source_columns(ref_hub_relation) -%}
-{{ log('hub_columns: ' ~ hub_columns, true) }}
+{{ log('hub_columns: ' ~ hub_columns, false) }}
 {%- set hub_columns_to_exclude = [src_ldts, src_rsrc] -%}
 {%- set ref_key_cols = datavault4dbt.process_columns_to_select(columns_list=hub_columns, exclude_columns_list=hub_columns_to_exclude )%}
-{{ log('ref_key_cols: ' ~ ref_key_cols, true) }}
+{{ log('ref_key_cols: ' ~ ref_key_cols, false) }}
 {%- set sat_columns_to_exclude = [src_ldts, src_rsrc, ledts_alias, is_current_col_alias] + ref_key_cols -%}
-{{ log('sat_columns_to_exclude: '~ sat_columns_to_exclude, true) }}
+{{ log('sat_columns_to_exclude: '~ sat_columns_to_exclude, false) }}
 
 {%- set ref_satellites_dict = {} -%}
 
@@ -40,7 +40,7 @@ WITH
 
 load_dates AS (
 
-    {{ log('ref_satellites: '~ ref_satellites, true) -}}
+    {{ log('ref_satellites: '~ ref_satellites, false) -}}
 
     {% for satellite in ref_satellites_dict.keys() -%}
     SELECT distinct 
@@ -80,7 +80,7 @@ ref_table AS (
 
     {%- set sat_columns = datavault4dbt.process_columns_to_select(sat_columns_pre, sat_columns_to_exclude) -%}
     
-    {{- log('sat_columns: '~ sat_columns, true) -}}
+    {{- log('sat_columns: '~ sat_columns, false) -}}
 
     {{ datavault4dbt.print_list(list_to_print=sat_columns, indent=2, src_alias=sat_alias) }}
     {%- if not loop.last -%} ,

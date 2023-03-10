@@ -4,7 +4,7 @@
 
     {%- set dict_result = {} -%}
 
-    {{ log('ref_keys: '~reference_keys, true)}}
+    {{ log('ref_keys: '~reference_keys, false)}}
 
     {%- if source_models is mapping -%}
 
@@ -119,7 +119,7 @@
 
     {%- do dict_result.update({"source_model_list": ns_source_models.source_model_list_tmp ,"has_rsrc_static_defined": ns_source_models.has_rsrc_static_defined, "source_models_rsrc_dict": ns_source_models.source_models_rsrc_dict}) -%}
      
-     {{log('dict_result: '~ dict_result, true)}}
+     {{log('dict_result: '~ dict_result, false)}}
 
     {{ return(dict_result | tojson) }}
 
