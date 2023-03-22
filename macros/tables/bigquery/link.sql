@@ -84,6 +84,7 @@ WITH
             {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
 
             {%- set rsrc_static_query_source -%}
+                SELECT count(*) FROM (
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
@@ -93,6 +94,7 @@ WITH
                         UNION ALL
                     {% endif -%}
                 {%- endfor -%}
+                )
             {% endset %}
 
             rsrc_static_{{ source_number }} AS (
@@ -108,12 +110,19 @@ WITH
                 {%- set ns.last_cte = "rsrc_static_{}".format(source_number) -%}
             ),
 
-            {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
             {%- set source_in_target = true -%}
+            
+            {%- if execute -%}
+                {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
 
-            {% if not rsrc_static_result %}
-                {%- set source_in_target = false -%}
-            {% endif %}
+                {%- set row_count = rsrc_static_result.columns[0].values()[0] -%}
+
+                {{ log('row_count for '~source_model~' is '~row_count, false) }}
+
+                {%- if row_count == 0 -%}
+                    {%- set source_in_target = false -%}
+                {%- endif -%}
+            {%- endif -%}
 
             {%- do ns.source_included_before.update({source_model: source_in_target}) -%}
 
