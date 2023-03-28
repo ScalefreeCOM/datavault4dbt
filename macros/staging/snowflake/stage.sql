@@ -166,7 +166,7 @@ source_data AS (
 
   FROM {{ source_relation }}
 
-  {%- if is_incremental() -%}
+  {% if is_incremental() %}
   WHERE {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) FROM {{ this }})
   {%- endif -%}
 
