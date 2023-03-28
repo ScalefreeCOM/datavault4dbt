@@ -26,6 +26,10 @@ source_data AS (
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
+
+    QUALIFY
+        ROW_NUMBER() OVER (PARTITION BY {{parent_hashkey}} ORDER BY {{ src_ldts }}) = 1
+        
 ),
 
 {% if is_incremental() -%}
