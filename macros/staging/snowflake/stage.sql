@@ -242,6 +242,8 @@ prejoined_columns AS (
 {# Adding derived columns to the selection #}
 derived_columns AS (
 
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) -%}
+
   SELECT
   {% if final_columns_to_select | length > 0 -%}
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
