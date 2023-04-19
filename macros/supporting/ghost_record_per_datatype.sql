@@ -11,6 +11,7 @@
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+{%- set datatype = datatype | string | upper -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -57,6 +58,7 @@
 {%- set hash_alg= hash_default_values['hash_alg'] -%}
 {%- set unknown_value__HASHTYPE = hash_default_values['unknown_key'] -%}
 {%- set  error_value__HASHTYPE = hash_default_values['error_key'] -%}
+{%- set datatype = datatype | string | upper -%}
 
 {%- if ghost_record_type == 'unknown' -%}
 
@@ -135,6 +137,7 @@
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
 {%- set unknown_value_alt__STRING = var('datavault4dbt.unknown_value_alt__STRING', 'u')  -%}
 {%- set error_value_alt__STRING = var('datavault4dbt.error_value_alt__STRING', 'e')  -%}
+{%- set datatype = datatype | string | upper -%}
 
 {%- if ghost_record_type == 'unknown' -%}
      {%- if datatype in ['TIMESTAMP_NTZ','TIMESTAMP'] %}{{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} AS {{ column_name }}
