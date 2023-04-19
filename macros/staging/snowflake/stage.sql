@@ -167,7 +167,9 @@ source_data AS (
   FROM {{ source_relation }}
 
   {% if is_incremental() %}
-  WHERE {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) FROM {{ this }})
+  WHERE {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) 
+                      FROM {{ this }} 
+                      WHERE {{ load_datetime_col_name}} != {{ datavault4dbt.string_to_timestamp(timestamp_format , end_of_all_times) }} )
   {%- endif -%}
 
   {% set last_cte = "source_data" -%}
