@@ -34,25 +34,53 @@
 
 WITH 
 
+dates AS (
+
 {% if historized in ['full', 'latest'] -%}
 
     {%- set date_column = src_ldts -%}
 
-load_dates AS (
 
     {{ log('ref_satellites: '~ ref_satellites, false) -}}
+
+    {% if historized == 'full' -%}
+    SELECT distinct {{ date_column }} FROM (
+    {%- elif historized == 'latest' -%}
+    SELECT MAX({{ date_column }}) as {{ date_column }} FROM (
+    {%- endif -%}
 
     {% for satellite in ref_satellites_dict.keys() -%}
     SELECT distinct 
         {{ src_ldts }}
     FROM {{ ref(satellite|string) }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     {% if not loop.last -%} UNION {% endif %}
     {%- endfor %}
-),
+    )
+
 
 {% elif snapshot_relation is not none %}
+
     {%- set date_column = sdts_alias -%}
+    
+    SELECT 
+        {{ date_column }}
+    FROM (
+        
+        SELECT 
+            {{ sdts_alias }}
+        FROM {{ ref(snapshot_relation) }}
+        WHERE {{ snapshot_trigger_column }}
+    )
+
 {%- endif %}
+
+{%- if is_incremental() -%}
+    WHERE {{ date_column }} > (SELECT MAX({{ date_column }}) FROM {{ this }})
+{%- endif -%}
+
+
+),
 
 ref_table AS (
 
@@ -89,22 +117,9 @@ ref_table AS (
     {% endfor %} 
 
     FROM {{ ref(ref_hub) }} h
-
-    {% if historized in ['full', 'latest'] -%}
-
-    INNER JOIN load_dates ld
-        ON h.{{ src_ldts }} >= ld.{{ src_ldts }}
-
-    {% elif snapshot_relation is not none %}
-
-    FULL OUTER JOIN {{ ref(snapshot_relation) }} ld
-        ON ld.{{ snapshot_trigger_column }} = true
     
-    {% else -%}
-
-        {{ exceptions.raise_compiler_error("If 'historized' is set to 'snapshot', the parameter 'snapshot_relation' must be set. Insert the name of your snapshot v1 view.") }}
-    
-    {%- endif -%}        
+    FULL OUTER JOIN dates ld
+        ON 1 = 1  
 
     {% for satellite in ref_satellites_dict.keys() %}
 
@@ -116,9 +131,7 @@ ref_table AS (
     
     {% endfor %}
 
-    {%- if historized == 'latest' -%}
-    WHERE ld.{{ src_ldts }} = (SELECT MAX({{ src_ldts }}) FROM load_dates)
-    {%- endif -%}
+    WHERE h.{{ src_ldts }} <= ld.{{ date_column }}
 
 ) 
 
