@@ -257,7 +257,7 @@ prejoined_columns AS (
       {{ col }}: {{ vals }}
       {%- endset -%}
 
-    {{- do exceptions.raise_compiler_error(error_message) -}}
+    {%- do exceptions.raise_compiler_error(error_message) -%}
     {%- endif -%}
 
     {%- set operator = vals['operator'] -%}

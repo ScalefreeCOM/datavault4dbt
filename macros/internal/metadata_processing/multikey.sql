@@ -18,7 +18,7 @@
         {%- set right_columns = columns -%}
     {%- elif right_columns is string -%}
         {%- set right_columns = [right_columns] -%}
-    {%- elif right_columns|length <> columns|length -%}
+    {%- elif right_columns|length != columns|length -%}
         {%- set error_message -%}
       Multikey Error: If right_columns are defined, it must be the same length as columns. 
       Got: 
@@ -26,7 +26,7 @@
         right_columns: {{ right_columns }} with length {{ right_columns|length }}
         {%- endset -%}
 
-        {{- do exceptions.raise_compiler_error(error_message) -}}
+        {{- exceptions.raise_compiler_error(error_message) -}}
     {%- endif -%}
 
     {%- if condition in ['<>', '!=', '='] -%}
