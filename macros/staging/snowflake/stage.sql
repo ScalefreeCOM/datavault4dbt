@@ -228,12 +228,12 @@ prejoined_columns AS (
 
   FROM {{ last_cte }} lcte
 
-  {%- for col, vals in prejoined_columns.items() %}
+  {% for col, vals in prejoined_columns.items() %}
 
-    {%- if ['src_name', 'src_table'] in vals.keys() -%}
-    {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+    {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
+      {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
     {%- elif 'ref_model' in vals.keys() -%}
-    {%- set relation = ref(vals['ref_model']) -%}
+      {%- set relation = ref(vals['ref_model']) -%}
     {%- else -%}
       {%- set error_message -%}
       Prejoin error: Invalid target entity definition. Allowed are: 
@@ -260,11 +260,17 @@ prejoined_columns AS (
     {%- do exceptions.raise_compiler_error(error_message) -%}
     {%- endif -%}
 
-    {%- set operator = vals['operator'] -%}
-    {%- set prejoin_prefix = pj_{{loop.index}}|string -%}
+{# This sets a default value for the operator that connects multiple joining conditions. Only when it is not set by user. #}
+    {%- if 'operator' not in vals.keys() -%}
+      {%- set operator = 'AND' -%}
+    {%- else -%}
+      {%- set operator = vals['operator'] -%}
+    {%- endif -%}
 
-    left join {{ relation }} as pj_{{loop.index}} 
-      on {{ datavault4dbt.multikey(columns=vals['this_column_name'], prefix=['lcte', prejoin_prefix], condition='=', operator=operator, right_columns=vals['ref_column_name']) }}
+    {%- set prejoin_alias = 'pj_' + loop.index|string -%}
+
+    left join {{ relation }} as {{ prejoin_alias }} 
+      on {{ datavault4dbt.multikey(columns=vals['this_column_name'], prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=vals['ref_column_name']) }}
 
   {% endfor %}
 
@@ -361,7 +367,7 @@ unknown_values AS (
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
 
-        {%- if ['src_name', 'src_table'] in vals.keys() -%}
+        {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
           {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
         {%- elif 'ref_model' in vals.keys() -%}
           {%- set relation = ref(vals['ref_model']) -%}
@@ -429,7 +435,7 @@ error_values AS (
     {# Additionally generating ghost records for the prejoined attributes #}
       {%- for col, vals in prejoined_columns.items() %}
 
-        {%- if ['src_name', 'src_table'] in vals.keys() -%}
+        {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
           {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
         {%- elif 'ref_model' in vals.keys() -%}
           {%- set relation = ref(vals['ref_model']) -%}
