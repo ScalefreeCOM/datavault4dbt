@@ -136,7 +136,7 @@
 {#- Select hashing algorithm -#}
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+{%- set hash = datavault4dbt.hash_method() -%}
 {{ log('hash_function: ' ~ hash, false)}}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
