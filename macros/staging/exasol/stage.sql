@@ -224,7 +224,7 @@ prejoined_columns AS (
     {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=datavault4dbt.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
   {% endif %}
   {%- for col, vals in prejoined_columns.items() -%}
-    ,pj_{{loop.index}}.{{ vals['bk'] }} AS "{{ col }}"
+    ,pj_{{loop.index}}.{{ vals['bk'] }} AS "{{ col | upper }}"
   {% endfor -%}
 
   FROM {{ last_cte }} lcte
@@ -422,11 +422,9 @@ unknown_values AS (
         {%- endif -%}
 
         {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
-
           {% for column in pj_relation_columns -%}
-
             {% if column.name|lower == vals['bk']|lower -%}
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, col_size=column.char_size, ghost_record_type='unknown') }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=col|upper, datatype=column.dtype, col_size=column.char_size, ghost_record_type='unknown') }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -493,7 +491,7 @@ error_values AS (
 
         {% for column in pj_relation_columns -%}
           {% if column.name|lower == vals['bk']|lower -%}
-            {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, col_size=column.char_size, ghost_record_type='error') -}}
+            {{ datavault4dbt.ghost_record_per_datatype(column_name=col|upper, datatype=column.dtype, col_size=column.char_size, ghost_record_type='error') -}}
           {%- endif -%}
         {%- endfor -%}
           {%- if not loop.last -%},{%- endif %}
