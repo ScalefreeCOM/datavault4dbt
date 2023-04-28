@@ -224,13 +224,55 @@ prejoined_columns AS (
     {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=datavault4dbt.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
   {% endif %}
   {%- for col, vals in prejoined_columns.items() -%}
-    ,pj_{{loop.index}}.{{ vals['bk'] }} AS "{{ col }}"
+    ,pj_{{loop.index}}.{{ vals['bk'] }} AS "{{ col | upper }}"
   {% endfor -%}
 
   FROM {{ last_cte }} lcte
 
-  {%- for col, vals in prejoined_columns.items() %}
-    left join {{ source(vals['src_name']|string, vals['src_table']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
+  {% for col, vals in prejoined_columns.items() %}
+
+    {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
+      {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+    {%- elif 'ref_model' in vals.keys() -%}
+      {%- set relation = ref(vals['ref_model']) -%}
+    {%- else -%}
+      {%- set error_message -%}
+      Prejoin error: Invalid target entity definition. Allowed are: 
+      e.g.
+      [REF STYLE]
+      extracted_column_alias:
+        ref_model: model_name
+        bk: extracted_column_name
+        this_column_name: join_columns_in_this_model
+        ref_column_name: join_columns_in_ref_model
+      OR
+      [SOURCES STYLE]
+      extracted_column_alias:
+        src_name: name_of_ref_source
+        src_table: name_of_ref_table
+        bk: extracted_column_name
+        this_column_name: join_columns_in_this_model
+        ref_column_name: join_columns_in_ref_model
+
+      Got: 
+      {{ col }}: {{ vals }}
+      {%- endset -%}
+
+    {%- do exceptions.raise_compiler_error(error_message) -%}
+    {%- endif -%}
+
+{# This sets a default value for the operator that connects multiple joining conditions. Only when it is not set by user. #}
+    {%- if 'operator' not in vals.keys() -%}
+      {%- set operator = 'AND' -%}
+    {%- else -%}
+      {%- set operator = vals['operator'] -%}
+    {%- endif -%}
+
+    {%- set prejoin_alias = 'pj_' + loop.index|string -%}
+
+    left join {{ relation }} as {{ prejoin_alias }} 
+      on {{ datavault4dbt.multikey(columns=vals['this_column_name'], prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=vals['ref_column_name']) }}
+
   {% endfor %}
 
   {% set last_cte = "prejoined_columns" -%}
@@ -373,12 +415,16 @@ unknown_values AS (
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
 
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
+        {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
+          {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+        {%- elif 'ref_model' in vals.keys() -%}
+          {%- set relation = ref(vals['ref_model']) -%}
+        {%- endif -%}
 
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
           {% for column in pj_relation_columns -%}
-
             {% if column.name|lower == vals['bk']|lower -%}
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, col_size=column.char_size, ghost_record_type='unknown') }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=col|upper, datatype=column.dtype, col_size=column.char_size, ghost_record_type='unknown') }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -435,11 +481,17 @@ error_values AS (
     {# Additionally generating ghost records for the prejoined attributes #}
       {%- for col, vals in prejoined_columns.items() %}
 
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
+        {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
+          {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+        {%- elif 'ref_model' in vals.keys() -%}
+          {%- set relation = ref(vals['ref_model']) -%}
+        {%- endif -%}
+
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
 
         {% for column in pj_relation_columns -%}
           {% if column.name|lower == vals['bk']|lower -%}
-            {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, col_size=column.char_size, ghost_record_type='error') -}}
+            {{ datavault4dbt.ghost_record_per_datatype(column_name=col|upper, datatype=column.dtype, col_size=column.char_size, ghost_record_type='error') -}}
           {%- endif -%}
         {%- endfor -%}
           {%- if not loop.last -%},{%- endif %}
