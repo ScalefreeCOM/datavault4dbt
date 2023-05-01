@@ -8,6 +8,9 @@
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 {%- set ledts_alias = var('datavault4dbt.ledts_alias', 'ledts') -%}
 {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
+
+{%- set include_business_objects_before_appearance = var('datavault4dbt.include_business_objects_before_appearance', 'false') -%}
+
 {{ log('ref_hub_relation: ' ~ ref_hub_relation, false) }}
 {%- set hub_columns = datavault4dbt.source_columns(ref_hub_relation) -%}
 {{ log('hub_columns: ' ~ hub_columns, false) }}
@@ -130,8 +133,10 @@ ref_table AS (
         AND  ld.{{ date_column }} BETWEEN {{ sat_alias }}.{{ src_ldts }} AND {{ sat_alias }}.{{ ledts_alias }}
     
     {% endfor %}
-
+    
+    {% if include_business_objects_before_appearance == 'false' -%}
     WHERE h.{{ src_ldts }} <= ld.{{ date_column }}
+    {% endif %}
 
 ) 
 
