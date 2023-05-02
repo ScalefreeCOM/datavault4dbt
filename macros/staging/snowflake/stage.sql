@@ -166,6 +166,12 @@ source_data AS (
 
   FROM {{ source_relation }}
 
+  {% if is_incremental() %}
+  WHERE {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) 
+                      FROM {{ this }} 
+                      WHERE {{ load_datetime_col_name}} != {{ datavault4dbt.string_to_timestamp(timestamp_format , end_of_all_times) }} )
+  {%- endif -%}
+
   {% set last_cte = "source_data" -%}
 ),
 
@@ -242,6 +248,8 @@ prejoined_columns AS (
 {# Adding derived columns to the selection #}
 derived_columns AS (
 
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) -%}
+
   SELECT
   {% if final_columns_to_select | length > 0 -%}
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
@@ -296,6 +304,7 @@ hashed_columns AS (
 {%- endif -%}
 {%- endif -%}
 
+{% if not is_incremental() %}
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
   
@@ -425,6 +434,7 @@ ghost_records AS (
     UNION ALL
     SELECT * FROM error_values
 ),
+{%- endif %}
 
 {%- if not include_source_columns -%}
   {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select, exclude_columns_list=source_columns_to_select) %}
@@ -439,6 +449,7 @@ columns_to_select AS (
 
     FROM {{ last_cte }}
 
+  {% if not is_incremental() %}
     UNION ALL
     
     SELECT
@@ -446,6 +457,7 @@ columns_to_select AS (
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
 
     FROM ghost_records
+  {% endif %}
 )
 
 SELECT * FROM columns_to_select
