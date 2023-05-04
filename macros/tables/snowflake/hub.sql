@@ -133,7 +133,7 @@ WITH
     {%- set source_number = source_model.id | string -%}
 
     {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = ns.source_models_rsrc_dict.id -%}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number|string] -%}
     {%- endif -%}
 
     {%- if 'hk_column' not in source_model.keys() %}
@@ -153,8 +153,9 @@ WITH
             {{ src_ldts }},
             {{ src_rsrc }}
         FROM {{ ref(source_model.name) }} src
+        {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], true) }}
 
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number] %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
         ({%- for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'
