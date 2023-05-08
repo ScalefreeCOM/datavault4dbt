@@ -137,7 +137,19 @@ WITH
             GROUP BY rsrc_static
 
         ),
-    {%- endif -%}
+    {%- else -%}
+        {%- if source_models.keys() | length == 1 %}
+
+            max_ldts_single_src AS (
+            {# Calculate the max load date timestamp of the whole table when there is only one source. #}
+            
+                SELECT 
+                    MAX({{ src_ldts }}) as max_ldts
+                FROM {{ this }}
+                WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            ),
+        {%- endif %}
+    {%- endif %}
 {% endif -%}
 
 {#
@@ -167,6 +179,8 @@ WITH
                 INNER JOIN max_ldts_per_rsrc_static_in_target max
                     ON max.rsrc_static = '{{ rsrc_static }}'
                 WHERE src.{{ src_ldts }} > max.max_ldts
+            {%- elif is_incremental() and source_models.keys() | length == 1 and not ns.has_rsrc_static_defined %}
+                WHERE src.{{ src_ldts }} > (SELECT max.max_ldts FROM max_ldts_single_src max)
             {%- endif %}
 
             {%- if not loop.last %}
