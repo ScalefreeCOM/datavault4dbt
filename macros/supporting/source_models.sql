@@ -1,4 +1,4 @@
-{%- macro source_model_processing(source_models, set_rsrc_static=true, parameters={}, business_keys=none, reference_keys=none, foreign_hashkeys=none) -%}
+{%- macro source_model_processing(source_models, set_rsrc_static=true, parameters={}, business_keys=none, reference_keys=none, foreign_hashkeys=none, payload=none) -%}
 
     {%- set ns_source_models = namespace(source_model_list = [], source_model_list_tmp=[], source_model_dict = {}, source_model_input = [], has_rsrc_static_defined=true, source_models_rsrc_dict = {}) -%}
 
@@ -130,7 +130,26 @@
             {%- else -%}{%- do source_model.update({'fk_columns': foreign_hashkeys_input}) -%}
             {%- endif -%}
 
-        {%- endif -%}              
+        {%- endif -%}     
+
+        {%- if payload is not none -%}
+            {%- set payload_input = payload -%}
+
+            {%- if 'payload' in source_model.keys() -%}
+                {%- set payload_input = source_model['payload'] -%}
+
+                {%- if not (payload_input is iterable and payload_input is not string) -%}
+                    {%- set payload_input = [payload_input] -%}
+                {%- endif -%}
+
+                {%- do source_model.update({'payload': payload_input}) -%}
+            {%- elif not datavault4dbt.is_list(payload_input) -%}
+                {%- set payload_list = datavault4dbt.expand_column_list(columns=[payload_input]) -%}
+                {%- do source_model.update({'payload': payload_list}) -%}
+            {%- else -%}{%- do source_model.update({'payload': payload_input}) -%}
+            {%- endif -%}
+
+        {%- endif -%}                  
 
         {%- do ns_source_models.source_model_list_tmp.append(source_model) -%}
 
