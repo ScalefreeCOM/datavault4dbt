@@ -392,11 +392,13 @@ unknown_values AS (
         {%- endif -%}
 
         {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
+        {{ log('pj_relation_columns: ' ~ pj_relation_columns, false ) }}
 
           {% for column in pj_relation_columns -%}
 
             {% if column.name|lower == vals['bk']|lower -%}
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='unknown') }}
+              {{ log('column found? yes, for column :' ~ column.name , false) }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown', alias=col) }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -463,7 +465,7 @@ error_values AS (
 
         {% for column in pj_relation_columns -%}
           {% if column.name|lower == vals['bk']|lower -%}
-            {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='error') -}}
+            {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error', alias=col) -}}
           {%- endif -%}
         {%- endfor -%}
           {%- if not loop.last -%},{%- endif %}
