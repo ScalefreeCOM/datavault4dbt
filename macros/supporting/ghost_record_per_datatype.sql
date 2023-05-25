@@ -53,7 +53,7 @@
 {%- set unknown_value_alt__STRING = var('datavault4dbt.unknown_value_alt__STRING', 'u')  -%}
 {%- set error_value_alt__STRING = var('datavault4dbt.error_value_alt__STRING', 'e')  -%}
 {%- set format_date = var('datavault4dbt.format_date', 'YYYY-mm-dd') -%}
-{%- set hash = var('datavault4dbt.hash', 'MD5')-%}
+{%- set hash = datavault4dbt.hash_method() -%}
 {%- set hash_default_values =  datavault4dbt.hash_default_values(hash_function=hash) -%}
 {%- set hash_alg= hash_default_values['hash_alg'] -%}
 {%- set unknown_value__HASHTYPE = hash_default_values['unknown_key'] -%}
