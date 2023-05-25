@@ -1,4 +1,4 @@
-{%- macro source_model_processing(source_models, set_rsrc_static=true, parameters={}, business_keys=none, reference_keys=none) -%}
+{%- macro source_model_processing(source_models, set_rsrc_static=true, parameters={}, business_keys=none, reference_keys=none, foreign_hashkeys=none) -%}
 
     {%- set ns_source_models = namespace(source_model_list = [], source_model_list_tmp=[], source_model_dict = {}, source_model_input = [], has_rsrc_static_defined=true, source_models_rsrc_dict = {}) -%}
 
@@ -111,7 +111,26 @@
             {%- else -%}{%- do source_model.update({'ref_keys': ref_column_input}) -%}
             {%- endif -%}
 
-        {%- endif -%}        
+        {%- endif -%}       
+
+        {%- if foreign_hashkeys is not none -%}
+            {%- set foreign_hashkeys_input = foreign_hashkeys -%}
+
+            {%- if 'fk_columns' in source_model.keys() -%}
+                {%- set foreign_hashkeys_input = source_model['fk_columns'] -%}
+
+                {%- if not (foreign_hashkeys_input is iterable and foreign_hashkeys_input is not string) -%}
+                    {%- set foreign_hashkeys_input = [foreign_hashkeys_input] -%}
+                {%- endif -%}
+
+                {%- do source_model.update({'fk_columns': foreign_hashkeys_input}) -%}
+            {%- elif not datavault4dbt.is_list(foreign_hashkeys_input) -%}
+                {%- set fk_list = datavault4dbt.expand_column_list(columns=[foreign_hashkeys_input]) -%}
+                {%- do source_model.update({'fk_columns': fk_list}) -%}
+            {%- else -%}{%- do source_model.update({'fk_columns': foreign_hashkeys_input}) -%}
+            {%- endif -%}
+
+        {%- endif -%}              
 
         {%- do ns_source_models.source_model_list_tmp.append(source_model) -%}
 
