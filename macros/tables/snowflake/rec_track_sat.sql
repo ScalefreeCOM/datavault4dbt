@@ -179,10 +179,7 @@ WITH
                 INNER JOIN max_ldts_per_rsrc_static_in_target max
                     ON max.rsrc_static = '{{ rsrc_static }}'
                 WHERE src.{{ src_ldts }} > max.max_ldts
-            {%- elif is_incremental() and source_models.keys() | length == 1 and not ns.has_rsrc_static_defined %}
-                WHERE src.{{ src_ldts }} > (SELECT max.max_ldts FROM max_ldts_single_src max)
             {%- endif %}
-
             {%- if not loop.last %}
                 UNION ALL
             {% endif -%}
@@ -197,6 +194,9 @@ WITH
                 CAST({{ src_rsrc }} AS {{ rsrc_default_dtype }}) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model }}') AS {{ stg_default_dtype }}) AS {{ src_stg }}
             FROM {{ ref(source_model) }} src
+            {%- if is_incremental() and source_models.keys() | length == 1 %}
+                WHERE src.{{ src_ldts }} > (SELECT max.max_ldts FROM max_ldts_single_src max)
+            {%- endif %}
         ),
     {%- endif -%}
 
