@@ -126,7 +126,7 @@ WITH
 
         ),
     {%- else -%}
-        {%- if source_models.keys() | length == 1 %}
+        {%- if source_models | length == 1 %}
 
             max_ldts_single_src AS (
             {# Calculate the max load date timestamp of the whole table when there is only one source. #}
@@ -182,7 +182,7 @@ src_new_{{ source_number }} AS (
             {% endif -%}
         {%- endfor %})
         WHERE src.{{ src_ldts }} > max.max_ldts
-    {%- elif is_incremental() and source_models.keys() | length == 1 and not ns.has_rsrc_static_defined %}
+    {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined %}
         WHERE src.{{ src_ldts }} > (SELECT max.max_ldts FROM max_ldts_single_src max)
     {%- endif %}
 
