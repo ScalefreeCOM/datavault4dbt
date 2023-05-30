@@ -1,5 +1,11 @@
 {%- macro default__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc) -%}
+{%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
 
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
+    {%- endif %}
+
+{%- endif -%}
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -119,6 +125,18 @@ WITH
             GROUP BY rsrc_static
 
         ),
+    {%- else -%}
+        {%- if source_models | length == 1 %}
+
+            max_ldts_single_src AS (
+            {# Calculate the max load date timestamp of the whole table when there is only one source. #}
+            
+                SELECT 
+                    MAX({{ src_ldts }}) as max_ldts
+                FROM {{ this }}
+                WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            ),
+        {%- endif %}
     {%- endif %}
 {% endif -%}
 
@@ -164,6 +182,8 @@ src_new_{{ source_number }} AS (
             {% endif -%}
         {%- endfor %})
         WHERE src.{{ src_ldts }} > max.max_ldts
+    {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined %}
+        WHERE src.{{ src_ldts }} > (SELECT max.max_ldts FROM max_ldts_single_src max)
     {%- endif %}
 
     {%- set ns.last_cte = "src_new_{}".format(source_number) %}
