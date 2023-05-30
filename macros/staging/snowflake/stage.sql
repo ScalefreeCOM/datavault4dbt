@@ -92,7 +92,7 @@
 {%- set hashed_column_names = datavault4dbt.extract_column_names(hashed_columns) -%}
 {%- set prejoined_column_names = datavault4dbt.extract_column_names(prejoined_columns) -%}
 {%- set missing_column_names = datavault4dbt.extract_column_names(missing_columns) -%}
-{%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
+{%- set exclude_column_names = hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
 {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
 
@@ -166,6 +166,12 @@ source_data AS (
 
   FROM {{ source_relation }}
 
+  {% if is_incremental() %}
+  WHERE {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) 
+                      FROM {{ this }} 
+                      WHERE {{ load_datetime_col_name}} != {{ datavault4dbt.string_to_timestamp(timestamp_format , end_of_all_times) }} )
+  {%- endif -%}
+
   {% set last_cte = "source_data" -%}
 ),
 
@@ -191,6 +197,15 @@ ldts_rsrc_data AS (
 
   {%- set last_cte = "ldts_rsrc_data" -%}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) | list -%}
+  
+  {%- set columns_without_excluded_columns_tmp = [] -%}
+  {%- for column in columns_without_excluded_columns -%}
+    {%- if column.name not in derived_column_names -%}
+      {%- do columns_without_excluded_columns_tmp.append(column) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- set columns_without_excluded_columns = columns_without_excluded_columns_tmp |list -%}
 ),
 
 {%- if datavault4dbt.is_something(missing_columns) %}
@@ -284,6 +299,8 @@ prejoined_columns AS (
 {# Adding derived columns to the selection #}
 derived_columns AS (
 
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) -%}
+
   SELECT
   {% if final_columns_to_select | length > 0 -%}
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
@@ -338,6 +355,7 @@ hashed_columns AS (
 {%- endif -%}
 {%- endif -%}
 
+{% if not is_incremental() %}
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
   
@@ -374,11 +392,13 @@ unknown_values AS (
         {%- endif -%}
 
         {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
+        {{ log('pj_relation_columns: ' ~ pj_relation_columns, false ) }}
 
           {% for column in pj_relation_columns -%}
 
             {% if column.name|lower == vals['bk']|lower -%}
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='unknown') }}
+              {{ log('column found? yes, for column :' ~ column.name , false) }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown', alias=col) }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -445,7 +465,7 @@ error_values AS (
 
         {% for column in pj_relation_columns -%}
           {% if column.name|lower == vals['bk']|lower -%}
-            {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='error') -}}
+            {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error', alias=col) -}}
           {%- endif -%}
         {%- endfor -%}
           {%- if not loop.last -%},{%- endif %}
@@ -479,6 +499,7 @@ ghost_records AS (
     UNION ALL
     SELECT * FROM error_values
 ),
+{%- endif %}
 
 {%- if not include_source_columns -%}
   {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select, exclude_columns_list=source_columns_to_select) %}
@@ -493,6 +514,7 @@ columns_to_select AS (
 
     FROM {{ last_cte }}
 
+  {% if not is_incremental() %}
     UNION ALL
     
     SELECT
@@ -500,6 +522,7 @@ columns_to_select AS (
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
 
     FROM ghost_records
+  {% endif %}
 )
 
 SELECT * FROM columns_to_select

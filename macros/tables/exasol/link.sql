@@ -180,8 +180,11 @@ WITH
     {%- set source_number = loop.index | string -%}
 
     {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = source_models[source_model]['rsrc_static'] %}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
     {%- endif -%}
+
+    {{ log('rsrc_static defined: ' ~ ns.has_rsrc_static_defined , false) }}
+    {{ log('source_included_before: ' ~ ns.source_included_before[source_model|string] , false) }}
 
     src_new_{{ source_number }} AS (
 
@@ -194,7 +197,7 @@ WITH
             {{ src_rsrc }}
         FROM {{ ref(source_model|string) }} src
 
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_model] %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_model|string] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
         ({%- for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'

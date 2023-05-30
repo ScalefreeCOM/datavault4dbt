@@ -12,51 +12,15 @@
 {# If no specific hk_column is defined for each source, we apply the values set in the hashkey variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
-{%- if source_models is not mapping -%}
+{%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
     {%- set source_models = {source_models: {}} -%}
 {%- endif -%}
 
-{%- for source_model in source_models.keys() -%}
-
-    {%- if 'hk_column' not in source_models[source_model].keys() -%}
-        {%- do source_models[source_model].update({'hk_column': hashkey}) -%}
-    {%- endif -%}
-
-    {%- if 'bk_columns' in source_models[source_model].keys() -%}
-        {%- set bk_column_input = source_models[source_model]['bk_columns'] -%}
-
-        {%- if not (bk_column_input is iterable and bk_column_input is not string) -%}
-            {%- set bk_column_input = [bk_column_input] -%}
-        {%- endif -%}
-
-        {%- do source_models[source_model].update({'bk_columns': bk_column_input}) -%}
-    {%- elif not datavault4dbt.is_list(bk_column_input) -%}
-        {%- set bk_list = datavault4dbt.expand_column_list(columns=[bk_column_input]) -%}
-        {%- do source_models[source_model].update({'bk_columns': bk_list}) -%}
-    {%- else -%}{%- do source_models[source_model].update({'bk_columns': business_keys}) -%}
-    {%- endif -%}
-
-    {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
-        {%- set ns.has_rsrc_static_defined = false -%}
-    {%- else -%}
-
-        {%- if not (source_models[source_model]['rsrc_static'] is iterable and source_models[source_model]['rsrc_static'] is not string) -%}
-
-            {%- if source_models[source_model]['rsrc_static'] == '' or source_models[source_model]['rsrc_static'] is none -%}
-                {%- if execute -%}
-                    {{ exceptions.raise_compiler_error("If rsrc_static is defined -> it must not be an empty string ") }}
-                {%- endif %}
-            {%- else -%}
-                {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
-            {%- endif -%}
-
-        {%- elif source_models[source_model]['rsrc_static'] is iterable -%}
-            {%- do ns.source_models_rsrc_dict.update({source_model : source_models[source_model]['rsrc_static'] } ) -%}
-        {%- endif -%}
-
-    {%- endif -%}
-
-{%- endfor -%}
+{%- set source_model_values = fromjson(datavault4dbt.source_model_processing(source_models=source_models, parameters={'hk_column':hashkey}, business_keys=business_keys)) -%}
+{%- set source_models = source_model_values['source_model_list'] -%}
+{%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
+{%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
+{{ log('source_models: '~source_models, false) }}
 
 {%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] -%}
 
@@ -74,10 +38,12 @@ WITH
 
     ),
     {%- if ns.has_rsrc_static_defined -%}
-        {% for source_model in source_models.keys() %}
+        {% for source_model in source_models %}
          {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
-            {%- set source_number = loop.index | string -%}
-            {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
+            {%- set source_number = source_model.id | string -%}
+            {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number] -%}
+
+            {{log('rsrc_statics: '~ rsrc_statics, false) }}
 
             {%- set rsrc_static_query_source -%}
                 SELECT count(*) FROM (
@@ -92,6 +58,8 @@ WITH
                 {%- endfor -%}
                 )
             {% endset %}
+
+            {{ log('rsrc static query: '~rsrc_static_query_source, false) }}
 
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
@@ -122,17 +90,17 @@ WITH
             {%- endif -%}
 
 
-            {%- do ns.source_included_before.update({source_model: source_in_target}) -%}
+            {%- do ns.source_included_before.update({source_model.id: source_in_target}) -%}
 
         {% endfor -%}
 
-        {%- if source_models.keys() | length > 1 %}
+        {%- if source_models | length > 1 %}
 
         rsrc_static_union AS (
             {#  Create one unionized table over all sources. It will be the same as the already existing
                 hub, but extended by the rsrc_static column. #}
-            {% for source_model in source_models.keys() %}
-            {%- set source_number = loop.index | string -%}
+            {% for source_model in source_models %}
+            {%- set source_number = source_model.id | string -%}
 
             SELECT rsrc_static_{{ source_number }}.* FROM rsrc_static_{{ source_number }}
 
@@ -158,33 +126,34 @@ WITH
     {%- endif %}
 {% endif -%}
 
-{% for source_model in source_models.keys() %}
+{% for source_model in source_models %}
 
-    {%- set source_number = loop.index | string -%}
+    {%- set source_number = source_model.id | string -%}
 
     {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number|string] -%}
     {%- endif -%}
 
-    {%- if 'hk_column' not in source_models[source_model].keys() %}
+    {%- if 'hk_column' not in source_model.keys() %}
         {%- set hk_column = hashkey -%}
     {%- else -%}
-        {%- set hk_column = source_models[source_model]['hk_column'] -%}
+        {%- set hk_column = source_model['hk_column'] -%}
     {% endif %}
 
     src_new_{{ source_number }} AS (
 
         SELECT
             {{ hk_column }} AS {{ hashkey }},
-            {% for bk in source_models[source_model]['bk_columns'] -%}
+            {% for bk in source_model['bk_columns'] -%}
             {{ bk }},
             {% endfor -%}
 
             {{ src_ldts }},
             {{ src_rsrc }}
-        FROM {{ ref(source_model) }} src
+        FROM {{ ref(source_model.name) }} src
+        {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], true) }}
 
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_model] %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
         ({%- for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'
@@ -199,18 +168,18 @@ WITH
     ),
 {%- endfor -%}
 
-{%- if source_models.keys() | length > 1 %}
+{%- if source_models | length > 1 %}
 
 source_new_union AS (
 
-    {%- for source_model in source_models.keys() -%}
+    {%- for source_model in source_models -%}
 
-    {%- set source_number = loop.index | string -%}
+    {%- set source_number = source_model.id | string -%}
 
     SELECT
         {{ hashkey }},
 
-        {% for bk in source_models[source_model]['bk_columns'] -%}
+        {% for bk in source_model['bk_columns'] -%}
             {{ bk }} AS {{ business_keys[loop.index - 1] }},
         {% endfor -%}
 
