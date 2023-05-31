@@ -1,4 +1,4 @@
-{%- macro default__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg) -%}
+{%- macro default__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg, disable_hwm) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -38,7 +38,7 @@ WITH
         {{ datavault4dbt.concat_ws(concat_columns) }} as concat
         FROM {{ this }}
     ),
-    {%- if ns.has_rsrc_static_defined -%}
+    {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
         rsrc_static_unionized AS (
         {% for source_model in source_models %}
         {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
@@ -112,18 +112,6 @@ WITH
             GROUP BY rsrc_static
 
         ),
-    {%- else -%}
-        {%- if source_models | length == 1 %}
-
-            max_ldts_single_src AS (
-            {# Calculate the max load date timestamp of the whole table when there is only one source. #}
-            
-                SELECT 
-                    MAX({{ src_ldts }}) as max_ldts
-                FROM {{ this }}
-                WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-            ),
-        {%- endif %}
     {%- endif %}
 {% endif -%}
 
@@ -150,12 +138,11 @@ WITH
             FROM {{ ref(source_model.name) }} src
 
 
-            {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] %}
+            {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
                 INNER JOIN max_ldts_per_rsrc_static_in_target max
                     ON max.rsrc_static = '{{ rsrc_static }}'
                 WHERE src.{{ src_ldts }} > max.max_ldts
             {%- endif %}
-
             {%- if not loop.last %}
                 UNION ALL
             {% endif -%}
@@ -170,8 +157,12 @@ WITH
                 CAST({{ src_rsrc }} AS {{ rsrc_default_dtype }}) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }}) AS {{ src_stg }}
             FROM {{ ref(source_model.name) }} src
-            {%- if is_incremental() and source_models | length == 1 %}
-                WHERE src.{{ src_ldts }} > (SELECT max.max_ldts FROM max_ldts_single_src max)
+            {%- if is_incremental() and source_models | length == 1 and not disable_hwm %}
+                WHERE src.{{ src_ldts }} > (
+            SELECT MAX({{ src_ldts }})
+            FROM {{ this }}
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            )
             {%- endif %}
         ),
     {%- endif -%}

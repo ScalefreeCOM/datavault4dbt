@@ -1,5 +1,5 @@
 
-{%- macro default__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc) -%}
+{%- macro default__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc, disable_hwm) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
 
@@ -42,7 +42,7 @@ WITH
         FROM {{ this }}
 
     ),
-    {%- if ns.has_rsrc_static_defined -%}
+    {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
         {% for source_model in source_models %}
         {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
             {%- set source_number = source_model.id | string -%}
@@ -127,18 +127,6 @@ WITH
             GROUP BY rsrc_static
 
         ),
-    {%- else -%}
-        {%- if source_models | length == 1 %}
-
-            max_ldts_single_src AS (
-            {# Calculate the max load date timestamp of the whole table when there is only one source. #}
-            
-                SELECT 
-                    MAX({{ src_ldts }}) as max_ldts
-                FROM {{ this }}
-                WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-            ),
-        {%- endif %}
     {%- endif %}
 {% endif -%}
 
@@ -171,7 +159,7 @@ WITH
         FROM {{ ref(source_model.name) }} src
         {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
 
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
         ({%- for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'
@@ -179,8 +167,12 @@ WITH
             {% endif -%}
         {%- endfor %})
         WHERE src.{{ src_ldts }} > max.max_ldts
-    {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined %}
-        WHERE src.{{ src_ldts }} > (SELECT max.max_ldts FROM max_ldts_single_src max)
+    {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
+        WHERE src.{{ src_ldts }} > (
+            SELECT MAX({{ src_ldts }})
+            FROM {{ this }}
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            )
     {%- endif %}
 
         {%- set ns.last_cte = "src_new_{}".format(source_number) %}
