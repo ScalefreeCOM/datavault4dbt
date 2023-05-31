@@ -153,7 +153,7 @@ WITH
             {{ src_ldts }},
             {{ src_rsrc }}
         FROM {{ ref(source_model.name) }} src
-        {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], true) }}
+        {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
 
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
