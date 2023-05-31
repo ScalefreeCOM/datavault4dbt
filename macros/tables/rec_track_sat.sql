@@ -65,7 +65,7 @@
 
 #}
 
-{%- macro rec_track_sat(tracked_hashkey, source_models, src_ldts=none, src_rsrc=none, src_stg=none) -%}
+{%- macro rec_track_sat(tracked_hashkey, source_models, src_ldts=none, src_rsrc=none, src_stg=none, disable_hwm=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
@@ -77,6 +77,7 @@
                                                                       source_models=source_models,
                                                                       src_ldts=src_ldts,
                                                                       src_rsrc=src_rsrc,
-                                                                      src_stg=src_stg)) }}
+                                                                      src_stg=src_stg,
+                                                                      disable_hwm=disable_hwm)) }}
 
 {%- endmacro -%}
