@@ -27,8 +27,12 @@ source_data AS (
     )
     {%- endif %}
     
+    {% if not source_is_single_batch -%}
+
     QUALIFY
         ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) = 1
+
+    {%- endif %}        
 
 ),
 
