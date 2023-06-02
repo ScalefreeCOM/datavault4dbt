@@ -28,7 +28,7 @@ source_data AS (
     {%- endif %}
 
     QUALIFY
-        ROW_NUMBER() OVER (PARTITION BY {{parent_hashkey}} ORDER BY {{ src_ldts }}) = 1
+        ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) = 1
         
 ),
 
