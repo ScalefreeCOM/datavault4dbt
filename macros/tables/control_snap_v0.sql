@@ -61,11 +61,13 @@
 
 #}
 
-{%- macro control_snap_v0(start_date, daily_snapshot_time, sdts_alias=none) -%}
+{%- macro control_snap_v0(start_date, daily_snapshot_time, sdts_alias=none, end_date=none) -%}
+    
     {%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
     {{ adapter.dispatch('control_snap_v0', 'datavault4dbt')(start_date=start_date,
-                                                                        daily_snapshot_time=daily_snapshot_time,
-                                                                        sdts_alias=sdts_alias) }}
+                                                            daily_snapshot_time=daily_snapshot_time,
+                                                            sdts_alias=sdts_alias,
+                                                            end_date=end_date) }}
 
 {%- endmacro -%}

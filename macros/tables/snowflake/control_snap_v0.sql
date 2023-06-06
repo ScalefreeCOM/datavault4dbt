@@ -1,4 +1,4 @@
-{%- macro snowflake__control_snap_v0(start_date, daily_snapshot_time, sdts_alias) -%}
+{%- macro snowflake__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {%- set start_date = start_date | replace('00:00:00', daily_snapshot_time) -%}
