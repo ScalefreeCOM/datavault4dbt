@@ -1,4 +1,4 @@
-{%- macro sqlserver__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm=false, source_is_single_batch=false) -%}
+{%- macro sqlserver__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm, source_is_single_batch) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
 
@@ -7,6 +7,7 @@
     {%- endif %}
 
 {%- endif -%}
+
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
