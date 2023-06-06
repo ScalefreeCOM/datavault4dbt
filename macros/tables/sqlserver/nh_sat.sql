@@ -1,4 +1,4 @@
-{%- macro default__nh_sat(parent_hashkey, src_payload, src_ldts, src_rsrc, source_model) -%}
+{%- macro sqlserver__nh_sat(parent_hashkey, src_payload, src_ldts, src_rsrc, source_model) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
