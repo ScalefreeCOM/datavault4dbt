@@ -41,6 +41,9 @@ vars:
   
   #Stage Configuration
   datavault4dbt.copy_rsrc_ldts_input_columns: false  
+
+  #General Configuration
+  datavault4dbt.include_business_objects_before_appearance: false
   
   #Ghost Record Configuration  
   datavault4dbt.beginning_of_all_times: {"bigquery":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01"}

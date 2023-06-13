@@ -11,6 +11,7 @@
 - Non-Historized Links and Satellites
 - Multi-Active Satellites
 - Virtualized End-Dating (in Satellites)
+- Reference Hubs, - Satellites, and - Tables
 - PIT Tables
   - Hook for Cleaning up PITs 
 - Snapshot Control

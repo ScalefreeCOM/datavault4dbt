@@ -78,7 +78,7 @@
 #}
 
 
-{%- macro hub(hashkey, business_keys, source_models, src_ldts=none, src_rsrc=none) -%}
+{%- macro hub(hashkey, business_keys, source_models, src_ldts=none, src_rsrc=none, disable_hwm=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
@@ -89,6 +89,7 @@
                                                             business_keys=business_keys,
                                                             src_ldts=src_ldts,
                                                             src_rsrc=src_rsrc,
-                                                            source_models=source_models)) }}
+                                                            source_models=source_models,
+                                                            disable_hwm=disable_hwm)) }}
 
 {%- endmacro -%}

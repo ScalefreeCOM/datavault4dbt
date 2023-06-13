@@ -158,6 +158,18 @@ WITH
             GROUP BY rsrc_static
 
         ),
+    {%- else -%}
+        {%- if source_models.keys() | length == 1 %}
+
+            max_ldts_single_src AS (
+            {# Calculate the max load date timestamp of the whole table when there is only one source. #}
+            
+                SELECT 
+                    MAX({{ src_ldts }}) as max_ldts
+                FROM {{ this }}
+                WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            ),
+        {%- endif %}
     {%- endif %}
 {% endif -%}
 
@@ -168,8 +180,11 @@ WITH
     {%- set source_number = loop.index | string -%}
 
     {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = source_models[source_model]['rsrc_static'] %}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
     {%- endif -%}
+
+    {{ log('rsrc_static defined: ' ~ ns.has_rsrc_static_defined , false) }}
+    {{ log('source_included_before: ' ~ ns.source_included_before[source_model|string] , false) }}
 
     src_new_{{ source_number }} AS (
 
@@ -182,7 +197,7 @@ WITH
             {{ src_rsrc }}
         FROM {{ ref(source_model|string) }} src
 
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_model] %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_model|string] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
         ({%- for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'
@@ -190,6 +205,8 @@ WITH
             {% endif -%}
         {%- endfor %})
         WHERE src.{{ src_ldts }} > max.max_ldts
+    {%- elif is_incremental() and source_models.keys() | length == 1 and not ns.has_rsrc_static_defined %}
+        WHERE src.{{ src_ldts }} > (SELECT max.max_ldts FROM max_ldts_single_src max)
     {%- endif %}
 
         {%- set ns.last_cte = "src_new_{}".format(source_number) %}
