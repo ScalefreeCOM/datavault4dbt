@@ -11,6 +11,7 @@
                                                                             alias=alias)) }}
 {%- endmacro -%}
 
+
 {%- macro default__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
@@ -42,6 +43,7 @@
     {%- endif %}
 {%- endif -%}
 {%- endmacro -%}
+
 
 {%- macro exasol__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
