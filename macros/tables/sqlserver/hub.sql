@@ -58,7 +58,7 @@ WITH
                         UNION ALL
                     {% endif -%}
                 {%- endfor -%}
-                )
+                ) sub
             {% endset %}
 
             {{ log('rsrc static query: '~rsrc_static_query_source, false) }}
