@@ -32,7 +32,7 @@ WITH
 
         SELECT
         {% if ref_keys | length > 1 %}
-            {{ datavault4dbt.concat_ws(ref_keys) }}
+            {{ datavault4dbt.concat_ws(ref_keys) }} -- Warning on the concatenation
         {% else %}
             {{ ref_keys[0] }}
         {% endif %}
@@ -157,7 +157,8 @@ WITH
     {%- endif %}
 
          {%- set ns.last_cte = "src_new_{}".format(source_number) %}
-
+         
+        -- Incremental conditions are not defined - SELECT MAX({{ src_ldts }})...
     ),
 {%- endfor -%}
 
@@ -224,7 +225,7 @@ records_to_insert AS (
         {% else %}
             {{ ref_keys[0] }}
         {% endif %} 
-        NOT IN (SELECT * FROM distinct_target_ref_keys)
+        NOT IN (SELECT * FROM distinct_target_ref_keys)-- NOT EXISTS!. Warning on the concatenation
     {% endif -%}
 )
 

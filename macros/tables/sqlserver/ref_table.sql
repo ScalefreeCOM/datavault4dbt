@@ -79,7 +79,7 @@ dates AS (
 {%- endif %}
 
 {%- if is_incremental() -%}
-    WHERE {{ date_column }} > (SELECT MAX({{ date_column }}) FROM {{ this }})
+    WHERE {{ date_column }} > (SELECT MAX({{ date_column }}) FROM {{ this }}) -- Wrap in COALESCE  -- UNION ALL ghost record 000000
 {%- endif -%}
 
 
@@ -121,7 +121,7 @@ ref_table AS (
 
     FROM {{ ref(ref_hub) }} h
     
-    FULL OUTER JOIN dates ld
+    FULL OUTER JOIN dates ld -- CROSS JOIN might fit better here
         ON 1 = 1  
 
     {% for satellite in ref_satellites_dict.keys() %}

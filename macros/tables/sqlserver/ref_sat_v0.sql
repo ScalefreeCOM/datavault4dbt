@@ -42,6 +42,8 @@ source_data AS (
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
+
+    -- UNION ALL ghost record 000000
 ),
 
 {# Adding window functions row_number and lag to target #}

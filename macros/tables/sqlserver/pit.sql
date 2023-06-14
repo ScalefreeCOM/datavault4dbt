@@ -60,7 +60,7 @@ pit_records AS (
 
     FROM
             {{ ref(tracked_entity) }} te
-        FULL OUTER JOIN
+        FULL OUTER JOIN -- Test with CROSS JOIN moving ON contitions to WHERE clause. Might work faster.
             {{ ref(snapshot_relation) }} snap
             {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
                 ON snap.{{ snapshot_trigger_column }} = 1
@@ -76,7 +76,7 @@ pit_records AS (
             SELECT
                 {{ hashkey }},
                 {{ ldts }},
-                COALESCE(LEAD({{ ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
+                COALESCE(LEAD({{ ldts }} - INTERVAL '1 MICROSECOND' /*This syntax will not work in SQL Server. Use function DATEADD*/) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
             FROM {{ ref(satellite) }}
         ) {{ satellite }}
         {% endif %}
@@ -87,16 +87,21 @@ pit_records AS (
     {% if datavault4dbt.is_something(snapshot_trigger_column) %}
         WHERE snap.{{ snapshot_trigger_column }} = 1
     {%- endif %}
-
+    {%- if is_incremental() %} -- I would use this incremental flter condition as earlier as possible
+        AND te.{{ hashkey }} --NOT IN (SELECT * FROM existing_dimension_keys)
+        NOT EXISTS (
+            SELECT 1
+            FROM existing_dimension_keys edk
+            WHERE 1=1
+                AND edk.{{ dimension_key }} = te.{{ dimension_key }}
+        )
+    {% endif -%}
 ),
 
 records_to_insert AS (
 
     SELECT DISTINCT *
     FROM pit_records
-    {%- if is_incremental() %}
-    WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
-    {% endif -%}
 
 )
 

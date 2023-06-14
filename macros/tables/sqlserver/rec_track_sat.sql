@@ -31,11 +31,15 @@ WITH
 
 {% if is_incremental() %}
 
-    distinct_concated_target AS (
+    distinct_target AS ( -- This CONCAT part worked veeeeery slow in SQL. RT_SATs tend to contain large amounts of rows. Concatenating all of them
+        -- and then checking the existance of a record based on the concatenated values on the fly was very expensive
         {%- set concat_columns = [tracked_hashkey, src_ldts, src_rsrc] -%}
         {{ "\n" }}
         SELECT
-        {{ datavault4dbt.concat_ws(concat_columns) }} as concat
+        --{{ datavault4dbt.concat_ws(concat_columns) }} as concat
+             {{ tracked_hashkey }}
+            ,{{ src_ldts }}
+            ,{{ src_rsrc }}
         FROM {{ this }}
     ),
     {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
@@ -159,7 +163,7 @@ WITH
             FROM {{ ref(source_model.name) }} src
             {%- if is_incremental() and source_models | length == 1 and not disable_hwm %}
                 WHERE src.{{ src_ldts }} > (
-            SELECT MAX({{ src_ldts }})
+            SELECT MAX({{ src_ldts }}) -- Wrap in COALESCE
             FROM {{ this }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
@@ -193,6 +197,8 @@ source_new_union AS (
         UNION ALL
         {% endif -%}
 
+        -- UNION ALL ghost record 000000
+
     {% endfor %}
 
     {%- set ns.last_cte = 'source_new_union' -%}
@@ -210,11 +216,19 @@ records_to_insert AS (
 
     SELECT
     {{ datavault4dbt.print_list(final_columns_to_select) }}
-    FROM {{ ns.last_cte }}
+    FROM {{ ns.last_cte }} cte
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} 
     AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
     {%- if is_incremental() %}
-        AND {{ datavault4dbt.concat_ws(concat_columns) }} NOT IN (SELECT * FROM distinct_concated_target)
+        AND {{ datavault4dbt.concat_ws(concat_columns) }} --NOT IN (SELECT * FROM distinct_concated_target)
+            NOT EXISTS (
+                SELECT 1
+                FROM distinct_target dt
+                WHERE 1=1
+                    AND dt.{{ tracked_hashkey }} = cte.{{ tracked_hashkey }}
+                    AND dt.{{ src_ldts }} = cte.{{ src_ldts }}
+                    AND dt.{{ src_rsrc }} = cte.{{ src_rsrc }}
+            )
     {% endif %}
 )
 

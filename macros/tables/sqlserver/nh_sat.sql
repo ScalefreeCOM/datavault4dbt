@@ -73,9 +73,14 @@ records_to_insert AS (
 
     SELECT
         {{ datavault4dbt.print_list(source_cols) }}
-    FROM {{ ns.last_cte }}
+    FROM {{ ns.last_cte }} cte
     {%- if is_incremental() %}
-    WHERE {{ parent_hashkey }} NOT IN (SELECT * FROM distinct_hashkeys)
+    WHERE {{ parent_hashkey }} --NOT IN (SELECT * FROM distinct_hashkeys)
+        NOT EXISTS (
+            SELECT 1
+            FROM distinct_target_hashkeys dth
+            WHERE cte.{{ parent_hashkey }} = dth.{{ parent_hashkey }}
+        )
     {%- endif %}
     )
 SELECT 
