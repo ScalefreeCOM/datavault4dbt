@@ -31,7 +31,13 @@
 
     {%- elif datavault4dbt.is_list(source_models) -%}
 
-        {%- set ns_source_models.source_model_list = source_models -%}
+        {%- for source_model in source_models -%}
+        
+            {%- set source_model_dict = {'name': source_model} -%}
+            
+            {%- do ns_source_models.source_model_list.append(source_model_dict) -%}
+
+        {%- endfor -%}
 
     {%- endif -%}
 
