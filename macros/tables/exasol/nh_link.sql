@@ -184,7 +184,7 @@ src_new_{{ source_number }} AS (
     ),
 {%- endfor -%}
 
-{%- if source_models length > 1 %}
+{%- if source_models | length > 1 %}
 
 source_new_union AS (
 {# Unionize the new records from all sources. #}
