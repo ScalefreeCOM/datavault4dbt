@@ -33,7 +33,7 @@
 
         {%- for source_model in source_models -%}
 
-            {%- if source_model is string}
+            {%- if source_model is string -%}
         
                 {%- set source_model_dict = {'name': source_model} -%}
 
