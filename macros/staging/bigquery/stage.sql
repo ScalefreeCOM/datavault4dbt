@@ -130,11 +130,11 @@
 
     {%- if datavault4dbt.is_list(multi_active_config['multi_active_key']) -%}
 
-      {%- set ma_keys = multi_active_config['multi_active_key'] }
+      {%- set ma_keys = multi_active_config['multi_active_key'] -%}
 
     {%- else -%}
 
-      {%- set ma_keys = [multi_active_config['multi_active_key']] }
+      {%- set ma_keys = [multi_active_config['multi_active_key']] -%}
 
     {%- endif -%}
 
@@ -145,7 +145,7 @@
     {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
 
   {%- endif -%}
-  
+
   {%- set source_columns_to_select = only_include_from_source -%}
 
 {%- endif-%}
