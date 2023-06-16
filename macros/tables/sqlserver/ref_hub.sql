@@ -58,7 +58,7 @@ WITH
                         UNION ALL
                     {% endif -%}
                 {%- endfor -%}
-                )
+                ) sub
             {% endset %}
 
             rsrc_static_{{ source_number }} AS (

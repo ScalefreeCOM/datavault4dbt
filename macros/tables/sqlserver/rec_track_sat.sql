@@ -59,7 +59,7 @@ WITH
                         UNION ALL
                     {% endif -%}
                 {%- endfor -%}
-                )
+                ) sub
             {% endset %}
 
             {%- set rsrc_static_query_source -%}
