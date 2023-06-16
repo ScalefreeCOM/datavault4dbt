@@ -31,12 +31,9 @@ WITH
 
 {% if is_incremental() %}
 
-    distinct_target AS ( -- This CONCAT part worked veeeeery slow in SQL. RT_SATs tend to contain large amounts of rows. Concatenating all of them
-        -- and then checking the existance of a record based on the concatenated values on the fly was very expensive
-        {%- set concat_columns = [tracked_hashkey, src_ldts, src_rsrc] -%}
+    distinct_target AS ( 
         {{ "\n" }}
         SELECT
-        --{{ datavault4dbt.concat_ws(concat_columns) }} as concat
              {{ tracked_hashkey }}
             ,{{ src_ldts }}
             ,{{ src_rsrc }}
@@ -163,7 +160,7 @@ WITH
             FROM {{ ref(source_model.name) }} src
             {%- if is_incremental() and source_models | length == 1 and not disable_hwm %}
                 WHERE src.{{ src_ldts }} > (
-            SELECT MAX({{ src_ldts }}) -- Wrap in COALESCE
+            SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM {{ this }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
@@ -197,8 +194,6 @@ source_new_union AS (
         UNION ALL
         {% endif -%}
 
-        -- UNION ALL ghost record 000000
-
     {% endfor %}
 
     {%- set ns.last_cte = 'source_new_union' -%}
@@ -220,7 +215,7 @@ records_to_insert AS (
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} 
     AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
     {%- if is_incremental() %}
-        AND {{ datavault4dbt.concat_ws(concat_columns) }} --NOT IN (SELECT * FROM distinct_concated_target)
+        AND 
             NOT EXISTS (
                 SELECT 1
                 FROM distinct_target dt
