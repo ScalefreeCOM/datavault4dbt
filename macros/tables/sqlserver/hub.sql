@@ -203,8 +203,6 @@ source_new_union AS (
 
     {%- set ns.last_cte = 'source_new_union' -%}
 
-    -- UNION ALL ghost record 000000
-
 ),
 
 {%- endif %}
@@ -238,11 +236,10 @@ records_to_insert AS (
     FROM {{ ns.last_cte }} cte
 
     {%- if is_incremental() %}
-    WHERE {{ hashkey }} --NOT IN (SELECT * FROM distinct_target_hashkeys)
-        NOT EXISTS (
-            SELECT 1
-            FROM distinct_target_hashkeys dth
-            WHERE cte.{{ hashkey }} = dth.{{ hashkey }}
+    WHERE {{ hashkey }} NOT IN (
+        SELECT 
+            {{ hashkey }} 
+        FROM distinct_target_hashkeys
         )
     {% endif -%}
 )
