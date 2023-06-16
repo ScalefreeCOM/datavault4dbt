@@ -10,6 +10,7 @@
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
@@ -174,7 +175,7 @@ src_new_{{ source_number }} AS (
         WHERE src.{{ src_ldts }} > max.max_ldts
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
         WHERE src.{{ src_ldts }} > (
-            SELECT MAX({{ src_ldts }}) --Wrap in COALESCE
+            SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM {{ this }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
@@ -218,8 +219,6 @@ source_new_union AS (
 
     {%- set ns.last_cte = 'source_new_union' -%}
 
-    -- UNION ALL ghost record 000000
-
 ),
 
 {%- endif %}
@@ -257,11 +256,10 @@ records_to_insert AS (
     FROM {{ ns.last_cte }} cte
 
     {%- if is_incremental() %}
-    WHERE {{ link_hashkey }} --NOT IN (SELECT * FROM distinct_target_hashkeys)
-        NOT EXISTS (
-            SELECT 1
-            FROM distinct_target_hashkeys dth
-            WHERE cte.{{ link_hashkey }} = dth.{{ link_hashkey }}
+    WHERE {{ link_hashkey }} NOT IN (
+        SELECT 
+            {{ link_hashkey }} 
+        FROM distinct_target_hashkeys
         )
     {% endif %}
 )
