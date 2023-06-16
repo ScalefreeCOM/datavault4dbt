@@ -119,7 +119,7 @@ WITH
         {# Use the previously created CTE to calculate the max load date timestamp per rsrc_static. #}
             SELECT
                 rsrc_static,
-                MAX({{ src_ldts }}) as max_ldts
+                COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) as max_ldts
             FROM {{ ns.last_cte }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
@@ -236,10 +236,11 @@ records_to_insert AS (
     FROM {{ ns.last_cte }} cte
 
     {%- if is_incremental() %}
-    WHERE {{ hashkey }} NOT IN (
-        SELECT 
-            {{ hashkey }} 
-        FROM distinct_target_hashkeys
+    WHERE
+        NOT EXISTS (
+            SELECT 1
+            FROM distinct_target_hashkeys dth
+            WHERE cte.{{ hashkey }} = dth.{{ hashkey }}
         )
     {% endif -%}
 )

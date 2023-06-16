@@ -31,11 +31,9 @@ WITH
     distinct_target_ref_keys AS (
 
         SELECT
-        {% if ref_keys | length > 1 %}
-            {{ datavault4dbt.concat_ws(ref_keys) }} -- Warning on the concatenation
-        {% else %}
-            {{ ref_keys[0] }}
-        {% endif %}
+            {% for ref_key in ref_keys -%}
+            {{ ref_key}},
+            {% endfor -%}
         FROM {{ this }}
 
     ),
@@ -146,7 +144,7 @@ WITH
             {{ src_rsrc }}
         FROM {{ ref(source_model.name) }} src
 
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number] %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
         ({%- for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'
@@ -154,11 +152,16 @@ WITH
             {% endif -%}
         {%- endfor %})
         WHERE src.{{ src_ldts }} > max.max_ldts
+    {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
+        WHERE src.{{ src_ldts }} > (
+            SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
+            FROM {{ this }}
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            )
     {%- endif %}
 
          {%- set ns.last_cte = "src_new_{}".format(source_number) %}
          
-        -- Incremental conditions are not defined - SELECT MAX({{ src_ldts }})...
     ),
 {%- endfor -%}
 
@@ -217,15 +220,18 @@ records_to_insert AS (
     {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the hub. #}
     SELECT
         {{ datavault4dbt.print_list(final_columns_to_select) }}
-    FROM {{ ns.last_cte }}
+    FROM {{ ns.last_cte }} cte
 
     {%- if is_incremental() %}
-    WHERE  {% if ref_keys | length > 1 %}
-            {{ datavault4dbt.concat_ws(ref_keys) }}
-        {% else %}
-            {{ ref_keys[0] }}
-        {% endif %} 
-        NOT IN (SELECT * FROM distinct_target_ref_keys)-- NOT EXISTS!. Warning on the concatenation
+    WHERE NOT EXISTS (
+        SELECT 
+            1 
+        FROM distinct_target_ref_keys dtr
+        WHERE 
+            {% for ref_key in ref_keys -%}
+            {% if not loop.first %}AND {% endif -%} cte.{{ ref_key}} = dtr.{{ ref_key }}
+            {% endfor -%}
+         )
     {% endif -%}
 )
 

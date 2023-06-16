@@ -79,7 +79,11 @@ dates AS (
 {%- endif %}
 
 {%- if is_incremental() -%}
-    WHERE {{ date_column }} > (SELECT MAX({{ date_column }}) FROM {{ this }}) -- Wrap in COALESCE  -- UNION ALL ghost record 000000
+    WHERE {{ date_column }} > (
+        SELECT 
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) 
+        FROM {{ this }}
+    )
 {%- endif -%}
 
 
@@ -121,7 +125,7 @@ ref_table AS (
 
     FROM {{ ref(ref_hub) }} h
     
-    FULL OUTER JOIN dates ld -- CROSS JOIN might fit better here
+    FULL OUTER JOIN dates ld
         ON 1 = 1  
 
     {% for satellite in ref_satellites_dict.keys() %}

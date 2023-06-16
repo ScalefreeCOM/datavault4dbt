@@ -256,10 +256,11 @@ records_to_insert AS (
     FROM {{ ns.last_cte }} cte
 
     {%- if is_incremental() %}
-    WHERE {{ link_hashkey }} NOT IN (
-        SELECT 
-            {{ link_hashkey }} 
-        FROM distinct_target_hashkeys
+    WHERE
+        NOT EXISTS (
+            SELECT 1
+            FROM distinct_target_hashkeys dth
+            WHERE cte.{{ link_hashkey }} = dth.{{ link_hashkey }}
         )
     {% endif %}
 )
