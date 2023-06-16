@@ -121,7 +121,7 @@ WITH
 
             SELECT
                 rsrc_static,
-                MAX({{ src_ldts }}) AS max_ldts
+                COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS max_ldts
             FROM {{ ns.last_cte }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
