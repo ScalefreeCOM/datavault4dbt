@@ -89,12 +89,12 @@ deduplicated_numbered_source AS (
     {{ parent_hashkey }},
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}
-    {% if is_incremental() -%}
-    {%- endif %}
     FROM deduplicated_numbered_source_prep
     WHERE 1=1
         AND {{ ns.hdiff_alias }} <> prev_hashdiff OR prev_hashdiff IS NULL
+    {% if is_incremental() -%}
         AND rn = 1
+    {%- endif %}
 ),
 
 {#
