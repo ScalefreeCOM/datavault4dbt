@@ -79,7 +79,11 @@ dates AS (
 {%- endif %}
 
 {%- if is_incremental() -%}
-    WHERE {{ date_column }} > (SELECT MAX({{ date_column }}) FROM {{ this }})
+    WHERE {{ date_column }} > (
+        SELECT 
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) 
+        FROM {{ this }}
+    )
 {%- endif -%}
 
 

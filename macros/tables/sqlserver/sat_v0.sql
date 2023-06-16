@@ -34,10 +34,12 @@ source_data AS (
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
+
+    -- UNION ALL ghost record 000000
 ),
 
 {# Get the latest record for each parent hashkey in existing sat, if incremental. #}
@@ -88,10 +90,11 @@ deduplicated_numbered_source AS (
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}
     {% if is_incremental() -%}
-    , rn
     {%- endif %}
     FROM deduplicated_numbered_source_prep
-    WHERE {{ ns.hdiff_alias }} <> prev_hashdiff OR prev_hashdiff IS NULL
+    WHERE 1=1
+        AND {{ ns.hdiff_alias }} <> prev_hashdiff OR prev_hashdiff IS NULL
+        AND rn = 1
 ),
 
 {#
@@ -111,7 +114,7 @@ records_to_insert AS (
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
             AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
-            AND deduplicated_numbered_source.rn = 1)
+    )
     {%- endif %}
 
     )

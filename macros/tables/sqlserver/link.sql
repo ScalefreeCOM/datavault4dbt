@@ -120,7 +120,7 @@ WITH
 
             SELECT
                 rsrc_static,
-                MAX({{ src_ldts }}) as max_ldts
+                COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) as max_ldts
             FROM {{ ns.last_cte }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
@@ -168,7 +168,7 @@ WITH
         WHERE src.{{ src_ldts }} > max.max_ldts
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
         WHERE src.{{ src_ldts }} > (
-            SELECT MAX({{ src_ldts }})
+            SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM {{ this }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
@@ -236,10 +236,15 @@ records_to_insert AS (
 
     SELECT
         {{ datavault4dbt.print_list(final_columns_to_select) | indent(4) }}
-    FROM {{ ns.last_cte }}
+    FROM {{ ns.last_cte }} cte
 
     {%- if is_incremental() %}
-    WHERE {{ link_hashkey }} NOT IN (SELECT * FROM distinct_target_hashkeys)
+    WHERE 
+        NOT EXISTS (
+            SELECT 1
+            FROM distinct_target_hashkeys dth
+            WHERE cte.{{ link_hashkey }} = dth.{{ link_hashkey }}
+        )
     {% endif %}
 )
 

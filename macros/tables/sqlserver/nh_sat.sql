@@ -29,7 +29,7 @@ source_data AS (
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) 
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
         FROM 
             {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
@@ -73,9 +73,14 @@ records_to_insert AS (
 
     SELECT
         {{ datavault4dbt.print_list(source_cols) }}
-    FROM {{ ns.last_cte }}
+    FROM {{ ns.last_cte }} cte
     {%- if is_incremental() %}
-    WHERE {{ parent_hashkey }} NOT IN (SELECT * FROM distinct_hashkeys)
+    WHERE 
+        NOT EXISTS (
+            SELECT 1
+            FROM distinct_target_hashkeys dth
+            WHERE cte.{{ parent_hashkey }} = dth.{{ parent_hashkey }}
+        )
     {%- endif %}
     )
 SELECT 
