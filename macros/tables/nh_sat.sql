@@ -40,7 +40,7 @@
 
 #}
 
-{%- macro nh_sat(parent_hashkey, src_payload, source_model, src_ldts=none, src_rsrc=none) -%}
+{%- macro nh_sat(parent_hashkey, src_payload, source_model, src_ldts=none, src_rsrc=none, source_is_single_batch=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
@@ -51,6 +51,7 @@
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
-                                         source_model=source_model) }}
+                                         source_model=source_model,
+                                         source_is_single_batch=source_is_single_batch) }}
 
 {%- endmacro -%}

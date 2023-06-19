@@ -68,7 +68,7 @@
 
 #}
 
-{%- macro link(link_hashkey, foreign_hashkeys, source_models, src_ldts=none, src_rsrc=none) -%}
+{%- macro link(link_hashkey, foreign_hashkeys, source_models, src_ldts=none, src_rsrc=none, disable_hwm=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
@@ -77,6 +77,7 @@
 
     {{- adapter.dispatch('link', 'datavault4dbt')(link_hashkey=link_hashkey, foreign_hashkeys=foreign_hashkeys,
                                              src_ldts=src_ldts, src_rsrc=src_rsrc,
-                                             source_models=source_models) -}}
+                                             source_models=source_models,
+                                             disable_hwm=disable_hwm) -}}
 
 {%- endmacro -%}
