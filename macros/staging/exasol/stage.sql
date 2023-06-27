@@ -120,11 +120,28 @@
   {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, missing_column_names) -%}  {# Excluding the names of the missing columns. #}
   {%- set prejoined_input_columns = datavault4dbt.extract_input_columns(prejoined_columns) -%}
 
+  {% if datavault4dbt.is_something(multi_active_config) %}
+
+    {%- if datavault4dbt.is_list(multi_active_config['multi_active_key']) -%}
+
+      {%- set ma_keys = multi_active_config['multi_active_key'] -%}
+
+    {%- else -%}
+
+      {%- set ma_keys = [multi_active_config['multi_active_key']] -%}
+
+    {%- endif -%}
+
+    {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns + ma_keys) | unique | list -%}
+
+  {%- else -%}
+
   {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
-  {%- if datavault4dbt.is_something(multi_active_config) -%}
-    {%- set only_include_from_source = only_include_from_source + datavault4dbt.expand_column_list([multi_active_config['multi_active_key']]) -%}
+
   {%- endif -%}
+
   {%- set source_columns_to_select = only_include_from_source -%}
+
 {%- endif-%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
@@ -138,7 +155,7 @@
 {#- Select hashing algorithm -#}
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+{%- set hash = datavault4dbt.hash_method() -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'HASHTYPE') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
@@ -224,13 +241,55 @@ prejoined_columns AS (
     {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=datavault4dbt.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
   {% endif %}
   {%- for col, vals in prejoined_columns.items() -%}
-    ,pj_{{loop.index}}.{{ vals['bk'] }} AS "{{ col }}"
+    ,pj_{{loop.index}}.{{ vals['bk'] }} AS "{{ col | upper }}"
   {% endfor -%}
 
   FROM {{ last_cte }} lcte
 
-  {%- for col, vals in prejoined_columns.items() %}
-    left join {{ source(vals['src_name']|string, vals['src_table']) }} as pj_{{loop.index}} on lcte.{{ vals['this_column_name'] }} = pj_{{loop.index}}.{{ vals['ref_column_name'] }}
+  {% for col, vals in prejoined_columns.items() %}
+
+    {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
+      {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+    {%- elif 'ref_model' in vals.keys() -%}
+      {%- set relation = ref(vals['ref_model']) -%}
+    {%- else -%}
+      {%- set error_message -%}
+      Prejoin error: Invalid target entity definition. Allowed are: 
+      e.g.
+      [REF STYLE]
+      extracted_column_alias:
+        ref_model: model_name
+        bk: extracted_column_name
+        this_column_name: join_columns_in_this_model
+        ref_column_name: join_columns_in_ref_model
+      OR
+      [SOURCES STYLE]
+      extracted_column_alias:
+        src_name: name_of_ref_source
+        src_table: name_of_ref_table
+        bk: extracted_column_name
+        this_column_name: join_columns_in_this_model
+        ref_column_name: join_columns_in_ref_model
+
+      Got: 
+      {{ col }}: {{ vals }}
+      {%- endset -%}
+
+    {%- do exceptions.raise_compiler_error(error_message) -%}
+    {%- endif -%}
+
+{# This sets a default value for the operator that connects multiple joining conditions. Only when it is not set by user. #}
+    {%- if 'operator' not in vals.keys() -%}
+      {%- set operator = 'AND' -%}
+    {%- else -%}
+      {%- set operator = vals['operator'] -%}
+    {%- endif -%}
+
+    {%- set prejoin_alias = 'pj_' + loop.index|string -%}
+
+    left join {{ relation }} as {{ prejoin_alias }} 
+      on {{ datavault4dbt.multikey(columns=vals['this_column_name'], prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=vals['ref_column_name']) }}
+
   {% endfor %}
 
   {% set last_cte = "prejoined_columns" -%}
@@ -373,12 +432,16 @@ unknown_values AS (
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
 
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
+        {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
+          {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+        {%- elif 'ref_model' in vals.keys() -%}
+          {%- set relation = ref(vals['ref_model']) -%}
+        {%- endif -%}
 
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
           {% for column in pj_relation_columns -%}
-
             {% if column.name|lower == vals['bk']|lower -%}
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, col_size=column.char_size, ghost_record_type='unknown') }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=col|upper, datatype=column.dtype, col_size=column.char_size, ghost_record_type='unknown') }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -435,11 +498,17 @@ error_values AS (
     {# Additionally generating ghost records for the prejoined attributes #}
       {%- for col, vals in prejoined_columns.items() %}
 
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
+        {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
+          {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+        {%- elif 'ref_model' in vals.keys() -%}
+          {%- set relation = ref(vals['ref_model']) -%}
+        {%- endif -%}
+
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
 
         {% for column in pj_relation_columns -%}
           {% if column.name|lower == vals['bk']|lower -%}
-            {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, col_size=column.char_size, ghost_record_type='error') -}}
+            {{ datavault4dbt.ghost_record_per_datatype(column_name=col|upper, datatype=column.dtype, col_size=column.char_size, ghost_record_type='error') -}}
           {%- endif -%}
         {%- endfor -%}
           {%- if not loop.last -%},{%- endif %}

@@ -1,59 +1,30 @@
-{%- macro exasol__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc) -%}
+{%- macro exasol__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm, source_is_single_batch) -%}
+{%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
+
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
+    {%- endif %}
+
+{%- endif -%}
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-
-{# If no specific link_hk, fk_columns, or payload are defined for each source, we apply the values set in the link_hashkey, foreign_hashkeys, and payload variable. #}
+{# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
-{%- if source_models is not mapping -%}
+{%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
     {%- set source_models = {source_models: {}} -%}
 {%- endif -%}
 
-{%- for source_model in source_models.keys() %}
+{%- set source_model_values = fromjson(datavault4dbt.source_model_processing(source_models=source_models, parameters={'link_hk':link_hashkey}, foreign_hashkeys=foreign_hashkeys, payload=payload)) -%}
+{%- set source_models = source_model_values['source_model_list'] -%}
+{%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
+{%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
+{{ log('source_models: '~source_models, false) }}
 
-    {%- if 'fk_columns' not in source_models[source_model].keys() -%}
-
-        {%- do source_models[source_model].update({'fk_columns': foreign_hashkeys}) -%}
-
-    {%- endif -%}
-
-    {%- if 'link_hk' not in source_models[source_model].keys() -%}
-
-        {%- do source_models[source_model].update({'link_hk': link_hashkey}) -%}
-
-    {%- endif -%}
-
-    {%- if 'payload' not in source_models[source_model].keys() -%}
-
-        {%- do source_models[source_model].update({'payload': payload}) -%}
-
-    {%- endif -%}
-
-    {%- if 'rsrc_static' not in source_models[source_model].keys() -%}
-
-        {%- set ns.has_rsrc_static_defined = false -%}
-
-    {%- else -%}
-        {%- if not (source_models[source_model]['rsrc_static'] is iterable and source_models[source_model]['rsrc_static'] is not string) -%}
-            {%- if source_models[source_model]['rsrc_static'] == '' or source_models[source_model]['rsrc_static'] is none -%}
-                {%- if execute -%}
-                    {{ exceptions.raise_compiler_error("If rsrc_static is defined -> it must not be an empty string ") }}
-                {%- endif %}
-            {%- else -%}
-                {%- do ns.source_models_rsrc_dict.update({source_model : [source_models[source_model]['rsrc_static']] } ) -%}
-            {%- endif -%}
-        {%- elif source_models[source_model]['rsrc_static'] is iterable -%}
-            {%- do ns.source_models_rsrc_dict.update({source_model : source_models[source_model]['rsrc_static'] } ) -%}
-        {%- endif -%}
-
-    {%- endif -%}
-
-
-{% endfor %}
 
 {%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + payload -%}
 
@@ -70,12 +41,13 @@ WITH
         FROM {{ this }}
 
     ),
-    {%- if ns.has_rsrc_static_defined -%}
+    {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
         {% for source_model in source_models.keys() %}
         {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
+            {%- set source_number = source_model.id | string -%}
+            {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number] -%}
 
-            {%- set source_number = loop.index | string -%}
-            {%- set rsrc_statics = ns.source_models_rsrc_dict[source_model] -%}
+            {{log('rsrc_statics: '~ rsrc_statics, false) }}
 
             {%- set rsrc_static_query_source -%}
                 SELECT count(*) FROM (
@@ -118,18 +90,18 @@ WITH
                 {%- endif -%}
             {%- endif -%}
 
-            {%- do ns.source_included_before.update({source_model: source_in_target}) -%}
+            {%- do ns.source_included_before.update({source_model.id: source_in_target}) -%}
 
         {% endfor -%}
 
-        {%- if source_models.keys() | length > 1 %}
+        {%- if source_models | length > 1 %}
 
         rsrc_static_union AS (
             {#  Create one unionized table over all sources. It will be the same as the already existing
                 nh_link, but extended by the rsrc_static column. #}
 
-            {% for source_model in source_models.keys() %}
-            {%- set source_number = loop.index | string -%}
+            {% for source_model in source_models %}
+            {%- set source_number = source_model.id | string -%}
 
             SELECT rsrc_static_{{ source_number }}.* FROM rsrc_static_{{ source_number }}
 
@@ -156,35 +128,42 @@ WITH
     {%- endif %}
 {% endif -%}
 
-{%- for source_model in source_models.keys() %}
+{%- for source_model in source_models %}
 {#  Select all deduplicated records from each source, and filter for records that are newer
     than the max ldts inside the existing link, if incremental. #}
 
-    {%- set source_number = loop.index | string -%}
+    {%- set source_number = source_model.id | string -%}
+
     {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = source_models[source_model]['rsrc_static'] %}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number|string] -%}
     {%- endif -%}
+
+    {%- if 'link_hk' not in source_model.keys() %}
+        {%- set link_hk = link_hashkey -%}
+    {%- else -%}
+        {%- set link_hk = source_model['link_hk'] -%}
+    {% endif %}
 
 src_new_{{ source_number }} AS (
 
     SELECT
-        {{ source_models[source_model]['link_hk'] }} AS {{ link_hashkey }},
+        {{ link_hk }} AS {{ link_hashkey }},
 
-        {% for fk in source_models[source_model]['fk_columns']|list %}
+        {% for fk in source_model['fk_columns']|list %}
             {{ fk }},
         {%- endfor %}
 
         {{ src_ldts }},
         {{ src_rsrc }},
 
-        {{ datavault4dbt.print_list(source_models[source_model]['payload']) | indent(3) }}
+        {{ datavault4dbt.print_list(source_model['payload']) | indent(3) }}
 
-    FROM {{ ref(source_model|string) }} src
+    FROM {{ ref(source_model.name) }} src
     {# If the model is incremental and all sources has rsrc_static defined and valid and the source was already included before in the target transactional link #}
     {# then an inner join is performed on the CTE for the maximum load date timestamp per record source static to get the records
     that match any of the rsrc_static present in it #}
     {# if there are records in the source with a newer load date time stamp than the ones present in the target, those will be selected to be inserted later #}
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_model] %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
         ({%- for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'
@@ -192,6 +171,12 @@ src_new_{{ source_number }} AS (
             {% endif -%}
         {%- endfor %})
         WHERE src.{{ src_ldts }} > max.max_ldts
+    {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
+        WHERE src.{{ src_ldts }} > (
+            SELECT MAX({{ src_ldts }})
+            FROM {{ this }}
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            )
     {%- endif %}
 
     {%- set ns.last_cte = "src_new_{}".format(source_number) %}
@@ -199,26 +184,26 @@ src_new_{{ source_number }} AS (
     ),
 {%- endfor -%}
 
-{%- if source_models.keys() | length > 1 %}
+{%- if source_models | length > 1 %}
 
 source_new_union AS (
 {# Unionize the new records from all sources. #}
 
-    {%- for source_model in source_models.keys() -%}
+    {%- for source_model in source_models -%}
 
-    {%- set source_number = loop.index | string -%}
+    {%- set source_number = source_model.id | string -%}
 
     SELECT
         {{ link_hashkey }},
 
-        {% for fk in source_models[source_model]['fk_columns']|list %}
+        {% for fk in source_model['fk_columns']|list %}
             {{ fk }} AS {{ foreign_hashkeys[loop.index - 1] }},
         {% endfor -%}
 
         {{ src_ldts }},
         {{ src_rsrc }},
 
-        {% for col in source_models[source_model]['payload']|list %}
+        {% for col in source_model['payload']|list %}
             {{ col }} AS {{ payload[loop.index - 1] }}
             {%- if not loop.last %}, {%- endif %}
         {% endfor -%}
@@ -237,6 +222,8 @@ source_new_union AS (
 
 {%- endif %}
 
+{%- if not source_is_single_batch %}
+
 earliest_hk_over_all_sources AS (
 {# Deduplicate the unionized records again to only insert the earliest one. #}
 
@@ -249,12 +236,13 @@ earliest_hk_over_all_sources AS (
     {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 
 ),
+{%- endif %}
 
 records_to_insert AS (
 {# Select everything from the previous CTE, if its incremental then filter for hashkeys that are not already in the link. #}
 
     SELECT
-    {{ datavault4dbt.print_list(final_columns_to_select) }}
+    {{ datavault4dbt.print_list(final_columns_to_select)| indent(4) }}
     FROM {{ ns.last_cte }}
 
     {%- if is_incremental() %}

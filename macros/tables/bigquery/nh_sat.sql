@@ -1,4 +1,4 @@
-{%- macro default__nh_sat(parent_hashkey, src_payload, src_ldts, src_rsrc, source_model) -%}
+{%- macro default__nh_sat(parent_hashkey, src_payload, src_ldts, src_rsrc, source_model, source_is_single_batch) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -26,6 +26,14 @@ source_data AS (
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
+
+    {% if not source_is_single_batch -%}
+
+    QUALIFY
+        ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) = 1
+        
+    {%- endif %}        
+
 ),
 
 {% if is_incremental() -%}

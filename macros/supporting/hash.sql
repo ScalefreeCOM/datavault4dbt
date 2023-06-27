@@ -15,7 +15,7 @@
 
 {%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
 
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+{%- set hash = datavault4dbt.hash_method() -%}
 {%- set concat_string = var('concat_string', '||') -%}
 {%- set quote = var('quote', '"') -%}
 {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
@@ -83,7 +83,7 @@
 
 {%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
 
-    {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
+    {%- set hash = datavault4dbt.hash_method() -%}
     {%- set concat_string = var('concat_string', '||') -%}
     {%- set quote = var('quote', '"') -%}
     {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
