@@ -102,3 +102,52 @@
 
 
 {%- endmacro -%}
+
+
+{%- macro sqlserver__hash_default_values(hash_function, hash_datatype) -%}
+
+    {%- set dict_result = {} -%}
+    {%- set hash_alg = '' -%}
+    {%- set unknown_key = '' -%}
+    {%- set error_key = '' -%}
+
+
+    {{ log('hash datatype: ' ~ hash_datatype, false) }}
+
+    {%- if hash_function == 'MD5' -%}
+        {%- if 'VARCHAR' in hash_datatype|upper or 'CHAR' in hash_datatype|upper  %}
+            {%- set hash_alg = 'MD5' -%}
+            {%- set unknown_key = '!00000000000000000000000000000000' -%}
+            {%- set error_key = '!ffffffffffffffffffffffffffffffff' -%}
+        {%- elif 'BINARY' in hash_datatype|upper %}
+            {%- set hash_alg = 'MD5' -%}
+            {%- set unknown_key = '!0x00000000000000000000000000000000' -%}
+            {%- set error_key = '!0xffffffffffffffffffffffffffffffff' -%}           
+        {%- endif -%} 
+    {%- elif hash_function == 'SHA1' or hash_function == 'SHA' -%} 
+        {%- if 'VARCHAR' in hash_datatype|upper or 'CHAR' in hash_datatype|upper  %}
+            {%- set hash_alg = 'SHA1' -%}
+            {%- set unknown_key = '!0000000000000000000000000000000000000000' -%}
+            {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- elif 'BINARY' in hash_datatype|upper -%}
+            {%- set hash_alg = 'SHA1' -%}
+            {%- set unknown_key = '!0x0000000000000000000000000000000000000000' -%}
+            {%- set error_key = '!0xffffffffffffffffffffffffffffffffffffffff' -%}        
+        {%- endif -%}
+    {%- elif hash_function == 'SHA2' or hash_function == 'SHA2_256' -%}
+        {%- if 'VARCHAR' in hash_datatype|upper or 'CHAR' in hash_datatype|upper %}
+            {%- set hash_alg = 'SHA2_256' -%}
+            {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
+            {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- elif 'BINARY' in hash_datatype|upper -%}
+            {%- set hash_alg = 'SHA2_256' -%}
+            {%- set unknown_key = '!0x0000000000000000000000000000000000000000000000000000000000000000' -%}
+            {%- set error_key = '!0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}        
+        {%- endif -%}   
+    {%- endif -%}
+
+    {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}
+
+    {{ return(dict_result | tojson ) }}
+
+{%- endmacro -%}

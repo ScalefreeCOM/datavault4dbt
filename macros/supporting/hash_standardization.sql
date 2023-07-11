@@ -25,6 +25,14 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 {%- endmacro -%}
 
 
+{%- macro sqlserver__attribute_standardise() -%}
+
+REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS varchar(max)) COLLATE Latin1_General_100_BIN2_UTF8), '[QUOTE]', '"'), '[NULL_PLACEHOLDER_STRING]', '--')
+
+{%- endmacro -%}
+
+
+
 {%- macro concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {{ return(adapter.dispatch('concattenated_standardise', 'datavault4dbt')(case_sensitive=case_sensitive,
@@ -134,7 +142,6 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- endmacro -%}
 
-
 {%- macro exasol__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {%- set dict_result = {} -%}
@@ -167,6 +174,37 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- endmacro -%}
 
+
+{%- macro sqlserver__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+
+{%- set dict_result = {} -%}
+
+{%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
+
+
+{%- if case_sensitive -%}
+    {%- set standardise_prefix = "CONVERT({}, ISNULL(LOWER(CONVERT({}, HASHBYTES('{}', (NULLIF(CAST(CONCAT(".format(datatype,datatype, hash_alg)-%}
+    {%- if alias is not none -%}    
+        {%- set standardise_suffix = ") AS varchar(max)) COLLATE Latin1_General_100_BIN2_UTF8, '[ALL_NULL]')) COLLATE Latin1_General_100_BIN2_UTF8),2)), {})) AS {}".format(zero_key, alias)-%}
+    {%- else -%}
+        {%- set standardise_suffix = ") AS varchar(max)) COLLATE Latin1_General_100_BIN2_UTF8, '[ALL_NULL]')) COLLATE Latin1_General_100_BIN2_UTF8),2)), {}))".format(zero_key)-%}
+    {%- endif -%}    
+{%- else -%}
+
+    {%- set standardise_prefix = "CONVERT({}, ISNULL(LOWER(CONVERT({}, HASHBYTES('{}', (NULLIF(CAST(UPPER(CONCAT(".format(datatype,datatype, hash_alg)-%}
+    {%- if alias is not none -%}
+        {%- set standardise_suffix = ")) AS varchar(max)) COLLATE Latin1_General_100_BIN2_UTF8 , '[ALL_NULL]')) COLLATE Latin1_General_100_BIN2_UTF8),2)), {})) AS {}".format(zero_key, alias)-%}
+    {%- else -%}
+        {%- set standardise_suffix = ")) AS varchar(max)) COLLATE Latin1_General_100_BIN2_UTF8, '[ALL_NULL]')) COLLATE Latin1_General_100_BIN2_UTF8),2)), {}))".format(zero_key)-%}
+    {%- endif -%}
+{%- endif -%}
+
+
+{%- do dict_result.update({"standardise_suffix": standardise_suffix, "standardise_prefix": standardise_prefix }) -%}
+
+{{ return(dict_result | tojson ) }}
+
+{%- endmacro -%}
 
 
 

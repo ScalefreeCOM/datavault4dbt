@@ -46,9 +46,9 @@ vars:
   datavault4dbt.include_business_objects_before_appearance: false
   
   #Ghost Record Configuration  
-  datavault4dbt.beginning_of_all_times: {"bigquery":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01"}
-  datavault4dbt.end_of_all_times: {"bigquery":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31 23:59:59"}
-  datavault4dbt.timestamp_format: {"bigquery":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-mm-dd HH:MI:SS"}
+  datavault4dbt.beginning_of_all_times: {"bigquery":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01","sqlserver": "0001-01-01T00:00:01"}
+  datavault4dbt.end_of_all_times: {"bigquery":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31 23:59:59", "sqlserver": "8888-12-31T23:59:59"}
+  datavault4dbt.timestamp_format: {"bigquery":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-mm-dd HH:MI:SS","sqlserver": 126}
   datavault4dbt.default_unknown_rsrc: 'SYSTEM'
   datavault4dbt.default_error_rsrc: 'ERROR'
   datavault4dbt.rsrc_default_dtype: 'STRING'
