@@ -168,6 +168,7 @@
             {%- endif -%}
      {%- elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}0 AS {{ alias }}
      {%- elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
+     {%- elif datatype == 'ARRAY' %} CAST('{{ unknown_value__STRING }}' as ARRAY) as "{{ alias }}"
      {%- else %}NULL AS {{ alias }}
      {% endif %}
 {%- elif ghost_record_type == 'error' -%}
@@ -192,6 +193,7 @@
             {%- endif -%}
      {% elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}-1 AS {{ alias }}
      {% elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
+     {% elif datatype == 'ARRAY' %} CAST('{{ error_value__STRING }}' as ARRAY) as "{{ alias }}"
      {% else %}NULL AS {{ alias }}
       {% endif %}
 {%- else -%}
