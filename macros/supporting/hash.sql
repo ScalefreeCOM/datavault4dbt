@@ -178,7 +178,9 @@
 {%- set all_null = [] -%}
 
 {%- if is_hashdiff  and datavault4dbt.is_something(multi_active_key) -%}
+
     {%- set std_dict = fromjson(datavault4dbt.multi_active_concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key, multi_active_key=multi_active_key, main_hashkey_column=main_hashkey_column)) -%}
+
 {%- elif is_hashdiff -%}
     {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key)) -%}
 {%- else -%}
@@ -208,7 +210,13 @@
 
     {%- if loop.last -%}
 
-        {{ standardise_suffix | replace('[ALL_NULL]', all_null | join("")) | indent(4) }}
+        {%- set all_null = all_null | join("") -%}
+        {%- if false and is_hashdiff  and datavault4dbt.is_something(multi_active_key) -%}
+        
+            {{ standardise_suffix | replace("'[ALL_NULL]'",  all_null) | indent(4) }}
+        {%- else -%}
+            {{ standardise_suffix | replace('[ALL_NULL]',  all_null) | indent(4) }}
+        {%- endif -%}
 
     {%- else -%}
 

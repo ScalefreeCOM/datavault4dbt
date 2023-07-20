@@ -31,9 +31,12 @@ source_data AS (
 
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
-        SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+        SELECT            
+             COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
+        FROM 
+            {{ this }}            
+        WHERE 
+            {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
 
@@ -43,27 +46,41 @@ source_data AS (
 {%- if is_incremental() %}
 latest_entries_in_sat AS (
 
-    SELECT
-        {{ parent_hashkey }},
-        {{ ns.hdiff_alias }}
-    FROM 
-        {{ this }}
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
+    select * from 
+    (
+        SELECT
+            {{ parent_hashkey }},
+            {{ ns.hdiff_alias }},
+            ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) rn
+        FROM 
+            {{ this }}
+    ) l
+    where l.rn = 1
 ),
 {%- endif %}
 
 {# Get a list of all distinct hashdiffs that exist for each parent_hashkey. #}
+pre_deduped_row_hashdiff AS (
+
+  SELECT 
+    {{ parent_hashkey }},
+    {{ src_ldts }},
+    {{ ns.hdiff_alias }},
+    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) prev_hdiff
+  FROM 
+    source_data
+),
 deduped_row_hashdiff AS (
 
   SELECT 
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }}
-  FROM source_data
-  QUALIFY CASE
-            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
-            ELSE TRUE
-          END
+  FROM 
+    pre_deduped_row_hashdiff
+  WHERE
+    {{ ns.hdiff_alias }} is distinct from prev_hdiff
+    
 ),
 
 {# Dedupe the source data regarding non-delta groups. #}

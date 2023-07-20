@@ -1,6 +1,7 @@
 {%- macro sqlserver__ref_table(ref_hub, ref_satellites, src_ldts, src_rsrc, historized, snapshot_trigger_column='is_active', snapshot_relation=none) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- set ref_hub_relation = ref(ref_hub|string) -%}
@@ -59,7 +60,7 @@ dates AS (
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     {% if not loop.last -%} UNION {% endif %}
     {%- endfor %}
-    )
+    ) d
 
 
 {% elif snapshot_relation is not none %}
@@ -95,6 +96,7 @@ ref_table AS (
     {%- for satellite in ref_satellites_dict.keys() %}
 
     {%- set sat_alias = 's_' + loop.index|string -%}
+    {%- set ghost_alias = 'g_' + loop.index|string -%}
     {%- set sat_columns_pre = [] -%}
         
         {%- if ref_satellites_dict[satellite] is mapping and 'include' in ref_satellites_dict[satellite].keys() -%}
@@ -113,7 +115,12 @@ ref_table AS (
     
     {{- log('sat_columns: '~ sat_columns, false) -}}
 
-    {{ datavault4dbt.print_list(list_to_print=sat_columns, indent=2, src_alias=sat_alias) }}
+    {%- for col_name in sat_columns %}
+        ISNULL({{ (sat_alias ~ '.' ~ col_name) }}, {{ (ghost_alias ~ '.' ~ col_name) }}) {{col_name}}
+    {%- if not loop.last -%} ,
+    {%-endif -%}
+    {% endfor %}
+
     {%- if not loop.last -%} ,
     {% endif -%}
 
@@ -132,6 +139,11 @@ ref_table AS (
         ON {{ datavault4dbt.multikey(columns=ref_key_cols, prefix=['h', sat_alias], condition='=') }}
         AND  ld.{{ date_column }} BETWEEN {{ sat_alias }}.{{ src_ldts }} AND {{ sat_alias }}.{{ ledts_alias }}
     
+        {%- set ghost_alias = 'g_' + loop.index|string %}
+
+    LEFT JOIN {{ ref(satellite) }} {{ ghost_alias }}
+        ON {{ ghost_alias }}.{{ src_ldts }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} 
+
     {% endfor %}
 
     {% if include_business_objects_before_appearance == 'false' -%}

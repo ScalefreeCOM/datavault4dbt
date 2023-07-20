@@ -143,6 +143,7 @@
 
 {%- endif-%}
 
+
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 
@@ -341,9 +342,10 @@ derived_columns AS (
     {%- do tmp_ns.main_hashkey_dict.update({column: hashed_columns[column]}) -%}
   {% elif column != multi_active_config['main_hashkey_column'] and not hashed_columns[column].is_hashdiff -%}
     {%- do tmp_ns.remaining_hashed_columns.update({column: hashed_columns[column]}) -%}
-  {%- elif hashed_columns[column].is_hashdiff -%}
+  {%- elif hashed_columns[column].is_hashdiff-%}
     {%- do tmp_ns.hashdiff_names.append(column) -%}
   {%- endif -%}
+
 {%- endfor -%}
 
 main_hashkey_generation AS (
@@ -351,8 +353,9 @@ main_hashkey_generation AS (
   SELECT 
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
     {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict) -%}
-      {{- datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
+    {{- datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
   FROM {{ last_cte }}
+  {%- set last_cte = "main_hashkey_generation" -%}
 
 ),
 
@@ -362,13 +365,14 @@ ma_hashdiff_prep AS (
     SELECT
       
       {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
-      
+
+      {{ multi_active_config['main_hashkey_column'] }},      
       {# Generates only all hashdiffs. #}
-      {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }},
+      {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=none) | indent(4) }},
       {{ ldts_alias }}
 
     FROM {{ last_cte }}
-    GROUP BY local.{{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
+    GROUP BY {{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
 
 ),
 

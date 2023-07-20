@@ -5,3 +5,4 @@ logs/
 .idea/
 dbt-public-release.code-workspace
 integration_tests/dbt_packages
+logs/dbt.log

@@ -160,7 +160,7 @@ WITH
             FROM {{ ref(source_model.name) }} src
             {%- if is_incremental() and source_models | length == 1 and not disable_hwm %}
                 WHERE src.{{ src_ldts }} > (
-            SELECT MAX({{ src_ldts }})
+            SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM {{ this }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )

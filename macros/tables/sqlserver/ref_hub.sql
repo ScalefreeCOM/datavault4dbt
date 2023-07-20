@@ -32,7 +32,10 @@ WITH
 
         SELECT
             {% for ref_key in ref_keys -%}
-            {{ ref_key}},
+            {{ ref_key}}
+            {%- if not loop.last -%}
+            ,
+            {% endif %}
             {% endfor -%}
         FROM {{ this }}
 
@@ -56,7 +59,7 @@ WITH
                         UNION ALL
                     {% endif -%}
                 {%- endfor -%}
-                )
+                ) c
             {% endset %}
 
             rsrc_static_{{ source_number }} AS (

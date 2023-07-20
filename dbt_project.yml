@@ -35,9 +35,10 @@ vars:
 
   #Hash Configuration
   datavault4dbt.hash: 'MD5'
-  datavault4dbt.hash_datatype: 'STRING'
+  #datavault4dbt.hash_datatype: 'STRING'
+  datavault4dbt.hash_datatype: 'CHAR(32)' #sql server   
   datavault4dbt.hashkey_input_case_sensitive: FALSE
-  datavault4dbt.hashdiff_input_case_sensitive: TRUE
+  datavault4dbt.hashdiff_input_case_sensitive: FALSE
   
   #Stage Configuration
   datavault4dbt.copy_rsrc_ldts_input_columns: false  

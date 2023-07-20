@@ -38,7 +38,7 @@ source_data AS (
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
@@ -89,8 +89,8 @@ deduplicated_numbered_source AS (
     {% if is_incremental() -%}
     , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
-    FROM source_data
-    prep_deduplicated_numbered_source
+    FROM prep_deduplicated_numbered_source
+    where
         {{ ns.hdiff_alias }} is distinct from prev_hdiff
 
 ),
