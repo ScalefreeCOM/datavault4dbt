@@ -23,6 +23,7 @@
 {%- set ns = namespace(forever_status=FALSE) %}
 
 {%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
+{%- set cnt = 0 -%}
 
 WITH
 
@@ -49,6 +50,7 @@ virtual_logic AS (
         CASE 
             WHEN
             {% if 'daily' in log_logic.keys() %}
+                {%- set cnt = cnt + 1 -%}
                 {%- if log_logic['daily']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
                   (1=1)
@@ -59,8 +61,8 @@ virtual_logic AS (
                 {%- endif -%}   
             {%- endif %}
 
-            {%- if 'weekly' in log_logic.keys() %}
-            OR
+            {%- if 'weekly' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
+                {%- set cnt = cnt + 1 -%}
                 {%- if log_logic['weekly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
                     (c.is_end_of_week = 1)
@@ -75,8 +77,8 @@ virtual_logic AS (
                 {%- endif -%}
             {% endif -%}
 
-            {%- if 'monthly' in log_logic.keys() %} 
-            OR
+            {%- if 'monthly' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
+                {%- set cnt = cnt + 1 -%}
                 {%- if log_logic['monthly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' %}
                 (c.is_end_of_month = 1)
@@ -90,8 +92,8 @@ virtual_logic AS (
                 {%- endif -%}
             {% endif -%}
 
-            {%- if 'yearly' in log_logic.keys() %}
-            OR
+            {%- if 'yearly' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
+                {%- set cnt = cnt + 1 -%}
                 {%- if log_logic['yearly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
                     (c.is_end_of_year = 1)
@@ -119,7 +121,7 @@ virtual_logic AS (
 --        c.is_daily,
         c.is_end_of_week as is_weekly,
         c.is_end_of_month as is_monthly,
-        c.is_end_of_month as is_yearly,
+        c.is_end_of_year as is_yearly,
         CASE
             WHEN c.[year] = DATEPART(YEAR,SYSDATETIME()) THEN 1
             ELSE 0
