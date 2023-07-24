@@ -42,10 +42,16 @@
 
     {{ log('hash datatype: ' ~ hash_datatype, false) }}
 
-    {%- if hash_function == 'MD5' and hash_datatype == 'STRING' -%}
-        {%- set hash_alg = 'MD5' -%}
-        {%- set unknown_key = '!00000000000000000000000000000000' -%}
-        {%- set error_key = '!ffffffffffffffffffffffffffffffff' -%}
+    {%- if hash_function == 'MD5' or hash_function == 'MD5_HEX' -%}
+        {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
+            {%- set hash_alg = 'MD5' -%}
+            {%- set unknown_key = '!00000000000000000000000000000000' -%}
+            {%- set error_key = '!ffffffffffffffffffffffffffffffff' -%}
+        {%- elif 'BINARY' in hash_datatype -%}
+            {%- set hash_alg = 'MD5_BINARY' -%}
+            {%- set unknown_key = "TO_BINARY('00000000000000000000000000000000')" -%}
+            {%- set error_key = "TO_BINARY('ffffffffffffffffffffffffffffffff')" -%}        
+        {%- endif -%}    
     {%- elif hash_function == 'SHA1' or hash_function == 'SHA1_HEX' or hash_function == 'SHA' -%} 
         {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
             {%- set hash_alg = 'SHA1' -%}
