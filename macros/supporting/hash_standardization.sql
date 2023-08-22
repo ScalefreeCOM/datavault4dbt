@@ -4,7 +4,7 @@
 
 {%- macro default__attribute_standardise() -%}
 
-CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\', r'\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
+CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\', r'\\\\'), r'\[QUOTE]', r'\\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
 
 {%- endmacro -%}
 
@@ -20,7 +20,7 @@ CONCAT('"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS VARCHAR(20000) UTF
 
 {%- macro snowflake__attribute_standardise() -%}
 
-CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
+CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '\\\\'), r'\[QUOTE]', r'\\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
 
 {%- endmacro -%}
 
