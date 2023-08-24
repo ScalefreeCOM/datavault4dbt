@@ -47,7 +47,7 @@ virtual_logic AS (
         {%- else %}
         CASE 
             WHEN
-            {% if 'daily' in log_logic.keys() %}
+            {% if 'daily' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
                 {%- set cnt = cnt + 1 -%}
                 {%- if log_logic['daily']['forever'] == 'TRUE' -%}
                     {%- set ns.forever_status = 'TRUE' -%}
@@ -90,6 +90,32 @@ virtual_logic AS (
                 {%- endif -%}
             {% endif -%}
 
+            {%- if 'end_of_monthly' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
+                {%- set cnt = cnt + 1 -%}
+                {%- if log_logic['end_of_monthly']['forever'] is true -%}
+                    {%- set ns.forever_status = 'TRUE' %}
+              (c.is_end_of_monthly = TRUE)
+                {%- else %}
+                    {%- set end_of_monthly_duration = log_logic['end_of_monthly']['duration'] -%}
+                    {%- set end_of_monthly_unit = log_logic['end_of_monthly']['unit'] %}            
+              ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN  ADD_{{ end_of_monthly_unit }}S(CURRENT_DATE, -{{ end_of_monthly_duration }}) AND CURRENT_DATE)
+                AND (c.is_end_of_monthly = TRUE))
+                {%- endif -%}
+            {% endif -%}
+
+            {%- if 'quarterly' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
+                {%- set cnt = cnt + 1 -%}
+                {%- if log_logic['quarterly']['forever'] is true -%}
+                    {%- set ns.forever_status = 'TRUE' %}
+              (c.is_quarterly = TRUE)
+                {%- else %}
+                    {%- set quarterly_duration = log_logic['quarterly']['duration'] -%}
+                    {%- set quarterly_unit = log_logic['quarterly']['unit'] %}            
+              ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ quarterly_unit }}S(CURRENT_DATE, -{{ quarterly_duration }}) AND CURRENT_DATE()) 
+              AND (c.is_quarterly = TRUE))
+                {%- endif -%}
+            {% endif -%}
+
             {%- if 'yearly' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
                 {%- set cnt = cnt + 1 -%}
                 {%- if log_logic['yearly']['forever'] is true -%}
@@ -102,6 +128,19 @@ virtual_logic AS (
                     ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ yearly_unit }}S(CURRENT_DATE, - {{ yearly_duration }}) AND CURRENT_DATE) 
                     AND 
                     (c.is_yearly = TRUE))
+                {%- endif -%}
+            {% endif %}
+
+            {%- if 'end_of_yearly' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
+                {%- set cnt = cnt + 1 -%}
+                {%- if log_logic['end_of_yearly']['forever'] is true -%}
+                    {%- set ns.forever_status = 'TRUE' %}
+              (c.is_end_of_yearly = TRUE)
+                {%- else %}
+                    {%- set end_of_yearly_duration = log_logic['end_of_yearly']['duration'] -%}
+                    {%- set end_of_yearly_unit = log_logic['end_of_yearly']['unit'] %}                    
+              ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ end_of_yearly_unit }}S(CURRENT_DATE, - {{ end_of_yearly_duration }}) AND CURRENT_DATE()) 
+              AND (c.is_end_of_yearly = TRUE))
                 {%- endif -%}
             {% endif %}
             THEN TRUE
@@ -119,7 +158,10 @@ virtual_logic AS (
         c.is_daily,
         c.is_weekly,
         c.is_monthly,
+        c.is_end_of_monthly,
+        c.is_quarterly,
         c.is_yearly,
+        c.is_end_of_yearly,
         CASE
             WHEN EXTRACT(YEAR FROM c.{{ sdts_alias }}) = EXTRACT(YEAR FROM CURRENT_DATE) THEN TRUE
             ELSE FALSE
@@ -158,7 +200,10 @@ active_logic_combined AS (
         is_daily,
         is_weekly,
         is_monthly,
+        is_end_of_monthly,
+        is_quarterly,
         is_yearly,
+        is_end_of_yearly,
         is_current_year,
         is_last_year,
         is_rolling_year,
