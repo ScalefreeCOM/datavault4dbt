@@ -60,7 +60,7 @@ initial_timestamps AS
         CASE
             WHEN sdts = date_add('day', -1, date_add('month', 1, date_trunc('month', sdts))) THEN TRUE
             ELSE FALSE 
-        END AS is_end_of_monthly,
+        END AS is_end_of_month,
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) IN (1,4,7,10) THEN TRUE
             ELSE FALSE
@@ -72,7 +72,7 @@ initial_timestamps AS
         CASE
             WHEN EXTRACT(DAY FROM sdts)=31 AND EXTRACT(MONTH FROM sdts) = 12 THEN TRUE
             ELSE FALSE
-        END AS is_end_of_yearly,
+        END AS is_end_of_year,
         NULL AS comment
     FROM 
         {{ last_cte }}

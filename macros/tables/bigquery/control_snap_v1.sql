@@ -98,20 +98,20 @@ virtual_logic AS (
                 {%- endif -%}
             {% endif -%}
 
-            {%- if 'end_of_monthly' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
+            {%- if 'end_of_month' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
                 {%- set cnt = cnt + 1 -%}
-                {%- if log_logic['end_of_monthly']['forever'] is true -%}
+                {%- if log_logic['end_of_month']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-                    (c.is_end_of_monthly = TRUE)
+                    (c.is_end_of_month = TRUE)
                 {%- else %}
 
-                    {%- set end_of_monthly_duration = log_logic['end_of_monthly']['duration'] -%}
-                    {%- set end_of_monthly_unit = log_logic['end_of_monthly']['unit'] -%}
+                    {%- set end_of_month_duration = log_logic['end_of_month']['duration'] -%}
+                    {%- set end_of_month_unit = log_logic['end_of_month']['unit'] -%}
 
                     (
-                (EXTRACT(DATE FROM c.{{ sdts_alias }}) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL {{ end_of_monthly_duration }} {{ end_of_monthly_unit }}) AND CURRENT_DATE() )
+                (EXTRACT(DATE FROM c.{{ sdts_alias }}) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL {{ end_of_month_duration }} {{ end_of_month_unit }}) AND CURRENT_DATE() )
                 AND
-                (c.is_end_of_monthly = TRUE)
+                (c.is_end_of_month = TRUE)
             )
                 {%- endif -%}
             {% endif -%}
@@ -152,20 +152,20 @@ virtual_logic AS (
                 {%- endif -%}
             {% endif %}
 
-            {%- if 'end_of_yearly' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
+            {%- if 'end_of_year' in log_logic.keys() %} {%- if cnt != 0 %} OR {% endif -%}
                 {%- set cnt = cnt + 1 -%}
-                {%- if log_logic['end_of_yearly']['forever'] is true -%}
+                {%- if log_logic['end_of_year']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-                    (c.is_end_of_yearly = TRUE)
+                    (c.is_end_of_year = TRUE)
                 {%- else %}
 
-                    {%- set end_of_yearly_duration = log_logic['end_of_yearly']['duration'] -%}
-                    {%- set end_of_yearly_unit = log_logic['end_of_yearly']['unit'] -%}
+                    {%- set end_of_year_duration = log_logic['end_of_year']['duration'] -%}
+                    {%- set end_of_year_unit = log_logic['end_of_year']['unit'] -%}
 
                     (
-                (EXTRACT(DATE FROM c.{{ sdts_alias }}) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL {{ end_of_yearly_duration }} {{ end_of_yearly_unit }}) AND CURRENT_DATE() )
+                (EXTRACT(DATE FROM c.{{ sdts_alias }}) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL {{ end_of_year_duration }} {{ end_of_year_unit }}) AND CURRENT_DATE() )
                 AND
-                (c.is_end_of_yearly = TRUE)
+                (c.is_end_of_year = TRUE)
             )
                 {%- endif -%}
             {% endif %}
@@ -185,10 +185,10 @@ virtual_logic AS (
         c.is_daily,
         c.is_weekly,
         c.is_monthly,
-        c.is_end_of_monthly,
+        c.is_end_of_month,
         c.is_quarterly,
         c.is_yearly,
-        c.is_end_of_yearly,
+        c.is_end_of_year,
         CASE
             WHEN EXTRACT(YEAR FROM c.{{ sdts_alias }}) = EXTRACT(YEAR FROM CURRENT_DATE()) THEN TRUE
             ELSE FALSE
@@ -227,10 +227,10 @@ active_logic_combined AS (
         is_daily,
         is_weekly,
         is_monthly,
-        is_end_of_monthly,
+        is_end_of_month,
         is_quarterly,
         is_yearly,
-        is_end_of_yearly,
+        is_end_of_year,
         is_current_year,
         is_last_year,
         is_rolling_year,

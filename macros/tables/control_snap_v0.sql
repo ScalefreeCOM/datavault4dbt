@@ -28,13 +28,13 @@
 
         is_monthly::boolean             Captures if a sdts is the first day of a month.
 
-        is_end_of_monthly::boolean      Captures if a sdts is the last day of a month.
+        is_end_of_month::boolean      Captures if a sdts is the last day of a month.
 
         is_quarterly::boolean           Captures if a sdts is the first day of a quarter.
 
         is_yearly::boolean              Captures if a sdts is the first day of a year.
 
-        is_end_of_yearly::boolean       Captures if a sdts is the last day of a year.
+        is_end_of_year::boolean       Captures if a sdts is the last day of a year.
 
         comment::string                 Allows users to write custom comments for each sdts. By default this column is set to NULL.
         
