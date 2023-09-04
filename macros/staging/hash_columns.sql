@@ -35,10 +35,15 @@
         {%- else -%}          
             
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
-
+                {%- if columns[col].use_rtrim -%}
+                    {%- set rtrim_hashdiff = true -%}
+                {%- else -%}
+                    {%- set rtrim_hashdiff = false -%}
+                {%- endif -%}
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
-                                is_hashdiff=columns[col]['is_hashdiff']) -}}
+                                is_hashdiff=columns[col]['is_hashdiff'],
+                                rtrim_hashdiff=rtrim_hashdiff) -}}
 
             {%- elif columns[col] is not mapping -%}
 
