@@ -70,3 +70,17 @@ WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }}
 
 {%- endmacro -%}
 
+
+{%- macro sqlserver__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE pit FROM {{ this }} pit
+    left join  {{ ref(snapshot_relation) }} snap 
+        on snap.{{ snapshot_trigger_column }}=1 
+        and snap.{{ sdts }} = pit.{{ sdts }}
+    WHERE snap.{{ sdts }} is null 
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}
