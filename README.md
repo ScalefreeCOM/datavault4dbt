@@ -58,7 +58,11 @@ Currently supported platforms are:
 * Exasol
 * Snowflake
 
-We are working continuously at high pressure to adapt the package for large variety of different platforms. In the future, the package will hopefully be available for SQL Server, Oracle and many more.
+We are working continuously at high pressure to adapt the package for large variety of different platforms. In the future, the package will hopefully be available for many more databases.
+The development of adapters of datavault4dbt for the following databases are currently in progress:
+* SQL Server
+* Synapse Analytics
+* PostgreSQL
 
 ---
 
