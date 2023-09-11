@@ -25,17 +25,19 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 {%- endmacro -%}
 
 
-{%- macro concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+{%- macro concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff, rtrim_hashdiff) -%}
 
 {{ return(adapter.dispatch('concattenated_standardise', 'datavault4dbt')(case_sensitive=case_sensitive,
                                                                               hash_alg=hash_alg,
                                                                               datatype=datatype, 
                                                                               zero_key=zero_key,
-                                                                              alias=alias) )}}
+                                                                              alias=alias,
+                                                                              is_hashdiff=is_hashdiff,
+                                                                              rtrim_hashdiff=rtrim_hashdiff) )}}
 
 {%- endmacro -%}
 
-{%- macro default__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+{%- macro default__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff, rtrim_hashdiff) -%}
 
 {%- set dict_result = {} -%}
 
@@ -78,7 +80,7 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 {%- endmacro -%}
 
 
-{%- macro snowflake__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+{%- macro snowflake__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff, rtrim_hashdiff) -%}
 
 {%- set dict_result = {} -%}
 
@@ -86,43 +88,49 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {{ log('datatype: ' ~ datatype, false)}}
 
+{%- if is_hashdiff and rtrim_hashdiff -%}
+    {%- set hdiff_prefix = "RTRIM("-%}
+    {%- set hdiff_suffix = ",'[NULL_PLACEHOLDER_STRING][CONCAT_STRING]')"-%}
+{%- else -%}
+    {%- set hdiff_prefix = "" -%}
+    {%- set hdiff_suffix = "" -%}
+{%- endif -%}
+
 {%- if 'VARCHAR' in datatype or 'CHAR' in datatype or 'STRING' in datatype or 'TEXT' in datatype %}
 
     {%- if case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
-
+        {%- set standardise_prefix = "IFNULL(LOWER({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'))), {}) AS {}".format(zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'){})), {}) AS {}".format(hdiff_suffix,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'))), {})".format(zero_key)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'){})), {})".format(hdiff_suffix,zero_key)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
-
+        {%- set standardise_prefix = "IFNULL(LOWER({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'))), {}) AS {}".format(zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'){})), {}) AS {}".format(hdiff_suffix,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'))), {})".format(zero_key)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'){})), {})".format(hdiff_suffix,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
 {%- else -%}
 
     {%- if case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
+        {%- set standardise_prefix = "IFNULL({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]')), {}) AS {}".format(zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'){}), {}) AS {}".format(hdiff_suffix,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]')), {})".format(zero_key)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'){}), {})".format(hdiff_suffix,zero_key)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "IFNULL({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
+        {%- set standardise_prefix = "IFNULL({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg,hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]')), {}) AS {}".format(zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'){}), {}) AS {}".format(hdiff_suffix,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]')), {})".format(zero_key)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\x0B', '') \n, '\\r', '') AS STRING), '[ALL_NULL]'){}), {})".format(hdiff_suffix,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -135,7 +143,7 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 {%- endmacro -%}
 
 
-{%- macro exasol__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+{%- macro exasol__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias,is_hashdiff, rtrim_hashdiff) -%}
 
 {%- set dict_result = {} -%}
 
