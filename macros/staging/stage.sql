@@ -71,9 +71,10 @@
                                                                 'bk': 'contractnumber',                     name (specified in 'bk') from the source table 'contract' in the source 'source_data'
                                                                 'this_column_name': 'ContractId',           by joining on 'this.ContractId = contract.Id'. In this case the prejoined
                                                                 'ref_column_name': 'Id'},                   column alias equals the name of the original business key column, which should be
-                                            'master_account_key' {'ref_model': 'account_prep',              or a self-prejoin happens, and then you would have to rename the final columns to not
+                                            'master_account_key' {'src_name': 'source_data',                the case for most prejoins. But sometimes the same object is prejoined multiple times
+                                                                'src_table': 'account',                     or a self-prejoin happens, and then you would have to rename the final columns to not
                                                                 'bk': 'account_key',                        have duplicate column names. The column 'master_account_key' holds values of the column
-                                                                'this_column_name': 'master_account_id',    'account_key' inside the pre-populated dbt model 'account_prep'. If this prejoin is done inside account,
+                                                                'this_column_name': 'master_account_id',    'account_key' inside the source table 'account'. If this prejoin is done inside account,
                                                                 'ref_column_name': 'Id'}}                   we would now have a self-prejoin ON 'account.master_account_id = account.Id'. Because
                                                                                                             the table 'account' already has a column 'account_key', we rename the prejoined column
                                                                                                             to 'master_account_key'. More prejoined columns can be added as other keys of the dictionary.
