@@ -1,4 +1,4 @@
-{%- macro exasol__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias, add_is_current_flag, include_payload) -%}
+{%- macro exasol__sat_v1(sat_v0, hashkey, hashdiff, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
@@ -24,10 +24,8 @@ end_dated_source AS (
         {{ hashdiff }},
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }}
-        {%- if include_payload -%},
-            {{ datavault4dbt.print_list(source_columns_to_select) }}
-        {%- endif %}
+        COALESCE(LEAD(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }},
+        {{ datavault4dbt.print_list(source_columns_to_select) }}
     FROM {{ source_relation }}
 
 )
@@ -37,16 +35,14 @@ SELECT
     {{ hashdiff }},
     {{ src_rsrc }},
     {{ src_ldts }},
-    {{ ledts_alias }}
-    {%- if add_is_current_flag %},
+    {{ ledts_alias }},
+    {%- if add_is_current_flag %}
         CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}
         THEN TRUE
         ELSE FALSE
-        END AS {{ is_current_col_alias }}
+        END AS {{ is_current_col_alias }},
     {% endif -%}
-    {%- if include_payload -%},
-        {{ datavault4dbt.print_list(source_columns_to_select) }}
-    {%- endif %}
+    {{ datavault4dbt.print_list(source_columns_to_select) }}
 FROM end_dated_source
 
 {%- endmacro -%}

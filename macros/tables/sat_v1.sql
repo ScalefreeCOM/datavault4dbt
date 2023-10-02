@@ -42,17 +42,15 @@
                                     set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if the load
                                     end date time stamp is equal to the variable end of all times. If its not, then the record is not current therefore it
                                     will be set to false.
-    
-    include_payload::boolean        Optional parameter to specify if the v1 sat should have the payload columns from sat v0 or not. Default is true.
 #}
 
-{%- macro sat_v1(sat_v0, hashkey, hashdiff, src_ldts=none, src_rsrc=none, ledts_alias=none, add_is_current_flag=false, include_payload=true) -%}
+{%- macro sat_v1(sat_v0, hashkey, hashdiff, src_ldts=none, src_rsrc=none, ledts_alias=none, add_is_current_flag=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
     
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
-    {%- set ledts_alias = datavault4dbt.replace_standard(ledts_alias, 'datavault4dbt.ledts_alias', 'ledts') -%}
+    {%- set src_ledts = datavault4dbt.replace_standard(src_ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
 
     {{ adapter.dispatch('sat_v1', 'datavault4dbt')(sat_v0=sat_v0,
                                          hashkey=hashkey,
@@ -60,7 +58,6 @@
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
                                          ledts_alias=ledts_alias,
-                                         add_is_current_flag=add_is_current_flag,
-                                         include_payload=include_payload) }}
+                                         add_is_current_flag=add_is_current_flag) }}
 
 {%- endmacro -%}
