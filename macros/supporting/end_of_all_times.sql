@@ -86,7 +86,7 @@
 
 {%- if global_var is mapping -%}
     {%- if 'postgres' in global_var.keys()|map('lower') -%}
-        {% set end_of_all_times = global_var['bigquery'] %}
+        {% set end_of_all_times = global_var['postgres'] %}
     {%- else -%}
         {%- if execute -%}
             {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.end_of_all_times' to a dictionary, but have not included the adapter you use (postgres) as a key. Applying the default value.") -%}
@@ -110,7 +110,7 @@
 
 {%- if global_var is mapping -%}
     {%- if 'redshift' in global_var.keys()|map('lower') -%}
-        {% set end_of_all_times = global_var['bigquery'] %}
+        {% set end_of_all_times = global_var['redshift'] %}
     {%- else -%}
         {%- if execute -%}
             {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.end_of_all_times' to a dictionary, but have not included the adapter you use (redshift) as a key. Applying the default value.") -%}
