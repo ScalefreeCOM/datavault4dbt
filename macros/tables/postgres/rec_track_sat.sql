@@ -214,7 +214,7 @@ records_to_insert AS (
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} 
     AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
     {%- if is_incremental() %}
-        AND {{ datavault4dbt.concat_ws(concat_columns) }} NOT IN (SELECT * FROM distinct_concated_target)
+        AND NOT EXISTS(SELECT 1 from distinct_concated_target where {{ datavault4dbt.concat_ws(concat_columns) }} = distinct_concated_target.concat)
     {% endif %}
 )
 
