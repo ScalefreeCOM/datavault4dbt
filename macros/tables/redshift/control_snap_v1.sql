@@ -56,7 +56,7 @@ virtual_logic AS (
                     {%- set daily_duration = log_logic['daily']['duration'] -%}
                     {%- set daily_unit = log_logic['daily']['unit'] -%}
 
-                    c.{{ sdts_alias }} BETWEEN add_months(GETDATE(), -{{ daily_duration }}) AND GETDATE()
+                    c.{{ sdts_alias }} BETWEEN dateadd({{ daily_unit }}, -{{ daily_duration }}, GETDATE()) AND GETDATE()
                 {%- endif -%}
             {%- endif %}
 
@@ -71,7 +71,7 @@ virtual_logic AS (
                     {%- set weekly_unit = log_logic['weekly']['unit'] -%}
 
                     (
-                c.{{ sdts_alias }} BETWEEN add_months(GETDATE(), -{{ weekly_duration }}) AND GETDATE()
+                c.{{ sdts_alias }} BETWEEN dateadd({{ weekly_unit }}, -{{ weekly_duration }}, GETDATE()) AND GETDATE()
                 AND
                 (c.is_weekly = TRUE)
             )
@@ -89,7 +89,7 @@ virtual_logic AS (
                     {%- set monthly_unit = log_logic['monthly']['unit'] -%}
 
                     (
-                c.{{ sdts_alias }} BETWEEN add_months(GETDATE(), -{{ monthly_duration }}) AND GETDATE()
+                c.{{ sdts_alias }} BETWEEN dateadd({{ monthly_unit }}, -{{ monthly_duration }}, GETDATE()) AND GETDATE()
                 AND
                 (c.is_monthly = TRUE)
             )
@@ -107,7 +107,7 @@ virtual_logic AS (
                     {%- set yearly_unit = log_logic['yearly']['unit'] -%}
 
                     (
-                DATE FROM c.{{ sdts_alias }} BETWEEN add_months(GETDATE(), -{{ yearly_duration }}) AND GETDATE() 
+                DATE FROM c.{{ sdts_alias }} BETWEEN dateadd({{ yearly_unit }}, -{{ yearly_duration }}, GETDATE()) AND GETDATE() 
                 AND
                 (c.is_yearly = TRUE)
             )
@@ -139,11 +139,11 @@ virtual_logic AS (
             ELSE FALSE
         END AS is_last_year,
         CASE
-            WHEN c.{{ sdts_alias }} BETWEEN add_months(GETDATE(), - 1) AND CURRENT_DATE THEN TRUE
+            WHEN c.{{ sdts_alias }} BETWEEN dateadd(Year, -1, GETDATE()) AND CURRENT_DATE THEN TRUE
             ELSE FALSE
         END AS is_rolling_year,
         CASE
-            WHEN c.{{ sdts_alias }} BETWEEN add_months(GETDATE(), - 2) AND add_months(GETDATE(), - 1) THEN TRUE
+            WHEN c.{{ sdts_alias }} BETWEEN dateadd(Year, -2, GETDATE()) AND dateadd(Year, -1, GETDATE()) THEN TRUE
             ELSE FALSE
         END AS is_last_rolling_year,
         c.comment
