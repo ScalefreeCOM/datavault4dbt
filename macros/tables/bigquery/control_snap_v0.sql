@@ -55,7 +55,7 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_monthly,
         CASE 
-            WHEN LAST_DAY(sdts, 'month') = DATE(sdts) THEN TRUE
+            WHEN LAST_DAY(DATE(sdts), MONTH) = DATE(sdts) THEN TRUE
             ELSE FALSE
         END as is_end_of_month,
         CASE
@@ -67,7 +67,7 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_yearly,
         CASE
-            WHEN EXTRACT(DAY FROM sdts)=31 AND EXTRACT(MONTH FROM sdts) = 12 THEN TRUE
+            WHEN LAST_DAY(DATE(sdts), YEAR) = DATE(sdts) THEN TRUE
             ELSE FALSE
         END AS is_end_of_year,
         NULL as comment
