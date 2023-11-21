@@ -1,4 +1,4 @@
-{%- macro default__ref_sat_v0(parent_ref_keys, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
+{%- macro postgres__ref_sat_v0(parent_ref_keys, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
