@@ -1,4 +1,4 @@
-{%- macro default__ref_sat_v1(ref_sat_v0, ref_keys, hashdiff, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
+{%- macro postgres__ref_sat_v1(ref_sat_v0, ref_keys, hashdiff, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
