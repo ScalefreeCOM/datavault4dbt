@@ -6,12 +6,6 @@
 
 {%- macro default__concat_ws(string_list, separator="||") -%}
 
-    {{  "CONCAT_WS('" ~ separator ~ "', " ~ string_list | join(", ") ~ ")" }}
-
-{%- endmacro -%}
-
-{%- macro bigquery__concat_ws(string_list, separator="||") -%}
-
     {{- 'CONCAT(' -}}
     {%- for str in string_list -%}
         {{- "{}".format(str) -}}

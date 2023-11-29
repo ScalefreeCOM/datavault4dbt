@@ -20,30 +20,22 @@
                                 multi_active_key=multi_active_key,
                                 main_hashkey_column=main_hashkey_column) -}}
 
-            {{- ", \n" if not loop.last -}}
-            
             {%- elif columns[col] is not mapping and (col|upper) == (main_hashkey_column | upper) -%}
                 {{- datavault4dbt.hash(columns=columns[col],
                                 alias=col,
                                 is_hashdiff=false) -}}  
 
-            {{- ", \n" if not loop.last -}}
-
             {%- endif -%}
 
+            {{- ", \n" if not loop.last -}}
 
         {%- else -%}          
             
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
-                {%- if columns[col].use_rtrim -%}
-                    {%- set rtrim_hashdiff = true -%}
-                {%- else -%}
-                    {%- set rtrim_hashdiff = false -%}
-                {%- endif -%}
+
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
-                                is_hashdiff=columns[col]['is_hashdiff'],
-                                rtrim_hashdiff=rtrim_hashdiff) -}}
+                                is_hashdiff=columns[col]['is_hashdiff']) -}}
 
             {%- elif columns[col] is not mapping -%}
 

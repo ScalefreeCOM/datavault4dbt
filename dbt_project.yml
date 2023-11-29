@@ -32,28 +32,28 @@ vars:
   datavault4dbt.sdts_alias: 'sdts'
   datavault4dbt.stg_alias: 'stg'
   datavault4dbt.is_current_col_alias: 'IS_CURRENT'
-
+  datavault4dbt.deleted_flag_alias: 'deleted_flag'
   #Hash Configuration
   datavault4dbt.hash: 'MD5'
-  datavault4dbt.hash_datatype: 'STRING'
+  datavault4dbt.hash_datatype: 'BINARY(16)' #changed from string
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   
   #Stage Configuration
-  datavault4dbt.copy_rsrc_ldts_input_columns: false  
+  datavault4dbt.copy_rsrc_ldts_input_columns: true  
 
   #General Configuration
   datavault4dbt.include_business_objects_before_appearance: false
   
   #Ghost Record Configuration  
-  datavault4dbt.beginning_of_all_times: {"bigquery":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01"}
-  datavault4dbt.end_of_all_times: {"bigquery":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31 23:59:59"}
-  datavault4dbt.timestamp_format: {"bigquery":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-mm-dd HH:MI:SS"}
+  datavault4dbt.beginning_of_all_times: {"bigquery":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01", "synapse": "1901-01-01T00:00:01"}
+  datavault4dbt.end_of_all_times: {"bigquery":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31 23:59:59", "synapse": "8888-12-31T23:59:59"}
+  datavault4dbt.timestamp_format: {"bigquery":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-mm-dd HH:MI:SS", "synapse": 126}
   datavault4dbt.default_unknown_rsrc: 'SYSTEM'
   datavault4dbt.default_error_rsrc: 'ERROR'
-  datavault4dbt.rsrc_default_dtype: 'STRING'
-  datavault4dbt.stg_default_dtype: 'STRING'
-  datavault4dbt.derived_columns_default_dtype: STRING
+  datavault4dbt.rsrc_default_dtype: 'VARCHAR(255)' #changed from string
+  datavault4dbt.stg_default_dtype: 'VARCHAR(255)' #changed from string
+  datavault4dbt.derived_columns_default_dtype: 'VARCHAR(255)' #changed from string
 
   #Datatype specific default values
   datavault4dbt.error_value__STRING: '(error)'
@@ -71,9 +71,13 @@ vars:
 models:
   datavault4dbt:
     # Config indicated by + and applies to all files under models/example/
-    dbt_stg:
-      +schema: <name of your Staging schema>
+    index: HEAP
+    Stages:
+      +schema: Datavault4dbt.Stage
       +materialized: view
-    raw_vault:
-      +schema: <name of your RDV schema>
+    RDV:
+      +schema: Datavault4dbt.RDV
       +materialized: table
+    BDV:
+      +schema: Datavault4dbt.BDV
+      +materialized: view

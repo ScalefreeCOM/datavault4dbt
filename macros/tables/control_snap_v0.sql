@@ -28,16 +28,14 @@
 
         is_monthly::boolean             Captures if a sdts is the first day of a month.
 
-        is_end_of_month::boolean      Captures if a sdts is the last day of a month.
-
-        is_quarterly::boolean           Captures if a sdts is the first day of a quarter.
-
         is_yearly::boolean              Captures if a sdts is the first day of a year.
-
-        is_end_of_year::boolean       Captures if a sdts is the last day of a year.
 
         comment::string                 Allows users to write custom comments for each sdts. By default this column is set to NULL.
         
+        force_active::boolean           Allows users to deactivate single snapshots. Deactivating a snapshot here overwrites any logarithmic
+                                        logic that is applied in the version 1 snapshot table on top of this one. This column is automatically
+                                        set to TRUE.
+
         force_active::boolean           Allows users to deactivate single snapshots. Deactivating a snapshot here overwrites any logarithmic
                                         logic that is applied in the version 1 snapshot table on top of this one. This column is automatically
                                         set to TRUE.
@@ -63,11 +61,13 @@
 
 #}
 
-{%- macro control_snap_v0(start_date, daily_snapshot_time, sdts_alias=none) -%}
+{%- macro control_snap_v0(start_date, daily_snapshot_time, sdts_alias=none, end_date=none) -%}
+    
     {%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
     {{ adapter.dispatch('control_snap_v0', 'datavault4dbt')(start_date=start_date,
-                                                                        daily_snapshot_time=daily_snapshot_time,
-                                                                        sdts_alias=sdts_alias) }}
+                                                            daily_snapshot_time=daily_snapshot_time,
+                                                            sdts_alias=sdts_alias,
+                                                            end_date=end_date) }}
 
 {%- endmacro -%}

@@ -99,6 +99,7 @@
 
 {%- endmacro %}
 
+
 {%- macro default__escape_column_name(column) -%}
 
     {%- set escape_char_left  = var('escape_char_left',  '"') -%}
@@ -110,7 +111,8 @@
 
 {%- endmacro -%}
 
-{%- macro sqlserver__escape_column_name(column) -%}
+
+{%- macro synapse__escape_column_name(column) -%}
 
     {%- set escape_char_left  = var('escape_char_left',  '"') -%}
     {%- set escape_char_right = var('escape_char_right', '"') -%}

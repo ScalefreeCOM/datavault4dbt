@@ -26,7 +26,7 @@ src_payload:
 
 
 
-{%- macro ref_sat_v0(parent_ref_keys, src_hashdiff, src_payload, source_model, src_ldts=none, src_rsrc=none) -%}
+{%- macro ref_sat_v0(parent_ref_keys, src_hashdiff, src_payload, source_model, src_ldts=none, src_rsrc=none, disable_hwm=false, source_is_single_batch=false) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
@@ -37,6 +37,8 @@ src_payload:
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
-                                         source_model=source_model) 
+                                         source_model=source_model,
+                                         disable_hwm=disable_hwm,
+                                         source_is_single_batch=source_is_single_batch) 
     }}
 {%- endmacro -%}

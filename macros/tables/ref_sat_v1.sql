@@ -28,7 +28,7 @@ add_is_current_flag: true
     
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
-    {%- set ledts_alias = datavault4dbt.replace_standard(ledts_alias, 'datavault4dbt.ledts_alias', 'ledts') -%}
+    {%- set src_ledts = datavault4dbt.replace_standard(src_ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
 
     {{ adapter.dispatch('ref_sat_v1', 'datavault4dbt')(ref_sat_v0=ref_sat_v0,
                                          ref_keys=ref_keys,
