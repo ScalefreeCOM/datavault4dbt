@@ -1,4 +1,4 @@
-{%- macro concat_ws(string_list, separator="|") -%}
+{%- macro concat_ws(string_list, separator="||") -%}
 
     {{- adapter.dispatch('concat_ws', 'datavault4dbt')(string_list=string_list, separator=separator) -}}
 
