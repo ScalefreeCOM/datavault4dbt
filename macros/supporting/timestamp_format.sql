@@ -91,12 +91,12 @@
         {%- if execute -%}
             {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_format' to a dictionary, but have not included the adapter you use (postgres) as a key. Applying the default value.") -%}
         {% endif %}
-        {%- set timestamp_format = "YYYY/MM/DD HH24:MI:SS" -%}
+        {%- set timestamp_format = "%Y-%m-%dT%H-%M-%S" -%}
     {% endif %}
 {%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
     {%- set timestamp_format = global_var -%}
 {%- else -%}
-    {%- set timestamp_format = "YYYY/MM/DD HH24:MI:SS" -%}
+    {%- set timestamp_format = "%Y-%m-%dT%H-%M-%S" -%}
 {%- endif -%}
 
 {{ return(timestamp_format) }}
