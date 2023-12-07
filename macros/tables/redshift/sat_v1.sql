@@ -38,15 +38,15 @@ SELECT
     {{ hashdiff }},
     {{ src_rsrc }},
     {{ src_ldts }},
-    {{ ledts_alias }},
+    {{ ledts_alias }}
     {%- if add_is_current_flag %}
-        CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+        , CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
         THEN TRUE
         ELSE FALSE
-        END AS {{ is_current_col_alias }},
+        END AS {{ is_current_col_alias }}
     {% endif -%}
     {%- if include_payload -%}
-        {{ datavault4dbt.print_list(source_columns_to_select) }}
+        , {{ datavault4dbt.print_list(source_columns_to_select) }}
     {%- endif %}
 FROM end_dated_source
 
