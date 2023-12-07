@@ -33,7 +33,7 @@ source_data_single_batch AS (
     Select distinct on ({{ parent_hashkey }}) 
         source_data.*
     from source_data
-    order by {{ src_ldts }})     
+    order by {{ src_ldts }}),     
 {%- endif %} 
 
 {% if is_incremental() -%}
