@@ -28,11 +28,10 @@ source_data AS (
     {%- endif %}
 
     {% if not source_is_single_batch -%}
-
-    QUALIFY
-        ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) = 1
+    {%- if not is_incremental() %} redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from {%- endif %}
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) = 1
         
-    {%- endif %}   
+    {%- endif %} 
 ),
 
 {% if is_incremental() -%}
