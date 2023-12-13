@@ -62,11 +62,6 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 {%- endmacro -%}
 
 
-{%- macro snowflake__attribute_standardise() -%}
-
-CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS VARCHAR2(2000))), '\\', '\\\\'), '\[QUOTE]', '\\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
-
-{%- endmacro -%}
 
 
 
