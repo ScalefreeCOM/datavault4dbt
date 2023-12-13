@@ -126,3 +126,27 @@
 {{ return(timestamp_format) }}
 
 {%- endmacro -%}
+
+{%- macro oracle__timestamp_format() %}
+
+{%- set global_var = var('datavault4dbt.timestamp_format', none) -%}
+{%- set timestamp_format = '' -%}
+
+{%- if global_var is mapping -%}
+    {%- if 'oracle' in global_var.keys()|map('lower') -%}
+        {% set timestamp_format = global_var['oracle'] %}
+    {%- else -%}
+        {%- if execute -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_format' to a dictionary, but have not included the adapter you use (oracle) as a key. Applying the default value.") -%}
+        {% endif %}
+        {%- set timestamp_format = "YYYY-mm-dd HH24:MI:SS" -%}
+    {% endif %}
+{%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
+    {%- set timestamp_format = global_var -%}
+{%- else -%}
+    {%- set timestamp_format = "YYYY-mm-dd HH24:MI:SS" -%}
+{%- endif -%}
+
+{{ return(timestamp_format) }}
+
+{%- endmacro -%}
