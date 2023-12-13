@@ -78,3 +78,28 @@
 {{ return(hash_method) }}
 
 {%- endmacro -%}
+
+
+{%- macro oracle__hash_method() %}
+
+{%- set global_var = var('datavault4dbt.hash', none) -%}
+{%- set hash_method = '' -%}
+
+{%- if global_var is mapping -%}
+    {%- if 'oracle' in global_var.keys()|map('lower') -%}
+        {% set hash_method = global_var['oracle'] %}
+    {%- else -%}
+        {%- if execute -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.hash' to a dictionary, but have not included the adapter you use (oracle) as a key. Applying the default value.") -%}
+        {% endif %}
+        {%- set hash_method = 'MD5' -%}
+    {% endif %}
+{%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
+    {%- set hash_method = global_var -%}
+{%- else -%}
+    {%- set hash_method = 'MD5' -%}
+{%- endif -%}
+
+{{ return(hash_method) }}
+
+{%- endmacro -%}
