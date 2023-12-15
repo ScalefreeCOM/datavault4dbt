@@ -7,16 +7,20 @@
 WITH 
 initial_timestamps AS 
 (
-    select
-    add_days(ADD_MINUTES(ADD_HOURS(DATE_TRUNC('day', DATE '{{ start_date }}' ), EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) ),
-                                                        EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) 
-                                                    ), level-1) as sdts
-    from dual
-    connect by level <= days_between(ADD_MINUTES(ADD_HOURS(CURRENT_DATE(), EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) ),
-                                                        EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) 
-                                                    ), TO_DATE('{{ start_date}}', '{{ date_format_std }}')
-                                    )+1
-    order by local.sdts
+    SELECT
+            TO_DATE('{{ start_date }}', 'YYYY-mm-dd')
+            + (EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) / 24)
+            + (EXTRACT(MINUTE FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) / 24 / 60)
+            + level - 1 AS sdts
+    FROM dual
+    CONNECT BY level <= TRUNC(sysdate) - TO_DATE('2023-12-01', 'YYYY-mm-dd')
+                        + (EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) / 24)
+                        + (EXTRACT(MINUTE FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) / 24 / 60)
+                        + 2
+    ORDER BY TO_DATE('{{ start_date }}', 'YYYY-mm-dd')
+             + (EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) / 24)
+             + (EXTRACT(MINUTE FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) / 24 / 60)
+             + level - 1
 
     {%- set last_cte = 'initial_timestamps' -%}
 )
@@ -28,7 +32,7 @@ initial_timestamps AS
         src.* 
     FROM initial_timestamps src
 
-    WHERE src.sdts > (SELECT MAX(t."{{ sdts_alias }}") FROM {{ this }} t)
+    WHERE src.sdts > (SELECT MAX(t.{{ sdts_alias }}) FROM {{ this }} t)
     {%- set last_cte = 'incremental_cte' -%}
 
 )
@@ -37,43 +41,45 @@ initial_timestamps AS
 , enriched_timestamps AS 
 (
     SELECT
-        sdts as "{{ sdts_alias }}",
-        TRUE as force_active,
+        sdts as {{ sdts_alias }},
+        1 as force_active,
         sdts AS replacement_sdts,
-        CONCAT('Snapshot ', DATE_TRUNC('day', TO_DATE(sdts))) AS caption,
+        CONCAT('Snapshot ', TRUNC(TO_DATE(sdts),'DD')) AS caption,
         CASE
-            WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 THEN TRUE
-            ELSE FALSE
+            WHEN EXTRACT(MINUTE FROM CAST(sdts AS TIMESTAMP)) = 0 AND EXTRACT(SECOND FROM CAST(sdts AS TIMESTAMP)) = 0
+            THEN 1
+            ELSE 0
         END AS is_hourly,
         CASE
-            WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 AND EXTRACT(HOUR FROM sdts) = 0 THEN TRUE
-            ELSE FALSE
+            WHEN EXTRACT(MINUTE FROM CAST(sdts AS TIMESTAMP)) = 0 AND EXTRACT(SECOND FROM CAST(sdts AS TIMESTAMP)) = 0 AND EXTRACT(HOUR FROM CAST(sdts AS TIMESTAMP)) = 0
+            THEN 1
+            ELSE 0
         END AS is_daily,
         CASE 
-            WHEN to_char(sdts, 'ID') = '1' THEN TRUE
-            ELSE FALSE
+            WHEN to_char(sdts, 'ID') = '1' THEN 1
+            ELSE 0
         END AS is_weekly, 
         CASE
-            WHEN EXTRACT(DAY FROM sdts) = 1 THEN TRUE
-            ELSE FALSE
+            WHEN EXTRACT(DAY FROM sdts) = 1 THEN 1
+            ELSE 0
         END AS is_monthly,
         CASE
-            WHEN sdts = date_add('day', -1, date_add('month', 1, date_trunc('month', sdts))) THEN TRUE
-            ELSE FALSE 
+            WHEN sdts = TRUNC(sdts, 'MM') + INTERVAL '1' MONTH + INTERVAL '-1' DAY THEN 1
+            ELSE 0
         END AS is_end_of_month,
         CASE
-            WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) IN (1,4,7,10) THEN TRUE
-            ELSE FALSE
+            WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) IN (1,4,7,10) THEN 1
+            ELSE 0
         END AS is_quarterly,
         CASE
-            WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN TRUE
-            ELSE FALSE
+            WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN 1
+            ELSE 0
         END AS is_yearly,
         CASE
-            WHEN EXTRACT(DAY FROM sdts)=31 AND EXTRACT(MONTH FROM sdts) = 12 THEN TRUE
-            ELSE FALSE
+            WHEN EXTRACT(DAY FROM sdts)=31 AND EXTRACT(MONTH FROM sdts) = 12 THEN 1
+            ELSE 0
         END AS is_end_of_year,
-        NULL AS comment
+        CAST(NULL AS VARCHAR2(2000)) AS "comment"
     FROM 
         {{ last_cte }}
 )
