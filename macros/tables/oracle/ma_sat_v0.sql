@@ -55,15 +55,18 @@ latest_entries_in_sat AS (
 {# Get a list of all distinct hashdiffs that exist for each parent_hashkey. #}
 deduped_row_hashdiff AS (
 
-  SELECT 
-    {{ parent_hashkey }},
-    {{ src_ldts }},
-    {{ ns.hdiff_alias }}
-  FROM source_data
-  QUALIFY CASE
-            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
-            ELSE TRUE
-          END
+  SELECT *
+  FROM (
+          SELECT
+            CASE
+                WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) THEN 0
+                ELSE 1
+            END AS latest,
+                {{ parent_hashkey }},
+                {{ src_ldts }},
+                {{ ns.hdiff_alias }}
+          FROM source_data)
+  WHERE latest = 1
 ),
 
 {# Dedupe the source data regarding non-delta groups. #}

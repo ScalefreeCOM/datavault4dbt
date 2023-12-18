@@ -21,7 +21,7 @@ WITH
 source_satellite AS (
 
     SELECT src.*
-    FROM {{ source_relation }} as src
+    FROM {{ source_relation }} src
 
 ),
 
@@ -41,7 +41,7 @@ end_dated_loads AS (
     SELECT
         {{ hashkey }},
         {{ src_ldts }},
-        COALESCE(LEAD(ADD_SECONDS({{ src_ldts }}, -0.001)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }}
+        COALESCE(LEAD({{ src_ldts }} - INTERVAL '0.001' SECOND) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ ledts_alias }}
     FROM distinct_hk_ldts
 
 ),
@@ -57,13 +57,13 @@ end_dated_source AS (
         edl.{{ ledts_alias }},
         {%- if add_is_current_flag %}
             CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-            THEN TRUE
-            ELSE FALSE
+            THEN 1
+            ELSE 0
             END AS {{ is_current_col_alias }},
         {% endif %}
         {{- datavault4dbt.print_list(ma_attributes, indent=10, src_alias='src') }},
         {{- datavault4dbt.print_list(source_columns_to_select, indent=10, src_alias='src') }}
-    FROM source_satellite AS src
+    FROM source_satellite src
     LEFT JOIN end_dated_loads edl
         ON src.{{ hashkey }} = edl.{{ hashkey }}
         AND src.{{ src_ldts }} = edl.{{ src_ldts }}
