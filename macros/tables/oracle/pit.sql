@@ -16,7 +16,7 @@
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- if datavault4dbt.is_something(pit_type) -%}
-    {%- set hashed_cols = [pit_type, datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+    {%- set hashed_cols = [datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- else -%}
     {%- set hashed_cols = [datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- endif -%}
@@ -42,7 +42,7 @@ pit_records AS (
     SELECT
         
         {% if datavault4dbt.is_something(pit_type) -%}
-            {{ datavault4dbt.as_constant(pit_type) }} as type,
+            '{{ pit_type }}' as type,
         {%- endif %}
         {% if datavault4dbt.is_something(custom_rsrc) -%}
         '{{ custom_rsrc }}' as {{ rsrc }},
@@ -63,7 +63,7 @@ pit_records AS (
         FULL OUTER JOIN
             {{ ref(snapshot_relation) }} snap
             {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
-                ON snap.{{ snapshot_trigger_column }} = true
+                ON snap.{{ snapshot_trigger_column }} = 1
             {% else -%}
                 ON 1=1
             {%- endif %}
@@ -85,7 +85,7 @@ pit_records AS (
                 AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
     {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
-        WHERE snap.{{ snapshot_trigger_column }}
+        WHERE snap.{{ snapshot_trigger_column }} = 1
     {%- endif %}
 
 ),
