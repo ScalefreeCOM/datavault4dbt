@@ -3,6 +3,8 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{{ log('source_models'~source_models, false) }}
+
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
@@ -211,11 +213,11 @@ earliest_hk_over_all_sources AS (
     FROM (
             SELECT
                 lcte.*,
-                ROW_NUMBER() OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}) AS appearance
+                ROW_NUMBER() OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}) AS earliest
             FROM {{ ns.last_cte }} lcte
 
          )
-    WHERE appearance = 1
+    WHERE earliest = 1
     {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 
 ),
