@@ -23,7 +23,7 @@ With datavault4dbt you will get a lot of awesome features, including:
 - A fully auditable solution for a Data Warehouse
 - Creating a centralized, snapshot-based Business interface by using a centralized snapshot table supporting logarithmic logic
 - A modern insert-only approach that avoids updating data
-- Optimizing incremental loads by implemting a high-water-mark that also works for entities that are loaded from multiple sources
+- Optimizing incremental loads by implementing a high-water-mark that also works for entities that are loaded from multiple sources
 - A straight-forward, standardized approach to conduct agile datawarehouse development cycles
 
 ### Requirements
@@ -57,6 +57,8 @@ Currently supported platforms are:
 * Google Bigquery
 * Exasol
 * Snowflake
+* PostgreSQL
+* Amazon Redshift
 
 We are working continuously at high pressure to adapt the package for large variety of different platforms. In the future, the package will hopefully be available for SQL Server, Oracle and many more.
 

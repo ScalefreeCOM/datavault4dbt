@@ -27,6 +27,8 @@
     {{- exceptions.raise_compiler_error(error_message) -}}
 {%- endif -%}
 
+{{ log('source_model: ' ~ source_model, false )}}
+
 {#- Check for source format or ref format and create relation object from source_model -#}
 {% if source_model is mapping and source_model is not none -%}
 
@@ -38,12 +40,15 @@
 
 {%- elif source_model is not mapping and source_model is not none -%}
 
+    {{ log('source_model is not mapping and not none: ' ~ source_model, false) }}
+
     {%- set source_relation = ref(source_model) -%}
     {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
 {%- else -%}
     {%- set all_source_columns = [] -%}
 {%- endif -%}
 
+{{ log('source_relation: ' ~ source_relation, false) }}
 
 {# Setting the column name for load date timestamp and record source to the alias coming from the attributes #}
 {%- set ldts_alias = var('datavault4dbt.ldts_alias', 'ldts') -%}
@@ -116,11 +121,31 @@
   {# Getting the input columns for the additional columns #}
   {%- set derived_input_columns = datavault4dbt.extract_input_columns(derived_columns) -%}
   {%- set hashed_input_columns = datavault4dbt.expand_column_list(datavault4dbt.extract_input_columns(hashed_columns)) -%}
-  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, derived_column_names) -%}
-  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, prejoined_column_names) -%}
+  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, derived_column_names) -%}    {# Excluding the names of the derived columns. #}
+  {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, prejoined_column_names) -%}  {# Excluding the names of the prejoined columns. #}
   {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, missing_column_names) -%}  {# Excluding the names of the missing columns. #}
   {%- set prejoined_input_columns = datavault4dbt.extract_input_columns(prejoined_columns) -%}
+
+  {% if datavault4dbt.is_something(multi_active_config) %}
+
+    {%- if datavault4dbt.is_list(multi_active_config['multi_active_key']) -%}
+
+      {%- set ma_keys = multi_active_config['multi_active_key'] -%}
+
+    {%- else -%}
+
+      {%- set ma_keys = [multi_active_config['multi_active_key']] -%}
+
+    {%- endif -%}
+
+    {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns + ma_keys) | unique | list -%}
+
+  {%- else -%}
+
   {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
+
+  {%- endif -%}
+
   {%- set source_columns_to_select = only_include_from_source -%}
 
 {%- endif-%}

@@ -125,7 +125,27 @@
   {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, prejoined_column_names) -%}  {# Excluding the names of the prejoined columns. #}
   {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, missing_column_names) -%}  {# Excluding the names of the missing columns. #}
   {%- set prejoined_input_columns = datavault4dbt.extract_input_columns(prejoined_columns) -%}
-  {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
+
+  {% if datavault4dbt.is_something(multi_active_config) %}
+
+    {%- if datavault4dbt.is_list(multi_active_config['multi_active_key']) -%}
+
+      {%- set ma_keys = multi_active_config['multi_active_key'] -%}
+
+    {%- else -%}
+
+      {%- set ma_keys = [multi_active_config['multi_active_key']] -%}
+
+    {%- endif -%}
+
+    {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns + ma_keys) | unique | list -%}
+
+  {%- else -%}
+
+    {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
+
+  {%- endif -%}
+
   {%- set source_columns_to_select = only_include_from_source -%}
 
 {%- endif-%}
