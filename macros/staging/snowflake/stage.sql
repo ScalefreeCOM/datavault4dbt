@@ -107,6 +107,7 @@
 
 {%- if include_source_columns -%}
   {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_source_columns, exclude_column_names) | list -%}
+  {{ log('source_columns_to_select when include_source_columns=true: '~ source_columns_to_select, false) }}
 
   {%- for column in all_columns -%}
 
@@ -115,6 +116,7 @@
     {%- endif -%}
 
   {%- endfor -%}
+  {{ log('columns_without_excluded_columns: '~ columns_without_excluded_columns, false) }}
 {%- else -%}
   
   {# Include from the source only the input columns needed #}
@@ -143,15 +145,17 @@
   {%- else -%}
 
   {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
-
+  {{ log('only_include_from_source : '~ only_include_from_source, false) }}
   {%- endif -%}
 
   {%- set source_columns_to_select = only_include_from_source -%}
+  {{ log('source_columns_to_select when include_source_columns=false: '~ source_columns_to_select, false) }}
 
 {%- endif-%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
+  {{ log('derived_columns_to select : '~ derived_columns_to_select, false) }}
 
 {%- if datavault4dbt.is_something(derived_columns) %}
   {#- Getting Data types for derived columns with detection from source relation -#}
@@ -222,8 +226,9 @@ ldts_rsrc_data AS (
 
   {%- set last_cte = "ldts_rsrc_data" -%}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
+  {{ log('derived_column_names: '~ derived_column_names, false) }}
   {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) | list -%}
-  
+  {{ log('final_columns_to_select without derived col names: '~ final_columns_to_select, false)}}
   {%- set columns_without_excluded_columns_tmp = [] -%}
   {%- for column in columns_without_excluded_columns -%}
     {%- if column.name not in derived_column_names -%}
@@ -231,6 +236,8 @@ ldts_rsrc_data AS (
     {%- endif -%}
   {%- endfor -%}
   {%- set columns_without_excluded_columns = columns_without_excluded_columns_tmp |list -%}
+  {{ log('columns_without_excluded_columns without derived_col_names: '~ columns_without_excluded_columns, false)}}
+
 ),
 
 {%- if datavault4dbt.is_something(missing_columns) %}
@@ -527,6 +534,7 @@ ghost_records AS (
 {%- endif %}
 
 {%- if not include_source_columns -%}
+  {% set source_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=source_columns_to_select, exclude_columns_list=derived_column_names) %}
   {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select, exclude_columns_list=source_columns_to_select) %}
 {%- endif -%}
 
