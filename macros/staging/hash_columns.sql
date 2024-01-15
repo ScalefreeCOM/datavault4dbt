@@ -12,7 +12,9 @@
 
     {%- for col in columns -%}
 
+        {#- Check if multi-active config is defined -#}
         {%- if datavault4dbt.is_something(multi_active_key) -%}
+            {#- Apply block-based hashing pattern for hash diff attribute in multi-active satellite. -#}
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
@@ -22,7 +24,8 @@
 
             {{- ", \n" if not loop.last -}}
             
-            {%- elif columns[col] is not mapping and (col|upper) == (main_hashkey_column | upper) -%}
+            {#- Apply standard hashing for hash key attributes. -#}
+            {%- elif columns[col] is not mapping -%}
                 {{- datavault4dbt.hash(columns=columns[col],
                                 alias=col,
                                 is_hashdiff=false) -}}  
@@ -32,8 +35,7 @@
             {%- endif -%}
 
 
-        {%- else -%}          
-            
+        {%- else -%}
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
                 {%- if columns[col].use_rtrim -%}
                     {%- set rtrim_hashdiff = true -%}
