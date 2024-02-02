@@ -27,6 +27,8 @@
     {{- exceptions.raise_compiler_error(error_message) -}}
 {%- endif -%}
 
+{{ log('source_model: ' ~ source_model, false )}}
+
 {#- Check for source format or ref format and create relation object from source_model -#}
 {% if source_model is mapping and source_model is not none -%}
 
@@ -38,12 +40,15 @@
 
 {%- elif source_model is not mapping and source_model is not none -%}
 
+    {{ log('source_model is not mapping and not none: ' ~ source_model, false) }}
+
     {%- set source_relation = ref(source_model) -%}
     {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
 {%- else -%}
     {%- set all_source_columns = [] -%}
 {%- endif -%}
 
+{{ log('source_relation: ' ~ source_relation, false) }}
 
 {# Setting the column name for load date timestamp and record source to the alias coming from the attributes #}
 {%- set ldts_alias = var('datavault4dbt.ldts_alias', 'ldts') -%}
@@ -92,7 +97,7 @@
 {%- set hashed_column_names = datavault4dbt.extract_column_names(hashed_columns) -%}
 {%- set prejoined_column_names = datavault4dbt.extract_column_names(prejoined_columns) -%}
 {%- set missing_column_names = datavault4dbt.extract_column_names(missing_columns) -%}
-{%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
+{%- set exclude_column_names = hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
 {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
 
@@ -156,8 +161,8 @@
 {#- Select hashing algorithm -#}
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
-{%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR') -%}
+{%- set hash = datavault4dbt.hash_method() -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -173,7 +178,7 @@
 {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
 
 {# Setting the rsrc default datatype and length #}
-{% set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'VARCHAR') %}
+{% set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'STRING') %}
 
 WITH
 
@@ -184,6 +189,12 @@ source_data AS (
     {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
 
   FROM {{ source_relation }}
+
+  {% if is_incremental() %}
+  WHERE {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) 
+                      FROM {{ this }} 
+                      WHERE {{ load_datetime_col_name}} != {{ datavault4dbt.string_to_timestamp(timestamp_format , end_of_all_times) }} )
+  {%- endif -%}
 
   {% set last_cte = "source_data" -%}
 ),
@@ -210,6 +221,15 @@ ldts_rsrc_data AS (
 
   {%- set last_cte = "ldts_rsrc_data" -%}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) | list -%}
+  
+  {%- set columns_without_excluded_columns_tmp = [] -%}
+  {%- for column in columns_without_excluded_columns -%}
+    {%- if column.name not in derived_column_names -%}
+      {%- do columns_without_excluded_columns_tmp.append(column) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- set columns_without_excluded_columns = columns_without_excluded_columns_tmp |list -%}
 ),
 
 {%- if datavault4dbt.is_something(missing_columns) %}
@@ -302,6 +322,8 @@ prejoined_columns AS (
 {%- if datavault4dbt.is_something(derived_columns) %}
 {# Adding derived columns to the selection #}
 derived_columns AS (
+
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) -%}
 
   SELECT
   {% if final_columns_to_select | length > 0 -%}
@@ -434,12 +456,20 @@ unknown_values AS (
     {# Additionally generating ghost records for the prejoined attributes#}
       {% for col, vals in prejoined_columns.items() %}
 
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
+        {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
+          {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+        {%- elif 'ref_model' in vals.keys() -%}
+          {%- set relation = ref(vals['ref_model']) -%}
+        {%- endif -%}
+
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
+        {{ log('pj_relation_columns: ' ~ pj_relation_columns, false ) }}
 
           {% for column in pj_relation_columns -%}
 
             {% if column.name|lower == vals['bk']|lower -%}
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='unknown') }}
+              {{ log('column found? yes, for column :' ~ column.name , false) }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown', alias=col) }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -496,11 +526,17 @@ error_values AS (
     {# Additionally generating ghost records for the prejoined attributes #}
       {%- for col, vals in prejoined_columns.items() %}
 
-        {%- set pj_relation_columns = adapter.get_columns_in_relation( source(vals['src_name']|string, vals['src_table']) ) -%}
+        {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
+          {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
+        {%- elif 'ref_model' in vals.keys() -%}
+          {%- set relation = ref(vals['ref_model']) -%}
+        {%- endif -%}
+
+        {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
 
         {% for column in pj_relation_columns -%}
           {% if column.name|lower == vals['bk']|lower -%}
-            {{ datavault4dbt.ghost_record_per_datatype(column_name=col, datatype=column.dtype, ghost_record_type='error') -}}
+            {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error', alias=col) -}}
           {%- endif -%}
         {%- endfor -%}
           {%- if not loop.last -%},{%- endif %}
