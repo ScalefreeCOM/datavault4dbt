@@ -246,17 +246,29 @@
 {%- if ghost_record_type == 'unknown' -%}
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'VARCHAR' %} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'CHARACTER' %} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'INT' %} CAST('0' as INT) as {{ alias }}
+        {%- elif datatype == 'INT2' %} CAST('0' as INT2) as {{ alias }}
+        {%- elif datatype == 'INT8' %} CAST('0' as INT8) as {{ alias }}
+        {%- elif datatype == 'NUMERIC' %} CAST('0' as NUMERIC) as {{ alias }}
+        {%- elif datatype == 'FLOAT4' %} CAST('0' as FLOAT4) as {{ alias }}
         {%- elif datatype == 'FLOAT' %} CAST('0' as FLOAT) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
+        {%- elif datatype == 'VARBINARY' %} 'NULL'::varbyte as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'VARCHAR' %} '{{error_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'CHARACTER' %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'INT' %} CAST('-1' as INT) as {{ alias }}
+        {%- elif datatype == 'INT2' %} CAST('-1' as INT2) as {{ alias }}
+        {%- elif datatype == 'INT8' %} CAST('-1' as INT8) as {{ alias }}
+        {%- elif datatype == 'NUMERIC' %} CAST('-1' as NUMERIC) as {{ alias }}
+        {%- elif datatype == 'FLOAT4' %} CAST('-1' as FLOAT4) as {{ alias }}
         {%- elif datatype == 'FLOAT' %} CAST('-1' as FLOAT) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
+        {%- elif datatype == 'VARBINARY' %} 'NULL'::varbyte as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- else -%}

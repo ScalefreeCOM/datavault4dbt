@@ -52,7 +52,7 @@ WITH
                     SELECT 
                     {{ tracked_hashkey }},
                     {{ src_ldts }},
-                    '{{ rsrc_static }}' AS rsrc_static
+                    CAST('{{ rsrc_static }}' AS VARCHAR) AS rsrc_static
                     FROM {{ this }}
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %} 
@@ -67,7 +67,7 @@ WITH
                     SELECT 
                     {{ tracked_hashkey }},
                     {{ src_ldts }},
-                    '{{ rsrc_static }}' AS rsrc_static
+                    CAST('{{ rsrc_static }}' AS VARCHAR) AS rsrc_static
                     FROM {{ this }}
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %} 
