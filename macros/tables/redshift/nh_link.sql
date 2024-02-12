@@ -52,7 +52,7 @@ WITH
                 SELECT count(*) FROM (
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT t.{{ src_rsrc }},
-                    '{{ rsrc_static }}' AS rsrc_static
+                    CAST('{{ rsrc_static }}' AS VARCHAR) AS rsrc_static
                     FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
@@ -65,7 +65,7 @@ WITH
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT t.*,
-                    '{{ rsrc_static }}' AS rsrc_static
+                    CAST('{{ rsrc_static }}' AS VARCHAR) AS rsrc_static
                     FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
