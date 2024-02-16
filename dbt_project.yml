@@ -72,15 +72,9 @@ vars:
 models:
   datavault4dbt:
     # Config indicated by + and applies to all files under models/example/
-    stage:
-      +schema: cdwh_stg_010138_dynamics
+    dbt_stg:
+      +schema: <name of your Staging schema>
       +materialized: view
     raw_vault:
-      +schema: cdwh_stg_010138_dynamics
-      +materialized: incremental
-    control:
-      +schema: cdwh_stg_010138_dynamics
-      +materialized: view
-    business_vault:
-      +schema: cdwh_stg_010138_dynamics
-      +materialized: view
+      +schema: <name of your RDV schema>
+      +materialized: table
