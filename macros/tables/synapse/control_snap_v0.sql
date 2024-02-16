@@ -1,18 +1,19 @@
 {%- macro synapse__control_snap_v0(start_date, end_date, daily_snapshot_time, sdts_alias) -%}
 {{ log('start_date: '~ start_date, true)}}
-
-	WITH cte AS
-(
-  SELECT ROW_NUMBER() OVER (ORDER BY (SELECT 1)) - 1 AS [Incrementor]
-  FROM   [master].[sys].[columns] sc1
-  CROSS JOIN [master].[sys].[columns] sc2
-  CROSS JOIN [master].[sys].[columns] sc3
+WITH initial_timestamps AS (
+    SELECT
+        CAST(CAST('{{ start_date }}' AS VARCHAR) + ' ' + '{{ daily_snapshot_time }}' AS DATETIME) + CAST(rn - 1 AS INT) AS {{ sdts_alias }}
+    FROM 
+    (
+        SELECT 
+            TOP (DATEDIFF(DAY, '{{ start_date }}', '{{ end_date }}') + 1)
+            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS rn
+        FROM 
+            sys.all_objects s1
+        CROSS JOIN 
+            sys.all_objects s2
+    ) AS system_row
 ),
-
-initial_timestamps AS (
-SELECT  DATEADD(DAY, cte.[Incrementor], CONVERT(datetime, '{{ start_date }}') + CONVERT(datetime, '{{ daily_snapshot_time }}')) {{ sdts_alias }}
-FROM   cte
-WHERE  DATEADD(DAY, cte.[Incrementor], '{{ start_date }}') < '{{ end_date }}'),
 
 enriched_timestamps AS (
 
