@@ -19,23 +19,23 @@ snapshot-paths: ["snapshots"]
 target-path: "target"  # directory which will store compiled SQL files
 clean-targets:         # directories to be removed by `dbt clean`
   - "target"
-  - "dbt_packages"
-
+#  - "dbt_packages"
+  - "models"
 
 
 vars:
   #Column Aliases
   datavault4dbt.ldts_alias: 'ldts'
-  datavault4dbt.rsrc_alias: 'rsrc'
-  datavault4dbt.ledts_alias: 'ledts'
+  datavault4dbt.rsrc_alias: 'CDWH_RECORD_SOURCE'
+  datavault4dbt.ledts_alias: 'VALID_TO_TS'
   datavault4dbt.snapshot_trigger_column: 'is_active'
   datavault4dbt.sdts_alias: 'sdts'
-  datavault4dbt.stg_alias: 'stg'
-  datavault4dbt.is_current_col_alias: 'IS_CURRENT'
+  datavault4dbt.stg_alias: 'st'
+  datavault4dbt.is_current_col_alias: 'CURRENT_FLAG'
 
   #Hash Configuration
-  datavault4dbt.hash: 'MD5'
-  datavault4dbt.hash_datatype: 'STRING'
+  datavault4dbt.hash: 'SHA'
+  datavault4dbt.hash_datatype: 'VARCHAR2(40)'
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   
@@ -50,10 +50,11 @@ vars:
   datavault4dbt.end_of_all_times: {"bigquery":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31 23:59:59", "postgres": "8888-12-31 23:59:59", "redshift": "8888-12-31 23:59:59", "oracle": "9999-12-31 23:59:59"}
   datavault4dbt.timestamp_format: {"bigquery":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-mm-dd HH:MI:SS", "postgres": "%Y-%m-%dT%H-%M-%S", "redshift": "YYYY-MM-DD HH24:MI:SS","oracle": "YYYY-mm-dd HH24:MI:SS"}
   datavault4dbt.default_unknown_rsrc: 'SYSTEM'
+
   datavault4dbt.default_error_rsrc: 'ERROR'
-  datavault4dbt.rsrc_default_dtype: 'STRING'
-  datavault4dbt.stg_default_dtype: 'STRING'
-  datavault4dbt.derived_columns_default_dtype: STRING
+  datavault4dbt.rsrc_default_dtype: 'VARCHAR2(2000)'
+  datavault4dbt.stg_default_dtype: 'VARCHAR2(2000)'
+  datavault4dbt.derived_columns_default_dtype: 'VARCHAR2(2000)'
 
   #Datatype specific default values
   datavault4dbt.error_value__STRING: '(error)'
@@ -71,9 +72,15 @@ vars:
 models:
   datavault4dbt:
     # Config indicated by + and applies to all files under models/example/
-    dbt_stg:
-      +schema: <name of your Staging schema>
+    stage:
+      +schema: cdwh_stg_010138_dynamics
       +materialized: view
     raw_vault:
-      +schema: <name of your RDV schema>
-      +materialized: table
+      +schema: cdwh_stg_010138_dynamics
+      +materialized: incremental
+    control:
+      +schema: cdwh_stg_010138_dynamics
+      +materialized: view
+    business_vault:
+      +schema: cdwh_stg_010138_dynamics
+      +materialized: view
