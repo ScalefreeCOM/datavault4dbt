@@ -40,8 +40,8 @@ SELECT
     {{ ledts_alias }}
     {%- if add_is_current_flag %},
         CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}
-        THEN TRUE
-        ELSE FALSE
+        THEN 1
+        ELSE 0
         END AS {{ is_current_col_alias }}
     {% endif -%}
     {%- if include_payload -%},
