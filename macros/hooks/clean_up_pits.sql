@@ -70,3 +70,35 @@ WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }}
 
 {%- endmacro -%}
 
+{%- macro postgres__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE FROM {{ this }} pit
+WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} snap WHERE pit.{{ sdts }} = snap.{{ sdts }} AND snap.{{ snapshot_trigger_column }}=TRUE)
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}
+
+{%- macro redshift__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE FROM {{ this }}
+WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{ sdts }} = {{ ref(snapshot_relation) }}.{{ sdts }} AND {{ ref(snapshot_relation) }}.{{ snapshot_trigger_column }}=TRUE)
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}
+
+{%- macro oracle__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE FROM {{ this }} pit
+WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=1)
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}

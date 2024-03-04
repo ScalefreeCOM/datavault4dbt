@@ -37,8 +37,8 @@ SELECT
     {{ hashdiff }},
     {{ src_rsrc }},
     {{ src_ldts }},
-    {{ ledts_alias }},
-    {%- if add_is_current_flag %}
+    {{ ledts_alias }}
+    {%- if add_is_current_flag %},
         CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
         THEN TRUE
         ELSE FALSE
