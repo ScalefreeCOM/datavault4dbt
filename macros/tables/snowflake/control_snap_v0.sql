@@ -35,7 +35,10 @@ enriched_timestamps AS (
             ELSE FALSE
         END AS is_hourly,
         CASE
-            WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 AND EXTRACT(HOUR FROM sdts) = 0 THEN TRUE
+            WHEN EXTRACT(MINUTE FROM sdts) = EXTRACT(MINUTE FROM TO_TIME('{{ daily_snapshot_time }}'))
+             AND EXTRACT(SECOND FROM sdts) = EXTRACT(SECOND FROM TO_TIME('{{ daily_snapshot_time }}'))
+             AND EXTRACT(HOUR FROM sdts) = EXTRACT(HOUR FROM TO_TIME('{{ daily_snapshot_time }}'))
+            THEN TRUE
             ELSE FALSE
         END AS is_daily,
         CASE
