@@ -19,7 +19,7 @@ enriched_timestamps AS (
 
 SELECT 
 	CONVERT(datetime2, {{ sdts_alias }}) as {{ sdts_alias }},
-	CONVERT(date, {{ sdts_alias }}) as {{ sdts_alias }}_date,
+    CONVERT(varchar, {{ sdts_alias }}, 23) as {{ sdts_alias }}_date,
 	1 as force_active,
     {{ sdts_alias }} AS replacement_{{ sdts_alias }},
     CONCAT('Snapshot ', CONVERT(date, {{ sdts_alias }}, 23)) AS caption,

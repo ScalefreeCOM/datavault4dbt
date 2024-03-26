@@ -119,7 +119,23 @@
   {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, prejoined_column_names) -%}
   {%- set hashed_input_columns = datavault4dbt.process_columns_to_select(hashed_input_columns, missing_column_names) -%}  {# Excluding the names of the missing columns. #}
   {%- set prejoined_input_columns = datavault4dbt.extract_input_columns(prejoined_columns) -%}
+   {% if datavault4dbt.is_something(multi_active_config) %}
+
+    {%- if datavault4dbt.is_list(multi_active_config['multi_active_key']) -%}
+
+      {%- set ma_keys = multi_active_config['multi_active_key'] -%}
+
+    {%- else -%}
+
+      {%- set ma_keys = [multi_active_config['multi_active_key']] -%}
+
+    {%- endif -%}
+
+    {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns + ma_keys) | unique | list -%}
+
+  {%- else -%}
   {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
+  {%- endif -%}
   {%- set source_columns_to_select = only_include_from_source -%}
 
 {%- endif-%}
@@ -330,17 +346,66 @@ derived_columns AS (
 {%- if datavault4dbt.is_something(hashed_columns) and hashed_columns is mapping %}
 {# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
 {% if datavault4dbt.is_something(multi_active_config) %}
+{%- set tmp_ns = namespace(main_hashkey_dict={}, remaining_hashed_columns={}, hashdiffs={}, hashdiff_names=[]) -%}
 
+  {%- for column in hashed_columns.keys() -%}
+    {%- if column == multi_active_config['main_hashkey_column'] and not hashed_columns[column].is_hashdiff -%}
+      {%- do tmp_ns.main_hashkey_dict.update({column: hashed_columns[column]}) -%}
+    {% elif column != multi_active_config['main_hashkey_column'] and not hashed_columns[column].is_hashdiff -%}
+      {%- do tmp_ns.remaining_hashed_columns.update({column: hashed_columns[column]}) -%}
+    {%- elif hashed_columns[column].is_hashdiff -%}
+      {%- do tmp_ns.hashdiffs.update({column: hashed_columns[column]}) -%}
+      {%- do tmp_ns.hashdiff_names.append(column) -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+main_hashkey_generation AS (
+
+  SELECT 
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
+    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict) -%}
+      {{- datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
+  FROM {{ last_cte }}
+  {%- set last_cte = "main_hashkey_generation" -%}
+
+),
+
+{# Hash calculation for multi-active source data. #}
+ma_hashdiff_prep AS (
+
+    SELECT
+      
+      {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.hashdiffs) -%}
+      
+      {# Generates only all hashdiffs. #}
+      {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }},
+      {{ multi_active_config['main_hashkey_column'] }},
+      {{ ldts_alias }}
+
+    FROM {{ last_cte }}
+    GROUP BY {{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
+
+),
 hashed_columns AS (
 
     SELECT
 
-    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
+      {{ datavault4dbt.alias_all(columns=final_columns_to_select, prefix='main_hashkey_generation') }},                             {# Everything from last_cte before hashed_columns. #}
+      {% set processed_remaining_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.remaining_hashed_columns) -%}   
+      {# Generates only all remaining hashkeys, that are no hashdiffs #}
+      
+      {%- if datavault4dbt.is_something(processed_remaining_hash_columns) %}
+      {{- datavault4dbt.hash_columns(columns=processed_remaining_hash_columns) | indent(4) }},                                {# All remaining hashed_columns get calculated. #}
+      {% endif -%}
 
-    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
-    {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }}
+     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(tmp_ns.hashdiff_names)) }},                                   {# All MA Hashdiffs are selected. #}
+      main_hashkey_generation.{{ multi_active_config['main_hashkey_column'] }}                                                                       {# Main Hashkey selected. #}
 
-    FROM {{ last_cte }}
+    FROM main_hashkey_generation
+    LEFT JOIN ma_hashdiff_prep 
+      ON main_hashkey_generation.{{ multi_active_config['main_hashkey_column'] }} = ma_hashdiff_prep.{{ multi_active_config['main_hashkey_column'] }} 
+      AND main_hashkey_generation.{{ ldts_alias }} = ma_hashdiff_prep.{{ ldts_alias }}
+
     {%- set last_cte = "hashed_columns" -%}
     {%- set final_columns_to_select = final_columns_to_select + hashed_column_names %}
 
@@ -367,6 +432,7 @@ hashed_columns AS (
 ),
 
 {%- endif -%}
+{% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
 {%- endif -%}
 
 {% if not is_incremental() %}

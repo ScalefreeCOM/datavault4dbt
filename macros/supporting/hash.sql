@@ -207,8 +207,8 @@
     {{ log('attribute_standardise: '~attribute_standardise, false)}}
 
     {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
-    {{- "+'{}'+".format(concat_string) if not loop.last -}}
-    {{- "+ ''" if columns|length == 1 -}}
+    {{- ",'{}',".format(concat_string) if not loop.last -}}
+    {{- ", ''" if columns|length == 1 -}}
 
     {%- if loop.last -%}
 

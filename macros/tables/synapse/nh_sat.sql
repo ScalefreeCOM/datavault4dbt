@@ -78,7 +78,7 @@ records_to_insert AS (
     WHERE 
         NOT EXISTS (
             SELECT 1
-            FROM distinct_target_hashkeys dth
+            FROM distinct_hashkeys dth
             WHERE cte.{{ parent_hashkey }} = dth.{{ parent_hashkey }}
         )
     {%- endif %}
