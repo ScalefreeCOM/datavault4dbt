@@ -1,6 +1,6 @@
-{# This is the default version of the stage macro, designed for Snowflake. #}
+{# This is the default version of the stage macro, designed for Google BigQuery. #}
 
-{%- macro snowflake__stage(include_source_columns,
+{%- macro redshift__stage(include_source_columns,
                 ldts,
                 rsrc,
                 source_model,
@@ -107,7 +107,6 @@
 
 {%- if include_source_columns -%}
   {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_source_columns, exclude_column_names) | list -%}
-  {{ log('source_columns_to_select when include_source_columns=true: '~ source_columns_to_select, false) }}
 
   {%- for column in all_columns -%}
 
@@ -116,7 +115,6 @@
     {%- endif -%}
 
   {%- endfor -%}
-  {{ log('columns_without_excluded_columns: '~ columns_without_excluded_columns, false) }}
 {%- else -%}
   
   {# Include from the source only the input columns needed #}
@@ -144,18 +142,16 @@
 
   {%- else -%}
 
-  {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
-  {{ log('only_include_from_source : '~ only_include_from_source, false) }}
+    {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
+
   {%- endif -%}
 
   {%- set source_columns_to_select = only_include_from_source -%}
-  {{ log('source_columns_to_select when include_source_columns=false: '~ source_columns_to_select, false) }}
 
 {%- endif-%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
-  {{ log('derived_columns_to select : '~ derived_columns_to_select, false) }}
 
 {%- if datavault4dbt.is_something(derived_columns) %}
   {#- Getting Data types for derived columns with detection from source relation -#}
@@ -166,7 +162,6 @@
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
 {%- set hash = datavault4dbt.hash_method() -%}
-{{ log('hash_function: ' ~ hash, false)}}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
@@ -226,9 +221,8 @@ ldts_rsrc_data AS (
 
   {%- set last_cte = "ldts_rsrc_data" -%}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
-  {{ log('derived_column_names: '~ derived_column_names, false) }}
   {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) | list -%}
-  {{ log('final_columns_to_select without derived col names: '~ final_columns_to_select, false)}}
+  
   {%- set columns_without_excluded_columns_tmp = [] -%}
   {%- for column in columns_without_excluded_columns -%}
     {%- if column.name not in derived_column_names -%}
@@ -236,8 +230,6 @@ ldts_rsrc_data AS (
     {%- endif -%}
   {%- endfor -%}
   {%- set columns_without_excluded_columns = columns_without_excluded_columns_tmp |list -%}
-  {{ log('columns_without_excluded_columns without derived_col_names: '~ columns_without_excluded_columns, false)}}
-
 ),
 
 {%- if datavault4dbt.is_something(missing_columns) %}
@@ -349,16 +341,64 @@ derived_columns AS (
 {# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
 {% if datavault4dbt.is_something(multi_active_config) %}
 
-hashed_columns AS (
+{%- set tmp_ns = namespace(main_hashkey_dict={}, remaining_hashed_columns={}, hashdiff_names=[]) -%}
+
+{%- for column in hashed_columns.keys() -%}
+  {%- if column == multi_active_config['main_hashkey_column'] and not hashed_columns[column].is_hashdiff -%}
+    {%- do tmp_ns.main_hashkey_dict.update({column: hashed_columns[column]}) -%}
+  {% elif column != multi_active_config['main_hashkey_column'] and not hashed_columns[column].is_hashdiff -%}
+    {%- do tmp_ns.remaining_hashed_columns.update({column: hashed_columns[column]}) -%}
+  {%- elif hashed_columns[column].is_hashdiff -%}
+    {%- do tmp_ns.hashdiff_names.append(column) -%}
+  {%- endif -%}
+{%- endfor -%}
+
+main_hashkey_generation AS (
+
+  SELECT 
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
+    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict) -%}
+      {{- datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
+  FROM {{ last_cte }}
+
+),
+
+{# Hash calculation for multi-active source data. #}
+ma_hashdiff_prep AS (
 
     SELECT
-
-    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
-
-    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
-    {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }}
+      
+      {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+      
+      {# Generates only all hashdiffs. #}
+      {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }},
+      {{ ldts_alias }}
 
     FROM {{ last_cte }}
+    GROUP BY {{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
+
+),
+
+hashed_columns AS (
+
+    SELECT 
+
+      {{ datavault4dbt.alias_all(columns=final_columns_to_select, prefix='main_hashkey_generation') }},                             {# Everything from last_cte before hashed_columns. #}
+      {% set processed_remaining_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.remaining_hashed_columns) -%}   
+      {# Generates only all remaining hashkeys, that are no hashdiffs #}
+      
+      {%- if datavault4dbt.is_something(processed_remaining_hash_columns) %}
+      {{- datavault4dbt.hash_columns(columns=processed_remaining_hash_columns) | indent(4) }},                                {# All remaining hashed_columns get calculated. #}
+      {% endif -%}
+
+      {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(tmp_ns.hashdiff_names)) }},                                   {# All MA Hashdiffs are selected. #}
+      main_hashkey_generation.{{ multi_active_config['main_hashkey_column'] }}                                                                       {# Main Hashkey selected. #}
+
+    FROM main_hashkey_generation
+    LEFT JOIN ma_hashdiff_prep 
+      ON main_hashkey_generation.{{ multi_active_config['main_hashkey_column'] }} = ma_hashdiff_prep.{{ multi_active_config['main_hashkey_column'] }} 
+      AND main_hashkey_generation.{{ ldts_alias }} = ma_hashdiff_prep.{{ ldts_alias }}
+
     {%- set last_cte = "hashed_columns" -%}
     {%- set final_columns_to_select = final_columns_to_select + hashed_column_names %}
 
@@ -387,10 +427,9 @@ hashed_columns AS (
 {%- endif -%}
 {%- endif -%}
 
-{% if not is_incremental() %}
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
-  
+
     SELECT
 
     {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} as {{ load_datetime_col_name }},
@@ -441,7 +480,7 @@ unknown_values AS (
     {%- if datavault4dbt.is_something(derived_columns) -%},
     {# Additionally generating Ghost Records for Derived Columns #}
       {%- for column_name, properties in derived_columns_with_datatypes_DICT.items() %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, col_size=properties.col_size, ghost_record_type='unknown') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
       {%- endfor -%}
 
@@ -508,7 +547,7 @@ error_values AS (
     {%- if datavault4dbt.is_something(derived_columns) %},
     {# Additionally generating Ghost Records for Derived Columns #}
       {%- for column_name, properties in derived_columns_with_datatypes_DICT.items() %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, col_size=properties.col_size, ghost_record_type='error') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 
@@ -531,10 +570,8 @@ ghost_records AS (
     UNION ALL
     SELECT * FROM error_values
 ),
-{%- endif %}
 
 {%- if not include_source_columns -%}
-  {% set source_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=source_columns_to_select, exclude_columns_list=derived_column_names) %}
   {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select, exclude_columns_list=source_columns_to_select) %}
 {%- endif -%}
 
@@ -547,7 +584,6 @@ columns_to_select AS (
 
     FROM {{ last_cte }}
 
-  {% if not is_incremental() %}
     UNION ALL
     
     SELECT
@@ -555,7 +591,6 @@ columns_to_select AS (
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
 
     FROM ghost_records
-  {% endif %}
 )
 
 SELECT * FROM columns_to_select
