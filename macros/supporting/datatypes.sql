@@ -6,6 +6,6 @@
     {{ type_timestamp() }}
 {%- endmacro -%}
 
-{%- macro sqlserver__type_timestamp() -%}
+{%- macro synapse__type_timestamp() -%}
     datetime2
 {%- endmacro -%}
