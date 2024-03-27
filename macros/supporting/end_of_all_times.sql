@@ -82,6 +82,10 @@
 
 {%- macro synapse__end_of_all_times() %}
     
+{%- set global_var = var('datavault4dbt.end_of_all_times', none) -%}
+{%- set end_of_all_times = '' -%}
+
+{%- if global_var is mapping -%}
     {%- if 'synapse' in global_var.keys()|map('lower') -%}
         {% set end_of_all_times = global_var['synapse'] %}
     {%- else -%}
