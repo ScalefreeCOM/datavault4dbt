@@ -4,6 +4,14 @@
 
 {%- endmacro -%}
 
+
+{%- macro default__limit_rows() %}
+
+    {{ return('TOP 100') }}
+
+{%- endmacro -%}
+
+
 {%- macro synapse__limit_rows() %}
 
 {%- if target.schema == 'prod' %}
