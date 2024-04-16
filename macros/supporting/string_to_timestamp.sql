@@ -15,6 +15,10 @@
     TO_TIMESTAMP('{{ timestamp }}', '{{ format }}')
 {%- endmacro -%}
 
+{%- macro synapse__string_to_timestamp(format, timestamp) -%}
+    CONVERT(datetime2, '{{ timestamp }}', {{ format }})
+{%- endmacro -%}
+
 {%- macro postgres__string_to_timestamp(format, timestamp) -%}
     TO_TIMESTAMP('{{ timestamp }}', '{{ format }}')
 {%- endmacro -%}
@@ -22,3 +26,4 @@
 {%- macro redshift__string_to_timestamp(format, timestamp) -%}
     TO_TIMESTAMP('{{ timestamp }}', '{{ format }}')
 {%- endmacro -%}
+

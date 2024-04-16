@@ -46,7 +46,12 @@ distinct_hashkeys AS
 ),
 {%- endif %}
 {#- Select all records from the source. If incremental, insert only records, where the
-    hashkey is not already in the existing satellite. #}
+hashkey is not already in the existing satellite. #}
+
+{#- 
+Select all records from the source. If incremental, insert only records, where the
+    hashkey is not already in the existing satellite.
+#}
 records_to_insert AS 
 (
     SELECT 

@@ -81,7 +81,7 @@ WITH
             {%- set source_in_target = true -%}
             
             {%- if execute -%}
-                {%- set rsrc_static_result = run_query(rsrc_static_query_source_count) -%}
+                {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
 
                 {%- set row_count = rsrc_static_result.columns[0].values()[0] -%}
 

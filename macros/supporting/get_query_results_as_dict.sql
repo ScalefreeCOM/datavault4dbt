@@ -6,7 +6,7 @@
     {{ return(dbt_utils.get_query_results_as_dict(query)) }}
 {% endmacro %}
 
-{% macro sqlserver__get_query_results_as_dict(query) %}
+{% macro synapse__get_query_results_as_dict(query) %}
 
     {%- call statement('get_query_results', fetch_result=True,auto_begin=false) -%}
 
