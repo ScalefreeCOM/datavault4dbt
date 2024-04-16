@@ -20,7 +20,7 @@
 
 {%- set beginning_of_all_times_date = var('datavault4dbt.beginning_of_all_times_date', '0001-01-01') -%}
 {%- set end_of_all_times_date = var('datavault4dbt.end_of_all_times_date', '8888-12-31') -%}
-{%- set date_format = var('datavault4dbt.date_format', 'YYYY-mm-dd') -%}
+{%- set date_format = var('datavault4dbt.date_format', '%Y-%m-%d') -%}
 
 {%- set datatype = datatype | string | upper | trim -%}
 
@@ -28,7 +28,7 @@
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
 {%- if ghost_record_type == 'unknown' -%}
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
-        {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
+        {%- elif datatype == 'DATE'-%} PARSE_DATE('{{date_format}}','{{ beginning_of_all_times_date }}') as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'INT64' %} CAST('0' as INT64) as {{ alias }}
         {%- elif datatype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ alias }}
@@ -37,7 +37,7 @@
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ alias }}
-        {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
+        {%- elif datatype == 'DATE'-%} PARSE_DATE('{{date_format}}', '{{ end_of_all_times_date }}') as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'INT64' %} CAST('-1' as INT64) as {{ alias }}
         {%- elif datatype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ alias }}
