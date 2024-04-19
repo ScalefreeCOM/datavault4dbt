@@ -1,4 +1,4 @@
-{%- macro postgres__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm, source_is_single_batch) -%}
+{%- macro redshift__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm, source_is_single_batch) -%}
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
 
     {%- if execute -%}
