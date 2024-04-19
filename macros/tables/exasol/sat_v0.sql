@@ -52,20 +52,14 @@ latest_entries_in_sat AS (
     QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 {%- endif %}
-
-{#
-    Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each hashkey.
-    Additionally adding a row number based on that order, if incremental.
+{# 
+    Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each hashkey. 
 #}
-deduplicated_numbered_source AS (
-
-    SELECT
-    {{ parent_hashkey }},
-    {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(source_cols) }}
-    {% if is_incremental() -%}
-     , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
-    {%- endif %}
+deduplicate_qualify as (
+    SELECT     
+        {{ parent_hashkey }},
+        {{ ns.hdiff_alias }},
+        {{ datavault4dbt.print_list(source_cols) }}
     FROM source_data
     QUALIFY
         CASE
@@ -73,7 +67,20 @@ deduplicated_numbered_source AS (
             ELSE TRUE
         END
 ),
+{#
+    Adding a row number based on the order of appearance in the stage (load date), if incremental.
+#}
+deduplicated_numbered_source AS (
 
+    SELECT
+        {{ parent_hashkey }},
+        {{ ns.hdiff_alias }},
+        {{ datavault4dbt.print_list(source_cols) }}
+    {% if is_incremental() -%}
+    , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
+    {%- endif %}
+    FROM deduplicate_qualify
+),
 {#
     Select all records from the previous CTE. If incremental, compare the oldest incoming entry to
     the existing records in the satellite.

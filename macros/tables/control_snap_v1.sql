@@ -33,8 +33,9 @@
                                             available as a dbt model.
 
         log_logic::dictionary               Defining the desired durations of each granularity. Available granularities
-                                            are 'daily', 'weekly', 'monthly', and 'yearly'. For each granularity the
-                                            duration can be defined as an integer, and the time unit for that duration.
+                                            are 'daily', 'weekly', 'monthly', 'end_of_monthly', 'quarterly', 'yearly'
+                                            and 'end_of_yearly'. For each granularity the duration can be defined as an 
+                                            integer, and the time unit for that duration.
                                             The units include (in BigQuery): DAY, WEEK, MONTH, QUARTER, YEAR. Besides
                                             defining a duration and a unit for each granularity, there is also the option
                                             to set a granularity to 'forever'. E.g. reporting requires daily snapshots
@@ -44,9 +45,6 @@
                                             active. The other dynamic columns are calculated anyway.
 
                                             The duration is always counted from the current date.
-
-                                            EXASOL: Due to a missing "DAY OF WEEK" Function in Exasol, is_weekly is currently
-                                                    not supported and needs to be left out of the log_logic definition.
 
                                             Examples:
                                                 {'daily': {'duration': 3,               This configuration would keep daily

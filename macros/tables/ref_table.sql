@@ -98,6 +98,7 @@ Include / Exclude per Satellite:
                                                             src_rsrc=src_rsrc,
                                                             ref_satellites=ref_satellites,
                                                             historized=historized,
-                                                            snapshot_relation=snapshot_relation)) }}
+                                                            snapshot_relation=snapshot_relation,
+                                                            snapshot_trigger_column=snapshot_trigger_column)) }}
 
 {%- endmacro -%}
