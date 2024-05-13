@@ -40,7 +40,7 @@ vars:
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   
   #Stage Configuration
-  datavault4dbt.copy_rsrc_ldts_input_columns: true  
+  datavault4dbt.copy_rsrc_ldts_input_columns: false
 
   #General Configuration
   datavault4dbt.include_business_objects_before_appearance: false
