@@ -35,12 +35,12 @@ vars:
   datavault4dbt.deleted_flag_alias: 'deleted_flag'
   #Hash Configuration
   datavault4dbt.hash: 'MD5'
-  datavault4dbt.hash_datatype: 'BINARY(16)' #changed from string
+  datavault4dbt.hash_datatype: 'STRING'
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   
   #Stage Configuration
-  datavault4dbt.copy_rsrc_ldts_input_columns: true  
+  datavault4dbt.copy_rsrc_ldts_input_columns: false
 
   #General Configuration
   datavault4dbt.include_business_objects_before_appearance: false
