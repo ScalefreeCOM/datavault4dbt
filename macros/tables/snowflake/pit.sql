@@ -96,6 +96,9 @@ records_to_insert AS (
 
     SELECT DISTINCT *
     FROM pit_records
+    {%- if not is_incremental() %}
+    order by {{ sdts }}
+    {% endif -%}
 
 )
 
