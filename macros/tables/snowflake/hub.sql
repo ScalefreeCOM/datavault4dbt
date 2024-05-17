@@ -66,10 +66,12 @@ WITH
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT 
-                    t.*,
-                    '{{ rsrc_static }}' AS rsrc_static
+                    '{{ rsrc_static }}' AS rsrc_static,
+                    MAX(ldts) AS max_ldts
                     FROM {{ this }} t
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'                        
+                        AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+                    GROUP BY rsrc_static
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
@@ -98,13 +100,16 @@ WITH
 
         {%- if source_models | length > 1 %}
 
-        rsrc_static_union AS (
+        max_ldts_per_rsrc_static_in_target AS (
             {#  Create one unionized table over all sources. It will be the same as the already existing
                 hub, but extended by the rsrc_static column. #}
             {% for source_model in source_models %}
             {%- set source_number = source_model.id | string -%}
 
-            SELECT rsrc_static_{{ source_number }}.* FROM rsrc_static_{{ source_number }}
+            SELECT 
+                rsrc_static,
+                max_ldts 
+            FROM rsrc_static_{{ source_number }}
 
             {%- if not loop.last %}
             UNION ALL
@@ -115,16 +120,6 @@ WITH
 
         {%- endif %}
 
-        max_ldts_per_rsrc_static_in_target AS (
-        {# Use the previously created CTE to calculate the max load date timestamp per rsrc_static. #}
-            SELECT
-                rsrc_static,
-                MAX({{ src_ldts }}) as max_ldts
-            FROM {{ ns.last_cte }}
-            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-            GROUP BY rsrc_static
-
-        ),
     {%- endif %}
 {% endif -%}
 
@@ -150,19 +145,19 @@ WITH
             {{ bk }},
             {% endfor -%}
 
-            {{ src_ldts }},
+            MIN({{ src_ldts }}) AS {{ src_ldts }},
             {{ src_rsrc }}
         FROM {{ ref(source_model.name) }} src
         {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
-
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max ON
-        ({%- for rsrc_static in rsrc_statics -%}
-            max.rsrc_static = '{{ rsrc_static }}'
-            {%- if not loop.last -%} OR
-            {% endif -%}
-        {%- endfor %})
-        WHERE src.{{ src_ldts }} > max.max_ldts
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm and source_models | length > 1 %}
+        WHERE src.{{ src_ldts }} > 
+            (SELECT 
+                MIN(max_ldts) 
+             FROM max_ldts_per_rsrc_static_in_target 
+             WHERE rsrc_static IN 
+             ({% for rsrc_static in rsrc_statics %}
+             '{{ rsrc_static }}'
+             {% if not loop.last %} OR {% endif %} {% endfor %}))
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
         WHERE src.{{ src_ldts }} > (
             SELECT MAX({{ src_ldts }})
@@ -170,6 +165,7 @@ WITH
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
     {%- endif %}
+        GROUP BY ALL
 
          {%- set ns.last_cte = "src_new_{}".format(source_number) %}
 
