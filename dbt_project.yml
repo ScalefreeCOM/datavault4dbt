@@ -56,9 +56,9 @@ vars:
 
   datavault4dbt.default_unknown_rsrc: 'SYSTEM'
   datavault4dbt.default_error_rsrc: 'ERROR'
-  datavault4dbt.rsrc_default_dtype: 'VARCHAR(255)' #changed from string
-  datavault4dbt.stg_default_dtype: 'VARCHAR(255)' #changed from string
-  datavault4dbt.derived_columns_default_dtype: 'VARCHAR(255)' #changed from string
+  datavault4dbt.rsrc_default_dtype: 'VARCHAR(255)' 
+  datavault4dbt.stg_default_dtype: 'VARCHAR(255)' 
+  datavault4dbt.derived_columns_default_dtype: 'VARCHAR(255)' 
 
   #Datatype specific default values
   datavault4dbt.error_value__STRING: '(error)'
@@ -76,13 +76,9 @@ vars:
 models:
   datavault4dbt:
     # Config indicated by + and applies to all files under models/example/
-    index: HEAP
-    Stages:
-      +schema: Datavault4dbt.Stage
+    dbt_stg:
+      +schema: <name of your Staging schema>
       +materialized: view
-    RDV:
-      +schema: Datavault4dbt.RDV
+    raw_vault:
+      +schema: <name of your RDV schema>
       +materialized: table
-    BDV:
-      +schema: Datavault4dbt.BDV
-      +materialized: view
