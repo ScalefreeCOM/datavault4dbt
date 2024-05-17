@@ -23,23 +23,28 @@
 
 {{ datavault4dbt.prepend_generated_by() }}
 
-WITH
+    with
 
-{%- if is_incremental() %}
+        sdts_to_be_calculated AS (
+            SELECT
+                snap.{{ sdts }}
+            FROM {{ ref(snapshot_relation) }} snap
+            WHERE
+                1 = 1
+            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
+                and snap.{{ snapshot_trigger_column }} = true
+            {%- endif %}
+            {%- if is_incremental() %}
+                and NOT EXISTS (SELECT DISTINCT 
+                                    {{ sdts }} 
+                                FROM {{ this }} pit
+                                WHERE snap.{{ sdts }} = pit.{{ sdts }})
+            {%- endif %}
+        ),
 
-existing_dimension_keys AS (
+        pit_records as (
 
-    SELECT
-        {{ dimension_key }}
-    FROM {{ this }}
-
-),
-
-{%- endif %}
-
-pit_records AS (
-
-    SELECT
+            select
         
         {% if datavault4dbt.is_something(pit_type) -%}
             '{{ datavault4dbt.as_constant(pit_type) }}' as type,
@@ -84,19 +89,13 @@ pit_records AS (
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
                 AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
-    {% if datavault4dbt.is_something(snapshot_trigger_column) %}
-        WHERE snap.{{ snapshot_trigger_column }}
-    {%- endif %}
-
+                where snap.{{ sdts }} IN (select distinct {{ sdts }} FROM sdts_to_be_calculated)
 ),
 
 records_to_insert AS (
 
     SELECT DISTINCT *
     FROM pit_records
-    {%- if is_incremental() %}
-    WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
-    {% endif -%}
 
 )
 
