@@ -94,37 +94,9 @@ WITH
 
         {% endfor -%}
 
-        {%- if source_models | length > 1 %}
+        
 
-        rsrc_static_union AS (
-            {#  Create one unionized table over all sources. It will be the same as the already existing
-                nh_link, but extended by the rsrc_static column. #}
-
-            {% for source_model in source_models %}
-            {%- set source_number = source_model.id | string -%}
-
-            SELECT rsrc_static_{{ source_number }}.* FROM rsrc_static_{{ source_number }}
-
-            {%- if not loop.last %}
-            UNION ALL
-            {% endif -%}
-            {%- endfor %}
-            {%- set ns.last_cte = "rsrc_static_union" -%}
-        ),
-
-        {%- endif %}
-
-        max_ldts_per_rsrc_static_in_target AS (
-        {# Use the previously created CTE to calculate the max load date timestamp per rsrc_static. #}
-
-            SELECT
-                rsrc_static,
-                MAX({{ src_ldts }}) AS max_ldts
-            FROM {{ ns.last_cte }}
-            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-            GROUP BY rsrc_static
-
-        ),
+        
     {%- endif %}
 {% endif -%}
 
@@ -162,14 +134,27 @@ src_new_{{ source_number }} AS (
     {# then an inner join is performed on the CTE for the maximum load date timestamp per record source static to get the records
     that match any of the rsrc_static present in it #}
     {# if there are records in the source with a newer load date time stamp than the ones present in the target, those will be selected to be inserted later #}
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max ON
-        ({%- for rsrc_static in rsrc_statics -%}
-            max.rsrc_static = '{{ rsrc_static }}'
-            {%- if not loop.last -%} OR
-            {% endif -%}
-        {%- endfor %})
-        WHERE src.{{ src_ldts }} > max.max_ldts
+                {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number | int] and not disable_hwm %}
+                    where
+                        src.{{ src_ldts }} > (
+                            select max({{ src_ldts }})
+                            from {{ this }} trg
+                            where
+                                {{ src_ldts }}
+                                != {{
+                                    datavault4dbt.string_to_timestamp(
+                                        timestamp_format, end_of_all_times
+                                    )
+                                }}
+                                and (
+                                    {%- for rsrc_static in rsrc_statics -%}
+                                        trg.rsrc = '{{ rsrc_static }}'
+                                        {%- if not loop.last -%} or {% endif -%}
+                                    {%- endfor %}
+                                )
+                        )
+
+                
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
         WHERE src.{{ src_ldts }} > (
             SELECT MAX({{ src_ldts }})
