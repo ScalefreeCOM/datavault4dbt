@@ -40,13 +40,13 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 {%- endmacro -%}  
 
                                     
-{%- macro postgres__attribute_standardise() -%}
+{%- macro postgres__attribute_standardise(hash_type) -%}
 
 CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRESSION] AS VARCHAR)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
 
 {%- endmacro -%}
 
-{%- macro redshift__attribute_standardise() -%}
+{%- macro redshift__attribute_standardise(hash_type) -%}
 
 '"' ||  REPLACE(REPLACE(REPLACE(TRIM(BOTH ' ' FROM [EXPRESSION]), '\\', '\\\\'), '[QUOTE]', '\\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
 
@@ -196,7 +196,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 
 {%- endmacro -%}
 
-{%- macro postgres__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias,is_hashdiff, rtrim_hashdiff) -%}
+{%- macro postgres__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {%- set dict_result = {} -%}
 
@@ -238,7 +238,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 
 {%- endmacro -%}
 
-{%- macro redshift__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias,is_hashdiff, rtrim_hashdiff) -%}
+{%- macro redshift__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {%- set dict_result = {} -%}
 
@@ -263,13 +263,13 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
     {%- if case_sensitive -%}
         {%- set standardise_prefix = "COALESCE({}(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(".format(hash_alg)-%}
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]'))), CAST({} AS {})) AS {}".format(zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]')), CAST({} AS {})) AS {}".format(zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]'))), CAST({} AS {}))".format(zero_key, datatype)-%}
+            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]')), CAST({} AS {}))".format(zero_key, datatype)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "COALESCE({}(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(".format(hash_alg)-%}
-        {%- set standardise_suffix = "\n, '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]'))), CAST({} AS {})) AS {}".format(zero_key, datatype, alias)-%}
+        {%- set standardise_suffix = "\n, '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]')), CAST({} AS {})) AS {}".format(zero_key, datatype, alias)-%}
     {%- endif -%}
 
 {%- endif -%}

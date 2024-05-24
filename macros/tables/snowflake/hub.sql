@@ -147,7 +147,7 @@ WITH
         SELECT
             {{ hk_column }} AS {{ hashkey }},
             {% for bk in source_model['bk_columns'] -%}
-            {{ bk }},
+            {{ bk }} AS {{ business_keys[loop.index - 1] }},
             {% endfor -%}
 
             {{ src_ldts }},
@@ -188,7 +188,7 @@ source_new_union AS (
         {{ hashkey }},
 
         {% for bk in source_model['bk_columns'] -%}
-            {{ bk }} AS {{ business_keys[loop.index - 1] }},
+            {{ business_keys[loop.index - 1] }},
         {% endfor -%}
 
         {{ src_ldts }},
