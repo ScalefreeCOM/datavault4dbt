@@ -24,20 +24,20 @@ end_dated_source AS (
 
     SELECT
         {% for ref_key in ref_keys %}
-        {{ref_key}},
+        "{{ref_key}}",
         {% endfor %}
         {{ hashdiff }},
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD({{ src_ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {%- for ref_key in ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }},
-        {{ datavault4dbt.print_list(source_columns_to_select) }}
+        COALESCE(LEAD({{ src_ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {%- for ref_key in ref_keys %} "{{ref_key}}" {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }},
+        {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_columns_to_select)) if source_columns_to_select else " *" }}
     FROM {{ source_relation }}
 
 )
 
 SELECT
     {% for ref_key in ref_keys %}
-    {{ref_key}},
+    "{{ref_key}}",
     {% endfor %}
     {{ hashdiff }},
     {{ src_rsrc }},
@@ -49,7 +49,7 @@ SELECT
         ELSE FALSE
         END AS {{ is_current_col_alias }},
     {% endif -%}
-    {{ datavault4dbt.print_list(source_columns_to_select) }}
+    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_columns_to_select)) if source_columns_to_select else " *" }}
 FROM end_dated_source
 
 {%- endmacro -%}

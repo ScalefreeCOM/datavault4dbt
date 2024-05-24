@@ -58,7 +58,6 @@
 
 {%- endmacro -%}
 
-
 {%- macro extract_column_names(columns_dict=none) -%}
 
     {%- set extracted_column_names = [] -%}
