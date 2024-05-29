@@ -92,12 +92,12 @@
         {%- if execute -%}
             {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.beginning_of_all_times_date' to a dictionary, but have not included the adapter you use (synapse) as a key. Applying the default value.") -%}
         {% endif %}
-        {%- set beginning_of_all_times_date = "1901-01-01T00:00:01" -%}
+        {%- set beginning_of_all_times_date = "1901-01-01" -%}
     {% endif %}
 {%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
     {%- set beginning_of_all_times_date = global_var -%}
 {%- else -%}        
-    {%- set beginning_of_all_times_date = "1901-01-01T00:00:01" -%}
+    {%- set beginning_of_all_times_date = "1901-01-01" -%}
 {%- endif -%}
 
 {{ return(beginning_of_all_times_date) }}
