@@ -42,12 +42,12 @@
         {%- if execute -%}
             {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.end_of_all_times_date' to a dictionary, but have not included the adapter you use (snowflake) as a key. Applying the default value.") -%}
         {% endif %}
-        {%- set end_of_all_times_date = "8888-12-31T23:59:59" -%}
+        {%- set end_of_all_times_date = "8888-12-31" -%}
     {% endif %}
 {%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
     {%- set end_of_all_times_date = global_var -%}
 {%- else -%}
-    {%- set end_of_all_times_date = "8888-12-31T23:59:59" -%}
+    {%- set end_of_all_times_date = "8888-12-31" -%}
 {%- endif -%}
 
 {{ return(end_of_all_times_date) }}
