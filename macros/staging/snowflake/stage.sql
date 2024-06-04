@@ -227,10 +227,6 @@ ldts_rsrc_data AS (
   {%- set last_cte = "ldts_rsrc_data" -%}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
   {{ log('derived_column_names: '~ derived_column_names, false) }}
-  {#
-  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) | list -%}
-  #}
-  {{ log('final_columns_to_select without derived col names: '~ final_columns_to_select, false)}}
   {%- set columns_without_excluded_columns_tmp = [] -%}
   {%- for column in columns_without_excluded_columns -%}
     {%- if column.name not in derived_column_names -%}
