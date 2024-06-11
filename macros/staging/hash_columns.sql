@@ -21,8 +21,6 @@
                                 is_hashdiff=columns[col]['is_hashdiff'],
                                 multi_active_key=multi_active_key,
                                 main_hashkey_column=main_hashkey_column) -}}
-
-            {{- ", \n" if not loop.last -}}
             
             {#- Apply standard hashing for hash key attributes. -#}
             {%- elif columns[col] is not mapping -%}
