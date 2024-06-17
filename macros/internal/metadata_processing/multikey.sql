@@ -76,7 +76,7 @@
 
     {%- if condition in ['<>', '!=', '='] -%}
         {%- for col in columns -%}
-            {%- if col.startswith("hd_") -%}
+            {%- if col.startswith("hd_") or col.startswith("hk_") or col == "ldts" -%}
                 {%- if prefix -%}
                     {{- datavault4dbt.prefix([col], prefix[0], alias_target='target') }} {{ condition }} {{ datavault4dbt.prefix([right_columns[loop.index0]], prefix[1]) -}}
                 {%- endif %}
