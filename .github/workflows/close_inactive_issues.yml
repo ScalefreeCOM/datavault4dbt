@@ -2,7 +2,7 @@ name: Close Stale Issues
 
 on:
   schedule:
-    - cron: '0 6 * * *' # daily 6 am
+    - cron: '0 6 * * 1' # every monday 6 am
 
 jobs:
   close-issues:
