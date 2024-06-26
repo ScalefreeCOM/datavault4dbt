@@ -3,7 +3,7 @@
 {%- endmacro %}
 
 {% macro default__current_timestamp() %}
-    {{ dbt_utils.current_timestamp() }}
+    {{ dbt.current_timestamp() }}
 {% endmacro %}
 
 {% macro synapse__current_timestamp() %}
@@ -15,7 +15,7 @@
 {%- endmacro %}
 
 {% macro default__current_timestamp_in_utc() %}
-    {{dbt_utils.current_timestamp_in_utc()}}
+    {{dbt.current_timestamp() }}
 {% endmacro %}
 
 {% macro synapse__current_timestamp_in_utc() %}
