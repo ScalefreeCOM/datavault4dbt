@@ -40,13 +40,13 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 {%- endmacro -%}  
 
                                     
-{%- macro postgres__attribute_standardise() -%}
+{%- macro postgres__attribute_standardise(hash_type) -%}
 
 CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRESSION] AS VARCHAR)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
 
 {%- endmacro -%}
 
-{%- macro redshift__attribute_standardise() -%}
+{%- macro redshift__attribute_standardise(hash_type) -%}
 
 '"' ||  REPLACE(REPLACE(REPLACE(TRIM(BOTH ' ' FROM [EXPRESSION]), '\\', '\\\\'), '[QUOTE]', '\\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
 
