@@ -156,8 +156,6 @@
 {%- set unknown_value_alt__STRING = var('datavault4dbt.unknown_value_alt__STRING', 'u')  -%}
 {%- set error_value_alt__STRING = var('datavault4dbt.error_value_alt__STRING', 'e')  -%}
 {%- set datatype = datatype | string | upper | trim -%}
-    
-{%- set alias = datavault4dbt.escape_column_names(alias) -%}
 
 {%- set alias = datavault4dbt.escape_column_names(alias) -%}
 
