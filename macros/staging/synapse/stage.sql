@@ -139,7 +139,7 @@
   {%- endif -%}
   {%- set source_columns_to_select = only_include_from_source -%}
 
-{%- endif-%}
+{%- endif -%}
 
 {%- if not var('datavault4dbt.include_derived_column_input_columns', true) -%}
   {%- set exclude_column_names = exclude_column_names + derived_input_columns -%}

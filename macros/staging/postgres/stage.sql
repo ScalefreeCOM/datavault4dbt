@@ -149,7 +149,7 @@
 
   {%- set source_columns_to_select = only_include_from_source -%}
 
-{%- endif-%}
+{%- endif -%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
