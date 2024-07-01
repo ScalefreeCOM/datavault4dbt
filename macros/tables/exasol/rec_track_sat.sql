@@ -1,4 +1,4 @@
-{%- macro exasol__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg) -%}
+{%- macro exasol__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg, disable_hwm) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
