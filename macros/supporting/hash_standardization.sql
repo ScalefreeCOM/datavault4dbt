@@ -54,17 +54,18 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 
 
                                     
-{%- macro concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+{%- macro concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff=false) -%}
 
 {{ return(adapter.dispatch('concattenated_standardise', 'datavault4dbt')(case_sensitive=case_sensitive,
                                                                               hash_alg=hash_alg,
                                                                               datatype=datatype, 
                                                                               zero_key=zero_key,
-                                                                              alias=alias) )}}
+                                                                              alias=alias,
+                                                                              is_hashdiff=is_hashdiff) )}}
 
 {%- endmacro -%}
 
-{%- macro default__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+{%- macro default__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff) -%}
 
 {%- set dict_result = {} -%}
 
@@ -107,7 +108,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 {%- endmacro -%}
 
 
-{%- macro snowflake__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+{%- macro snowflake__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff) -%}
 
 {%- set dict_result = {} -%}
 
@@ -164,7 +165,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 {%- endmacro -%}
 
 
-{%- macro exasol__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+{%- macro exasol__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff) -%}
 
 {%- set dict_result = {} -%}
 
@@ -281,7 +282,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 {%- endmacro -%}
 
                                     
-{%- macro synapse__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
+{%- macro synapse__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff) -%}
 
 {%- set dict_result = {} -%}
 
