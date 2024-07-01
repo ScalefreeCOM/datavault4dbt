@@ -1,4 +1,4 @@
-{%- macro exasol__hub(hashkey, business_keys, src_ldts, src_rsrc, source_models) -%}
+{%- macro exasol__hub(hashkey, business_keys, src_ldts, src_rsrc, source_models, disable_hwm) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
