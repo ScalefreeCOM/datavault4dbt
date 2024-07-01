@@ -1,4 +1,4 @@
-{%- macro exasol__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc) -%}
+{%- macro exasol__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc, disable_hwm) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
 
