@@ -110,7 +110,7 @@
     {%- endif -%}
     
     {# If ldts is empty replace it with the current timestamp #}
-    {%- if datavault4dbt.is_nothing(ldts) == True -%}
+    {%- if datavault4dbt.is_nothing(ldts) -%}
       {%- set ldts = datavault4dbt.current_timestamp() -%}
     {%- endif -%}
 
