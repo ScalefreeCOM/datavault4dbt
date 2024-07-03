@@ -56,7 +56,8 @@ vars:
 
   datavault4dbt.default_unknown_rsrc: 'SYSTEM'
   datavault4dbt.default_error_rsrc: 'ERROR'
-  datavault4dbt.rsrc_default_dtype: 'VARCHAR(255)' 
+  datavault4dbt.rsrc_default_dtype: 'VARCHAR(255)'
+  datavault4dbt.ldts_default_dtype: 'TIMESTAMP'
   datavault4dbt.stg_default_dtype: 'VARCHAR(255)' 
   datavault4dbt.derived_columns_default_dtype: 'VARCHAR(255)' 
 
