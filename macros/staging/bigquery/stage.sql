@@ -205,7 +205,7 @@ source_data AS (
 ldts_rsrc_data AS (
 
   SELECT
-    CAST( {{ ldts }} as TIMESTAMP                )  AS {{ load_datetime_col_name}},
+    {{ ldts }} AS {{ load_datetime_col_name}},
     CAST( {{ rsrc }} as {{ rsrc_default_dtype }} ) AS {{ record_source_col_name }}
     {%- if datavault4dbt.is_something(sequence) %},
       {{ sequence }} AS edwSequence
