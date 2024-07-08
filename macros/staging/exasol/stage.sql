@@ -175,7 +175,7 @@
 {% set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'VARCHAR (2000000) UTF8') %}
 
 {# Setting the ldts default datatype #}
-{% set ldts_default_dtype = timestamp_default_dtype() %}
+{% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
 
 WITH
 
