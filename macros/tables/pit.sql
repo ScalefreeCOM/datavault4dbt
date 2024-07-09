@@ -12,8 +12,9 @@
 
     Parameters:
 
-    pit_type::string                    String to insert into the 'pit_type' column. Allows for future implementations of other
-                                        PIT variants, like T-PITs etc. Can be set freely, something like 'PIT' could be the default. 
+    pit_type::string                    String to insert into the 'pit_type' column. Has to be prefixed by a !.
+                                        Allows for future implementations of other PIT variants, like T-PITs etc.
+                                        Can be set freely, something like 'PIT' could be the default. 
                                         Is optional, if not set, no column will be added.
 
     tracked_entity::string              Name of the tracked Hub entity. Must be available as a model inside the dbt project.
