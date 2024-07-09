@@ -42,7 +42,7 @@ pit_records AS (
     SELECT
         
         {% if datavault4dbt.is_something(pit_type) -%}
-            '{{ datavault4dbt.as_constant(pit_type) }}' as type,
+            {{ datavault4dbt.as_constant(pit_type) }} as type,
         {%- endif %}
         {% if datavault4dbt.is_something(custom_rsrc) -%}
         '{{ custom_rsrc }}' as {{ rsrc }},
