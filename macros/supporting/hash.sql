@@ -1,4 +1,4 @@
-{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none, main_hashkey_column=none) -%}
+{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none, main_hashkey_column=none, rtrim_hashdiff=none) -%}
 
     {%- if is_hashdiff is none -%}
         {%- set is_hashdiff = false -%}
@@ -8,12 +8,13 @@
                                              alias=alias,
                                              is_hashdiff=is_hashdiff,
                                              multi_active_key=multi_active_key,
-                                             main_hashkey_column=main_hashkey_column) -}}
+                                             main_hashkey_column=main_hashkey_column,
+                                             rtrim_hashdiff=rtrim_hashdiff) -}}
 
 {%- endmacro %}
 
 
-{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -81,7 +82,7 @@
 
 {%- endmacro -%}
 
-{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
     {%- set hash = datavault4dbt.hash_method() -%}
     {%- set concat_string = var('concat_string', '||') -%}
@@ -149,7 +150,7 @@
 {%- endmacro -%}
 
 
-{%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -223,7 +224,7 @@
 {%- endmacro -%}    
 
 
-{%- macro postgres__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro postgres__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
@@ -295,7 +296,7 @@
 {%- endmacro -%}
 
 
-{%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '|') -%}
