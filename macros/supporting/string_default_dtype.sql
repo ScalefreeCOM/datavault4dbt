@@ -13,7 +13,7 @@
     {%- set global_var = var('datavault4dbt.stg_default_dtype', none) -%}
 {%- elif type == 'derived_columns' %}
     {%- set global_var = var('datavault4dbt.derived_columns_default_dtype', none) -%}
-{%- elif %}
+{%- else %}
     {%- set global_var = none %}
 {%- endif %}
 
@@ -41,13 +41,13 @@
 
 {%- macro snowflake__string_default_dtype(type) %}
 
-{%- if type = 'rsrc' %}  
+{%- if type =='rsrc' %}  
     {%- set global_var = var('datavault4dbt.rsrc_default_dtype', none) -%}
-{%- elif type = 'stg' %}
+{%- elif type =='stg' %}
     {%- set global_var = var('datavault4dbt.stg_default_dtype', none) -%}
-{%- elif type = 'derived_columns' %}
+{%- elif type =='derived_columns' %}
     {%- set global_var = var('datavault4dbt.derived_columns_default_dtype', none) -%}
-{%- elif %}
+{%- else %}
     {%- set global_var = none %}
 {%- endif %}
 
@@ -75,13 +75,13 @@
 
 {%- macro exasol__string_default_dtype(type) %}
 
-{%- if type = 'rsrc' %}  
+{%- if type =='rsrc' %}  
     {%- set global_var = var('datavault4dbt.rsrc_default_dtype', none) -%}
-{%- elif type = 'stg' %}
+{%- elif type =='stg' %}
     {%- set global_var = var('datavault4dbt.stg_default_dtype', none) -%}
-{%- elif type = 'derived_columns' %}
+{%- elif type =='derived_columns' %}
     {%- set global_var = var('datavault4dbt.derived_columns_default_dtype', none) -%}
-{%- elif %}
+{%- else %}
     {%- set global_var = none %}
 {%- endif %}
 
@@ -109,13 +109,13 @@
 
 {%- macro synapse__string_default_dtype(type) %}
 
-{%- if type = 'rsrc' %}  
+{%- if type =='rsrc' %}  
     {%- set global_var = var('datavault4dbt.rsrc_default_dtype', none) -%}
-{%- elif type = 'stg' %}
+{%- elif type =='stg' %}
     {%- set global_var = var('datavault4dbt.stg_default_dtype', none) -%}
-{%- elif type = 'derived_columns' %}
+{%- elif type =='derived_columns' %}
     {%- set global_var = var('datavault4dbt.derived_columns_default_dtype', none) -%}
-{%- elif %}
+{%- else %}
     {%- set global_var = none %}
 {%- endif %}
 
@@ -143,13 +143,13 @@
 
 {%- macro postgres__string_default_dtype(type) %}
 
-{%- if type = 'rsrc' %}  
+{%- if type =='rsrc' %}  
     {%- set global_var = var('datavault4dbt.rsrc_default_dtype', none) -%}
-{%- elif type = 'stg' %}
+{%- elif type =='stg' %}
     {%- set global_var = var('datavault4dbt.stg_default_dtype', none) -%}
-{%- elif type = 'derived_columns' %}
+{%- elif type =='derived_columns' %}
     {%- set global_var = var('datavault4dbt.derived_columns_default_dtype', none) -%}
-{%- elif %}
+{%- else %}
     {%- set global_var = none %}
 {%- endif %}
 
@@ -177,13 +177,13 @@
 
 {%- macro redshift__string_default_dtype(type) %}
 
-{%- if type = 'rsrc' %}  
+{%- if type =='rsrc' %}  
     {%- set global_var = var('datavault4dbt.rsrc_default_dtype', none) -%}
-{%- elif type = 'stg' %}
+{%- elif type =='stg' %}
     {%- set global_var = var('datavault4dbt.stg_default_dtype', none) -%}
-{%- elif type = 'derived_columns' %}
+{%- elif type =='derived_columns' %}
     {%- set global_var = var('datavault4dbt.derived_columns_default_dtype', none) -%}
-{%- elif %}
+{%- else %}
     {%- set global_var = none %}
 {%- endif %}
 
