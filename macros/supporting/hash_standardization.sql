@@ -54,19 +54,17 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 
 
                                     
-{%- macro concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff=false, rtrim_hashdiff=false) -%}
+{%- macro concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {{ return(adapter.dispatch('concattenated_standardise', 'datavault4dbt')(case_sensitive=case_sensitive,
                                                                               hash_alg=hash_alg,
                                                                               datatype=datatype, 
                                                                               zero_key=zero_key,
-                                                                              alias=alias,
-                                                                              is_hashdiff=is_hashdiff,
-                                                                              rtrim_hashdiff=rtrim_hashdiff) )}}
+                                                                              alias=alias) )}}
 
 {%- endmacro -%}
 
-{%- macro default__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff, rtrim_hashdiff) -%}
+{%- macro default__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {%- set dict_result = {} -%}
 
@@ -109,7 +107,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 {%- endmacro -%}
 
 
-{%- macro snowflake__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff, rtrim_hashdiff) -%}
+{%- macro snowflake__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {%- set dict_result = {} -%}
 
@@ -166,7 +164,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 {%- endmacro -%}
 
 
-{%- macro exasol__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff, rtrim_hashdiff) -%}
+{%- macro exasol__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {%- set dict_result = {} -%}
 
@@ -198,7 +196,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 
 {%- endmacro -%}
 
-{%- macro postgres__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias,is_hashdiff, rtrim_hashdiff) -%}
+{%- macro postgres__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {%- set dict_result = {} -%}
 
@@ -240,7 +238,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 
 {%- endmacro -%}
 
-{%- macro redshift__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias,is_hashdiff, rtrim_hashdiff) -%}
+{%- macro redshift__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {%- set dict_result = {} -%}
 
@@ -283,7 +281,7 @@ CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRE
 {%- endmacro -%}
 
                                     
-{%- macro synapse__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, is_hashdiff, rtrim_hashdiff) -%}
+{%- macro synapse__concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias) -%}
 
 {%- set dict_result = {} -%}
 
