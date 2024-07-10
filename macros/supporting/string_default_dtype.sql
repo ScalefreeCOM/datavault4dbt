@@ -24,7 +24,7 @@
         {% set string_default_dtype = global_var['bigquery'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.string_default_dtype' to a dictionary, but have not included the adapter you use (bigquery) as a key. Applying the default value.") -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt." ~ type ~ "_default_dtype' to a dictionary, but have not included the adapter you use (bigquery) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set string_default_dtype = "STRING" -%}
     {% endif %}
@@ -58,7 +58,7 @@
         {% set string_default_dtype = global_var['snowflake'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.string_default_dtype' to a dictionary, but have not included the adapter you use (snowflake) as a key. Applying the default value.") -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt." ~ type ~ "_default_dtype' to a dictionary, but have not included the adapter you use (snowflake) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set string_default_dtype = "VARCHAR" -%}
     {% endif %}
@@ -92,7 +92,7 @@
         {% set string_default_dtype = global_var['exasol'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.string_default_dtype' to a dictionary, but have not included the adapter you use (exasol) as a key. Applying the default value.") -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt." ~ type ~ "_default_dtype' to a dictionary, but have not included the adapter you use (exasol) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set string_default_dtype = "VARCHAR (2000000) UTF8" -%}
     {% endif %}
@@ -126,7 +126,7 @@
         {% set string_default_dtype = global_var['synapse'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.string_default_dtype' to a dictionary, but have not included the adapter you use (synapse) as a key. Applying the default value.") -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt." ~ type ~ "_default_dtype' to a dictionary, but have not included the adapter you use (synapse) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set string_default_dtype = "VARCHAR" -%}
     {% endif %}
@@ -160,7 +160,7 @@
         {% set string_default_dtype = global_var['postgres'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.string_default_dtype' to a dictionary, but have not included the adapter you use (postgres) as a key. Applying the default value.") -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt." ~ type ~ "_default_dtype' to a dictionary, but have not included the adapter you use (postgres) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set string_default_dtype = "VARCHAR" -%}
     {% endif %}
@@ -194,7 +194,7 @@
         {% set string_default_dtype = global_var['redshift'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.string_default_dtype' to a dictionary, but have not included the adapter you use (redshift) as a key. Applying the default value.") -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt." ~ type ~ "_default_dtype' to a dictionary, but have not included the adapter you use (redshift) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set string_default_dtype = "VARCHAR" -%}
     {% endif %}
