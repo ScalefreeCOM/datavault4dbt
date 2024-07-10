@@ -17,15 +17,15 @@ Please delete options that are not relevant.
 
 Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce.
 
-- [ ] 
+- [ ] Tests you ran
 
 **Test Configuration**:
 * datavault4dbt-Version:
-* dbt-Version: Cloud/Core, Versionnumber
+* dbt-Version: _cloud/core, version number_
 * dbt-adapter-Version:
 
 # Checklist:
 
 - [ ] I have performed a self-review of my code
 - [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
+- [ ] I have made corresponding changes to the documentation or included information that needs updates (e.g. in the Wiki)
