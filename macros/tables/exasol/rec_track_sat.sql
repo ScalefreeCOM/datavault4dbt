@@ -9,8 +9,8 @@
 {%- set rsrc_error = var('datavault4dbt.default_error_rsrc', 'ERROR') -%}
 
 {# Setting the rsrc and stg_alias default datatype and length #}
-{%- set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'VARCHAR (2000000) UTF8') -%}
-{%- set stg_default_dtype = var('datavault4dbt.stg_default_dtype', 'VARCHAR (200) UTF8') -%}
+{%- set rsrc_default_dtype = datavault4dbt.string_default_dtype(type='rsrc') -%}
+{%- set stg_default_dtype = datavault4dbt.string_default_dtype(type='stg') -%}
 {%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
 
 {%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
