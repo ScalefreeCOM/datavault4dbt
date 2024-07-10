@@ -9,8 +9,8 @@
 {%- set rsrc_error = var('datavault4dbt.default_error_rsrc', 'ERROR') -%}
 
 {# Setting the rsrc and stg_alias default datatype and length #}
-{%- set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'STRING') -%}
-{%- set stg_default_dtype = var('datavault4dbt.stg_default_dtype', 'STRING') -%}
+{%- set rsrc_default_dtype = datavault4dbt.string_default_dtype(type='rsrc') -%}
+{%- set stg_default_dtype = datavault4dbt.string_default_dtype(type='stg') -%}
 
 {# Setting the ldts to the default datatype for timestamps #}
 {% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}

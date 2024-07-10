@@ -178,7 +178,7 @@
 {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
 
 {# Setting the rsrc default datatype and length #}
-{% set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'STRING') %}
+{% set rsrc_default_dtype = datavault4dbt.string_default_dtype(type='rsrc') %}
 
 {# Setting the ldts default datatype #}
 {% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
