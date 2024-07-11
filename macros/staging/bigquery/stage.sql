@@ -372,7 +372,7 @@ ma_hashdiff_prep AS (
     SELECT
       
       {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.hashdiff_dict) -%}
-      
+
       {{ multi_active_config['main_hashkey_column'] }},
       {# Generates only all hashdiffs. #}
       {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }},
@@ -380,6 +380,10 @@ ma_hashdiff_prep AS (
 
     FROM main_hashkey_generation
     GROUP BY {{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
+
+    
+      {% do processed_hash_columns.update(datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict)) -%} {# Add main hashkey to list of processed columns, otherwise ghost records dont get created #}
+
 
 ),
 
@@ -392,8 +396,10 @@ hashed_columns AS (
       {# Generates only all remaining hashkeys, that are no hashdiffs #}
       
       {%- if datavault4dbt.is_something(processed_remaining_hash_columns) %}
-      {{- datavault4dbt.hash_columns(columns=processed_remaining_hash_columns) | indent(4) }},                                {# All remaining hashed_columns get calculated. #}
+      {{- datavault4dbt.hash_columns(columns=processed_remaining_hash_columns) | indent(4) }},
+      {%- do processed_hash_columns.update(datavault4dbt.process_hash_column_excludes(tmp_ns.remaining_hashed_columns)) -%}                                {# All remaining hashed_columns get calculated. #}
       {% endif -%}
+
 
       {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(tmp_ns.hashdiff_names)) }},                                   {# All MA Hashdiffs are selected. #}
       main_hashkey_generation.{{ multi_active_config['main_hashkey_column'] }}                                                                       {# Main Hashkey selected. #}
