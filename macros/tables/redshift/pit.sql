@@ -1,7 +1,7 @@
 {%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key,snapshot_trigger_column=none, custom_rsrc=none, pit_type=none) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
