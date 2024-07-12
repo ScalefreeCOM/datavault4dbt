@@ -1,4 +1,4 @@
-{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none, main_hashkey_column=none, rtrim_hashdiff=none) -%}
+{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none, main_hashkey_column=none) -%}
 
     {%- if is_hashdiff is none -%}
         {%- set is_hashdiff = false -%}
@@ -8,13 +8,12 @@
                                              alias=alias,
                                              is_hashdiff=is_hashdiff,
                                              multi_active_key=multi_active_key,
-                                             main_hashkey_column=main_hashkey_column,
-                                             rtrim_hashdiff=rtrim_hashdiff) -}}
+                                             main_hashkey_column=main_hashkey_column) -}}
 
 {%- endmacro %}
 
 
-{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -82,7 +81,7 @@
 
 {%- endmacro -%}
 
-{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
 
     {%- set hash = datavault4dbt.hash_method() -%}
     {%- set concat_string = var('concat_string', '||') -%}
@@ -150,7 +149,7 @@
 {%- endmacro -%}
 
 
-{%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
