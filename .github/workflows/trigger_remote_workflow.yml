@@ -1,0 +1,4 @@
+name: "Trigger remote Workflow"
+
+on: 
+  workflow_dispatch:
