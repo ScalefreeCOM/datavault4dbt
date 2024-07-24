@@ -1,0 +1,4 @@
+name: "Checking Labels"
+
+on: 
+  workflow_dispatch:
