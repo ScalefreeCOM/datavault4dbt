@@ -1,0 +1,81 @@
+name: "Trigger remote Workflow"
+
+permissions:
+  issues: write
+
+on: 
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Checking Labels]
+    types: [completed]
+
+concurrency:
+  group: trigger-group
+  cancel-in-progress: false
+
+jobs:
+  Checking-PR:
+      runs-on: ubuntu-latest
+      steps:  
+      
+        - name: Generate token
+          id: generate_token
+          uses: actions/create-github-app-token@v1
+          with:
+            app-id: ${{ secrets.WORKFLOW_APP_ID }}  
+            private-key: ${{ secrets.WORKFLOW_APP_PRIVATE_KEY }}
+            owner: ${{ github.repository_owner }}
+            repositories: "datavault4dbt,datavault4dbt-ci-cd"
+        
+        - name: Checking User Identity
+          id: user_affiliation
+          uses: tspascoal/get-user-teams-membership@v2
+          with:
+            GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+            username: ${{ github.actor }}
+            team: 'Datavault4dbt Devs'
+
+        - name: Outpu Team Membership
+          run: echo "Member of datavault4dbt dev team; ${{ steps.user_affiliation.outputs.isTeamMember }}"
+        
+        #Will only be triggered if external PRs is approved before
+        - name: Call Workflow
+          if: ${{ steps.user_affiliation.outputs.isTeamMember == 'false'}}
+          env: 
+            GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          run: |
+            gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/ScalefreeCOM/datavault4dbt-ci-cd/actions/workflows/remote-test-endpoint.yml/dispatches \
+            -f "ref=main"
+
+        - name: downloading-artifacts
+          if: ${{ steps.user_affiliation.outputs.isTeamMember == 'true'}}
+          id: download-artifact
+          uses: dawidd6/action-download-artifact@v6
+          with:
+            github_token: ${{ steps.generate_token.outputs.token }}
+            workflow: PR-workflow-workaround.yml
+            workflow_search: false
+            skip_unpack: false
+            path: ./
+        
+        - name: extract-artifact
+          id: extract-artifact
+          if: ${{ steps.user_affiliation.outputs.isTeamMember == 'true'}}
+          run: |
+            echo "labels=$(cat label/label)" >> $GITHUB_OUTPUT
+        
+        - name: trigger-labeled-workflow
+          if: ${{ steps.extract-artifact.outputs.labels == 'true' }}
+          env: 
+            GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          run: |
+            gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/ScalefreeCOM/datavault4dbt-ci-cd/actions/workflows/remote-test-endpoint.yml/dispatches \
+            -f "ref=main"
