@@ -65,12 +65,13 @@ pit_records AS (
 
     FROM
             {{ ref(tracked_entity) }} te
+            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}            
         FULL OUTER JOIN
             {{ ref(snapshot_relation) }} snap
-            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
                 ON snap.{{ snapshot_trigger_column }} = true
             {% else -%}
-                ON 1=1
+                CROSS JOIN
+            {{ ref(snapshot_relation) }} snap
             {%- endif %}
         {% for satellite in sat_names %}
         {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
