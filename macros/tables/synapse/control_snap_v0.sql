@@ -1,5 +1,5 @@
 {%- macro synapse__control_snap_v0(start_date, end_date, daily_snapshot_time, sdts_alias) -%}
-{{ log('start_date: '~ start_date, true)}}
+{{ log('start_date: '~ start_date, false)}}
 WITH initial_timestamps AS (
     SELECT
         CAST(CAST('{{ start_date }}' AS VARCHAR) + ' ' + '{{ daily_snapshot_time }}' AS DATETIME) + CAST(rn - 1 AS INT) AS {{ sdts_alias }}

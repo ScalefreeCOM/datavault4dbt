@@ -57,7 +57,7 @@ dates AS (
         {{ src_ldts }}
     FROM {{ ref(satellite|string) }}
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-    {% if not loop.last -%} UNION {% endif %}
+    {% if not loop.last -%} UNION DISTINCT {% endif %}
     {%- endfor %}
     )
 

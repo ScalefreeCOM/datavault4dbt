@@ -56,7 +56,7 @@ virtual_logic AS (
                     {%- set daily_duration = log_logic['daily']['duration'] -%}
                     {%- set daily_unit = log_logic['daily']['unit'] -%}
 
-                    c.{{ sdts_alias }} BETWEEN CURRENT_TIMESTAMP - INTERVAL '{{ daily_duration }}' {{ daily_unit }} AND CURRENT_DATE + 1
+                    c.{{ sdts_alias }} BETWEEN CURRENT_TIMESTAMP - INTERVAL '{{ daily_duration }} {{ daily_unit }}' AND CURRENT_DATE + 1
                 {%- endif -%}
             {%- endif %}
 
@@ -71,7 +71,7 @@ virtual_logic AS (
                     {%- set weekly_unit = log_logic['weekly']['unit'] -%}
 
                     (
-                c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '{{ weekly_duration }}' {{ weekly_unit }} AND CURRENT_DATE
+                c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '{{ weekly_duration }} {{ weekly_unit }}' AND CURRENT_DATE
                 AND
                 (c.is_weekly = TRUE)
             )
@@ -89,7 +89,7 @@ virtual_logic AS (
                     {%- set monthly_unit = log_logic['monthly']['unit'] -%}
 
                     (
-                c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '{{ monthly_duration }}' {{ monthly_unit }} AND CURRENT_DATE
+                c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '{{ monthly_duration }} {{ monthly_unit }}' AND CURRENT_DATE
                 AND
                 (c.is_monthly = TRUE)
             )
@@ -107,7 +107,7 @@ virtual_logic AS (
                     {%- set yearly_unit = log_logic['yearly']['unit'] -%}
 
                     (
-                DATE FROM c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '{{ yearly_duration }}' {{ yearly_unit }} AND CURRENT_DATE 
+                DATE FROM c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '{{ yearly_duration }} {{ yearly_unit }}' AND CURRENT_DATE 
                 AND
                 (c.is_yearly = TRUE)
             )
@@ -139,11 +139,11 @@ virtual_logic AS (
             ELSE FALSE
         END AS is_last_year,
         CASE
-            WHEN c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '1' YEAR AND CURRENT_DATE THEN TRUE
+            WHEN c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '1 YEAR' AND CURRENT_DATE THEN TRUE
             ELSE FALSE
         END AS is_rolling_year,
         CASE
-            WHEN c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '2' YEAR AND CURRENT_DATE - INTERVAL '1' YEAR THEN TRUE
+            WHEN c.{{ sdts_alias }} BETWEEN CURRENT_DATE - INTERVAL '2 YEAR' AND CURRENT_DATE - INTERVAL '1 YEAR' THEN TRUE
             ELSE FALSE
         END AS is_last_rolling_year,
         c.comment

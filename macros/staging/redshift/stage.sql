@@ -37,7 +37,6 @@
 
     {%- set source_relation = source(source_name, source_table_name) -%}
     {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
-
 {%- elif source_model is not mapping and source_model is not none -%}
 
     {{ log('source_model is not mapping and not none: ' ~ source_model, false) }}
@@ -162,7 +161,7 @@
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -178,7 +177,10 @@
 {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
 
 {# Setting the rsrc default datatype and length #}
-{% set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'STRING') %}
+{% set rsrc_default_dtype = datavault4dbt.string_default_dtype(type='rsrc') %}
+
+{# Setting the ldts default datatype #}
+{% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
 
 WITH
 
@@ -187,7 +189,6 @@ source_data AS (
     SELECT
 
     {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
-
   FROM {{ source_relation }}
 
   {% if is_incremental() %}
@@ -206,7 +207,7 @@ source_data AS (
 ldts_rsrc_data AS (
 
   SELECT
-    {{ ldts }} AS {{ load_datetime_col_name}},
+    CAST( {{ ldts }} as {{ ldts_default_dtype }} ) AS {{ load_datetime_col_name }},
     CAST( {{ rsrc }} as {{ rsrc_default_dtype }} ) AS {{ record_source_col_name }}
     {%- if datavault4dbt.is_something(sequence) %},
       {{ sequence }} AS edwSequence
@@ -221,11 +222,11 @@ ldts_rsrc_data AS (
 
   {%- set last_cte = "ldts_rsrc_data" -%}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
-  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) | list -%}
+  {# {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) | list -%} #}
   
   {%- set columns_without_excluded_columns_tmp = [] -%}
   {%- for column in columns_without_excluded_columns -%}
-    {%- if column.name not in derived_column_names -%}
+    {%- if column.name | lower not in derived_column_names | lower -%}
       {%- do columns_without_excluded_columns_tmp.append(column) -%}
     {%- endif -%}
   {%- endfor -%}
@@ -258,7 +259,7 @@ missing_columns AS (
 prejoined_columns AS (
 
   SELECT
-  {% if final_columns_to_select | length > 0 -%}
+  {% if final_columns_to_select | length > 0 -%}  
     {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=datavault4dbt.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
   {% endif %}
   {%- for col, vals in prejoined_columns.items() -%}
@@ -436,7 +437,7 @@ unknown_values AS (
     '{{ unknown_value_rsrc }}' as {{ record_source_col_name }}
 
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%},
-    {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
+    {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column and derived_columns #}
       {%- for column in columns_without_excluded_columns %}
         {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
