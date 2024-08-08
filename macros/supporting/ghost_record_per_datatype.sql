@@ -76,7 +76,7 @@
 {%- if ghost_record_type == 'unknown' -%}
 
         {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as "{{ column_name }}"
-        {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
+        {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
         {%- elif datatype.upper().startswith('VARCHAR') -%}
             {%- if col_size is not none -%}
                 {%- set unknown_dtype_length = col_size | int -%}
@@ -89,22 +89,22 @@
                 {%- set unknown_dtype_length = inside_parenthesis | int -%}
             {%- endif -%}
             {%- if unknown_dtype_length < unknown_value__STRING|length -%}
-                CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }} ) as "{{ alias }}"
+                CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- else -%}
-                CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as "{{ alias }}"
+                CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- endif -%}
-        {%- elif datatype.upper().startswith('CHAR') -%} CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }}) as "{{ alias }}"
-        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('0' as {{ datatype }}) as "{{ alias }}"
-        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as "{{ alias }}"
-        {%- elif datatype == 'BOOLEAN' %} FALSE as "{{ alias }}"
-        {%- elif datatype.upper().startswith('HASHTYPE') -%} CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
-        {%- else %} CAST(NULL as {{ datatype }}) as "{{ alias }}"
+        {%- elif datatype.upper().startswith('CHAR') -%} CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }}) as {{ alias }}
+        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('0' as {{ datatype }}) as {{ alias }}
+        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as {{ alias }}
+        {%- elif datatype == 'BOOLEAN' %} FALSE as {{ alias }}
+        {%- elif datatype.upper().startswith('HASHTYPE') -%} CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as {{ alias }}
+        {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 
 {%- elif ghost_record_type == 'error' -%}
 
         {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as "{{ column_name }}"
-        {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
+        {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
         {%- elif datatype.upper().startswith('VARCHAR') -%}
             {%- if col_size is not none -%}
                 {%- set error_dtype_length = col_size | int -%}
@@ -117,16 +117,16 @@
                 {%- set error_dtype_length = inside_parenthesis | int -%}
             {%- endif -%}
             {%- if error_dtype_length < error_value__STRING|length  -%}
-                CAST('{{ error_value_alt__STRING }}' as {{ datatype }} ) as "{{ alias }}"
+                CAST('{{ error_value_alt__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- else -%}
-                CAST('{{ error_value__STRING }}' as {{ datatype }} ) as "{{ alias }}"
+                CAST('{{ error_value__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- endif -%}
-        {%- elif datatype.upper().startswith('CHAR') -%} CAST('{{ error_value_alt__STRING }}' as {{ datatype }}) as "{{ alias }}"
-        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('-1' as {{ datatype }}) as "{{ alias }}"
-        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as "{{ alias }}"
-        {%- elif datatype == 'BOOLEAN' %} FALSE as "{{ alias }}"
-        {%- elif datatype.upper().startswith('HASHTYPE') -%} CAST('{{ error_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
-        {%- else %} CAST(NULL as {{ datatype }}) as "{{ alias }}"
+        {%- elif datatype.upper().startswith('CHAR') -%} CAST('{{ error_value_alt__STRING }}' as {{ datatype }}) as {{ alias }}
+        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('-1' as {{ datatype }}) as {{ alias }}
+        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as {{ alias }}
+        {%- elif datatype == 'BOOLEAN' %} FALSE as {{ alias }}
+        {%- elif datatype.upper().startswith('HASHTYPE') -%} CAST('{{ error_value__HASHTYPE }}' as {{ datatype }}) as {{ alias }}
+        {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 
 {%- else -%}

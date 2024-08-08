@@ -305,6 +305,8 @@ prejoined_columns AS (
 {# Adding derived columns to the selection #}
 derived_columns AS (
 
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) -%}
+
   SELECT
   {% if final_columns_to_select | length > 0 -%}
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
@@ -464,7 +466,7 @@ unknown_values AS (
     {%- if datavault4dbt.is_something(processed_hash_columns) -%},
 
       {%- for hash_column in processed_hash_columns %}
-        CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }}) as "{{ hash_column }}"
+        CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }}) as {{ hash_column }}
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 
