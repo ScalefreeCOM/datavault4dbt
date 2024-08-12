@@ -212,6 +212,14 @@ ldts_rsrc_data AS (
 
   {%- set last_cte = "ldts_rsrc_data" -%}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
+  
+  {%- set columns_without_excluded_columns_tmp = [] -%}
+  {%- for column in columns_without_excluded_columns -%}
+    {%- if column.name | lower not in derived_column_names | lower -%}
+      {%- do columns_without_excluded_columns_tmp.append(column) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- set columns_without_excluded_columns = columns_without_excluded_columns_tmp |list -%}
 ),
 
 {%- if datavault4dbt.is_something(missing_columns) %}
@@ -305,6 +313,8 @@ prejoined_columns AS (
 {# Adding derived columns to the selection #}
 derived_columns AS (
 
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) -%}
+
   SELECT
   {% if final_columns_to_select | length > 0 -%}
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
@@ -321,15 +331,16 @@ derived_columns AS (
 {# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
 {% if datavault4dbt.is_something(multi_active_config) %}
 
-{%- set tmp_ns = namespace(main_hashkey_dict={}, remaining_hashed_columns={}, hashdiff_names=[]) -%}
+{%- set tmp_ns = namespace(main_hashkey_dict={}, remaining_hashed_columns={}, hashdiff_names=[], hashdiff_dict={}) -%}
 
 {%- for column in hashed_columns.keys() -%}
-  {%- if column | lower == multi_active_config['main_hashkey_column']| lower and not hashed_columns[column].is_hashdiff -%}
+  {%- if column == multi_active_config['main_hashkey_column'] and not hashed_columns[column].is_hashdiff -%}
     {%- do tmp_ns.main_hashkey_dict.update({column: hashed_columns[column]}) -%}
   {% elif column != multi_active_config['main_hashkey_column'] and not hashed_columns[column].is_hashdiff -%}
     {%- do tmp_ns.remaining_hashed_columns.update({column: hashed_columns[column]}) -%}
   {%- elif hashed_columns[column].is_hashdiff -%}
     {%- do tmp_ns.hashdiff_names.append(column) -%}
+    {%- do tmp_ns.hashdiff_dict.update({column: hashed_columns[column]}) -%}
   {%- endif -%}
 {%- endfor -%}
 
@@ -348,14 +359,19 @@ ma_hashdiff_prep AS (
 
     SELECT
       
-      {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+      {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.hashdiff_dict) -%}
       
+      {{ multi_active_config['main_hashkey_column'] }},
       {# Generates only all hashdiffs. #}
       {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }},
       {{ ldts_alias }}
 
-    FROM {{ last_cte }}
-    GROUP BY local.{{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
+    FROM main_hashkey_generation
+    GROUP BY {{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
+
+    
+      {% do processed_hash_columns.update(datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict)) -%} {# Add main hashkey to list of processed columns, otherwise ghost records dont get created #}
+
 
 ),
 
@@ -363,16 +379,18 @@ hashed_columns AS (
 
     SELECT 
 
-      {{ datavault4dbt.alias_all(columns=final_columns_to_select, prefix='main_hashkey_generation') }},                         {# Everything from last_cte before hashed_columns. #}
+      {{ datavault4dbt.alias_all(columns=final_columns_to_select, prefix='main_hashkey_generation') }},                             {# Everything from last_cte before hashed_columns. #}
       {% set processed_remaining_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.remaining_hashed_columns) -%}   
       {# Generates only all remaining hashkeys, that are no hashdiffs #}
       
       {%- if datavault4dbt.is_something(processed_remaining_hash_columns) %}
-      {{- datavault4dbt.hash_columns(columns=processed_remaining_hash_columns) | indent(4) }},                                  {# All remaining hashed_columns get calculated. #}
+      {{- datavault4dbt.hash_columns(columns=processed_remaining_hash_columns) | indent(4) }},
+      {%- do processed_hash_columns.update(datavault4dbt.process_hash_column_excludes(tmp_ns.remaining_hashed_columns)) -%}                                {# All remaining hashed_columns get calculated. #}
       {% endif -%}
 
+
       {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(tmp_ns.hashdiff_names)) }},                                   {# All MA Hashdiffs are selected. #}
-      main_hashkey_generation.{{ multi_active_config['main_hashkey_column'] }}                                                          {# Main Hashkey selected. #}
+      main_hashkey_generation.{{ multi_active_config['main_hashkey_column'] }}                                                                       {# Main Hashkey selected. #}
 
     FROM main_hashkey_generation
     LEFT JOIN ma_hashdiff_prep 
@@ -464,7 +482,7 @@ unknown_values AS (
     {%- if datavault4dbt.is_something(processed_hash_columns) -%},
 
       {%- for hash_column in processed_hash_columns %}
-        CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }}) as "{{ hash_column }}"
+        CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }}) as {{ hash_column }}
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 
@@ -531,7 +549,7 @@ error_values AS (
     {%- if datavault4dbt.is_something(processed_hash_columns) -%},
 
       {%- for hash_column in processed_hash_columns %}
-        CAST({{ datavault4dbt.as_constant(column_str=error_key) }} as {{ hash_dtype }}) as "{{ hash_column }}"
+        CAST({{ datavault4dbt.as_constant(column_str=error_key) }} as {{ hash_dtype }}) as {{ hash_column }}
         {%- if not loop.last %},{% endif %}
       {%- endfor -%}
 
