@@ -244,7 +244,11 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+{%- if is_hashdiff -%}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff') %}
+{%- else -%}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey') %}
+{%- endif -%}
 
 
 {#- If single column to hash -#}
