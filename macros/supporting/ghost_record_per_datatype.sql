@@ -360,37 +360,31 @@
 {%- set datatype = datatype | string | upper | trim -%}
 
 {%- if ghost_record_type == 'unknown' -%}
-        {%- if datatype in ['TIMESTAMPTZ','TIMESTAMP'] %}{{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times_date) }} AS {{ alias }}
+        {%- if 'TIMESTAMP' in datatype %}{{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times_date) }} AS {{ alias }}
         {%- elif datatype == 'TIMETZ' %} CAST('00:00:01 UTC' as TIMETZ) as {{ alias }}
         {%- elif datatype == 'TIME' %} CAST('00:00:01' as TIME) as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
         {%- elif datatype == 'VARCHAR' or datatype == 'CHARACTER VARYING' or datatype == 'NVARCHAR' or datatype == 'TEXT' %} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'CHAR' or datatype == 'CHARACTER' or datatype == 'NCHAR' or datatype == 'BPCHAR' %} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'INTEGER' or datatype == 'INT' or datatype == 'INT4' %} CAST('0' as INT) as {{ alias }}
-        {%- elif datatype == 'SMALLINT' or datatype == 'INT2' %} CAST('0' as INT2) as {{ alias }}
-        {%- elif datatype == 'BIGINT' or datatype == 'INT8' %} CAST('0' as INT8) as {{ alias }}
-        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST('0' as {{ datatype }}) as {{ alias }}
-        {%- elif datatype == 'REAL' or datatype == 'FLOAT4' %} CAST('0' as FLOAT4) as {{ alias }}
-        {%- elif datatype == 'DOUBLE PRECISION' or datatype == 'FLOAT' or datatype == 'FLOAT8' %} CAST('0' as FLOAT) as {{ alias }}
+        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} 0 as {{ alias }}
+        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} 0 as {{ alias }}
         {%- elif datatype == 'BOOLEAN' or datatype == 'BOOL' %} CAST('TRUE' as BOOLEAN) as {{ alias }}
         {%- elif datatype == 'VARBYTE' or datatype == 'VARBINARY' or datatype == 'BINARY VARYING' %} CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
+        {%- elif datatype == 'GEOMETRY' %} CAST(ST_MAKEPOINT(0,90) as GEOMETRY) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%} 
-        {%- if datatype in ['TIMESTAMPTZ','TIMESTAMP'] %}{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} AS {{ alias }}
+        {%- if 'TIMESTAMP' in datatype %}{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} AS {{ alias }}
         {%- elif datatype == 'TIMETZ' %} CAST('23:59:59 UTC' as TIMETZ) as {{ alias }}
         {%- elif datatype == 'TIME' %} CAST('23:59:59' as TIME) as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
         {%- elif datatype == 'VARCHAR' or datatype == 'CHARACTER VARYING' or datatype == 'NVARCHAR' or datatype == 'TEXT' %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'CHAR' or datatype == 'CHARACTER' or datatype == 'NCHAR' or datatype == 'BPCHAR' %} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'INTEGER' or datatype == 'INT' or datatype == 'INT4' %} CAST('-1' as INT) as {{ alias }}
-        {%- elif datatype == 'SMALLINT' or datatype == 'INT2' %} CAST('-1' as INT2) as {{ alias }}
-        {%- elif datatype == 'BIGINT' or datatype == 'INT8' %} CAST('-1' as INT8) as {{ alias }}
-        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST('-1' as {{ datatype }}) as {{ alias }}
-        {%- elif datatype == 'REAL' or datatype == 'FLOAT4' %} CAST('-1' as FLOAT4) as {{ alias }}
-        {%- elif datatype == 'DOUBLE PRECISION' or datatype == 'FLOAT' or datatype == 'FLOAT8' %} CAST('-1' as FLOAT) as {{ alias }}
+        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} -1 as {{ alias }}
+        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} -1 as {{ alias }}
         {%- elif datatype == 'BOOLEAN' or datatype == 'BOOL' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- elif datatype == 'VARBYTE' or datatype == 'VARBINARY' or datatype == 'BINARY VARYING' %} CAST('{{ error_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
+        {%- elif datatype == 'GEOMETRY' %} CAST(ST_MAKEPOINT(0,90) as GEOMETRY) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- else -%}
