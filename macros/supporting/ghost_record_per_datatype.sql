@@ -364,26 +364,22 @@
         {%- elif datatype == 'TIMETZ' %} CAST('00:00:01 UTC' as TIMETZ) as {{ alias }}
         {%- elif datatype == 'TIME' %} CAST('00:00:01' as TIME) as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
-        {%- elif datatype == 'VARCHAR' or datatype == 'CHARACTER VARYING' or datatype == 'NVARCHAR' or datatype == 'TEXT' %} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'CHAR' or datatype == 'CHARACTER' or datatype == 'NCHAR' or datatype == 'BPCHAR' %} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} 0 as {{ alias }}
-        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} 0 as {{ alias }}
-        {%- elif datatype == 'BOOLEAN' or datatype == 'BOOL' %} CAST('TRUE' as BOOLEAN) as {{ alias }}
-        {%- elif datatype == 'VARBYTE' or datatype == 'VARBINARY' or datatype == 'BINARY VARYING' %} CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
+        {%- elif datatype in ['CHAR', 'CHARACTER', 'NCHAR', 'BPCHAR', 'VARCHAR', 'CHARACTER VARYING', 'NVARCHAR', 'TEXT'] %} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8', 'DECIMAL'. 'NUMERIC'] %} 0 as {{ alias }}
+        {%- elif datatype in ['BOOLEAN', 'BOOL'] %} CAST('TRUE' as BOOLEAN) as {{ alias }}
+        {%- elif datatype in ['VARBYTE', 'VARBINARY', 'BINARY VARYING'] %} CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
         {%- elif datatype == 'GEOMETRY' %} CAST(ST_MAKEPOINT(0,90) as GEOMETRY) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
-{%- elif ghost_record_type == 'error' -%} 
+{%- elif ghost_record_type == 'error' -%}
         {%- if 'TIMESTAMP' in datatype %}{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} AS {{ alias }}
         {%- elif datatype == 'TIMETZ' %} CAST('23:59:59 UTC' as TIMETZ) as {{ alias }}
         {%- elif datatype == 'TIME' %} CAST('23:59:59' as TIME) as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
-        {%- elif datatype == 'VARCHAR' or datatype == 'CHARACTER VARYING' or datatype == 'NVARCHAR' or datatype == 'TEXT' %} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'CHAR' or datatype == 'CHARACTER' or datatype == 'NCHAR' or datatype == 'BPCHAR' %} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} -1 as {{ alias }}
-        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} -1 as {{ alias }}
-        {%- elif datatype == 'BOOLEAN' or datatype == 'BOOL' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
-        {%- elif datatype == 'VARBYTE' or datatype == 'VARBINARY' or datatype == 'BINARY VARYING' %} CAST('{{ error_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
+        {%- elif datatype in ['CHAR', 'CHARACTER', 'NCHAR', 'BPCHAR', 'VARCHAR', 'CHARACTER VARYING', 'NVARCHAR', 'TEXT'] %} '{{error_value__STRING}}' as {{ alias }}
+        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8', 'DECIMAL'. 'NUMERIC'] %} -1 as {{ alias }}
+        {%- elif datatype in ['BOOLEAN', 'BOOL'] %} CAST('FALSE' as BOOLEAN) as {{ alias }}
+        {%- elif datatype in ['VARBYTE', 'VARBINARY', 'BINARY VARYING'] %} CAST('{{ error_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
         {%- elif datatype == 'GEOMETRY' %} CAST(ST_MAKEPOINT(0,90) as GEOMETRY) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
