@@ -80,7 +80,7 @@ jobs:
             -f "ref=PR-Branch-testing" -f "inputs[pr_branch]=pull/${{ steps.extract-artifact.outputs.prid }}" -f "inputs[all_env]=true"
 
         - name: trigger-labeled-workflow
-          if: ${{ steps.extract-artifact.outputs.labels == 'true' }}
+          if: ${{ steps.extract-artifact.outputs.labels == 'true' && steps.user_affiliation.outputs.isTeamMember == 'true'}}
           env: 
             GH_TOKEN: ${{ steps.generate_token.outputs.token }}
           run: |
