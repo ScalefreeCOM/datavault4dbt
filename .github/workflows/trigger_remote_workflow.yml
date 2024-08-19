@@ -1,4 +1,93 @@
 name: "Trigger remote Workflow"
 
-on: 
-  workflow_dispatch:
+permissions:
+  issues: write
+  id-token: write
+  contents: write
+
+on:
+  workflow_run:
+    workflows: [Checking Labels]
+    types: [completed]
+
+concurrency:
+  group: trigger-group
+  cancel-in-progress: false
+
+jobs:
+  Checking-PR:
+      runs-on: ubuntu-latest
+      steps:  
+      
+        - name: Generate token
+          id: generate_token
+          uses: actions/create-github-app-token@v1
+          with:
+            app-id: ${{ secrets.WORKFLOW_APP_ID }}  
+            private-key: ${{ secrets.WORKFLOW_APP_PRIVATE_KEY }}
+            owner: ${{ github.repository_owner }}
+            repositories: "datavault4dbt,datavault4dbt-ci-cd"
+        
+        - name: Checking User Identity
+          id: user_affiliation
+          uses: tspascoal/get-user-teams-membership@v2
+          with:
+            GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+            username: ${{ github.actor }}
+            team: 'Datavault4dbt Devs'
+
+        - name: Outpu Team Membership
+          run: echo "Member of datavault4dbt dev team; ${{ steps.user_affiliation.outputs.isTeamMember }}"
+        
+        - name: downloading-artifacts
+          id: download-artifact
+          uses: dawidd6/action-download-artifact@v6
+          with:
+            github_token: ${{ steps.generate_token.outputs.token }}
+            workflow: checking_labels.yml
+            workflow_search: false
+            skip_unpack: false
+            path: ./
+            allow_forks: true
+        
+        - name: extract-artifact
+          id: extract-artifact
+          run: |
+            echo "labels=$(cat label/label)" >> $GITHUB_OUTPUT
+            echo "labels=$(cat label/label)"
+            echo "prid=$(cat prid/prid)" >> $GITHUB_OUTPUT
+            echo "prid=$(cat prid/prid)"
+
+        - name: Checkout
+          uses: actions/checkout@v3
+              
+        - name: Create a new branch based on the PR ID
+          run: |
+            git fetch origin pull/${{ steps.extract-artifact.outputs.prid }}/head:pull/${{ steps.extract-artifact.outputs.prid }}
+            git push -u origin pull/${{ steps.extract-artifact.outputs.prid }}
+
+        #Will only be triggered if external PRs is approved before
+        - name: Call Workflow
+          if: ${{ steps.user_affiliation.outputs.isTeamMember == 'false'}}
+          env: 
+            GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          run: |
+            gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/ScalefreeCOM/datavault4dbt-ci-cd/actions/workflows/reusable-workflow.yml/dispatches \
+            -f "ref=PR-Branch-testing" -f "inputs[pr_branch]=pull/${{ steps.extract-artifact.outputs.prid }}" -f "inputs[all_env]=true"
+
+        - name: trigger-labeled-workflow
+          if: ${{ steps.extract-artifact.outputs.labels == 'true' && steps.user_affiliation.outputs.isTeamMember == 'true'}}
+          env: 
+            GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          run: |
+            gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/ScalefreeCOM/datavault4dbt-ci-cd/actions/workflows/reusable-workflow.yml/dispatches \
+            -f "ref=PR-Branch-testing" -f "inputs[pr_branch]=pull/${{ steps.extract-artifact.outputs.prid }}" -f "inputs[all_env]=true"
+
