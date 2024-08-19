@@ -1,4 +1,38 @@
 name: "Checking Labels"
 
+permissions:
+  issues: write
+
 on: 
-  workflow_dispatch:
+  pull_request:
+    types: [opened]
+
+concurrency:
+  group: trigger-group
+  cancel-in-progress: false
+  
+jobs:
+  checking-labels:
+      runs-on: ubuntu-latest
+      steps:
+        - name: 
+          id: checking-labels
+          env: 
+            LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'testing') }}
+            PRID: ${{ github.event.number }}
+          run: |
+            mkdir -p ./label
+            echo $LABEL > ./label/label
+            echo $LABEL
+            mkdir -p ./prid
+            echo $PRID > ./prid/prid
+            echo $PRID
+        - uses: actions/upload-artifact@v4
+          with:
+            name: label
+            path: label/
+
+        - uses: actions/upload-artifact@v4
+          with:
+            name: prid
+            path: prid/
