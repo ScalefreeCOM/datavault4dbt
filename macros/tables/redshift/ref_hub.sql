@@ -188,15 +188,11 @@ source_new_union AS (
 
 
 earliest_ref_key_over_all_sources_prep AS (
-{%- for source_model in source_models -%}
     SELECT
         lcte.*,
-        ROW_NUMBER() OVER (PARTITION BY {% for ref_key in source_model['ref_keys'] -%} 
-                                        {{ ref_key}}
-                                        {% endfor -%} 
-        ORDER BY {{ src_ldts}}) as rn
-    FROM {{ ns.last_cte }} AS lcte)
-{%- endfor -%},
+        ROW_NUMBER() OVER (PARTITION BY {{ datavault4dbt.concat_ws(ref_keys) }} ORDER BY {{ src_ldts}}) as rn
+        FROM {{ ns.last_cte }} AS lcte
+),
 
 earliest_ref_key_over_all_sources AS (
 
@@ -205,7 +201,8 @@ earliest_ref_key_over_all_sources AS (
         lcte.*
     FROM earliest_ref_key_over_all_sources_prep AS lcte
         WHERE rn = 1
-    {%- set ns.last_cte = 'earliest_ref_key_over_all_sources' -%}),
+    {%- set ns.last_cte = 'earliest_ref_key_over_all_sources' -%}
+),
 
 records_to_insert AS (
     {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the hub. #}
