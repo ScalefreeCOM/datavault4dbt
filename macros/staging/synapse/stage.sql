@@ -226,7 +226,7 @@ ldts_rsrc_data AS (
   
   {%- set columns_without_excluded_columns_tmp = [] -%}
   {%- for column in columns_without_excluded_columns -%}
-    {%- if column.name not in exclude_column_names -%}
+    {%- if column.name | lower not in derived_column_names | map('lower') -%}
       {%- do columns_without_excluded_columns_tmp.append(column) -%}
     {%- endif -%}
   {%- endfor -%}
