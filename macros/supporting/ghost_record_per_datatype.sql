@@ -371,7 +371,7 @@
         {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST(0 as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' or datatype == 'BOOL' %} CAST('TRUE' as BOOLEAN) as {{ alias }}
         {%- elif datatype == 'VARBYTE' or datatype == 'VARBINARY' or datatype == 'BINARY VARYING' %} CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
-        {%- elif datatype == 'GEOMETRY' %} CAST(ST_SetSRID(ST_POINT(0, 90), 4326) as {{ datatype }}) as {{ alias }}
+        {%- elif datatype == 'GEOMETRY' %} CAST(ST_POINT(0, 90) as {{ datatype }}) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%} 
@@ -384,7 +384,7 @@
         {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST(-1 as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' or datatype == 'BOOL' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- elif datatype == 'VARBYTE' or datatype == 'VARBINARY' or datatype == 'BINARY VARYING' %} CAST('{{ error_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
-        {%- elif datatype == 'GEOMETRY' %} CAST(ST_SetSRID(ST_POINT(0, 90), 4326) as {{ datatype }}) as {{ alias }}
+        {%- elif datatype == 'GEOMETRY' %} CAST(ST_POINT(0, 90) as {{ datatype }}) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- else -%}
