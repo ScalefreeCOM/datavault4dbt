@@ -6,7 +6,7 @@
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
-{% set string_default_dtype = datavault4dbt.string_default_dtype() %}
+{%- set string_default_dtype = datavault4dbt.string_default_dtype() -%}
 
 {%- if hash_dtype == 'BYTES' -%}
     {%- set hashkey_string = 'TO_HEX({})'.format(datavault4dbt.prefix([hashkey],'te')) -%}

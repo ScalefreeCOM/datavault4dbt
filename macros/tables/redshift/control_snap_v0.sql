@@ -1,13 +1,13 @@
 {%- macro redshift__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date) -%}
 
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
-
+{%- set timestamp_value = start_date ~ ' ' ~ daily_snapshot_time -%}
 {%- if not datavault4dbt.is_something(sdts_alias) -%}
     {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
 {%- endif -%}
 
 with recursive generate_dates({{ sdts_alias }}) as (
-	Select to_timestamp('{{ start_date }} {{ daily_snapshot_time }}', '{{ timestamp_format }}') as {{ sdts_alias }}
+	Select {{ datavault4dbt.string_to_timestamp(timestamp_format, timestamp_value) }} as {{ sdts_alias }}
   	union all
   	select {{ sdts_alias }} + 1
   	from generate_dates

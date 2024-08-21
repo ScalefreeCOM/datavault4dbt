@@ -28,7 +28,7 @@ source_data AS (
     SELECT
         {{ parent_hashkey }},
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
-        {{ datavault4dbt.print_list(source_cols) }}
+        {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
     FROM {{ source_relation }}
 
     {%- if is_incremental() %}
@@ -62,7 +62,7 @@ deduplicated_numbered_source AS (
     SELECT
     {{ parent_hashkey }},
     {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(source_cols) }}
+    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
     {% if is_incremental() -%}
     , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
@@ -83,7 +83,7 @@ records_to_insert AS (
     SELECT
     {{ parent_hashkey }},
     {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(source_cols) }}
+    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
     FROM deduplicated_numbered_source
     {%- if is_incremental() %}
     WHERE NOT EXISTS (
