@@ -6,6 +6,8 @@ permissions:
 on: 
   pull_request:
     types: [opened, synchronize]
+    branches:
+      - main
 
 concurrency:
   group: trigger-group
