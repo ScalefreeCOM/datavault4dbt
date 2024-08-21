@@ -9,8 +9,12 @@
 {%- set rsrc_error = var('datavault4dbt.default_error_rsrc', 'ERROR') -%}
 
 {# Setting the rsrc and stg_alias default datatype and length #}
-{%- set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'STRING') -%}
-{%- set stg_default_dtype = var('datavault4dbt.stg_default_dtype', 'STRING') -%}
+{%- set rsrc_default_dtype = datavault4dbt.string_default_dtype(type='rsrc') -%}
+{%- set stg_default_dtype = datavault4dbt.string_default_dtype(type='stg') -%}
+
+{# Setting the ldts to the default datatype for timestamps #}
+{% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
+
 {%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
 
 {%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
@@ -132,7 +136,7 @@ WITH
         {%- for rsrc_static in rsrc_statics %}
             SELECT DISTINCT
                 {{ hk_column }} AS {{ tracked_hashkey }},
-                {{ src_ldts }},
+                CAST({{ src_ldts }} AS {{ldts_default_dtype  }}) AS {{ src_ldts }},
                 CAST('{{ rsrc_static }}' AS {{ rsrc_default_dtype }} ) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }})  AS {{ src_stg }}
             FROM {{ ref(source_model.name) }} src
@@ -153,7 +157,7 @@ WITH
         src_new_{{ source_number}} AS (
             SELECT DISTINCT
                 {{ hk_column }} AS {{ tracked_hashkey }},
-                {{ src_ldts }},
+                CAST({{ src_ldts }} AS {{ldts_default_dtype  }}) AS {{ src_ldts }},
                 CAST({{ src_rsrc }} AS {{ rsrc_default_dtype }}) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }}) AS {{ src_stg }}
             FROM {{ ref(source_model.name) }} src

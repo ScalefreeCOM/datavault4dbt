@@ -6,6 +6,7 @@
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
+{%- set string_default_dtype = datavault4dbt.string_default_dtype() -%}
 
 {%- if hash_dtype == 'BYTES' -%}
     {%- set hashkey_string = 'TO_HEX({})'.format(datavault4dbt.prefix([hashkey],'te')) -%}
@@ -46,10 +47,10 @@ pit_records AS (
     SELECT
         
         {% if datavault4dbt.is_something(pit_type) -%}
-            cast({{ datavault4dbt.as_constant(pit_type) }} as varchar) as type,
+            CAST({{ datavault4dbt.as_constant(pit_type) }} as {{ string_default_dtype }} ) as type,
         {%- endif %}
         {% if datavault4dbt.is_something(custom_rsrc) -%}
-        cast('{{ custom_rsrc }}' as varchar) as {{ rsrc }},
+        CAST('{{ custom_rsrc }}' as {{ string_default_dtype }} ) as {{ rsrc }},
         {%- endif %}
         {{ datavault4dbt.hash(columns=hashed_cols,
                     alias=dimension_key,
@@ -64,12 +65,13 @@ pit_records AS (
 
     FROM
             {{ ref(tracked_entity) }} te
+            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}            
         FULL OUTER JOIN
             {{ ref(snapshot_relation) }} snap
-            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
                 ON snap.{{ snapshot_trigger_column }} = true
             {% else -%}
-                ON 1=1
+                CROSS JOIN
+            {{ ref(snapshot_relation) }} snap
             {%- endif %}
         {% for satellite in sat_names %}
         {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}

@@ -125,8 +125,7 @@ ref_table AS (
 
     FROM {{ ref(ref_hub) }} h
     
-    FULL OUTER JOIN dates ld
-        ON 1 = 1  
+    CROSS JOIN dates ld
 
     {% for satellite in ref_satellites_dict.keys() %}
 
