@@ -96,7 +96,7 @@ WITH
 
         {% endfor -%}
 
-        {%- if source_models | length > 1 %}
+        {%- if source_models | length > 0 %}
 
         rsrc_static_union AS (
             {#  Create one unionized table over all sources. It will be the same as the already existing
