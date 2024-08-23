@@ -1,4 +1,4 @@
-{%- macro snowflake__eff_sat_v0(source_models, existing_eff_model, tracked_hashkey, src_ldts, src_rsrc, deleted_flag_alias) -%}
+{%- macro snowflake__eff_sat_v0(source_models, tracked_hashkey, src_ldts, src_rsrc, deleted_flag_alias) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
@@ -19,40 +19,46 @@
 
 {%- set final_columns_to_select = [tracked_hashkey] + [src_rsrc]  + [src_ldts] + [deleted_flag_alias] -%}
 
+{%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
+{%- set tracked_hashkey = datavault4dbt.escape_column_names(tracked_hashkey) -%}
+{%- set deleted_flag_alias = datavault4dbt.escape_column_names(deleted_flag_alias) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+
 {{ log('columns to select: '~final_columns_to_select, false) }}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH 
-
+{#
+    For incremental runs, three different cases can occur: 
+        hashkey disappeared ->  deleted_flag = 1
+        hashkey reappeared  ->  deleted_flag = 0
+        new hashkey appeared -> deleted_flag = 0
+#}
 {%- if is_incremental() and execute %}
 
-    current_status_prep AS (
+    {#
+        First, the current status for each hashkey is queried
+    #}
+    current_status AS (
 
         SELECT
             {{ tracked_hashkey }},
             {{ deleted_flag_alias }},
-            {{ src_rsrc }},
-            ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} desc) as RN
-        FROM {{ this }}
-
-    ),
-
-    current_status AS (
-
-        SELECT 
-            {{ tracked_hashkey }},
-            {{ deleted_flag_alias }},
             {{ src_rsrc }}
-        FROM current_status_prep
-        WHERE RN = 1
+        FROM {{ this }}
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} desc) = 1
 
     ),
 
     {%- for source_model in source_models -%}
 
+    	{#
+            For each source_model, all hashkeys that are not yet in the effectivity satellite, or are currently marked as deleted, get 0 as deleted_flag.
+        #}
         {%- set source_number = source_model.id | string -%}
-        {%- set tracked_hashkey_src = source_model['tracked_hashkey'] -%}
+        {%- set tracked_hashkey_src = datavault4dbt.escape_column_names(source_model['tracked_hashkey']) -%}
 
         new_hashkeys_{{ source_number }} AS (
 
@@ -73,6 +79,10 @@ WITH
 
     {%- endfor -%}
 
+        {#
+            All hashkeys, that currently have deleted_flag = 0, are searched for in all source models. 
+            If they can't be found anywhere, they are marked as deleted_flag = 1.
+        #}
         disappeared_hashkeys AS (
 
             SELECT DISTINCT 
@@ -83,7 +93,7 @@ WITH
             FROM current_status cs
             WHERE 
             {% for source_model in source_models %}
-                {%- set tracked_hashkey_src = source_model['tracked_hashkey'] -%}
+                {%- set tracked_hashkey_src = datavault4dbt.escape_column_names(source_model['tracked_hashkey']) -%}
                 {{ 'AND' if not loop.first }}
                 NOT EXISTS (
                     SELECT 
@@ -99,6 +109,9 @@ WITH
 
     {%- if source_models | length > 1 -%}
 
+        {#
+            If more then one source_model is defined, the new hashkeys of all source_models are unioned.
+        #}
         new_hashkeys_union AS (
 
             {%- for source_model in source_models -%}
@@ -124,6 +137,10 @@ WITH
 
     {%- endif -%}
 
+    {#
+        All hashkeys that have a status change  should be inserted. 
+        That includes new, reappeared, and disappeared hashkeys. 
+    #}
     records_to_insert AS (
 
         SELECT
@@ -140,10 +157,16 @@ WITH
 
 {%- else %}
 
+    {#
+        In initial runs, every available hashkey is marked as deleted_flag = 0.
+    #}
     {% for source_model in source_models %}
 
+        {#
+            When multiple source_models are defined, the hashkeys of all source_models are determined and unioned.
+        #}
         {%- set source_number = source_model.id | string -%}
-        {%- set tracked_hashkey_src = source_model['tracked_hashkey'] -%}
+        {%- set tracked_hashkey_src = datavault4dbt.escape_column_names(source_model['tracked_hashkey']) -%}
 
         hashkeys_{{ source_number }} AS (
 
@@ -176,7 +199,7 @@ WITH
             FROM hashkeys_{{ source_number }}
 
             {%- if not loop.last %}
-            UNION
+            UNION 
             {% endif -%}
 
             {%- endfor -%}
