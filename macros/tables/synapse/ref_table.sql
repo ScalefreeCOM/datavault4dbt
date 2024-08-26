@@ -71,16 +71,11 @@ dates AS (
 {% elif snapshot_relation is not none %}
 
     {%- set date_column = sdts_alias -%}
-    
+
     SELECT 
-        {{ date_column }}
-    FROM (
-        
-        SELECT 
-            {{ sdts_alias }}
-        FROM {{ ref(snapshot_relation) }}
-        WHERE {{ snapshot_trigger_column }} = 1
-    )
+        {{ sdts_alias }}
+    FROM {{ ref(snapshot_relation) }}
+    WHERE {{ snapshot_trigger_column }} = 1
 
 {%- endif %}
 
@@ -91,7 +86,6 @@ dates AS (
         FROM {{ this }}
     )
 {%- endif -%}
-
 
 ),
 
