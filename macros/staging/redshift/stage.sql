@@ -351,9 +351,9 @@ derived_columns AS (
   {%- endif -%}
   {%- for hash_column_key in hashed_columns.keys() -%}
     {%- if hashed_columns[hash_column_key] is mapping -%}
-      {%- do hashed_columns[hash_column_key].update({'columns': get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key]['columns'], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+      {%- do hashed_columns[hash_column_key].update({'columns': datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key]['columns'], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
     {%- elif datavault4dbt.is_list(hashed_columns[hash_column_key]) -%}
-      {%- do hashed_columns.update({hash_column_key: get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+      {%- do hashed_columns.update({hash_column_key: datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
     {%- endif -%}
   {%- endfor -%}
 {%- endif -%}
@@ -616,33 +616,4 @@ columns_to_select AS (
 
 SELECT * FROM columns_to_select
 
-{%- endmacro -%}
-
-{%- macro get_field_hash_by_datatype(hashed_columns, all_datatype_columns, derived_columns=none) -%}
-  {%- set tmp_columns_of_hashed_column = [] -%}
-  {%- if datavault4dbt.is_list(hashed_columns) -%}
-    {%- for hash_column in hashed_columns -%}
-      {%- set ns_hash_column_new = namespace(hash_column_new=hash_column) -%}
-      {%- for column in all_datatype_columns -%}
-        {%- if hash_column|lower == column.name|lower -%}
-          {%- if derived_columns[hash_column] and derived_columns[hash_column] is mapping and derived_columns[hash_column]['datatype']-%}
-            {%- set datatype = derived_columns[hash_column]['datatype'] | string | upper | trim -%}
-          {%- else -%}
-            {%- set datatype = column.data_type | string | upper | trim -%}
-          {%- endif -%}
-          {%- if datatype == 'BOOLEAN' -%}
-            {%- set ns_hash_column_new.hash_column_new = 'DECODE('~hash_column~', true, 1, false, 0)' -%}
-          {%- elif datatype == 'GEOMETRY' -%}
-            {%- set ns_hash_column_new.hash_column_new = 'FNV_HASH(ST_AsBinary('~hash_column~'))' -%}
-          {%- elif datatype == 'SUPER' -%}
-            {%- set ns_hash_column_new.hash_column_new = 'JSON_SERIALIZE('~hash_column~')' -%}
-          {%- endif -%}
-
-        {%- break -%}
-        {%- endif -%}
-      {%- endfor -%}
-      {%- do tmp_columns_of_hashed_column.append(ns_hash_column_new.hash_column_new) -%}
-    {%- endfor -%}
-  {%- endif -%}
-  {{ return(tmp_columns_of_hashed_column) }}
 {%- endmacro -%}
