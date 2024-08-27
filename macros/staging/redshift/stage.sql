@@ -162,7 +162,7 @@
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -178,7 +178,10 @@
 {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
 
 {# Setting the rsrc default datatype and length #}
-{% set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'STRING') %}
+{% set rsrc_default_dtype = datavault4dbt.string_default_dtype(type='rsrc') %}
+
+{# Setting the ldts default datatype #}
+{% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
 
 WITH
 
@@ -206,7 +209,7 @@ source_data AS (
 ldts_rsrc_data AS (
 
   SELECT
-    {{ ldts }} AS {{ load_datetime_col_name}},
+    CAST( {{ ldts }} as {{ ldts_default_dtype }} ) AS {{ load_datetime_col_name }},
     CAST( {{ rsrc }} as {{ rsrc_default_dtype }} ) AS {{ record_source_col_name }}
     {%- if datavault4dbt.is_something(sequence) %},
       {{ sequence }} AS edwSequence
@@ -221,11 +224,11 @@ ldts_rsrc_data AS (
 
   {%- set last_cte = "ldts_rsrc_data" -%}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
-  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) | list -%}
+  {# {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) | list -%} #}
   
   {%- set columns_without_excluded_columns_tmp = [] -%}
   {%- for column in columns_without_excluded_columns -%}
-    {%- if column.name not in derived_column_names -%}
+    {%- if column.name | lower not in derived_column_names | map('lower') -%}
       {%- do columns_without_excluded_columns_tmp.append(column) -%}
     {%- endif -%}
   {%- endfor -%}
@@ -258,7 +261,7 @@ missing_columns AS (
 prejoined_columns AS (
 
   SELECT
-  {% if final_columns_to_select | length > 0 -%}
+  {% if final_columns_to_select | length > 0 -%}  
     {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=datavault4dbt.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
   {% endif %}
   {%- for col, vals in prejoined_columns.items() -%}
@@ -335,6 +338,24 @@ derived_columns AS (
   {%- set last_cte = "derived_columns" -%}
   {%- set final_columns_to_select = final_columns_to_select + derived_column_names %}
 ),
+{%- endif -%}
+
+{# Checking data_type from hashed_columns to enable trim functions on byte datatypes as super / geometry / boolean #}
+
+{%- if execute -%}
+  
+  {%- if datavault4dbt.is_something(derived_columns) %}
+    {%- set derived_columns_dict = derived_columns_with_datatypes_DICT -%}
+  {%- else -%}
+    {%- set derived_columns_dict = [] -%}
+  {%- endif -%}
+  {%- for hash_column_key in hashed_columns.keys() -%}
+    {%- if hashed_columns[hash_column_key] is mapping -%}
+      {%- do hashed_columns[hash_column_key].update({'columns': get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key]['columns'], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+    {%- elif datavault4dbt.is_list(hashed_columns[hash_column_key]) -%}
+      {%- do hashed_columns.update({hash_column_key: get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+    {%- endif -%}
+  {%- endfor -%}
 {%- endif -%}
 
 {%- if datavault4dbt.is_something(hashed_columns) and hashed_columns is mapping %}
@@ -436,9 +457,9 @@ unknown_values AS (
     '{{ unknown_value_rsrc }}' as {{ record_source_col_name }}
 
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%},
-    {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
+    {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column and derived_columns #}
       {%- for column in columns_without_excluded_columns %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='unknown') }}
         {%- if not loop.last %},{% endif -%}
       {%- endfor -%}
 
@@ -469,7 +490,7 @@ unknown_values AS (
 
             {% if column.name|lower == vals['bk']|lower -%}
               {{ log('column found? yes, for column :' ~ column.name , false) }}
-              {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown', alias=col) }}
+              {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='unknown', alias=col) }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -508,7 +529,7 @@ error_values AS (
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%},
     {# Generating Ghost Records for Source Columns #}
       {%- for column in columns_without_excluded_columns %}
-        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error') }}
+        {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='error') }}
         {%- if not loop.last %},{% endif -%}
       {%- endfor -%}
 
@@ -536,7 +557,7 @@ error_values AS (
 
         {% for column in pj_relation_columns -%}
           {% if column.name|lower == vals['bk']|lower -%}
-            {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error', alias=col) -}}
+            {{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='error', alias=col) -}}
           {%- endif -%}
         {%- endfor -%}
           {%- if not loop.last -%},{%- endif %}
@@ -595,4 +616,33 @@ columns_to_select AS (
 
 SELECT * FROM columns_to_select
 
+{%- endmacro -%}
+
+{%- macro get_field_hash_by_datatype(hashed_columns, all_datatype_columns, derived_columns=none) -%}
+  {%- set tmp_columns_of_hashed_column = [] -%}
+  {%- if datavault4dbt.is_list(hashed_columns) -%}
+    {%- for hash_column in hashed_columns -%}
+      {%- set ns_hash_column_new = namespace(hash_column_new=hash_column) -%}
+      {%- for column in all_datatype_columns -%}
+        {%- if hash_column|lower == column.name|lower -%}
+          {%- if derived_columns[hash_column] and derived_columns[hash_column] is mapping and derived_columns[hash_column]['datatype']-%}
+            {%- set datatype = derived_columns[hash_column]['datatype'] | string | upper | trim -%}
+          {%- else -%}
+            {%- set datatype = column.data_type | string | upper | trim -%}
+          {%- endif -%}
+          {%- if datatype == 'BOOLEAN' -%}
+            {%- set ns_hash_column_new.hash_column_new = 'DECODE('~hash_column~', true, 1, false, 0)' -%}
+          {%- elif datatype == 'GEOMETRY' -%}
+            {%- set ns_hash_column_new.hash_column_new = 'FNV_HASH(ST_AsBinary('~hash_column~'))' -%}
+          {%- elif datatype == 'SUPER' -%}
+            {%- set ns_hash_column_new.hash_column_new = 'JSON_SERIALIZE('~hash_column~')' -%}
+          {%- endif -%}
+
+        {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- do tmp_columns_of_hashed_column.append(ns_hash_column_new.hash_column_new) -%}
+    {%- endfor -%}
+  {%- endif -%}
+  {{ return(tmp_columns_of_hashed_column) }}
 {%- endmacro -%}
