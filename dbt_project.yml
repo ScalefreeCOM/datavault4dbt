@@ -66,6 +66,8 @@ vars:
   datavault4dbt.error_value_alt__STRING: 'e'
   datavault4dbt.unknown_value__STRING: '(unknown)'
   datavault4dbt.unknown_value_alt__STRING: 'u'
+  datavault4dbt.unknown_value__numeric: '0'
+  datavault4dbt.error_value__numeric: '-1'
 
 
 # Configuring models
