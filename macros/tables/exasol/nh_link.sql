@@ -5,7 +5,6 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-
 {# If no specific link_hk, fk_columns, or payload are defined for each source, we apply the values set in the link_hashkey, foreign_hashkeys, and payload variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
@@ -19,6 +18,11 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
+{%- if execute -%}
+
+{%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
+    {%- set foreign_hashkeys = [] -%}
+{%- endif -%}
 {%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + payload -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -244,5 +248,7 @@ records_to_insert AS (
 )
 
 SELECT * FROM records_to_insert
+
+{% endif %}
 
 {%- endmacro -%}
