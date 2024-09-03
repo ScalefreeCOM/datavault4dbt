@@ -116,6 +116,11 @@
       {%- set enable_ghost_records = true -%}
     {%- endif -%}
 
+    {# If ldts is empty replace it with the current timestamp #}
+    {%- if datavault4dbt.is_nothing(ldts) -%}
+      {%- set ldts = datavault4dbt.current_timestamp() -%}
+    {%- endif -%}
+    
     {{- adapter.dispatch('stage', 'datavault4dbt')(include_source_columns=include_source_columns,
                                         ldts=ldts,
                                         rsrc=rsrc,

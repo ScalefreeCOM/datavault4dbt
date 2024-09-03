@@ -28,7 +28,7 @@ initial_timestamps AS
         src.* 
     FROM initial_timestamps src
 
-    WHERE src.sdts > (SELECT MAX(t."{{ sdts_alias }}") FROM {{ this }} t)
+    WHERE src.sdts > (SELECT MAX(t.{{ sdts_alias }}) FROM {{ this }} t)
     {%- set last_cte = 'incremental_cte' -%}
 
 )
@@ -37,7 +37,7 @@ initial_timestamps AS
 , enriched_timestamps AS 
 (
     SELECT
-        sdts as "{{ sdts_alias }}",
+        sdts as {{ sdts_alias }},
         TRUE as force_active,
         sdts AS replacement_sdts,
         CONCAT('Snapshot ', DATE_TRUNC('day', TO_DATE(sdts))) AS caption,

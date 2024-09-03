@@ -223,7 +223,7 @@
 {%- endmacro -%}    
 
 
-{%- macro postgres__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro postgres__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
 
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
@@ -244,7 +244,11 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+{%- if is_hashdiff -%}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff') %}
+{%- else -%}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey') %}
+{%- endif -%}
 
 
 {#- If single column to hash -#}
@@ -257,9 +261,9 @@
 {%- if is_hashdiff  and datavault4dbt.is_something(multi_active_key) -%}
     {%- set std_dict = fromjson(datavault4dbt.multi_active_concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key, multi_active_key=multi_active_key, main_hashkey_column=main_hashkey_column)) -%}
 {%- elif is_hashdiff -%}
-    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key,is_hashdiff=is_hashdiff, rtrim_hashdiff=rtrim_hashdiff)) -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key)) -%}
 {%- else -%}
-    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key,is_hashdiff=is_hashdiff, rtrim_hashdiff=rtrim_hashdiff)) -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key)) -%}
 {%- endif -%}
 
     {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
@@ -295,7 +299,7 @@
 {%- endmacro -%}
 
 
-{%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '|') -%}
@@ -306,7 +310,7 @@
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
 
 {#- Select hashing algorithm -#}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
 {{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
@@ -325,9 +329,9 @@
 {%- if is_hashdiff  and datavault4dbt.is_something(multi_active_key) -%}
     {%- set std_dict = fromjson(datavault4dbt.multi_active_concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key, multi_active_key=multi_active_key, main_hashkey_column=main_hashkey_column)) -%}
 {%- elif is_hashdiff -%}
-    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key,is_hashdiff=is_hashdiff, rtrim_hashdiff=rtrim_hashdiff)) -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key)) -%}
 {%- else -%}
-    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key,is_hashdiff=is_hashdiff, rtrim_hashdiff=rtrim_hashdiff)) -%}
+    {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashkey_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key)) -%}
 {%- endif -%}
 
     {%- set standardise_prefix = std_dict['standardise_prefix'] -%}

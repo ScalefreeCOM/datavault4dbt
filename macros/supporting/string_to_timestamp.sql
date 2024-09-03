@@ -24,6 +24,5 @@
 {%- endmacro -%}
 
 {%- macro redshift__string_to_timestamp(format, timestamp) -%}
-    TO_TIMESTAMP('{{ timestamp }}', '{{ format }}')
+    CAST(TO_TIMESTAMP('{{ timestamp }}', '{{ format }}') AS {{ datavault4dbt.timestamp_default_dtype() }})
 {%- endmacro -%}
-
