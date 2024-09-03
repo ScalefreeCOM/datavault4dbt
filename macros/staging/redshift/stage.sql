@@ -338,6 +338,24 @@ derived_columns AS (
 ),
 {%- endif -%}
 
+{# Checking data_type from hashed_columns to enable trim functions on byte datatypes as super / geometry / boolean #}
+
+{%- if execute -%}
+  
+  {%- if datavault4dbt.is_something(derived_columns) %}
+    {%- set derived_columns_dict = derived_columns_with_datatypes_DICT -%}
+  {%- else -%}
+    {%- set derived_columns_dict = [] -%}
+  {%- endif -%}
+  {%- for hash_column_key in hashed_columns.keys() -%}
+    {%- if hashed_columns[hash_column_key] is mapping -%}
+      {%- do hashed_columns[hash_column_key].update({'columns': datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key]['columns'], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+    {%- elif datavault4dbt.is_list(hashed_columns[hash_column_key]) -%}
+      {%- do hashed_columns.update({hash_column_key: datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
 {%- if datavault4dbt.is_something(hashed_columns) and hashed_columns is mapping %}
 {# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
 {% if datavault4dbt.is_something(multi_active_config) %}
