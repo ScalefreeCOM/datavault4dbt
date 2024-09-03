@@ -98,15 +98,22 @@
                                             {'multi_active_key': ['phonetype', 'company'],  This source data comes with two multi-active keys. The combination of those two, the main_hashkey and ldts is unique 
                                              'main_hashkey_column': 'hk_contact_h'}         inside the source system.          
 
+    enable_ghost_records::boolean       If set to true, the stage will be created with ghost records. By default, ghost records are enabled. Optional Parameter
+
   #}
 
 
 
-  {%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none, multi_active_config=none) -%}
+  {%- macro stage(ldts, rsrc, source_model, include_source_columns=true, hashed_columns=none, derived_columns=none, sequence=none, prejoined_columns=none, missing_columns=none, multi_active_config=none, enable_ghost_records=true) -%}
     
     {# If include_source_columns is passed but its empty then it is set with the default value (true) #}
     {%- if include_source_columns is none or include_source_columns == "" -%}
       {%- set include_source_columns = true -%}
+    {%- endif -%}
+
+    {# If enable_ghost_records is passed but its empty then it is set with the default value (true) #}
+    {%- if enable_ghost_records is none or enable_ghost_records == "" -%}
+      {%- set enable_ghost_records = true -%}
     {%- endif -%}
 
     {# If ldts is empty replace it with the current timestamp #}
@@ -123,6 +130,7 @@
                                         sequence=sequence,
                                         prejoined_columns=prejoined_columns,
                                         missing_columns=missing_columns,
-                                        multi_active_config=multi_active_config) -}}
+                                        multi_active_config=multi_active_config,
+                                        enable_ghost_records=enable_ghost_records) -}}
 
 {%- endmacro -%}
