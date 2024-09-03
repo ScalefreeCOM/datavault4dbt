@@ -14,7 +14,7 @@
 {# If no specific hk_column is defined for each source, we apply the values set in the hashkey variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
-{%- if source_models is not mapping -%}
+{%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
     {%- set source_models = {source_models: {}} -%}
 {%- endif -%}
 
@@ -147,7 +147,7 @@ WITH
         SELECT
             {{ hk_column }} AS {{ hashkey }},
             {% for bk in source_model['bk_columns'] -%}
-            {{ bk }},
+            {{ bk }} AS {{ business_keys[loop.index - 1] }},
             {% endfor -%}
 
             {{ src_ldts }},
@@ -188,7 +188,7 @@ source_new_union AS (
         {{ hashkey }},
 
         {% for bk in source_model['bk_columns'] -%}
-            {{ bk }} AS {{ business_keys[loop.index - 1] }},
+            {{ business_keys[loop.index - 1] }},
         {% endfor -%}
 
         {{ src_ldts }},

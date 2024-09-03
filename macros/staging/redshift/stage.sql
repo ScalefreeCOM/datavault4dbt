@@ -37,7 +37,6 @@
 
     {%- set source_relation = source(source_name, source_table_name) -%}
     {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
-
 {%- elif source_model is not mapping and source_model is not none -%}
 
     {{ log('source_model is not mapping and not none: ' ~ source_model, false) }}
@@ -190,7 +189,6 @@ source_data AS (
     SELECT
 
     {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
-
   FROM {{ source_relation }}
 
   {% if is_incremental() %}

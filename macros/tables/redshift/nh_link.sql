@@ -249,7 +249,7 @@ records_to_insert AS (
 
     {%- if is_incremental() %}
     WHERE NOT EXISTS (SELECT 1 FROM distinct_target_hashkeys 
-                WHERE distinct_target_hashkeys.{{ link_hashkey }} = earliest_hk_over_all_sources.{{ link_hashkey }})
+                WHERE distinct_target_hashkeys.{{ link_hashkey }} = {{ ns.last_cte }}.{{ link_hashkey }})
     {% endif %}
 )
 

@@ -141,6 +141,10 @@ WITH
             {{ src_ldts }},
             {{ src_rsrc }}
         FROM {{ ref(source_model.name) }} src
+        WHERE NOT (
+            {% for ref_key in source_model['ref_keys'] -%}
+            {{ ref_key}} IS NULL {%- if not loop.last %} AND {% endif -%}
+            {% endfor -%} )
 
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
@@ -149,7 +153,7 @@ WITH
             {%- if not loop.last -%} OR
             {% endif -%}
         {%- endfor %})
-        WHERE src.{{ src_ldts }} > max.max_ldts
+        AND src.{{ src_ldts }} > max.max_ldts
     {%- endif %}
 
          {%- set ns.last_cte = "src_new_{}".format(source_number) %}
@@ -188,15 +192,16 @@ source_new_union AS (
 
 
 earliest_ref_key_over_all_sources_prep AS (
-{%- for source_model in source_models -%}
+{%- for source_model in source_models %}
     SELECT
         lcte.*,
-        ROW_NUMBER() OVER (PARTITION BY {% for ref_key in source_model['ref_keys'] -%} 
-                                        {{ ref_key}}
+        ROW_NUMBER() OVER (PARTITION BY {% for ref_key in ref_keys -%} 
+                                        {{ ref_key}} {% if not loop.last %}, {% endif -%}
                                         {% endfor -%} 
         ORDER BY {{ src_ldts}}) as rn
-    FROM {{ ns.last_cte }} AS lcte)
-{%- endfor -%},
+    FROM {{ ns.last_cte }} AS lcte
+{% if not loop.last %} UNION {% endif %}
+{%- endfor -%}),
 
 earliest_ref_key_over_all_sources AS (
 
