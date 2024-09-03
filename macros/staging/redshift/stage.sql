@@ -588,7 +588,7 @@ columns_to_select AS (
 
     FROM {{ last_cte }}
 
-{%- if enable_ghost_records -%}
+{%- if enable_ghost_records %}
     UNION ALL
     
     SELECT
