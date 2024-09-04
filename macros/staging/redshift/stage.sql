@@ -447,7 +447,7 @@ hashed_columns AS (
 {%- endif -%}
 {%- endif -%}
 
-{%- if enable_ghost_records -%}
+{%- if enable_ghost_records and not is_incremental() %}
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
 
@@ -606,7 +606,7 @@ columns_to_select AS (
 
     FROM {{ last_cte }}
 
-{%- if enable_ghost_records %}
+{%- if enable_ghost_records and not is_incremental() %}
     UNION ALL
     
     SELECT
