@@ -584,7 +584,6 @@ ghost_records AS (
     SELECT * FROM error_values
 ),
 {%- endif %}
-{%- endif %}
 
 {%- if not include_source_columns -%}
   {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select, exclude_columns_list=source_columns_to_select) %}
