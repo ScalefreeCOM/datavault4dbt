@@ -24,14 +24,18 @@
 
 {%- set datatype = datatype | string | upper | trim -%}
 
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
+
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
+
 {%- if ghost_record_type == 'unknown' -%}
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE'-%} PARSE_DATE('{{date_format}}','{{ beginning_of_all_times_date }}') as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'INT64' %} CAST('0' as INT64) as {{ alias }}
-        {%- elif datatype == 'FLOAT64' %} CAST('0' as FLOAT64) as {{ alias }}
+        {%- elif datatype == 'INT64' %} CAST({{unknown_value__numeric}} as INT64) as {{ alias }}
+        {%- elif datatype == 'FLOAT64' %} CAST({{unknown_value__numeric}} as FLOAT64) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
@@ -39,8 +43,8 @@
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE'-%} PARSE_DATE('{{date_format}}', '{{ end_of_all_times_date }}') as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'INT64' %} CAST('-1' as INT64) as {{ alias }}
-        {%- elif datatype == 'FLOAT64' %} CAST('-1' as FLOAT64) as {{ alias }}
+        {%- elif datatype == 'INT64' %} CAST({{error_value__numeric}} as INT64) as {{ alias }}
+        {%- elif datatype == 'FLOAT64' %} CAST({{error_value__numeric}} as FLOAT64) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
@@ -61,6 +65,9 @@
 {%- set beginning_of_all_times_date = datavault4dbt.beginning_of_all_times_date() -%}
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
 {%- set date_format = datavault4dbt.date_format() -%}
+
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -94,8 +101,8 @@
                 CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- endif -%}
         {%- elif datatype.upper().startswith('CHAR') -%} CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }}) as {{ alias }}
-        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('0' as {{ datatype }}) as {{ alias }}
-        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as {{ alias }}
+        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('{{unknown_value__numeric}}' as {{ datatype }}) as {{ alias }}
+        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('{{unknown_value__numeric}}' as DOUBLE PRECISION) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} FALSE as {{ alias }}
         {%- elif datatype.upper().startswith('HASHTYPE') -%} CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
@@ -122,8 +129,8 @@
                 CAST('{{ error_value__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- endif -%}
         {%- elif datatype.upper().startswith('CHAR') -%} CAST('{{ error_value_alt__STRING }}' as {{ datatype }}) as {{ alias }}
-        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('-1' as {{ datatype }}) as {{ alias }}
-        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as {{ alias }}
+        {%- elif datatype.upper().startswith('DECIMAL') -%} CAST('{{error_value__numeric}}' as {{ datatype }}) as {{ alias }}
+        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('{{error_value__numeric}}' as DOUBLE PRECISION) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} FALSE as {{ alias }}
         {%- elif datatype.upper().startswith('HASHTYPE') -%} CAST('{{ error_value__HASHTYPE }}' as {{ datatype }}) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
@@ -150,6 +157,9 @@
 {%- set beginning_of_all_times_date = datavault4dbt.beginning_of_all_times_date() -%}
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
 {%- set date_format = datavault4dbt.date_format() -%}
+
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -180,7 +190,7 @@
             {%- else -%}
                 CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- endif -%}
-     {%- elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}0 AS {{ alias }}
+     {%- elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}{{unknown_value__numeric}} AS {{ alias }}
      {%- elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
      {%- else %}NULL AS {{ alias }}
      {% endif %}
@@ -205,7 +215,7 @@
             {%- else -%}
                 CAST('{{ error_value__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- endif -%}
-     {% elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}-1 AS {{ alias }}
+     {% elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}{{error_value__numeric}} AS {{ alias }}
      {% elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
      {% else %}NULL AS {{ alias }}
       {% endif %}
@@ -226,7 +236,9 @@
 
 {%- set beginning_of_all_times_date = datavault4dbt.beginning_of_all_times_date() -%}
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
-{%- set date_format = datavault4dbt.date_format() -%}
+
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -263,7 +275,8 @@
                 CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as "{{ alias }}"
             {%- endif -%}
         {%- elif datatype == 'TINYINT' -%} CAST('254' as {{ datatype }}) as "{{ alias }}"
-        {%- elif 'INT' in datatype or datatype == 'DECIMAL' or datatype == 'NUMERIC' or 'MONEY' in datatype or datatype == 'BIT'%} CAST('-1' as {{ datatype }}) as "{{ alias }}"
+        {%- elif 'INT' in datatype or datatype == 'DECIMAL' or datatype == 'NUMERIC' or 'MONEY' in datatype %} CAST('{{unknown_value__numeric}}' as {{ datatype }}) as "{{ alias }}"
+        {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as "{{ alias }}"
         {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ beginning_of_all_times_date }}') as "{{ alias }}"
         {%- elif 'BINARY' in datatype -%}
            CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as "{{ alias }}"
@@ -292,7 +305,7 @@
                 CAST('{{ error_value__STRING }}' as {{ datatype }} ) as "{{ alias }}"
             {%- endif -%}
         {%- elif datatype == 'TINYINT' -%} CAST('255' as {{ datatype }}) as "{{ alias }}"
-        {%- elif 'INT' in datatype or datatype == 'DECIMAL' or datatype == 'NUMERIC' or 'MONEY' in datatype %} CAST('-2' as {{ datatype }}) as "{{ alias }}"
+        {%- elif 'INT' in datatype or datatype == 'DECIMAL' or datatype == 'NUMERIC' or 'MONEY' in datatype %} CAST('{{error_value__numeric}}' as {{ datatype }}) as "{{ alias }}"
         {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as "{{ alias }}"
         {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ end_of_all_times_date }}') as "{{ alias }}"
         {%- elif 'BINARY' in datatype -%}
@@ -320,27 +333,32 @@
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
 {%- set date_format = datavault4dbt.date_format() -%}
 
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
+
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
 {%- set datatype = datatype | string | upper | trim -%}
 
 {%- if ghost_record_type == 'unknown' -%}
        {%- if 'TIMESTAMP' in datatype %}{{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times_date) }} AS {{ alias }}
+        {%- elif datatype == 'TIME WITH TIME ZONE' %} CAST('00:00:01 UTC' as TIMETZ) as {{ alias }}
+        {%- elif datatype == 'TIME WITHOUT TIME ZONE' %} CAST('00:00:01' as TIME) as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
-        {%- elif datatype == 'TEXT' %} CAST('{{unknown_value__STRING}}' as TEXT) as {{ alias }}
-        {%- elif datatype == 'VARCHAR' %} CAST('{{unknown_value__STRING}}' as VARCHAR) as {{ alias }}
-        {%- elif datatype == 'INTEGER' %} CAST('0' as INTEGER) as {{ alias }}
-        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('0' as DOUBLE PRECISION) as {{ alias }}
+        {%- elif 'CHAR' in datatype or datatype == 'TEXT' %} '{{unknown_value__STRING}}' as {{ alias }}        
+        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} CAST({{unknown_value__numeric}} as {{ datatype }}) as {{ alias }}
+        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST({{unknown_value__numeric}} as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
-{%- elif ghost_record_type == 'error' -%}        
+{%- elif ghost_record_type == 'error' -%}
         {%- if 'TIMESTAMP' in datatype %}{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} as {{ alias }}
+        {%- elif datatype == 'TIME WITH TIME ZONE' %} CAST('23:59:59 UTC' as TIMETZ) as {{ alias }}
+        {%- elif datatype == 'TIME WITHOUT TIME ZONE' %} CAST('23:59:59' as TIME) as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
-        {%- elif datatype == 'TEXT' %} CAST('{{error_value__STRING}}' as TEXT) as {{ alias }}
-        {%- elif datatype == 'VARCHAR' %} CAST('{{error_value__STRING}}' as VARCHAR) as {{ alias }}
-        {%- elif datatype == 'INTEGER' %} CAST('-1' as INTEGER) as {{ alias }}
-        {%- elif datatype == 'DOUBLE PRECISION' %} CAST('-1' as DOUBLE PRECISION) as {{ alias }}
+        {%- elif 'CHAR' in datatype or datatype == 'TEXT' %} '{{error_value__STRING}}' as {{ alias }}
+        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} CAST({{error_value__numeric}} as {{ datatype }}) as {{ alias }}
+        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST({{error_value__numeric}} as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
@@ -362,6 +380,9 @@
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
 {%- set date_format = datavault4dbt.date_format() -%}
 
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', -1) -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', -2) -%}
+
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
 
@@ -379,8 +400,8 @@
         {%- elif datatype == 'TIME' %} CAST('00:00:01' as TIME) as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
         {%- elif 'CHAR' in datatype or datatype == 'TEXT' %} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} CAST(0 as {{ datatype }}) as {{ alias }}
-        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST(0 as {{ datatype }}) as {{ alias }}
+        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} CAST({{unknown_value__numeric}} as {{ datatype }}) as {{ alias }}
+        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST({{unknown_value__numeric}} as {{ datatype }}) as {{ alias }}
         {%- elif datatype in ['BOOLEAN', 'BOOL'] %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- elif datatype in ['VARBYTE', 'VARBINARY', 'BINARY VARYING'] %} CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'GEOMETRY' %} CAST(ST_POINT(0, 90) as {{ datatype }}) as {{ alias }}
@@ -392,8 +413,8 @@
         {%- elif datatype == 'TIME' %} CAST('23:59:59' as TIME) as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
         {%- elif 'CHAR' in datatype or datatype == 'TEXT' %} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} CAST(-1 as {{ datatype }}) as {{ alias }}
-        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST(-1 as {{ datatype }}) as {{ alias }}
+        {%- elif datatype in ['INTEGER', 'INT', 'INT2', 'INT4', 'INT8', 'SMALLINT', 'BIGINT', 'REAL', 'FLOAT4', 'DOUBLE PRECISION', 'DOUBLE', 'FLOAT', 'FLOAT8'] %} CAST({{error_value__numeric}} as {{ datatype }}) as {{ alias }}
+        {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype %} CAST({{error_value__numeric}} as {{ datatype }}) as {{ alias }}
         {%- elif datatype in ['BOOLEAN', 'BOOL'] %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- elif datatype in ['VARBYTE', 'VARBINARY', 'BINARY VARYING'] %} CAST('{{ error_value__HASHTYPE }}' as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'GEOMETRY' %} CAST(ST_POINT(0, 90) as {{ datatype }}) as {{ alias }}
