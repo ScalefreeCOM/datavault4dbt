@@ -24,8 +24,8 @@
 
 {%- set datatype = datatype | string | upper | trim -%}
 
-{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '0') -%}
-{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-1') -%}
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -66,8 +66,8 @@
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
 {%- set date_format = datavault4dbt.date_format() -%}
 
-{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '0') -%}
-{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-1') -%}
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -158,8 +158,8 @@
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
 {%- set date_format = datavault4dbt.date_format() -%}
 
-{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '0') -%}
-{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-1') -%}
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -237,8 +237,8 @@
 {%- set beginning_of_all_times_date = datavault4dbt.beginning_of_all_times_date() -%}
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
 
-{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '0') -%}
-{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-1') -%}
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -333,8 +333,8 @@
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
 {%- set date_format = datavault4dbt.date_format() -%}
 
-{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '0') -%}
-{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-1') -%}
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -378,8 +378,8 @@
 {%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
 {%- set date_format = datavault4dbt.date_format() -%}
 
-{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', 0) -%}
-{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', -1) -%}
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', -1) -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', -2) -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
