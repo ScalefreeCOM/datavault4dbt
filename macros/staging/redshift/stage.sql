@@ -9,7 +9,8 @@
                 sequence,
                 prejoined_columns,
                 missing_columns,
-                multi_active_config) -%}
+                multi_active_config,
+                enable_ghost_records) -%}
 
 {% if (source_model is none) and execute %}
 
@@ -147,7 +148,7 @@
 
   {%- set source_columns_to_select = only_include_from_source -%}
 
-{%- endif-%}
+{%- endif -%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
@@ -338,6 +339,24 @@ derived_columns AS (
 ),
 {%- endif -%}
 
+{# Checking data_type from hashed_columns to enable trim functions on byte datatypes as super / geometry / boolean #}
+
+{%- if execute -%}
+  
+  {%- if datavault4dbt.is_something(derived_columns) %}
+    {%- set derived_columns_dict = derived_columns_with_datatypes_DICT -%}
+  {%- else -%}
+    {%- set derived_columns_dict = [] -%}
+  {%- endif -%}
+  {%- for hash_column_key in hashed_columns.keys() -%}
+    {%- if hashed_columns[hash_column_key] is mapping -%}
+      {%- do hashed_columns[hash_column_key].update({'columns': datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key]['columns'], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+    {%- elif datavault4dbt.is_list(hashed_columns[hash_column_key]) -%}
+      {%- do hashed_columns.update({hash_column_key: datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
 {%- if datavault4dbt.is_something(hashed_columns) and hashed_columns is mapping %}
 {# Generating Hashed Columns (hashkeys and hashdiffs for Hubs/Links/Satellites) #}
 {% if datavault4dbt.is_something(multi_active_config) %}
@@ -428,6 +447,7 @@ hashed_columns AS (
 {%- endif -%}
 {%- endif -%}
 
+{%- if enable_ghost_records and not is_incremental() %}
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
 
@@ -571,6 +591,7 @@ ghost_records AS (
     UNION ALL
     SELECT * FROM error_values
 ),
+{%- endif -%}
 
 {%- if not include_source_columns -%}
   {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select, exclude_columns_list=source_columns_to_select) %}
@@ -585,6 +606,7 @@ columns_to_select AS (
 
     FROM {{ last_cte }}
 
+{%- if enable_ghost_records and not is_incremental() %}
     UNION ALL
     
     SELECT
@@ -592,6 +614,7 @@ columns_to_select AS (
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
 
     FROM ghost_records
+{%- endif -%}
 )
 
 SELECT * FROM columns_to_select
