@@ -36,7 +36,7 @@ WITH
         hashkey reappeared  ->  deleted_flag = 0
         new hashkey appeared -> deleted_flag = 0
 #}
-{%- if is_incremental() and execute %}
+{% if is_incremental() and execute %}
 
     {#
         First, the current status for each hashkey is queried
@@ -52,7 +52,7 @@ WITH
 
     ),
 
-    {%- for source_model in source_models -%}
+    {% for source_model in source_models -%}
 
     	{#
             For each source_model, all hashkeys that are not yet in the effectivity satellite, or are currently marked as deleted, get 0 as deleted_flag.
@@ -77,7 +77,7 @@ WITH
 
         ),
 
-    {%- endfor -%}
+    {%- endfor %}
 
         {#
             All hashkeys, that currently have deleted_flag = 0, are searched for in all source models. 
@@ -135,7 +135,7 @@ WITH
 
         ),        
 
-    {%- endif -%}
+    {%- endif %}
 
     {#
         All hashkeys that have a status change  should be inserted. 
@@ -181,9 +181,9 @@ WITH
 
         ),
 
-    {%- endfor -%}
+    {%- endfor %}
 
-    {%- if source_models | length > 1 -%}
+    {% if source_models | length > 1 -%}
 
         hashkeys_union AS (
 
@@ -208,7 +208,7 @@ WITH
 
         ),
 
-    {%- endif -%}
+    {%- endif %}
 
     records_to_insert AS (
 
