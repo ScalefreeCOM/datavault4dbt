@@ -29,13 +29,13 @@ source_data AS (
 
     SELECT
         {% for ref_key in parent_ref_keys %}
-        {{ref_key}},
+        "{{ref_key}}",
         {% endfor %}
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
-        {{ datavault4dbt.print_list(source_cols) }}
+        {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() %}
+    {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
             MAX({{ src_ldts }}) FROM {{ this }}
@@ -50,12 +50,12 @@ latest_entries_in_sat AS (
 
     SELECT
         {% for ref_key in parent_ref_keys %}
-        {{ref_key}},
+        "{{ref_key}}",
         {% endfor %}
         {{ ns.hdiff_alias }}
     FROM 
         {{ this }}
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) = 1  
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} "{{ref_key}}" {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 {%- endif %}
 
@@ -67,17 +67,17 @@ deduplicated_numbered_source AS (
 
     SELECT
     {% for ref_key in parent_ref_keys %}
-    {{ref_key}},
+    "{{ref_key}}",
     {% endfor %}
     {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(source_cols) }}
+    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
     {% if is_incremental() -%}
-    , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) as rn
+    , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} "{{ref_key}}" {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
     FROM source_data
     QUALIFY
         CASE
-            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) THEN FALSE
+            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} "{{ref_key}}" {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) THEN FALSE
             ELSE TRUE
         END
 ),
@@ -90,10 +90,10 @@ records_to_insert AS (
 
     SELECT
     {% for ref_key in parent_ref_keys %}
-    {{ref_key}},
+    "{{ref_key}}",
     {% endfor %}
     {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(source_cols) }}
+    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
     FROM deduplicated_numbered_source
     {%- if is_incremental() %}
     WHERE NOT EXISTS (
