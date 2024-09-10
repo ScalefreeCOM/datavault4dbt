@@ -7,7 +7,8 @@
                 sequence,
                 prejoined_columns,
                 missing_columns,
-                multi_active_config) -%}
+                multi_active_config,
+                enable_ghost_records) -%}
 
 {% if (source_model is none) and execute %}
 
@@ -138,7 +139,7 @@
   {%- endif -%}
   {%- set source_columns_to_select = only_include_from_source -%}
 
-{%- endif-%}
+{%- endif -%}
 
 {%- if not var('datavault4dbt.include_derived_column_input_columns', true) -%}
   {%- set exclude_column_names = exclude_column_names + derived_input_columns -%}
@@ -438,7 +439,7 @@ hashed_columns AS (
 {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
 {%- endif -%}
 
-{% if not is_incremental() %}
+{%- if enable_ghost_records and not is_incremental() %}
 {# Creating Ghost Record for unknown case, based on datatype #}
 unknown_values AS (
   
@@ -597,7 +598,7 @@ columns_to_select AS (
 
     FROM {{ last_cte }}
 
-  {% if not is_incremental() %}
+{%- if enable_ghost_records and not is_incremental() %}
     UNION ALL
     
     SELECT
@@ -605,7 +606,7 @@ columns_to_select AS (
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
 
     FROM ghost_records
-  {% endif %}
+{% endif %}
 )
 
 SELECT * FROM columns_to_select
