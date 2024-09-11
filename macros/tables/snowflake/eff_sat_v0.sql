@@ -131,9 +131,21 @@ WITH
 
             {%- endfor -%}
 
-            {%- set ns.new_hashkeys_cte = 'new_hashkeys_union' -%}
+        ),
 
-        ),        
+        new_hashkeys_union_dedupe AS (
+
+            SELECT
+                {{ tracked_hashkey }},
+                {{ src_rsrc }},
+                {{ src_ldts }},
+                {{ deleted_flag_alias }}
+            FROM new_hashkeys_union_dedupe_prep
+            QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) = 1
+
+            {%- set ns.last_cte = 'new_hashkeys_union_dedupe' -%}
+
+        ),       
 
     {%- endif %}
 
@@ -204,7 +216,20 @@ WITH
 
             {%- endfor -%}
 
-            {%- set ns.last_cte = 'hashkeys_union' -%}
+
+        ),
+
+        hashkey_union_dedupe AS (
+
+            SELECT
+                {{ tracked_hashkey }},
+                {{ src_rsrc }},
+                {{ src_ldts }},
+                {{ deleted_flag_alias }}
+            FROM hashkey_union_dedupe_prep
+            QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) = 1
+
+            {%- set ns.last_cte = 'hashkey_union_dedupe' -%}
 
         ),
 
