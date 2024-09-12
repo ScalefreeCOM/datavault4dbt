@@ -140,7 +140,7 @@ WITH
                 {{ src_rsrc }},
                 {{ src_ldts }},
                 {{ deleted_flag_alias }}
-            FROM new_hashkeys_union_dedupe_prep
+            FROM new_hashkeys_union
             QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) = 1
 
             {%- set ns.last_cte = 'new_hashkeys_union_dedupe' -%}
@@ -226,7 +226,7 @@ WITH
                 {{ src_rsrc }},
                 {{ src_ldts }},
                 {{ deleted_flag_alias }}
-            FROM hashkey_union_dedupe_prep
+            FROM hashkeys_union
             QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) = 1
 
             {%- set ns.last_cte = 'hashkey_union_dedupe' -%}
@@ -251,6 +251,3 @@ SELECT
 FROM records_to_insert
 
 {%- endmacro -%}
-
-
-

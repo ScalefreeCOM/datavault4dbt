@@ -41,20 +41,32 @@ WITH
     {#
         First, the current status for each hashkey is queried
     #}
+
+    current_status_prep AS (
+
+        SELECT
+            {{ tracked_hashkey }},
+            {{ deleted_flag_alias }},
+            {{ src_rsrc }},
+            ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} desc) as rn
+        FROM {{ this }}
+
+    ),
+
     current_status AS (
 
         SELECT
             {{ tracked_hashkey }},
             {{ deleted_flag_alias }},
             {{ src_rsrc }}
-        FROM {{ this }}
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} desc) = 1
+        FROM current_status_prep
+        WHERE rn = 1
 
     ),
 
     {% for source_model in source_models -%}
 
-    	{#
+        {#
             For each source_model, all hashkeys that are not yet in the effectivity satellite, or are currently marked as deleted, get 0 as deleted_flag.
         #}
         {%- set source_number = source_model.id | string -%}
@@ -133,6 +145,18 @@ WITH
 
         ),
 
+        new_hashkeys_union_dedupe_prep AS (
+
+            SELECT
+                {{ tracked_hashkey }},
+                {{ src_rsrc }},
+                {{ src_ldts }},
+                {{ deleted_flag_alias }},
+                ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} desc) as rn
+            FROM new_hashkeys_union
+            
+        ),
+
         new_hashkeys_union_dedupe AS (
 
             SELECT
@@ -141,11 +165,11 @@ WITH
                 {{ src_ldts }},
                 {{ deleted_flag_alias }}
             FROM new_hashkeys_union_dedupe_prep
-            QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) = 1
+            WHERE rn = 1
 
             {%- set ns.last_cte = 'new_hashkeys_union_dedupe' -%}
 
-        ),       
+        ),
 
     {%- endif %}
 
@@ -219,6 +243,18 @@ WITH
 
         ),
 
+        hashkey_union_dedupe_prep AS (
+
+            SELECT
+                {{ tracked_hashkey }},
+                {{ src_rsrc }},
+                {{ src_ldts }},
+                {{ deleted_flag_alias }},
+                ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} desc) as rn
+            FROM hashkeys_union
+
+        ),
+
         hashkey_union_dedupe AS (
 
             SELECT
@@ -227,7 +263,7 @@ WITH
                 {{ src_ldts }},
                 {{ deleted_flag_alias }}
             FROM hashkey_union_dedupe_prep
-            QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) = 1
+            WHERE rn = 1
 
             {%- set ns.last_cte = 'hashkey_union_dedupe' -%}
 
@@ -251,6 +287,3 @@ SELECT
 FROM records_to_insert
 
 {%- endmacro -%}
-
-
-
