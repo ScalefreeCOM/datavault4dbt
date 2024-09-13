@@ -166,7 +166,7 @@ WITH
             FROM new_hashkeys_union_dedupe_prep
             WHERE rn = 1
 
-            {%- set ns.last_cte = 'new_hashkeys_union_dedupe' -%}
+            {%- set ns.new_hashkeys_cte = 'new_hashkeys_union_dedupe' -%}
 
         ),
 

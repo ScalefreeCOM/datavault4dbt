@@ -54,7 +54,7 @@ WITH
 
     {% for source_model in source_models -%}
 
-    	{#
+        {#
             For each source_model, all hashkeys that are not yet in the effectivity satellite, or are currently marked as deleted, get 0 as deleted_flag.
         #}
         {%- set source_number = source_model.id | string -%}
@@ -143,7 +143,7 @@ WITH
             FROM new_hashkeys_union
             QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) = 1
 
-            {%- set ns.last_cte = 'new_hashkeys_union_dedupe' -%}
+            {%- set ns.new_hashkeys_cte = 'new_hashkeys_union_dedupe' -%}
 
         ),       
 
