@@ -76,7 +76,7 @@ WITH
             SELECT DISTINCT 
                 src.{{ tracked_hashkey_src }} AS {{ tracked_hashkey }},
                 src.{{ src_rsrc }},
-                {{ datavault4dbt.current_timestamp() }} as {{ src_ldts }},
+                src.{{ src_ldts }},
                 0 as {{ deleted_flag_alias }}
             FROM {{ ref(source_model.name) }} src
             LEFT JOIN current_status cs
@@ -208,7 +208,7 @@ WITH
             SELECT DISTINCT 
                 src.{{ tracked_hashkey_src }} AS {{ tracked_hashkey }},
                 src.{{ src_rsrc }},
-                {{ datavault4dbt.current_timestamp() }} as {{ src_ldts }},
+                src.{{ src_ldts }},
                 0 as {{ deleted_flag_alias }}
             FROM {{ ref(source_model.name) }} src
 
