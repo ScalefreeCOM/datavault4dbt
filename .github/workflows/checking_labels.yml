@@ -5,7 +5,7 @@ permissions:
 
 on: 
   pull_request:
-    types: [opened, synchronize]
+    types: [labeled]
     branches:
       - main
 
