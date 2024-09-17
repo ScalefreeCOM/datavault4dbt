@@ -47,6 +47,7 @@ current_status AS (
 
     SELECT
         {{ tracked_hashkey }},
+        {{ src_rsrc }},
         {{ is_active_alias }}
     FROM {{ this }}
     QUALIFY 
@@ -69,6 +70,7 @@ current_status AS (
             {{ tracked_hashkey }},
             MIN({{ src_ldts }}) as first_appearance
         FROM source_data
+        WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
         GROUP BY {{ tracked_hashkey }}
 
     ),
@@ -81,6 +83,7 @@ current_status AS (
         SELECT Distinct
             {{ src_ldts }}
         FROM source_data
+        WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
 
     ),
 
@@ -91,7 +94,7 @@ current_status AS (
 
         SELECT 
             hk.{{ tracked_hashkey }},
-            load_dates.{{ src_ldts }}
+            ld.{{ src_ldts }}
         FROM hashkeys hk
         CROSS JOIN load_dates ld
         WHERE ld.{{ src_ldts }} >= hk.first_appearance
