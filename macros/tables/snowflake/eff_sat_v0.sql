@@ -25,8 +25,7 @@ source_data AS (
 
     SELECT
         {{ tracked_hashkey }},
-        {{ src_ldts }},
-        {{ src_rsrc }}
+        {{ src_ldts }}
     FROM {{ source_relation }} src
 
     {%- if is_incremental() and not disable_hwm %}
@@ -47,7 +46,6 @@ current_status AS (
 
     SELECT
         {{ tracked_hashkey }},
-        {{ src_rsrc }},
         {{ is_active_alias }}
     FROM {{ this }}
     QUALIFY 
@@ -111,7 +109,6 @@ current_status AS (
         SELECT
             h.{{ tracked_hashkey }},
             h.{{ src_ldts }},
-            src.{{ src_rsrc }},
             CASE 
                 WHEN src.{{ tracked_hashkey }} IS NULL THEN 0
                 ELSE 1 
@@ -132,7 +129,6 @@ current_status AS (
         SELECT
             is_active.{{ tracked_hashkey }},
             is_active.{{ src_ldts }},
-            is_active.{{ src_rsrc }},
             is_active.{{ is_active_alias }}
 
             {% if is_incremental() -%}
@@ -162,7 +158,6 @@ current_status AS (
 
         SELECT DISTINCT
             src.{{ tracked_hashkey }},
-            src.{{ src_rsrc }},
             src.{{ src_ldts }},
             1 as {{ is_active_alias }}
         FROM source_data src
@@ -194,7 +189,6 @@ current_status AS (
 
         SELECT DISTINCT 
             cs.{{ tracked_hashkey }},
-            cs.{{ src_rsrc }},
             {{ datavault4dbt.current_timestamp() }} as {{ src_ldts }},
             0 as {{ is_active_alias }}
         FROM current_status cs
@@ -219,7 +213,6 @@ records_to_insert AS (
     SELECT
         di.{{ tracked_hashkey }},
         di.{{ src_ldts }},
-        di.{{ src_rsrc }},
         di.{{ is_active_alias }}
     FROM {{ ns.last_cte }} di
 
@@ -247,7 +240,6 @@ records_to_insert AS (
     SELECT
         {{ tracked_hashkey }},
         {{ src_ldts }},
-        {{ src_rsrc }},
         {{ is_active_alias }}
     FROM disappeared_hashkeys
 
@@ -255,7 +247,17 @@ records_to_insert AS (
 
 )
 
-SELECT * FROM records_to_insert
+SELECT * 
+FROM records_to_insert ri
+
+{% if is_incremental() %}
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM {{ this }} t
+    WHERE t.{{ tracked_hashkey }} = ri.{{ tracked_hashkey }}
+        AND t.{{ src_ldts }} = ri.{{ src_ldts }}
+)
+{% endif %}
 
 {%- endmacro -%}
 
