@@ -27,7 +27,7 @@ source_data AS (
         {{ tracked_hashkey }},
         {{ src_ldts }},
         {{ src_rsrc }}
-    FROM {{ ref(source_relation) }} src
+    FROM {{ source_relation }} src
 
     {%- if is_incremental() and not disable_hwm %}
     WHERE src.{{ src_ldts }} > (
