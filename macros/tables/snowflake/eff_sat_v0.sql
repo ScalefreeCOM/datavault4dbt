@@ -94,7 +94,7 @@ current_status AS (
             load_dates.{{ src_ldts }}
         FROM hashkeys hk
         CROSS JOIN load_dates ld
-            ON ld.{{ src_ldts }} >= hk.first_appearance
+        WHERE ld.{{ src_ldts }} >= hk.first_appearance
 
     ),
 
