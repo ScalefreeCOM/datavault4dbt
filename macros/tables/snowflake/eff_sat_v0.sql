@@ -185,22 +185,45 @@ current_status AS (
 #}
 {%- if is_incremental() %}
 
-    disappeared_hashkeys AS (
+    {%- if not source_is_single_batch %}
+        disappeared_hashkeys AS (
 
-        SELECT DISTINCT 
-            cs.{{ tracked_hashkey }},
-            {{ datavault4dbt.current_timestamp() }} as {{ src_ldts }},
-            0 as {{ is_active_alias }}
-        FROM current_status cs
-        WHERE NOT EXISTS (
-            SELECT 
-                1 
-            FROM source_data src
-            WHERE src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
-        )
-        AND cs.{{ is_active_alias }} = 0
+            SELECT DISTINCT 
+                cs.{{ tracked_hashkey }},
+                ldts.min_ldts as {{ src_ldts }},
+                0 as {{ is_active_alias }}
+            FROM current_status cs
+            LEFT JOIN (
+                SELECT 
+                    MIN({{ src_ldts }}) as min_ldts
+                FROM deduplicated_incoming) ldts
+                ON 1 = 1
+            LEFT JOIN deduplicated_incoming src
+                ON src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
+                AND  src.{{ src_ldts }} = ldts.min_ldts
+            WHERE
+                cs.{{ is_active_alias }} = 1
+                AND src.{{ tracked_hashkey }} IS NULL
 
-    ),
+        ),
+    {% else %}
+        disappeared_hashkeys AS (
+
+            SELECT DISTINCT 
+                cs.{{ tracked_hashkey }},
+                {{ datavault4dbt.current_timestamp() }} as {{ src_ldts }},
+                0 as {{ is_active_alias }}
+            FROM current_status cs
+            WHERE NOT EXISTS (
+                SELECT 
+                    1 
+                FROM source_data src
+                WHERE src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
+            )
+            AND cs.{{ is_active_alias }} = 1
+
+        ),
+    {% endif %}
 {%- endif %}
 
 records_to_insert AS (
@@ -229,7 +252,9 @@ records_to_insert AS (
                 FROM current_status
                 WHERE {{ datavault4dbt.multikey(tracked_hashkey, prefix=['current_status', 'di'], condition='=') }}
                     AND {{ datavault4dbt.multikey(is_active_alias, prefix=['current_status', 'di'], condition='=') }}
-                    AND di.rn = 1)
+                    AND di.{{ src_ldts }} = (SELECT MIN({{ src_ldts }}) FROM deduplicated_incoming)
+                )
+            AND di.{{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM {{ this }})
         {% endif %}
 
     {#
