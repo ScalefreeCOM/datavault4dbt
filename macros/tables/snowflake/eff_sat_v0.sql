@@ -27,9 +27,9 @@ source_data AS (
         {{ tracked_hashkey }},
         {{ src_ldts }}
     FROM {{ source_relation }} src
-
+    WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
     {%- if is_incremental() and not disable_hwm %}
-    WHERE src.{{ src_ldts }} > (
+    AND src.{{ src_ldts }} > (
         SELECT
             MAX({{ src_ldts }})
         FROM {{ this }}
@@ -68,7 +68,6 @@ current_status AS (
             {{ tracked_hashkey }},
             MIN({{ src_ldts }}) as first_appearance
         FROM source_data
-        WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
         GROUP BY {{ tracked_hashkey }}
 
     ),
@@ -81,8 +80,7 @@ current_status AS (
         SELECT Distinct
             {{ src_ldts }}
         FROM source_data
-        WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
-
+        
     ),
 
     {#
@@ -204,6 +202,7 @@ current_status AS (
             WHERE
                 cs.{{ is_active_alias }} = 1
                 AND src.{{ tracked_hashkey }} IS NULL
+                AND ldts.min_ldts IS NOT NULL
 
         ),
     {% else %}
@@ -211,9 +210,14 @@ current_status AS (
 
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
-                {{ datavault4dbt.current_timestamp() }} as {{ src_ldts }},
+                ldts.min_ldts as {{ src_ldts }},
                 0 as {{ is_active_alias }}
             FROM current_status cs
+            LEFT JOIN (
+                SELECT 
+                    MIN({{ src_ldts }}) as min_ldts
+                FROM source_data) ldts
+                ON 1 = 1
             WHERE NOT EXISTS (
                 SELECT 
                     1 
@@ -221,6 +225,7 @@ current_status AS (
                 WHERE src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
             )
             AND cs.{{ is_active_alias }} = 1
+            AND ldts.min_ldts IS NOT NULL
 
         ),
     {% endif %}
