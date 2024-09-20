@@ -1,6 +1,7 @@
 {%- macro exasol__eff_sat_v0(source_model, tracked_hashkey, src_ldts, src_rsrc, is_active_alias, source_is_single_batch, disable_hwm) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- set ns = namespace(last_cte= "") -%}
@@ -27,7 +28,7 @@ source_data AS (
         {{ tracked_hashkey }},
         {{ src_ldts }}
     FROM {{ source_relation }} src
-    WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
+    WHERE {{ src_ldts }} NOT IN ({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
     {%- if is_incremental() and not disable_hwm %}
     AND src.{{ src_ldts }} > (
         SELECT
@@ -165,10 +166,10 @@ current_status AS (
             This automatically includes totally new hashkeys, or hashkeys that are currently set to inactive.
         #}
         {% if is_incremental() %}
-            LEFT JOIN current_status cs
-                ON src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
-                AND cs.{{ is_active_alias }} = 1
-            WHERE cs.{{ tracked_hashkey }} IS NULL
+            LEFT JOIN current_status cus
+                ON src.{{ tracked_hashkey }} = cus.{{ tracked_hashkey }}
+                AND cus.{{ is_active_alias }} = 1
+            WHERE cus.{{ tracked_hashkey }} IS NULL
         {% endif %}
 
     ),
@@ -187,20 +188,20 @@ current_status AS (
         disappeared_hashkeys AS (
 
             SELECT DISTINCT 
-                cs.{{ tracked_hashkey }},
+                cus.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
                 0 as {{ is_active_alias }}
-            FROM current_status cs
+            FROM current_status cus
             LEFT JOIN (
                 SELECT 
                     MIN({{ src_ldts }}) as min_ldts
                 FROM deduplicated_incoming) ldts
                 ON 1 = 1
             LEFT JOIN deduplicated_incoming src
-                ON src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
+                ON src.{{ tracked_hashkey }} = cus.{{ tracked_hashkey }}
                 AND  src.{{ src_ldts }} = ldts.min_ldts
             WHERE
-                cs.{{ is_active_alias }} = 1
+                cus.{{ is_active_alias }} = 1
                 AND src.{{ tracked_hashkey }} IS NULL
                 AND ldts.min_ldts IS NOT NULL
 
@@ -209,10 +210,10 @@ current_status AS (
         disappeared_hashkeys AS (
 
             SELECT DISTINCT 
-                cs.{{ tracked_hashkey }},
+                cus.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
                 0 as {{ is_active_alias }}
-            FROM current_status cs
+            FROM current_status cus
             LEFT JOIN (
                 SELECT 
                     MIN({{ src_ldts }}) as min_ldts
@@ -222,9 +223,9 @@ current_status AS (
                 SELECT 
                     1 
                 FROM source_data src
-                WHERE src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
+                WHERE src.{{ tracked_hashkey }} = cus.{{ tracked_hashkey }}
             )
-            AND cs.{{ is_active_alias }} = 1
+            AND cus.{{ is_active_alias }} = 1
             AND ldts.min_ldts IS NOT NULL
 
         ),
