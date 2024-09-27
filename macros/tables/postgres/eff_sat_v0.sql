@@ -146,10 +146,6 @@ current_status AS (
             is_active.{{ is_active_alias }},
             LAG(is_active.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) as lag_is_active
 
-            {% if is_incremental() -%}
-            , ROW_NUMBER() OVER(PARTITION BY is_active.{{ tracked_hashkey }} ORDER BY is_active.{{ src_ldts }}) as rn
-            {%- endif %}
-
         FROM is_active
 
     ),
@@ -159,17 +155,13 @@ current_status AS (
         SELECT
             deduplicated_incoming_prep.{{ tracked_hashkey }},
             deduplicated_incoming_prep.{{ src_ldts }},
-            deduplicated_incoming_prep.{{ is_active_alias }},
-            LAG(deduplicated_incoming_prep.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) as lag_is_active
-
-            {% if is_incremental() -%}
-            , ROW_NUMBER() OVER(PARTITION BY deduplicated_incoming_prep.{{ tracked_hashkey }} ORDER BY deduplicated_incoming_prep.{{ src_ldts }}) as rn
-            {%- endif %}
+            deduplicated_incoming_prep.{{ is_active_alias }}
 
         FROM
             deduplicated_incoming_prep
         WHERE
             deduplicated_incoming_prep.{{ is_active_alias }} != deduplicated_incoming_prep.lag_is_active
+            OR deduplicated_incoming_prep.lag_is_active IS NULL
 
     ),
 

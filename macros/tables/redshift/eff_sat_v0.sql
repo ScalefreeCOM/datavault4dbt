@@ -21,6 +21,16 @@ WITH
 {#
     In all cases, the source model is selected, and optionally a HWM is applied. 
 #}
+{% if is_incremental() and not disable_hwm %}
+max_ldts_prep AS (
+
+    SELECT
+        MAX({{ src_ldts }}) AS max_ldts
+    FROM {{ this }}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+),
+{% endif %}
+
 source_data AS (
 
     SELECT
@@ -30,10 +40,7 @@ source_data AS (
     WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
     {%- if is_incremental() and not disable_hwm %}
     AND src.{{ src_ldts }} > (
-        SELECT
-            MAX({{ src_ldts }})
-        FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+        SELECT max_ldts FROM max_ldts_prep
     )
     {%- endif %}
 ),
@@ -131,23 +138,30 @@ current_status AS (
         The rows are deduplicated on the is_active_alias, to only include status changes. 
         Additionally, a ROW_NUMBER() is calculated in incremental runs, to use it in the next step for comparison against the current status.
     #}
-    deduplicated_incoming AS (
+    deduplicated_incoming_prep AS (
 
         SELECT
             is_active.{{ tracked_hashkey }},
             is_active.{{ src_ldts }},
-            is_active.{{ is_active_alias }}
-
-            {% if is_incremental() -%}
-            , ROW_NUMBER() OVER(PARTITION BY is_active.{{ tracked_hashkey }} ORDER BY is_active.{{ src_ldts }}) as rn
-            {%- endif %}        
+            is_active.{{ is_active_alias }},
+            LAG(is_active.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) as lag_is_active
 
         FROM is_active
-        QUALIFY 
-            CASE 
-                WHEN is_active.{{ is_active_alias }} = LAG(is_active.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
-                ELSE TRUE
-            END
+
+    ),
+
+    deduplicated_incoming AS (
+
+        SELECT
+            deduplicated_incoming_prep.{{ tracked_hashkey }},
+            deduplicated_incoming_prep.{{ src_ldts }},
+            deduplicated_incoming_prep.{{ is_active_alias }}
+
+        FROM
+            deduplicated_incoming_prep
+        WHERE
+            deduplicated_incoming_prep.{{ is_active_alias }} != deduplicated_incoming_prep.lag_is_active
+            OR deduplicated_incoming_prep.lag_is_active IS NULL
 
     ),
 

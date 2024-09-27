@@ -140,13 +140,13 @@ current_status AS (
         SELECT
             deduplicated_incoming_prep.{{ tracked_hashkey }},
             deduplicated_incoming_prep.{{ src_ldts }},
-            deduplicated_incoming_prep.{{ is_active_alias }},
-            deduplicated_incoming_prep.lag_is_active
+            deduplicated_incoming_prep.{{ is_active_alias }}
 
         FROM
             deduplicated_incoming_prep
         WHERE
             deduplicated_incoming_prep.{{ is_active_alias }} != deduplicated_incoming_prep.lag_is_active
+            OR deduplicated_incoming_prep.lag_is_active IS NULL
 
     ),
 
