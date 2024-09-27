@@ -348,13 +348,15 @@ derived_columns AS (
   {%- else -%}
     {%- set derived_columns_dict = [] -%}
   {%- endif -%}
-  {%- for hash_column_key in hashed_columns.keys() -%}
-    {%- if hashed_columns[hash_column_key] is mapping -%}
-      {%- do hashed_columns[hash_column_key].update({'columns': datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key]['columns'], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
-    {%- elif datavault4dbt.is_list(hashed_columns[hash_column_key]) -%}
-      {%- do hashed_columns.update({hash_column_key: datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
-    {%- endif -%}
-  {%- endfor -%}
+  {%- if datavault4dbt.is_something(hashed_columns) %}
+    {%- for hash_column_key in hashed_columns.keys() -%}
+      {%- if hashed_columns[hash_column_key] is mapping -%}
+        {%- do hashed_columns[hash_column_key].update({'columns': datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key]['columns'], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+      {%- elif datavault4dbt.is_list(hashed_columns[hash_column_key]) -%}
+        {%- do hashed_columns.update({hash_column_key: datavault4dbt.get_field_hash_by_datatype(hashed_columns=hashed_columns[hash_column_key], all_datatype_columns=all_columns, derived_columns=derived_columns_dict)}) -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
 {%- endif -%}
 
 {%- if datavault4dbt.is_something(hashed_columns) and hashed_columns is mapping %}
