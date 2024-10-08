@@ -216,7 +216,7 @@ source_new_union AS (
 records_to_insert AS (
 
     SELECT
-    {{ datavault4dbt.print_list(escape_column_names(final_columns_to_select)) }}
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
     FROM {{ ns.last_cte }} cte
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} 
     AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
