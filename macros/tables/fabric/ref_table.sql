@@ -149,7 +149,7 @@ ref_table AS (
         {%- set sat_alias = 's_' + loop.index|string -%}
 
     LEFT JOIN {{ ref(satellite) }} {{ sat_alias }}
-        ON {{ datavault4dbt.multikey(columns=ref_key_cols, prefix=['h', sat_alias], condition='=') }}
+        ON {{ datavault4dbt.multikey(columns=datavault4dbt.escape_column_names(ref_key_cols), prefix=['h', sat_alias], condition='=') }}
         AND  ld.{{ date_column }} BETWEEN {{ sat_alias }}.{{ src_ldts }} AND {{ sat_alias }}.{{ ledts_alias }}
     
     {% endfor %}
