@@ -128,12 +128,12 @@
         {%- if execute -%}
             {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt." ~ type ~ "_default_dtype' to a dictionary, but have not included the adapter you use (synapse) as a key. Applying the default value.") -%}
         {% endif %}
-        {%- set string_default_dtype = "VARCHAR" -%}
+        {%- set string_default_dtype = "NVARCHAR(1000)" -%}
     {% endif %}
 {%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
     {%- set string_default_dtype = global_var -%}
 {%- else -%}        
-    {%- set string_default_dtype = "VARCHAR" -%}
+    {%- set string_default_dtype = "NVARCHAR(1000)" -%}
 {%- endif -%}
 
 {{ return(string_default_dtype) }}
