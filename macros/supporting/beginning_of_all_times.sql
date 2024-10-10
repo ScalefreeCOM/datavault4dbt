@@ -153,3 +153,28 @@
 {{ return(beginning_of_all_times) }}
 
 {%- endmacro -%}
+
+
+{%- macro fabric__beginning_of_all_times() %}
+
+{%- set global_var = var('datavault4dbt.beginning_of_all_times', none) -%}
+{%- set beginning_of_all_times = '' -%}
+
+{%- if global_var is mapping -%}    
+    {%- if 'fabric' in global_var.keys()|map('lower') -%}
+        {% set beginning_of_all_times = global_var['fabric'] %}
+    {%- else -%}
+        {%- if execute -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.beginning_of_all_times' to a dictionary, but have not included the adapter you use (fabric) as a key. Applying the default value.") -%}
+        {% endif %}
+        {%- set beginning_of_all_times = "0001-01-01T00:00:01" -%}
+    {% endif %}
+{%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
+    {%- set beginning_of_all_times = global_var -%}
+{%- else -%}        
+    {%- set beginning_of_all_times = "0001-01-01T00:00:01" -%}
+{%- endif -%}
+
+{{ return(beginning_of_all_times) }}
+
+{%- endmacro -%}  
