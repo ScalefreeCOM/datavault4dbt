@@ -26,3 +26,7 @@
 {%- macro redshift__string_to_timestamp(format, timestamp) -%}
     CAST(TO_TIMESTAMP('{{ timestamp }}', '{{ format }}') AS {{ datavault4dbt.timestamp_default_dtype() }})
 {%- endmacro -%}
+
+{%- macro oracle__string_to_timestamp(format, timestamp) -%}
+    TO_TIMESTAMP('{{ timestamp }}', '{{ format }}')
+{%- endmacro -%}
