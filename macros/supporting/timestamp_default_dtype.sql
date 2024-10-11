@@ -164,7 +164,7 @@
         {% set timestamp_default_dtype = global_var['oracle'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_default_dtype' to a dictionary, but have not included the adapter you use (redshift) as a key. Applying the default value.") -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_default_dtype' to a dictionary, but have not included the adapter you use (Oracle) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set timestamp_default_dtype = "TIMESTAMP WITH TIME ZONE" -%}
     {% endif %}
