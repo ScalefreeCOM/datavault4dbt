@@ -109,3 +109,15 @@ WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{
 {%- endif -%}
 
 {%- endmacro -%}
+    
+{%- macro oracle__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE FROM {{ this }}
+WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{ sdts }} = {{ ref(snapshot_relation) }}.{{ sdts }} AND {{ ref(snapshot_relation) }}.{{ snapshot_trigger_column }}= 1)
+
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}
