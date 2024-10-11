@@ -49,7 +49,7 @@ vars:
   datavault4dbt.default_unknown_rsrc: 'SYSTEM'
   datavault4dbt.default_error_rsrc: 'ERROR'
   datavault4dbt.rsrc_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "oracle":"VARCHAR2(40)"}
-  datavault4dbt.timestamp_default_dtype: {"bigquery":"TIMESTAMP","snowflake":"TIMESTAMP_TZ", "exasol": "TIMESTAMP(3) WITH LOCAL TIME ZONE", "postgres": "TIMESTAMPTZ", "redshift": "TIMESTAMPTZ", "synapse": "datetimeoffset", "oracle":"TIMESTAMP WITH TIME ZONE"}}
+  datavault4dbt.timestamp_default_dtype: {"bigquery":"TIMESTAMP","snowflake":"TIMESTAMP_TZ", "exasol": "TIMESTAMP(3) WITH LOCAL TIME ZONE", "postgres": "TIMESTAMPTZ", "redshift": "TIMESTAMPTZ", "synapse": "datetimeoffset", "oracle":"TIMESTAMP WITH TIME ZONE"}
   datavault4dbt.stg_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "oracle":"VARCHAR2(40)"}
   datavault4dbt.derived_columns_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "oracle":"VARCHAR2(40)"}
 
