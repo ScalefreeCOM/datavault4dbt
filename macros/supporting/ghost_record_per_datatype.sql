@@ -455,13 +455,6 @@
         {%- elif datatype == 'LONG' %} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'NUMBER' %} CAST('{{unknown_value__numeric}}' as NUMBER) as {{ alias }}
         {%- elif datatype == 'FLOAT' %} CAST('{{unknown_value__numeric}}' as FLOAT) as {{ alias }}
-        {%- elif datatype == 'BINARY_FLOAT' %} CAST(NULL as BINARY_FLOAT) as {{ alias }}
-        {%- elif datatype == 'BINARY_DOUBLE' %} CAST(NULL as BINARY_DOUBLE) as {{ alias }}
-        {%- elif datatype == 'RAW' %} CAST(NULL as RAW) as {{ alias }}
-        {%- elif datatype == 'LONG RAW' %} CAST(NULL as LONG RAW) as {{ alias }}
-        {%- elif datatype == 'BLOB' %} CAST(NULL as BLOB) as {{ alias }}
-        {%- elif datatype == 'CLOB' %} CAST(NULL as CLOB) as {{ alias }}
-        {%- elif datatype == 'NCLOB' %} CAST(NULL as NCLOB) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
@@ -475,13 +468,6 @@
         {%- elif datatype == 'LONG' %}  CAST('{{error_value__numeric}}' as LONG) as {{ alias }}
         {%- elif datatype == 'NUMBER' %} CAST('{{error_value__numeric}}' as NUMBER) as {{ alias }}
         {%- elif datatype == 'FLOAT' %} CAST('{{error_value__numeric}}' as FLOAT) as {{ alias }}
-        {%- elif datatype == 'BINARY_FLOAT' %} CAST(NULL as BINARY_FLOAT) as {{ alias }}
-        {%- elif datatype == 'BINARY_DOUBLE' %} CAST(NULL as BINARY_DOUBLE) as {{ alias }}
-        {%- elif datatype == 'RAW' %} CAST(NULL as RAW) as {{ alias }}
-        {%- elif datatype == 'LONG RAW' %} CAST(NULL as LONG RAW) as {{ alias }}
-        {%- elif datatype == 'BLOB' %} CAST(NULL as BLOB) as {{ alias }}
-        {%- elif datatype == 'CLOB' %} CAST(NULL as CLOB) as {{ alias }}
-        {%- elif datatype == 'NCLOB' %} CAST(NULL as NCLOB) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- else -%}
