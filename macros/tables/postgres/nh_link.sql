@@ -23,7 +23,6 @@
 {%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
     {%- set foreign_hashkeys = [] -%}
 {%- endif -%}
-{%- endif -%}
 {%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + payload -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -254,6 +253,6 @@ records_to_insert AS (
 
 SELECT * FROM records_to_insert
 
-
+{%- endif -%}
 
 {%- endmacro -%}
