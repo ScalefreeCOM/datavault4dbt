@@ -1,4 +1,4 @@
-{%- macro default__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg, disable_hwm) -%}
+{%- macro fabric__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg, disable_hwm) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -9,12 +9,8 @@
 {%- set rsrc_error = var('datavault4dbt.default_error_rsrc', 'ERROR') -%}
 
 {# Setting the rsrc and stg_alias default datatype and length #}
-{%- set rsrc_default_dtype = datavault4dbt.string_default_dtype(type='rsrc') -%}
-{%- set stg_default_dtype = datavault4dbt.string_default_dtype(type='stg') -%}
-
-{# Setting the ldts to the default datatype for timestamps #}
-{% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
-
+{%- set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'VARCHAR(400)') -%}
+{%- set stg_default_dtype = var('datavault4dbt.stg_default_dtype', 'VARCHAR(400)') -%}
 {%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
 
 {%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
@@ -29,17 +25,24 @@
 
 {%- set final_columns_to_select = [tracked_hashkey] + [src_ldts] + [src_rsrc] + [src_stg] -%}
 
+{%- set tracked_hashkey = datavault4dbt.escape_column_names(tracked_hashkey) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+{%- set src_stg = datavault4dbt.escape_column_names(src_stg) -%}
+
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
 {% if is_incremental() %}
 
-    distinct_concated_target AS (
-        {%- set concat_columns = [tracked_hashkey, src_ldts, src_rsrc] -%}
+    distinct_target AS ( 
         {{ "\n" }}
         SELECT
-        {{ datavault4dbt.concat_ws(concat_columns) }} as concat
+             {{ tracked_hashkey }}
+            ,{{ src_ldts }}
+            ,{{ src_rsrc }}
         FROM {{ this }}
     ),
     {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
@@ -63,7 +66,7 @@ WITH
                         UNION ALL
                     {% endif -%}
                 {%- endfor -%}
-                )
+                ) sub
             {% endset %}
 
             {%- set rsrc_static_query_source -%}
@@ -110,7 +113,7 @@ WITH
 
             SELECT
                 rsrc_static,
-                MAX({{ src_ldts }}) as max_ldts
+                COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) as max_ldts
             FROM {{ ns.last_cte }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
@@ -128,7 +131,7 @@ WITH
 {%- for source_model in source_models %}
 
     {%- set source_number = source_model.id | string -%}
-    {%- set hk_column = source_model['hk_column'] -%}
+    {%- set hk_column = datavault4dbt.escape_column_names(source_model['hk_column']) -%}
     {%- if ns.has_rsrc_static_defined -%}
         {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number|string] -%}
 
@@ -136,7 +139,7 @@ WITH
         {%- for rsrc_static in rsrc_statics %}
             SELECT DISTINCT
                 {{ hk_column }} AS {{ tracked_hashkey }},
-                CAST({{ src_ldts }} AS {{ldts_default_dtype  }}) AS {{ src_ldts }},
+                {{ src_ldts }},
                 CAST('{{ rsrc_static }}' AS {{ rsrc_default_dtype }} ) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }})  AS {{ src_stg }}
             FROM {{ ref(source_model.name) }} src
@@ -157,13 +160,13 @@ WITH
         src_new_{{ source_number}} AS (
             SELECT DISTINCT
                 {{ hk_column }} AS {{ tracked_hashkey }},
-                CAST({{ src_ldts }} AS {{ldts_default_dtype  }}) AS {{ src_ldts }},
+                {{ src_ldts }},
                 CAST({{ src_rsrc }} AS {{ rsrc_default_dtype }}) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }}) AS {{ src_stg }}
             FROM {{ ref(source_model.name) }} src
             {%- if is_incremental() and source_models | length == 1 and not disable_hwm %}
                 WHERE src.{{ src_ldts }} > (
-            SELECT MAX({{ src_ldts }})
+            SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM {{ this }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
@@ -213,12 +216,20 @@ source_new_union AS (
 records_to_insert AS (
 
     SELECT
-    {{ datavault4dbt.print_list(final_columns_to_select) }}
-    FROM {{ ns.last_cte }}
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
+    FROM {{ ns.last_cte }} cte
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} 
     AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
     {%- if is_incremental() %}
-        AND {{ datavault4dbt.concat_ws(concat_columns) }} NOT IN (SELECT * FROM distinct_concated_target)
+        AND 
+            NOT EXISTS (
+                SELECT 1
+                FROM distinct_target dt
+                WHERE 1=1
+                    AND dt.{{ tracked_hashkey }} = cte.{{ tracked_hashkey }}
+                    AND dt.{{ src_ldts }} = cte.{{ src_ldts }}
+                    AND dt.{{ src_rsrc }} = cte.{{ src_rsrc }}
+            )
     {% endif %}
 )
 
