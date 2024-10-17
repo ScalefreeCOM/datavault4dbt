@@ -755,9 +755,9 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
         {%- set standardise_prefix = "NULLIF(CAST(standard_hash(LISTAGG(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(" -%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'))WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2(32767)),{}) AS {} ".format(multi_active_key,hash_alg,zero_key, alias) -%}
+            {%- set standardise_suffix = ", chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'))WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2(32767)),{}) AS {} ".format(multi_active_key,hash_alg,zero_key, alias) -%}
         {%- else %}
-            {%- set standardise_suffix = "), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'))WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2(32767)),{})".format(multi_active_key,hash_alg,zero_key) -%}
+            {%- set standardise_suffix = ", chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'))WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2(32767)),{})".format(multi_active_key,hash_alg,zero_key) -%}
         {%- endif -%}
 
     {%- endif -%}
