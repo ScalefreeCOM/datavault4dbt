@@ -5,7 +5,7 @@ name: "Checking Labels"
 permissions:
   issues: write
 
-#Will be triggerd if label is added to a pull request with the main branch as target.
+#Will be triggered if label is added to a pull request with the main branch as target.
 on: 
   pull_request:
     types: [labeled]
