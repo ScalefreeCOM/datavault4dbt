@@ -1,20 +1,26 @@
 name: "Checking Labels"
 
+#Workflow to provide needed information for a remote workflow trigger through testing label.
+
 permissions:
   issues: write
 
+#Will be triggerd if label is added to a pull request with the main branch as target.
 on: 
   pull_request:
     types: [labeled]
     branches:
       - main
 
+#Concurrency group to avoid grabbing false artifacts.
 concurrency:
   group: trigger-group
   cancel-in-progress: false
   
-jobs:
-  checking-labels:
+# Checking if the 'testing' label is attached to the Pull Request. 
+# Saving information about testing label and PR ID as artifact for further processing.
+jobs: 
+  checking-labels: 
       runs-on: ubuntu-latest
       steps:
         - name: 
