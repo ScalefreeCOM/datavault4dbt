@@ -177,8 +177,8 @@
 {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
 
-{# Setting the rsrc default datatype and length #}
-{% set rsrc_default_dtype = var('datavault4dbt.rsrc_default_dtype', 'STRING') %}
+{# Setting the rsrc default datatype #}
+{% set rsrc_default_dtype = datavault4dbt.string_default_dtype(type=rsrc) %}
 
 WITH
 
