@@ -33,7 +33,7 @@ jobs:
             owner: ${{ github.repository_owner }}
             repositories: "datavault4dbt,datavault4dbt-ci-cd"
         
-        #Checking if creater of PR is member of internal development team.
+        #Checking if creator of PR is member of internal development team.
         - name: Checking User Identity 
           id: user_affiliation
           uses: tspascoal/get-user-teams-membership@v2
