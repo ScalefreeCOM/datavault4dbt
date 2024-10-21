@@ -14,6 +14,7 @@
 {%- endif -%}
 {%- set source_model_values = fromjson(datavault4dbt.source_model_processing(source_models=source_models, parameters={'link_hk':link_hashkey}, foreign_hashkeys=foreign_hashkeys, payload=payload)) -%}
 {%- set source_models = source_model_values['source_model_list'] -%}
+{#This loop goes through each source_model in the source_models list. For each model, it uses the ref() function to establish dependencies for dbt to track the relationships between models..#}
 {%- for source_model in source_models -%}
     {%- set source_relation = ref(source_model.name) -%}
 {%- endfor -%}
