@@ -1,16 +1,10 @@
 {%- macro snowflake__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm, source_is_single_batch) -%}
-{%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
-
-    {%- if execute -%}
-        {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
-    {%- endif %}
-
-{%- endif -%}
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+{{ log('source_models: '~source_models, false) }}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
@@ -18,13 +12,22 @@
 {%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
     {%- set source_models = {source_models: {}} -%}
 {%- endif -%}
-
 {%- set source_model_values = fromjson(datavault4dbt.source_model_processing(source_models=source_models, parameters={'link_hk':link_hashkey}, foreign_hashkeys=foreign_hashkeys, payload=payload)) -%}
 {%- set source_models = source_model_values['source_model_list'] -%}
+{#This loop goes through each source_model in the source_models list. For each model, it uses the ref() function to establish dependencies for dbt to track the relationships between models..#}
+{%- for source_model in source_models -%}
+    {%- set source_relation = ref(source_model.name) -%}
+{%- endfor -%}
+
+{%- if execute -%}
+
 {%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
+{%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
+    {%- set foreign_hashkeys = [] -%}
+{%- endif -%}
 {%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + payload -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -250,5 +253,7 @@ records_to_insert AS (
 )
 
 SELECT * FROM records_to_insert
+
+{%- endif -%}
 
 {%- endmacro -%}
