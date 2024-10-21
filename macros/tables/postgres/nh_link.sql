@@ -25,7 +25,6 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{%- if execute -%}
 
 {%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
     {%- set foreign_hashkeys = [] -%}
