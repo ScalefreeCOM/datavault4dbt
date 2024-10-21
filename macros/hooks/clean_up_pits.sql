@@ -124,3 +124,14 @@ WHERE snap.{{ sdts }} IS NULL
 {%- endif -%}
 
 {%- endmacro -%}
+
+{%- macro databricks__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE FROM {{ this }} pit
+WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}

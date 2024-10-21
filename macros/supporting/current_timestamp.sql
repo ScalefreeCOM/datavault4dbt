@@ -29,3 +29,7 @@
 {% macro fabric__current_timestamp_in_utc() %}
     {{return('sysutcdatetime()')}}
 {% endmacro %}
+
+{% macro databricks__current_timestamp() %}
+    {{ return('current_timestamp()') }}
+{% endmacro %}
