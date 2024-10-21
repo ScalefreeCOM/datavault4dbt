@@ -15,11 +15,16 @@
 
 {%- set source_model_values = fromjson(datavault4dbt.source_model_processing(source_models=source_models, parameters={'link_hk':link_hashkey}, foreign_hashkeys=foreign_hashkeys, payload=payload)) -%}
 {%- set source_models = source_model_values['source_model_list'] -%}
+{%- for source_model in source_models -%}
+    {%- set source_relation = ref(source_model.name) -%}
+{%- endfor -%}
+
+{%- if execute -%}
+
 {%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{%- if execute -%}
 
 {%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
     {%- set foreign_hashkeys = [] -%}
