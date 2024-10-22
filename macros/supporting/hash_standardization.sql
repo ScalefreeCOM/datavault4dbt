@@ -970,7 +970,6 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
         {%- set standardise_prefix = "NULLIF(CAST(standard_hash(LISTAGG(NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER("-%}
                                       
         {%- if alias is not none -%}
-            --{%- set standardise_suffix = ")), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR(2000),'[ALL_NULL]'), '{}') WITHIN GROUP (ORDER BY {})), {}) AS {} ".format(hash_alg,multi_active_key, zero_key, alias) -%}
             {%- set standardise_suffix = "), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'))WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2(32767)),{}) AS {} ".format(multi_active_key,hash_alg,zero_key, alias) -%}
         {%- else -%}
             {%- set standardise_suffix = "), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'))WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2(32767)),{})".format(multi_active_key,hash_alg,zero_key) -%}
