@@ -581,9 +581,9 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set beginning_of_all_times_date = var('datavault4dbt.beginning_of_all_times_date', '0001-01-01') -%}
-{%- set end_of_all_times_date = var('datavault4dbt.end_of_all_times_date', '8888-12-31') -%}
-{%- set date_format = var('datavault4dbt.date_format', 'YYYY-mm-dd') -%}
+{%- set beginning_of_all_times_date = datavault4dbt.beginning_of_all_times_date() -%}
+{%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
+{%- set date_format = datavault4dbt.date_format() -%}
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
@@ -603,13 +603,6 @@
         {%- elif datatype == 'LONG' %} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'NUMBER' %} CAST('{{unknown_value__numeric}}' as NUMBER) as {{ alias }}
         {%- elif datatype == 'FLOAT' %} CAST('{{unknown_value__numeric}}' as FLOAT) as {{ alias }}
-        {%- elif datatype == 'BINARY_FLOAT' %} CAST(NULL as BINARY_FLOAT) as {{ alias }}
-        {%- elif datatype == 'BINARY_DOUBLE' %} CAST(NULL as BINARY_DOUBLE) as {{ alias }}
-        {%- elif datatype == 'RAW' %} CAST(NULL as RAW) as {{ alias }}
-        {%- elif datatype == 'LONG RAW' %} CAST(NULL as LONG RAW) as {{ alias }}
-        {%- elif datatype == 'BLOB' %} CAST(NULL as BLOB) as {{ alias }}
-        {%- elif datatype == 'CLOB' %} CAST(NULL as CLOB) as {{ alias }}
-        {%- elif datatype == 'NCLOB' %} CAST(NULL as NCLOB) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
@@ -623,13 +616,6 @@
         {%- elif datatype == 'LONG' %}  CAST('{{error_value__numeric}}' as LONG) as {{ alias }}
         {%- elif datatype == 'NUMBER' %} CAST('{{error_value__numeric}}' as NUMBER) as {{ alias }}
         {%- elif datatype == 'FLOAT' %} CAST('{{error_value__numeric}}' as FLOAT) as {{ alias }}
-        {%- elif datatype == 'BINARY_FLOAT' %} CAST(NULL as BINARY_FLOAT) as {{ alias }}
-        {%- elif datatype == 'BINARY_DOUBLE' %} CAST(NULL as BINARY_DOUBLE) as {{ alias }}
-        {%- elif datatype == 'RAW' %} CAST(NULL as RAW) as {{ alias }}
-        {%- elif datatype == 'LONG RAW' %} CAST(NULL as LONG RAW) as {{ alias }}
-        {%- elif datatype == 'BLOB' %} CAST(NULL as BLOB) as {{ alias }}
-        {%- elif datatype == 'CLOB' %} CAST(NULL as CLOB) as {{ alias }}
-        {%- elif datatype == 'NCLOB' %} CAST(NULL as NCLOB) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- else -%}
