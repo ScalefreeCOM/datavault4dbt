@@ -613,7 +613,7 @@
         {%- elif datatype == 'NVARCHAR2' %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'CHAR' %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'NCHAR' %} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'LONG' %}  CAST('{{error_value__numeric}}' as LONG) as {{ alias }}
+        {%- elif datatype == 'LONG' %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'NUMBER' %} CAST('{{error_value__numeric}}' as NUMBER) as {{ alias }}
         {%- elif datatype == 'FLOAT' %} CAST('{{error_value__numeric}}' as FLOAT) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}

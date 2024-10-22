@@ -211,7 +211,7 @@
         {% set end_of_all_times = global_var['oracle'] %}
     {%- else -%}
         {%- if execute -%}
-            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.end_of_all_times' to a dictionary, but have not included the adapter you use (redshift) as a key. Applying the default value.") -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.end_of_all_times' to a dictionary, but have not included the adapter you use (oracle) as a key. Applying the default value.") -%}
         {% endif %}
         {%- set end_of_all_times = "8888-12-31 23:59:59" -%}
     {% endif %}

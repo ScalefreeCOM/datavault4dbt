@@ -205,8 +205,6 @@
 {%- endmacro -%}
 
 
-{%- endmacro -%}
-
 {%- macro oracle__beginning_of_all_times_date() %}
 
 {%- set global_var = var('datavault4dbt.beginning_of_all_times_date', none) -%}
