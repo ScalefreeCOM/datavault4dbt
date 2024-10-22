@@ -573,3 +573,69 @@
     {%- endif %}
 {%- endif -%}
 {%- endmacro -%}
+
+
+{%- macro oracle__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
+
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{%- set beginning_of_all_times_date = var('datavault4dbt.beginning_of_all_times_date', '0001-01-01') -%}
+{%- set end_of_all_times_date = var('datavault4dbt.end_of_all_times_date', '8888-12-31') -%}
+{%- set date_format = var('datavault4dbt.date_format', 'YYYY-mm-dd') -%}
+
+{%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
+{%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
+{%- set datatype = datatype | string | upper | trim -%}
+
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
+
+{%- if ghost_record_type == 'unknown' -%}
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH TIMEZONE' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
+        {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
+        {%- elif datatype == 'VARCHAR'-%} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'VARCHAR2'-%} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'NVARCHAR2' %} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'CHAR' %} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'NCHAR' %} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'LONG' %} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'NUMBER' %} CAST('{{unknown_value__numeric}}' as NUMBER) as {{ alias }}
+        {%- elif datatype == 'FLOAT' %} CAST('{{unknown_value__numeric}}' as FLOAT) as {{ alias }}
+        {%- elif datatype == 'BINARY_FLOAT' %} CAST(NULL as BINARY_FLOAT) as {{ alias }}
+        {%- elif datatype == 'BINARY_DOUBLE' %} CAST(NULL as BINARY_DOUBLE) as {{ alias }}
+        {%- elif datatype == 'RAW' %} CAST(NULL as RAW) as {{ alias }}
+        {%- elif datatype == 'LONG RAW' %} CAST(NULL as LONG RAW) as {{ alias }}
+        {%- elif datatype == 'BLOB' %} CAST(NULL as BLOB) as {{ alias }}
+        {%- elif datatype == 'CLOB' %} CAST(NULL as CLOB) as {{ alias }}
+        {%- elif datatype == 'NCLOB' %} CAST(NULL as NCLOB) as {{ alias }}
+        {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
+        {% endif %}
+{%- elif ghost_record_type == 'error' -%}
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH TIMEZONE' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ alias }}
+        {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
+        {%- elif datatype == 'VARCHAR'-%} CAST('{{error_value__STRING}}' as VARCHAR2(40)) as {{ alias }}
+        {%- elif datatype == 'VARCHAR2'-%} '{{error_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'NVARCHAR2' %} '{{error_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'CHAR' %} '{{error_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'NCHAR' %} '{{error_value__STRING}}' as {{ alias }}
+        {%- elif datatype == 'LONG' %}  CAST('{{error_value__numeric}}' as LONG) as {{ alias }}
+        {%- elif datatype == 'NUMBER' %} CAST('{{error_value__numeric}}' as NUMBER) as {{ alias }}
+        {%- elif datatype == 'FLOAT' %} CAST('{{error_value__numeric}}' as FLOAT) as {{ alias }}
+        {%- elif datatype == 'BINARY_FLOAT' %} CAST(NULL as BINARY_FLOAT) as {{ alias }}
+        {%- elif datatype == 'BINARY_DOUBLE' %} CAST(NULL as BINARY_DOUBLE) as {{ alias }}
+        {%- elif datatype == 'RAW' %} CAST(NULL as RAW) as {{ alias }}
+        {%- elif datatype == 'LONG RAW' %} CAST(NULL as LONG RAW) as {{ alias }}
+        {%- elif datatype == 'BLOB' %} CAST(NULL as BLOB) as {{ alias }}
+        {%- elif datatype == 'CLOB' %} CAST(NULL as CLOB) as {{ alias }}
+        {%- elif datatype == 'NCLOB' %} CAST(NULL as NCLOB) as {{ alias }}
+        {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
+        {% endif %}
+{%- else -%}
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("Invalid Ghost Record Type. Accepted are 'unknown' and 'error'.") }}
+    {%- endif %}
+{%- endif -%}
+
+{%- endmacro -%}
