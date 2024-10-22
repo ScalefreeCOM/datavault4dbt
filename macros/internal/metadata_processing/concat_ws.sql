@@ -34,3 +34,12 @@
     {%- endfor -%}
 
 {%- endmacro -%}
+
+{%- macro oracle__concat_ws(string_list, separator="|") -%}
+
+    {%- for str in string_list -%}
+        {{- "{}".format(str) -}}
+        {{- "|| '{}' ||".format(separator) if not loop.last -}}
+    {%- endfor -%}
+
+{%- endmacro -%}
