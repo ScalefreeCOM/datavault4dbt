@@ -198,3 +198,28 @@
 
 {{ return(end_of_all_times_date) }}
 {%- endmacro -%}
+
+
+{%- macro oracle__end_of_all_times_date() %}
+
+{%- set global_var = var('datavault4dbt.end_of_all_times_date', none) -%}
+{%- set end_of_all_times_date = '' -%}
+
+{%- if global_var is mapping -%}
+    {%- if 'oracle' in global_var.keys()|map('lower') -%}
+        {% set end_of_all_times_date = global_var['oracle'] %}
+    {%- else -%}
+        {%- if execute -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.end_of_all_times_date' to a dictionary, but have not included the adapter you use (oracle) as a key. Applying the default value.") -%}
+        {% endif %}
+        {%- set end_of_all_times_date = "8888-12-31" -%}
+    {% endif %}
+{%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
+    {%- set end_of_all_times_date = global_var -%}
+{%- else -%}
+    {%- set end_of_all_times_date = "8888-12-31" -%}
+{%- endif -%}
+
+{{ return(end_of_all_times_date) }}
+
+{%- endmacro -%}
