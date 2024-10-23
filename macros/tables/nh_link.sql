@@ -82,8 +82,7 @@
 
 #}
 
-{%- macro nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts=none, src_rsrc=none, disable_hwm=false, source_is_single_batch=false) -%}
-
+{%- macro nh_link(link_hashkey, payload, source_models, foreign_hashkeys=none, src_ldts=none, src_rsrc=none, disable_hwm=false, source_is_single_batch=false) -%}
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
