@@ -192,6 +192,7 @@
             {%- endif -%}
      {%- elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}{{unknown_value__numeric}} AS {{ alias }}
      {%- elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
+     {%- elif datatype in ['ARRAY', 'VARIANT'] %} CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) AS {{ alias }}
      {%- else %}NULL AS {{ alias }}
      {% endif %}
 {%- elif ghost_record_type == 'error' -%}
@@ -199,7 +200,7 @@
      {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
      {%- elif datatype in ['STRING','VARCHAR','TEXT'] %}'{{ error_value__STRING }}' AS {{ alias }}
      {%- elif datatype == 'CHAR' %}CAST('{{ error_value_alt__STRING }}' as {{ datatype }} ) as {{ alias }}
-     {%- elif datatype.upper().startswith('VARCHAR(')  or datatype.upper().startswith('CHAR(') -%}
+     {%- elif datatype.upper().startswith('VARCHAR(') or datatype.upper().startswith('CHAR(') -%}
             {%- if col_size is not none -%}
                 {%- set error_dtype_length = col_size | int -%}
                 {%- if '(' not in datatype -%}
@@ -217,8 +218,9 @@
             {%- endif -%}
      {% elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}{{error_value__numeric}} AS {{ alias }}
      {% elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
+     {%- elif datatype in ['ARRAY', 'VARIANT'] %} CAST('{{ error_value__STRING }}' as {{ datatype }} ) AS {{ alias }}
      {% else %}NULL AS {{ alias }}
-      {% endif %}
+     {% endif %}
 {%- else -%}
     {%- if execute -%}
      {{ exceptions.raise_compiler_error("Invalid Ghost Record Type. Accepted are 'unknown' and 'error'.") }}
