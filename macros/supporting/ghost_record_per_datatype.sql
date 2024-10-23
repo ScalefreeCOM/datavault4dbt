@@ -523,3 +523,53 @@
 
 {%- endif -%}
 {%- endmacro -%}
+
+
+{%- macro databricks__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
+
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{%- set beginning_of_all_times_date = datavault4dbt.beginning_of_all_times_date() -%}
+{%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
+{%- set date_format = datavault4dbt.date_format() -%}
+
+{%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
+{%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', -1) -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', -2) -%}
+
+{%- set hash = datavault4dbt.hash_method() -%}
+{%- set hash_default_values =  datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set unknown_value__HASHTYPE = hash_default_values['unknown_key'] -%}
+{%- set error_value__HASHTYPE = hash_default_values['error_key'] -%}
+
+{%- set datatype = datatype | string | upper | trim -%}
+
+{%- if ghost_record_type == 'unknown' -%}
+        {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} as {{ alias }}
+        {%- elif datatype == 'DATE'%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
+        {%- elif datatype == 'STRING' %} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif datatype in ['INT', 'SMALLINT', 'TINYINT', 'BIGINT', 'DOUBLE', 'FLOAT'] %} CAST('{{unknown_value__numeric}}' as {{ datatype}}) as {{ alias }}
+        {%- elif datatype.upper().startswith('DECIMAL') %} CAST('{{unknown_value__numeric}}' as DECIMAL) as {{ alias }}
+        {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
+        {%- elif datatype == 'BINARY' %} CAST('{{ unknown_value__HASHTYPE }}') as {{ alias }}
+        {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
+        {% endif %}
+{%- elif ghost_record_type == 'error' -%}
+        {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} as {{ alias }}
+        {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
+        {%- elif datatype == 'STRING' %} '{{error_value__STRING}}' as {{ alias }}
+        {%- elif datatype in ['INT', 'SMALLINT', 'TINYINT', 'BIGINT', 'DOUBLE', 'FLOAT'] %} CAST('{{error_value__numeric}}' as {{ datatype}}) as {{ alias }}
+        {%- elif datatype.upper().startswith('DECIMAL') %} CAST('{{error_value__numeric}}' as DECIMAL) as {{ alias }}
+        {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
+        {%- elif datatype == 'BINARY' %} CAST('{{ error_value__HASHTYPE }}') as {{ alias }}
+        {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
+        {% endif %}
+{%- else -%}
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("Invalid Ghost Record Type. Accepted are 'unknown' and 'error'.") }}
+    {%- endif %}
+{%- endif -%}
+{%- endmacro -%}
