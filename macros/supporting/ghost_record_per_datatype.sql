@@ -170,7 +170,9 @@
 {%- set alias = datavault4dbt.escape_column_names(alias) -%}
 
 {%- if ghost_record_type == 'unknown' -%}
-     {%- if datatype in ['TIMESTAMP_NTZ','TIMESTAMP'] %}{{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} AS {{ alias }}
+     {%- if datatype in ['TIMESTAMP_NTZ'] %} TO_TIMESTAMP_NTZ( '{{ beginning_of_all_times}}', '{{ timestamp_format}}') AS {{ alias }}
+     {%- elif datatype in ['TIMESTAMP_TZ'] %} TO_TIMESTAMP_TZ( '{{ beginning_of_all_times}}', '{{ timestamp_format}}') AS {{ alias }}
+     {%- elif datatype in ['TIMESTAMP_LTZ'] %} TO_TIMESTAMP_LTZ( '{{ beginning_of_all_times}}', '{{ timestamp_format}}') AS {{ alias }}
      {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
      {%- elif datatype in ['STRING', 'VARCHAR','TEXT'] %}'{{ unknown_value__STRING }}' AS {{ alias }}
      {%- elif datatype == 'CHAR' %}CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }} ) as {{ alias }}
@@ -190,13 +192,18 @@
             {%- else -%}
                 CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- endif -%}
-     {%- elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}{{unknown_value__numeric}} AS {{ alias }}
+     {%- elif datatype in ['INT','FLOAT', 'INTEGER', 'BIGINT', 'SMALLINT', 'TINYINT', 'BYTEINT'] %}{{unknown_value__numeric}} AS {{ alias }}
+     {%- elif datatype.startswith('NUMBER') %} {{unknown_value__numeric}} AS {{ alias }}
+     {%- elif datatype.startswith('NUMERIC') %} {{unknown_value__numeric}} AS {{ alias }}
+     {%- elif datatype.startswith('DECIMAL') %} {{unknown_value__numeric}} AS {{ alias }}
      {%- elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
      {%- elif datatype in ['ARRAY', 'VARIANT'] %} CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) AS {{ alias }}
      {%- else %}NULL AS {{ alias }}
      {% endif %}
 {%- elif ghost_record_type == 'error' -%}
-     {%- if datatype in ['TIMESTAMP_NTZ','TIMESTAMP'] %}{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} AS {{ alias }}
+     {%- if datatype in ['TIMESTAMP_NTZ'] %} TO_TIMESTAMP_NTZ( '{{ end_of_all_times}}', '{{ timestamp_format}}') AS {{ alias }}
+     {%- elif datatype in ['TIMESTAMP_TZ'] %} TO_TIMESTAMP_TZ( '{{ end_of_all_times}}', '{{ timestamp_format}}') AS {{ alias }}
+     {%- elif datatype in ['TIMESTAMP_LTZ'] %} TO_TIMESTAMP_LTZ( '{{ end_of_all_times}}', '{{ timestamp_format}}') AS {{ alias }}
      {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
      {%- elif datatype in ['STRING','VARCHAR','TEXT'] %}'{{ error_value__STRING }}' AS {{ alias }}
      {%- elif datatype == 'CHAR' %}CAST('{{ error_value_alt__STRING }}' as {{ datatype }} ) as {{ alias }}
@@ -216,11 +223,14 @@
             {%- else -%}
                 CAST('{{ error_value__STRING }}' as {{ datatype }} ) as {{ alias }}
             {%- endif -%}
-     {% elif datatype in ['NUMBER','INT','FLOAT','DECIMAL'] %}{{error_value__numeric}} AS {{ alias }}
+     {%- elif datatype in ['INT','FLOAT', 'INTEGER', 'BIGINT', 'SMALLINT', 'TINYINT', 'BYTEINT'] %}{{error_value__numeric}} AS {{ alias }}
+     {%- elif datatype.startswith('NUMBER') %} {{error_value__numeric}} AS {{ alias }}
+     {%- elif datatype.startswith('NUMERIC') %} {{error_value__numeric}} AS {{ alias }}
+     {%- elif datatype.startswith('DECIMAL') %} {{error_value__numeric}} AS {{ alias }}
      {% elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
      {%- elif datatype in ['ARRAY', 'VARIANT'] %} CAST('{{ error_value__STRING }}' as {{ datatype }} ) AS {{ alias }}
      {% else %}NULL AS {{ alias }}
-     {% endif %}
+      {% endif %}
 {%- else -%}
     {%- if execute -%}
      {{ exceptions.raise_compiler_error("Invalid Ghost Record Type. Accepted are 'unknown' and 'error'.") }}
