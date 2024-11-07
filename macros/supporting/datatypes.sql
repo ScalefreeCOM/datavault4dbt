@@ -9,3 +9,7 @@
 {%- macro synapse__type_timestamp() -%}
     datetime2
 {%- endmacro -%}
+
+{%- macro fabric__type_timestamp() -%}
+    datetime2(6)
+{%- endmacro -%}

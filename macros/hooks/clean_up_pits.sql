@@ -109,3 +109,42 @@ WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{
 {%- endif -%}
 
 {%- endmacro -%}
+
+
+{%- macro fabric__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE pit
+FROM {{ this }} AS pit 
+LEFT JOIN {{ ref(snapshot_relation) }} AS snap
+ON pit.{{ sdts }} = snap.{{ sdts }} AND {{ snapshot_trigger_column }}=1
+WHERE snap.{{ sdts }} IS NULL
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}
+
+{%- macro databricks__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE FROM {{ this }} pit
+WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}
+
+
+{%- macro oracle__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE FROM {{ this }}
+WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{ sdts }} = {{ ref(snapshot_relation) }}.{{ sdts }} AND {{ ref(snapshot_relation) }}.{{ snapshot_trigger_column }}= 1)
+
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}

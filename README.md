@@ -60,6 +60,9 @@ Currently supported platforms are:
 * PostgreSQL
 * Amazon Redshift
 * Microsoft Azure Synapse
+* Microsoft Fabric
+* Databricks
+* Oracle
 
 We are working continuously at high pressure to adapt the package for large variety of different platforms. In the future, the package will hopefully be available for SQL Server, Oracle and many more.
 

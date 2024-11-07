@@ -1,16 +1,20 @@
 name: "Trigger remote Workflow"
 
+#Workflow to trigger cicd workflow after checking trigger access.
+
 permissions:
   issues: write
   id-token: write
   contents: write
 
-on:
+#Running after the 'Checking Labels' workflow. 
+on: 
   workflow_run:
     workflows: [Checking Labels]
     types: [completed]
 
-concurrency:
+#Concurrency group to avoid grabbing false artifacts.
+concurrency: 
   group: trigger-group
   cancel-in-progress: false
 
@@ -19,7 +23,8 @@ jobs:
       runs-on: ubuntu-latest
       steps:  
       
-        - name: Generate token
+        #generating token to trigger the pipeline in cicd repository.
+        - name: Generate token 
           id: generate_token
           uses: actions/create-github-app-token@v1
           with:
@@ -28,7 +33,8 @@ jobs:
             owner: ${{ github.repository_owner }}
             repositories: "datavault4dbt,datavault4dbt-ci-cd"
         
-        - name: Checking User Identity
+        #Checking if creator of PR is member of internal development team.
+        - name: Checking User Identity 
           id: user_affiliation
           uses: tspascoal/get-user-teams-membership@v2
           with:
@@ -36,10 +42,12 @@ jobs:
             username: ${{ github.actor }}
             team: 'Datavault4dbt Devs'
 
-        - name: Outpu Team Membership
+        #Team Membership output for debugging
+        - name: Output Team Membership 
           run: echo "Member of datavault4dbt dev team; ${{ steps.user_affiliation.outputs.isTeamMember }}"
         
-        - name: downloading-artifacts
+        #Grabbing the artifacts of 'checking labels' workflow.
+        - name: downloading-artifacts 
           id: download-artifact
           uses: dawidd6/action-download-artifact@v6
           with:
@@ -49,7 +57,7 @@ jobs:
             skip_unpack: false
             path: ./
             allow_forks: true
-        
+
         - name: extract-artifact
           id: extract-artifact
           run: |
@@ -61,12 +69,13 @@ jobs:
         - name: Checkout
           uses: actions/checkout@v3
               
-        - name: Create a new branch based on the PR ID
+        - name: Create a new branch based on the PR ID 
           run: |
             git fetch origin pull/${{ steps.extract-artifact.outputs.prid }}/head:pull/${{ steps.extract-artifact.outputs.prid }}
             git push -u origin pull/${{ steps.extract-artifact.outputs.prid }}
 
-        #Will only be triggered if external PRs is approved before
+        #Trigger the workflow if creator of PR is not a member of development team.
+        #Will only be triggered if external PRs is approved before.
         - name: Call Workflow
           if: ${{ steps.user_affiliation.outputs.isTeamMember == 'false'}}
           env: 
@@ -79,6 +88,7 @@ jobs:
             /repos/ScalefreeCOM/datavault4dbt-ci-cd/actions/workflows/reusable-workflow.yml/dispatches \
             -f "ref=main" -f "inputs[pr_branch]=pull/${{ steps.extract-artifact.outputs.prid }}" -f "inputs[all_env]=true" -f "inputs[pr_id]=${{ steps.extract-artifact.outputs.prid }}" -f "inputs[remote-triggered]=true"
 
+        #Trigger workflow if member of development team added testing label to PR.
         - name: trigger-labeled-workflow
           if: ${{ steps.extract-artifact.outputs.labels == 'true' && steps.user_affiliation.outputs.isTeamMember == 'true'}}
           env: 

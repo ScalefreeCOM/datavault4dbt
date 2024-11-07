@@ -126,6 +126,8 @@
 
 {{ return(end_of_all_times) }}
 {%- endmacro -%}
+
+
 {%- macro postgres__end_of_all_times() %}
 
 {%- set global_var = var('datavault4dbt.end_of_all_times', none) -%}
@@ -147,4 +149,77 @@
 {%- endif -%}
 
 {{ return(end_of_all_times) }}    
+{%- endmacro -%}
+
+
+{%- macro fabric__end_of_all_times() %}
+
+{%- set global_var = var('datavault4dbt.end_of_all_times', none) -%}
+{%- set end_of_all_times = '' -%}
+
+{%- if global_var is mapping -%}
+    {%- if 'fabric' in global_var.keys()|map('lower') -%}
+        {% set end_of_all_times = global_var['fabric'] %}
+    {%- else -%}
+        {%- if execute -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.end_of_all_times' to a dictionary, but have not included the adapter you use (fabric) as a key. Applying the default value.") -%}
+        {% endif %}
+        {%- set end_of_all_times = "8888-12-31T23:59:59" -%}
+    {% endif %}
+{%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
+    {%- set end_of_all_times = global_var -%}
+{%- else -%}        
+    {%- set end_of_all_times = "8888-12-31T23:59:59" -%}
+{%- endif -%}
+
+{{ return(end_of_all_times) }}
+{%- endmacro -%}
+
+
+{%- macro databricks__end_of_all_times() %}
+
+{%- set global_var = var('datavault4dbt.end_of_all_times', none) -%}
+{%- set end_of_all_times = '' -%}
+
+{%- if global_var is mapping -%}
+    {%- if 'databricks' in global_var.keys()|map('lower') -%}
+        {% set end_of_all_times = global_var['databricks'] %}
+    {%- else -%}
+        {%- if execute -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.end_of_all_times' to a dictionary, but have not included the adapter you use (databricks) as a key. Applying the default value.") -%}
+        {% endif %}
+        {%- set end_of_all_times = "8888-12-31 23:59:59" -%}
+    {% endif %}
+{%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
+    {%- set end_of_all_times = global_var -%}
+{%- else -%}
+    {%- set end_of_all_times = "8888-12-31 23:59:59" -%}
+{%- endif -%}
+
+{{ return(end_of_all_times) }}
+
+{%- endmacro -%}
+
+
+{%- macro oracle__end_of_all_times() %}
+
+{%- set global_var = var('datavault4dbt.end_of_all_times', none) -%}
+{%- set end_of_all_times = '' -%}
+
+{%- if global_var is mapping -%}
+    {%- if 'oracle' in global_var.keys()|map('lower') -%}
+        {% set end_of_all_times = global_var['oracle'] %}
+    {%- else -%}
+        {%- if execute -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.end_of_all_times' to a dictionary, but have not included the adapter you use (oracle) as a key. Applying the default value.") -%}
+        {% endif %}
+        {%- set end_of_all_times = "8888-12-31 23:59:59" -%}
+    {% endif %}
+{%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
+    {%- set end_of_all_times = global_var -%}
+{%- else -%}
+    {%- set end_of_all_times = "8888-12-31 23:59:59" -%}
+{%- endif -%}
+
+{{ return(end_of_all_times) }}
 {%- endmacro -%}
