@@ -517,17 +517,19 @@
 {%- set concat_string = var('concat_string', '|') -%}
 {%- set quote = var('quote', '"') -%}
 {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set clob_hashing =  var('datavault4dbt.clob_hashing', FALSE) -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
 
 {#- Select hashing algorithm -#}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR2(40)') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'NVARCHAR2(40)') -%}
 {{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
+
 
 {%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
 
@@ -538,7 +540,9 @@
 
 {%- set all_null = [] -%}
 
-{%- if is_hashdiff  and datavault4dbt.is_something(multi_active_key) -%}
+{%- if is_hashdiff and datavault4dbt.is_something(multi_active_key) and clob_hashing -%}
+    {%- set std_dict = fromjson(datavault4dbt.multi_active_concattenated_standardise_CLOB(case_sensitive=hashdiff_input_case_sensitive, hash_alg='2', datatype=hash_dtype, alias=alias, zero_key=unknown_key, multi_active_key=multi_active_key, main_hashkey_column=main_hashkey_column)) -%}
+{%- elif is_hashdiff and datavault4dbt.is_something(multi_active_key) and not datavault4dbt.clob_hashing -%}
     {%- set std_dict = fromjson(datavault4dbt.multi_active_concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key, multi_active_key=multi_active_key, main_hashkey_column=main_hashkey_column)) -%}
 {%- elif is_hashdiff -%}
     {%- set std_dict = fromjson(datavault4dbt.concattenated_standardise(case_sensitive=hashdiff_input_case_sensitive, hash_alg=hash_alg, datatype=hash_dtype, alias=alias, zero_key=unknown_key)) -%}
