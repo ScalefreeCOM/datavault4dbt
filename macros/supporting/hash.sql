@@ -523,7 +523,7 @@
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
 
 {#- Select hashing algorithm -#}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'NVARCHAR2(40)') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR2(40)') -%}
 {{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
