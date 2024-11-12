@@ -1,20 +1,21 @@
 # datavault4dbt by [Scalefree International GmbH](https://www.scalefree.com)
 
-<img src="https://user-images.githubusercontent.com/81677440/195860893-435b5faa-71f1-4e01-969d-3593a808daa8.png">
+[<img src="https://user-images.githubusercontent.com/81677440/195860893-435b5faa-71f1-4e01-969d-3593a808daa8.png">](https://www.datavault4dbt.com/)
 
 
 ---
 
 ### Included Macros
-- Staging Area (For Hashing, prejoins and ghost records)
-- Hubs, Links & Satellites (allowing multiple deltas)
-- Non-Historized Links and Satellites
-- Multi-Active Satellites
-- Virtualized End-Dating (in Satellites)
-- Reference Hubs, - Satellites, and - Tables
-- PIT Tables
-  - Hook for Cleaning up PITs 
-- Snapshot Control
+- [Staging Area (For Hashing, prejoins and ghost records)](https://www.datavault4dbt.com/documentation/macro-instructions/staging/)
+- [Hubs](https://www.datavault4dbt.com/documentation/macro-instructions/hubs/standard-hub/), [Links](https://www.datavault4dbt.com/documentation/macro-instructions/links/standard-link/) & [Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/standard-satellite/standard-satellite-v0/) (allowing multiple deltas)
+- [Non-Historized Links](https://www.datavault4dbt.com/documentation/macro-instructions/links/non-historized-link/) and [Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/non-historized-satellite/)
+- [Multi-Active Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/multi-active-satellite/multi-active-satellite-v0/)
+- [Effectivity](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/effectivity-satellite/) and [Record Tracking Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/record-tracking-satellite/)
+- [Virtualized End-Dating (in Satellites)](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/standard-satellite/standard-satellite-v1/)
+- [Reference Hubs](https://www.datavault4dbt.com/documentation/macro-instructions/reference-data/reference-hub/), [- Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/reference-data/reference-satellite/reference-satellite-v0/), and [- Tables](https://www.datavault4dbt.com/documentation/macro-instructions/reference-data/reference-tables/)
+- [PIT Tables](https://www.datavault4dbt.com/documentation/macro-instructions/business-vault/pit/)
+  - [Hook for Cleaning up PITs](https://www.datavault4dbt.com/documentation/macro-instructions/business-vault/pit/hook-cleanup-pits/) 
+- [Snapshot Control](https://www.datavault4dbt.com/documentation/macro-instructions/business-vault/snapshot-control/snapshot-control-v0/)
 
 ### Features
 With datavault4dbt you will get a lot of awesome features, including:
@@ -36,6 +37,7 @@ To use the macros efficiently, there are a few prerequisites you need to provide
 <img src="https://www.getdbt.com/ui/img/logos/dbt-logo.svg" width=33% align=right>
 
 ### Resources:
+- Find technical information about the macros, examples, and more, on [the official datavault4dbt Website](https://www.datavault4dbt.com/)!
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
 - Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
 - Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
