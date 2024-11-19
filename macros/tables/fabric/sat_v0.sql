@@ -63,7 +63,7 @@ latest_entries_in_sat_prep AS (
     SELECT
         tgt.{{ parent_hashkey }},
         tgt.{{ ns.hdiff_alias }},
-        ROW_NUMBER() OVER(PARTITION BY tgt.{{ parent_hashkey|lower }} ORDER BY tgt.{{ src_ldts }} DESC) as rn
+        ROW_NUMBER() OVER(PARTITION BY tgt.{{ parent_hashkey }} ORDER BY tgt.{{ src_ldts }} DESC) as rn
     FROM {{ this }} tgt
     INNER JOIN distinct_incoming_hashkeys src
         ON tgt.{{ parent_hashkey }} = src.{{ parent_hashkey }}
@@ -91,7 +91,7 @@ deduplicated_numbered_source_prep AS (
     {{ parent_hashkey }},
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}
-    , LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) as prev_hashdiff
+    , LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as prev_hashdiff
     FROM source_data
 
 ),
