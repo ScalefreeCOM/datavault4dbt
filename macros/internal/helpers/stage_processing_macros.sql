@@ -124,3 +124,74 @@
     {%- endfor -%}
 
 {%- endmacro -%}
+
+
+{%- macro process_prejoined_columns(prejoined_columns=none) -%}
+{# Check if the new list syntax is used for prejoined columns
+    If so parse it to dictionaries #}
+
+{% if not datavault4dbt.is_list(prejoined_columns) %}
+    {% do return(prejoined_columns) %}
+{% else %}
+    {# if the (new) list syntax for prejoins is used
+    it needs to be converted to the old syntax #}
+
+    {# Initialize emtpy dict which will be filled by each entry #}
+    {% set return_dict = {} %}
+
+    {# Iterate over each dictionary in the prejoined_colums-list #}
+    {% for dict_item in prejoined_columns %}
+
+        {# If column aliases are present they they have to map 1:1 to the extract_columns #}
+        {% if datavault4dbt.is_something(dict_item.aliases) 
+            and not dict_item.aliases|length ==  dict_item.extract_columns|length%}
+            {{ exceptions.raise_compiler_error("Prejoin aliases must have the same length as extract_columns") }}
+        {% endif %}
+
+        {# If multiple columns from the same source should be extracted each column has to be processed once #}
+        {% if datavault4dbt.is_list(dict_item.extract_columns) %}
+            {% for column in dict_item.extract_columns %}
+                {# If aliases are defined they should be used as dict keys
+                These will be used as new column names #}
+                {% if datavault4dbt.is_something(dict_item.aliases) %}
+                    {% set dict_key = dict_item.aliases[loop.index-1] %}
+                {% else %}
+                    {% set dict_key = dict_item.extract_columns[loop.index-1] %}
+                {% endif %}
+
+                {% set tmp_dict %}
+                {{dict_key}}:
+                    ref_model: {{dict_item.ref_model}}
+                    bk: {{dict_item.extract_columns[loop.index-1]}}
+                    this_column_name: {{dict_item.this_column_name}}
+                    ref_column_name: {{dict_item.ref_column_name}}
+                {% endset %}
+                {% do return_dict.update(fromyaml(tmp_dict)) %}
+            {% endfor %}
+
+        {% else %}
+
+            {# If aliases are defined they should be used as dict keys
+            These will be used as new column names #}
+            {% if datavault4dbt.is_something(dict_item.aliases) %}
+                {% set dict_key = dict_item.aliases[loop.index-1] %}
+            {% else %}
+                {% set dict_key = dict_item.extract_columns[loop.index-1] %}
+            {% endif %}
+
+            {% set tmp_dict %}
+            {{dict_key}}:
+                ref_model: {{dict_item.ref_model}}
+                bk: {{dict_item.extract_columns[loop.index-1]}}
+                this_column_name: {{dict_item.this_column_name}}
+                ref_column_name: {{dict_item.ref_column_name}}
+            {% endset %}
+            {% do return_dict.update(fromyaml(tmp_dict)) %}
+        {% endif %}
+    {% endfor %}
+
+    {%- do return(return_dict) -%}
+
+{% endif %}
+
+{%- endmacro -%}
