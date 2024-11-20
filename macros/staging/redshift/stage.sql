@@ -260,16 +260,14 @@ missing_columns AS (
 prejoined_columns AS (
 
   SELECT
-  {% if final_columns_to_select | length > 0 -%}  
+  {% if final_columns_to_select | length > 0 -%}
     {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=datavault4dbt.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
-  {% endif %}
+  {%- endif -%}
+
+ {#-  prepare join statements -#}
+  {%- set prejoin_statements_list = [] -%}
+  {%- set processed_prejoin_hashes = [] -%}
   {%- for col, vals in prejoined_columns.items() -%}
-    ,pj_{{loop.index}}.{{ vals['bk'] }} AS {{ col }}
-  {% endfor -%}
-
-  FROM {{ last_cte }} lcte
-
-  {% for col, vals in prejoined_columns.items() %}
 
     {%- if 'src_name' in vals.keys() or 'src_table' in vals.keys() -%}
       {%- set relation = source(vals['src_name']|string, vals['src_table']) -%}
@@ -308,15 +306,29 @@ prejoined_columns AS (
       {%- set operator = vals['operator'] -%}
     {%- endif -%}
 
-    {%- set prejoin_alias = 'pj_' + loop.index|string -%}
 
-    left join {{ relation }} as {{ prejoin_alias }} 
-      on {{ datavault4dbt.multikey(columns=vals['this_column_name'], prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=vals['ref_column_name']) }}
+    {%- set prejoin_hash = '"' ~ local_md5(relation~vals['this_column_name']~operator~vals['ref_column_name']) ~ '"' -%}
 
-  {% endfor %}
+    {%- if not prejoin_hash in processed_prejoin_hashes  %}
+      {%- do processed_prejoin_hashes.append(prejoin_hash) %}
+      {%- set prejoin_join_statement_tmp -%}
+        left join {{ relation }} as {{ prejoin_hash }} 
+        on {{ datavault4dbt.multikey(columns=vals['this_column_name'], prefix=['lcte', prejoin_hash], condition='=', operator=operator, right_columns=vals['ref_column_name']) }}
+
+      {% endset -%}
+      {%- do prejoin_statements_list.append(prejoin_join_statement_tmp) -%}
+    {%- endif -%}
+   
+{# select the prejoined columns #}
+    ,{{prejoin_hash}}.{{ vals['bk'] }} AS {{ col }}
+  {% endfor -%}
+
+  FROM {{ last_cte }} lcte
+
+  {{ prejoin_statements_list|join(' ')}}
 
   {% set last_cte = "prejoined_columns" -%}
-  {%- set final_columns_to_select = final_columns_to_select + prejoined_column_names %}
+  {%- set final_columns_to_select = final_columns_to_select + prejoined_column_names -%}
 ),
 {%- endif -%}
 
