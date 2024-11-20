@@ -999,9 +999,10 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
 {%- endmacro -%}
 
 {%- macro default__multi_active_concattenated_standardise_CLOB(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column) -%}
-    {% if target.type != 'oracle'  %}
         {{ exceptions.raise_compiler_error("Clob Hashing only works for Oracle, not for "~ target.type) }}   
-    {% endif %}
+{%- endmacro -%}
+
+{%- macro oracle__multi_active_concattenated_standardise_CLOB(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column) -%}
     {%- set dict_result = {} -%}
     {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
     {%- if multi_active_key is not string and multi_active_key is iterable -%}
