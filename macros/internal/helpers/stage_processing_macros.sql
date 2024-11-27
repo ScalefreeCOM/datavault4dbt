@@ -145,7 +145,8 @@
         {# If column aliases are present they they have to map 1:1 to the extract_columns #}
         {% if datavault4dbt.is_something(dict_item.aliases) 
             and not dict_item.aliases|length ==  dict_item.extract_columns|length %}
-            {{ exceptions.raise_compiler_error("Prejoin aliases must have the same length as extract_columns") }}
+            {{ exceptions.raise_compiler_error("Prejoin aliases must have the same length as extract_columns. Got "
+             ~ dict_item.extract_columns|length ~ " extract_columns and " ~ dict_item.aliases|length ~ " aliases.") }}
         {% endif %}
 
         {# If multiple columns from the same source should be extracted each column has to be processed once #}
