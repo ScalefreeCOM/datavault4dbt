@@ -144,7 +144,7 @@
 
         {# If column aliases are present they they have to map 1:1 to the extract_columns #}
         {% if datavault4dbt.is_something(dict_item.aliases) 
-            and not dict_item.aliases|length ==  dict_item.extract_columns|length%}
+            and not dict_item.aliases|length ==  dict_item.extract_columns|length %}
             {{ exceptions.raise_compiler_error("Prejoin aliases must have the same length as extract_columns") }}
         {% endif %}
 
@@ -154,15 +154,20 @@
                 {# If aliases are defined they should be used as dict keys
                 These will be used as new column names #}
                 {% if datavault4dbt.is_something(dict_item.aliases) %}
-                    {% set dict_key = dict_item.aliases[loop.index-1] %}
+                    {% set dict_key = dict_item.aliases[loop.index0] %}
                 {% else %}
-                    {% set dict_key = dict_item.extract_columns[loop.index-1] %}
+                    {% set dict_key = dict_item.extract_columns[loop.index0] %}
+                {% endif %}
+
+                {# To make sure each column or alias is present only once #}
+                {% if dict_key|lower in return_dict.keys()|map('lower') %}
+                    {{ exceptions.raise_compiler_error("Prejoined Column name or alias '" ~ dict_key ~ "' is defined twice.") }}
                 {% endif %}
 
                 {% set tmp_dict %}
                 {{dict_key}}:
                     ref_model: {{dict_item.ref_model}}
-                    bk: {{dict_item.extract_columns[loop.index-1]}}
+                    bk: {{dict_item.extract_columns[loop.index0]}}
                     this_column_name: {{dict_item.this_column_name}}
                     ref_column_name: {{dict_item.ref_column_name}}
                 {% endset %}
@@ -174,15 +179,20 @@
             {# If aliases are defined they should be used as dict keys
             These will be used as new column names #}
             {% if datavault4dbt.is_something(dict_item.aliases) %}
-                {% set dict_key = dict_item.aliases[loop.index-1] %}
+                {% set dict_key = dict_item.aliases[loop.index0] %}
             {% else %}
-                {% set dict_key = dict_item.extract_columns[loop.index-1] %}
+                {% set dict_key = dict_item.extract_columns[loop.index0] %}
+            {% endif %}
+
+            {# To make sure each column or alias is present only once #}
+            {% if dict_key|lower in return_dict.keys()|map('lower') %}
+                {{ exceptions.raise_compiler_error("Prejoined Column name or alias '" ~ dict_key ~ "' is defined twice.") }}
             {% endif %}
 
             {% set tmp_dict %}
             {{dict_key}}:
                 ref_model: {{dict_item.ref_model}}
-                bk: {{dict_item.extract_columns[loop.index-1]}}
+                bk: {{dict_item.extract_columns[loop.index0]}}
                 this_column_name: {{dict_item.this_column_name}}
                 ref_column_name: {{dict_item.ref_column_name}}
             {% endset %}
