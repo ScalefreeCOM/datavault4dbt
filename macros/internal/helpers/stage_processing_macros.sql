@@ -167,7 +167,14 @@
 
                 {% set tmp_dict %}
                 {{dict_key}}:
+                    {%- if 'ref_model' in dict_item.keys()|map('lower') %}
                     ref_model: {{dict_item.ref_model}}
+                    {%- elif 'src_name' in dict_item.keys()|map('lower') and 'src_table' in dict_item.keys()|map('lower') %}
+                    src_name: {{dict_item.src_name}}
+                    src_table: {{dict_item.src_table}}
+                    {%- else %}
+                        {{ exceptions.raise_compiler_error("Either ref_model or src_name and src_table have to be defined for each prejoin") }}
+                    {%- endif %}
                     bk: {{dict_item.extract_columns[loop.index0]}}
                     this_column_name: {{dict_item.this_column_name}}
                     ref_column_name: {{dict_item.ref_column_name}}
@@ -192,7 +199,14 @@
 
             {% set tmp_dict %}
             {{dict_key}}:
+                {%- if 'ref_model' in dict_item.keys()|map('lower') %}
                 ref_model: {{dict_item.ref_model}}
+                {%- elif 'src_name' in dict_item.keys()|map('lower') and 'src_table' in dict_item.keys()|map('lower') %}
+                src_name: {{dict_item.src_name}}
+                src_table: {{dict_item.src_table}}
+                {%- else %}
+                    {{ exceptions.raise_compiler_error("Either ref_model or src_name and src_table have to be defined for each prejoin") }}
+                {%- endif %}
                 bk: {{dict_item.extract_columns[loop.index0]}}
                 this_column_name: {{dict_item.this_column_name}}
                 ref_column_name: {{dict_item.ref_column_name}}
