@@ -65,33 +65,38 @@
 
 
     {% set start_date_description = "
-    Description of Parameter 'start_date':
-        start_date::timestamp           Defines the earliest timestamp that should be available inside the snapshot_table. The time part of this
-                                        timestamp needs to be set to '00:00:00'. The format of this timestamp must equal to the timestamp format
-                                        defined in the global variable 'datavault4dbt.timestamp_format'.
+    start_date::timestamp           Defines the earliest timestamp that should be available inside the snapshot_table. The time part of this
+                                    timestamp needs to be set to '00:00:00'. The format of this timestamp must equal to the timestamp format
+                                    defined in the global variable 'datavault4dbt.timestamp_format'.
 
-                                        Examples:
-                                            '2015-01-01T00-00-00'   This snapshot table would hold daily snapshots beginning at 2015.    
+                                    Examples:
+                                        '2015-01-01T00-00-00'   This snapshot table would hold daily snapshots beginning at 2015.    
+    " %}
+
+    {% set daily_snapshot_time_description = "
+    daily_snapshot_time::time       Defines the time that your daily snapshots should have. Usually this is either something right before
+                                    daily business starts, or after daily business is over.
+
+                                    Examples:
+                                        '07:30:00'      The snapshots inside this table would all have the time '07:30:00'.
+                                        '23:00:00'      The snapshots inside this table would all have the time '23:00:00'.
+    " %}
+
+    {% set sdts_alias_description = "
+    sdts_alias::string              Defines the name of the snapshot date timestamp column inside the snapshot_table. It is optional,
+                                    if not set will use the global variable `datavault4dbt.sdts_alias` set inside dbt_project.yml
+    " %}
+
+    {% set end_date_description = "
+    end_date::timestamp             Defines the latest timestamp that should be available inside the snapshot_table.
     " %}
 
 
-    {% if datavault4dbt.is_something(yaml_metadata) %}
-        {%- set yaml_metadata = fromyaml(yaml_metadata) -%}
-        {% if 'start_date' in yaml_metadata.keys() %}
-            {% set start_date = yaml_metadata.get('start_date') %}
-        {% elif datavault4dbt.is_something(start_date) %}
-            {% set start_date = start_date %}
-            {% do exceptions.warn("[" ~ this ~ "] Warning: yaml-metadata given, but parameter 'start_date' not defined in there. Using 'start_date' parameter defined outside. We advise to use only one method of parameter passing.") %}
-        {% else %}
-            {{ exceptions.raise_compiler_error("[" ~ this ~ "] Error: yaml-metadata given, but required parameter 'start_date' not defined in there or outside in the parameter." ~ start_date_description ) }}
-        {% endif %}
-    {% elif datavault4dbt.is_something(start_date) %}
-        {% set start_date_start_dateoutput = start_date %}
-    {% else %}
-        {{ exceptions.raise_compiler_error("[" ~ this ~ "] Error: Required parameter 'start_date' not defined. Define it either directly, or inside yaml-metadata." ~ start_date_description ) }}
-    {% endif %}
+    {%- set start_date          =  datavault4dbt.yaml_metadata_parser(name='start_date', yaml_metadata=yaml_metadata, parameter=start_date, required=True, documentation=start_date_description) -%}
+    {%- set daily_snapshot_time =  datavault4dbt.yaml_metadata_parser(name='daily_snapshot_time', yaml_metadata=yaml_metadata, parameter=daily_snapshot_time, required=True, documentation=daily_snapshot_time_description) -%}
+    {%- set sdts_alias          =  datavault4dbt.yaml_metadata_parser(name='sdts_alias', yaml_metadata=yaml_metadata, parameter=sdts_alias, required=False, documentation=sdts_alias_description) -%}
+    {%- set end_date            =  datavault4dbt.yaml_metadata_parser(name='end_date', yaml_metadata=yaml_metadata, parameter=end_date, required=False, documentation=end_date_description) -%}
 
-    
     {%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
     {{ adapter.dispatch('control_snap_v0', 'datavault4dbt')(start_date=start_date,
