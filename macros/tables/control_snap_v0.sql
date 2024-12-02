@@ -61,7 +61,36 @@
 
 #}
 
-{%- macro control_snap_v0(start_date, daily_snapshot_time, sdts_alias=none, end_date=none) -%}
+{%- macro control_snap_v0(yaml_metadata, start_date, daily_snapshot_time, sdts_alias=none, end_date=none) -%}
+
+
+    {% set start_date_description = "
+    Description of Parameter 'start_date':
+        start_date::timestamp           Defines the earliest timestamp that should be available inside the snapshot_table. The time part of this
+                                        timestamp needs to be set to '00:00:00'. The format of this timestamp must equal to the timestamp format
+                                        defined in the global variable 'datavault4dbt.timestamp_format'.
+
+                                        Examples:
+                                            '2015-01-01T00-00-00'   This snapshot table would hold daily snapshots beginning at 2015.    
+    " %}
+
+
+    {% if datavault4dbt.is_something(yaml_metadata) %}
+        {%- set yaml_metadata = fromyaml(yaml_metadata) -%}
+        {% if 'start_date' in yaml_metadata.keys() %}
+            {% set start_date = yaml_metadata.get('start_date') %}
+        {% elif datavault4dbt.is_something(start_date) %}
+            {% set start_date = start_date %}
+            {% do exceptions.warn("[" ~ this ~ "] Warning: yaml-metadata given, but parameter 'start_date' not defined in there. Using 'start_date' parameter defined outside. We advise to use only one method of parameter passing.") %}
+        {% else %}
+            {{ exceptions.raise_compiler_error("[" ~ this ~ "] Error: yaml-metadata given, but required parameter 'start_date' not defined in there or outside in the parameter." ~ start_date_description ) }}
+        {% endif %}
+    {% elif datavault4dbt.is_something(start_date) %}
+        {% set start_date_start_dateoutput = start_date %}
+    {% else %}
+        {{ exceptions.raise_compiler_error("[" ~ this ~ "] Error: Required parameter 'start_date' not defined. Define it either directly, or inside yaml-metadata." ~ start_date_description ) }}
+    {% endif %}
+
     
     {%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
