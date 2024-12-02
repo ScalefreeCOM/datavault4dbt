@@ -93,6 +93,23 @@
 {%- set ldts = datavault4dbt.as_constant(ldts) -%}
 {%- set rsrc = datavault4dbt.as_constant(rsrc) -%}
 
+{# Hash diff calculation operations #}
+{% for col in hashed_columns %}
+  {% if hashed_columns[col].is_hashdiff %}
+    {# Check if columns is '*' #}
+    {% if hashed_columns[col].columns == '*' %}
+      {# Update columns with all source columns #}
+      {% set hashed_columns = hashed_columns | merge({col: hashed_columns[col] | merge({'columns': all_source_columns})}) %}
+    {% endif %}
+
+    {# Check for exclude_hashdiff_columns #}
+    {% if hashed_columns[col].exclude_hashdiff_columns is is_something %}
+      {# Exclude specified columns from the columns list #}
+      {% set hashed_columns = hashed_columns | merge({col: hashed_columns[col] | merge({'columns': hashed_columns[col].columns | difference(hashed_columns[col].exclude_hashdiff_columns)})}) %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
 {# Getting the column names for all additional columns #}
 {%- set derived_column_names = datavault4dbt.extract_column_names(derived_columns) -%}
 {%- set hashed_column_names = datavault4dbt.extract_column_names(hashed_columns) -%}
