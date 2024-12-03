@@ -40,25 +40,6 @@
                                         logic that is applied in the version 1 snapshot table on top of this one. This column is automatically
                                         set to TRUE.
 
-    Parameters:
-
-        start_date::timestamp           Defines the earliest timestamp that should be available inside the snapshot_table. The time part of this
-                                        timestamp needs to be set to '00:00:00'. The format of this timestamp must equal to the timestamp format
-                                        defined in the global variable 'datavault4dbt.timestamp_format'.
-
-                                        Examples:
-                                            '2015-01-01T00-00-00'   This snapshot table would hold daily snapshots beginning at 2015.
-
-        daily_snapshot_time::time       Defines the time that your daily snapshots should have. Usually this is either something right before
-                                        daily business starts, or after daily business is over.
-
-                                        Examples:
-                                            '07:30:00'      The snapshots inside this table would all have the time '07:30:00'.
-                                            '23:00:00'      The snapshots inside this table would all have the time '23:00:00'.
-                                                    
-        sdts_alias::string              Defines the name of the snapshot date timestamp column inside the snapshot_table. It is optional,
-                                        if not set will use the global variable `datavault4dbt.sdts_alias` set inside dbt_project.yml
-
 #}
 
 {%- macro control_snap_v0(yaml_metadata, start_date, daily_snapshot_time, sdts_alias=none, end_date=none) -%}

@@ -4,13 +4,12 @@
         {%- set yaml_metadata = fromyaml(yaml_metadata) -%}
         {% if name in yaml_metadata.keys() %}
             {% set return_value = yaml_metadata.get(name) %}
+            {% if datavault4dbt.is_something(parameter)%}
+                {% do exceptions.warn("[" ~ this ~ "] Warning: Parameter '" ~ name ~ "' defined both in yaml-metadata and separately. Definition in yaml-metadata will be used, and separate parameter is ignored.") %}
+            {% endif %}
         {% elif datavault4dbt.is_something(parameter) %}
             {% set return_value = parameter %}
-
-            {% if required %}
-                {% do exceptions.warn("[" ~ this ~ "] Warning: yaml-metadata given, but parameter '" ~ name ~ "' not defined in there. Using '" ~ name ~ "' parameter defined outside. We advise to use only one method of parameter passing.") %}
-            {% else %}
-
+            {% do exceptions.warn("[" ~ this ~ "] Warning: yaml-metadata given, but parameter '" ~ name ~ "' not defined in there. Using '" ~ name ~ "' parameter defined outside. We advise to use only one method of parameter passing.") %}
         {% elif required %}
             {{ exceptions.raise_compiler_error("[" ~ this ~ "] Error: yaml-metadata given, but required parameter '" ~ name ~ "' not defined in there or outside in the parameter. \n Description of parameter '" ~ name ~ "': \n" ~ documentation ) }}
         {% endif %}
