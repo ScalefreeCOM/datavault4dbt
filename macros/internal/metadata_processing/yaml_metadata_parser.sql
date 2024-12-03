@@ -1,9 +1,9 @@
 {% macro yaml_metadata_parser(name=none, yaml_metadata=none, parameter=none, required=False, documentation=none) %}
 
     {% if datavault4dbt.is_something(yaml_metadata) %}
-        {%- set yaml_metadata = fromyaml(yaml_metadata) -%}
-        {% if name in yaml_metadata.keys() %}
-            {% set return_value = yaml_metadata.get(name) %}
+        {%- set metadata_dict = fromyaml(yaml_metadata) -%}
+        {% if name in metadata_dict.keys() %}
+            {% set return_value = metadata_dict.get(name) %}
             {% if datavault4dbt.is_something(parameter)%}
                 {% do exceptions.warn("[" ~ this ~ "] Warning: Parameter '" ~ name ~ "' defined both in yaml-metadata and separately. Definition in yaml-metadata will be used, and separate parameter is ignored.") %}
             {% endif %}
