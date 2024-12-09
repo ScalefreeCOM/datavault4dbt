@@ -1,25 +1,26 @@
 # datavault4dbt by [Scalefree International GmbH](https://www.scalefree.com)
 
-<img src="https://user-images.githubusercontent.com/81677440/195860893-435b5faa-71f1-4e01-969d-3593a808daa8.png">
+[<img src="https://user-images.githubusercontent.com/81677440/195860893-435b5faa-71f1-4e01-969d-3593a808daa8.png">](https://www.datavault4dbt.com/)
 
 
 ---
 
 ### Included Macros
-- Staging Area (For Hashing, prejoins and ghost records)
-- Hubs, Links & Satellites (allowing multiple deltas)
-- Non-Historized Links and Satellites
-- Multi-Active Satellites
-- Virtualized End-Dating (in Satellites)
-- Reference Hubs, - Satellites, and - Tables
-- PIT Tables
-  - Hook for Cleaning up PITs 
-- Snapshot Control
+- [Staging Area (For Hashing, prejoins and ghost records)](https://www.datavault4dbt.com/documentation/macro-instructions/staging/)
+- [Hubs](https://www.datavault4dbt.com/documentation/macro-instructions/hubs/standard-hub/), [Links](https://www.datavault4dbt.com/documentation/macro-instructions/links/standard-link/) & [Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/standard-satellite/standard-satellite-v0/) (allowing multiple deltas)
+- [Non-Historized Links](https://www.datavault4dbt.com/documentation/macro-instructions/links/non-historized-link/) and [Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/non-historized-satellite/)
+- [Multi-Active Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/multi-active-satellite/multi-active-satellite-v0/)
+- [Effectivity](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/effectivity-satellite/) and [Record Tracking Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/record-tracking-satellite/)
+- [Virtualized End-Dating (in Satellites)](https://www.datavault4dbt.com/documentation/macro-instructions/satellites/standard-satellite/standard-satellite-v1/)
+- [Reference Hubs](https://www.datavault4dbt.com/documentation/macro-instructions/reference-data/reference-hub/), [- Satellites](https://www.datavault4dbt.com/documentation/macro-instructions/reference-data/reference-satellite/reference-satellite-v0/), and [- Tables](https://www.datavault4dbt.com/documentation/macro-instructions/reference-data/reference-tables/)
+- [PIT Tables](https://www.datavault4dbt.com/documentation/macro-instructions/business-vault/pit/)
+  - [Hook for Cleaning up PITs](https://www.datavault4dbt.com/documentation/macro-instructions/business-vault/pit/hook-cleanup-pits/) 
+- Snapshot Control [Tables](https://www.datavault4dbt.com/documentation/macro-instructions/business-vault/snapshot-control/snapshot-control-v0/) and [Views](https://www.datavault4dbt.com/documentation/macro-instructions/business-vault/snapshot-control/snapshot-control-v1/)
 
 ### Features
 With datavault4dbt you will get a lot of awesome features, including:
 - A Data Vault 2.0 implementation congruent to the original Data Vault 2.0 definition by Dan Linstedt
-- Ready for both Persistent Staging Areas and Transient Staging Areas, due to the allowance of multiple deltas in all macros, without losing any intermediate changes - Enforcing standards in naming conventions by implementing [global variables](https://github.com/ScalefreeCOM/datavault4dbt/wiki/Global-variables) for technical columns    
+- Ready for both Persistent Staging Areas and Transient Staging Areas, due to the allowance of multiple deltas in all macros, without losing any intermediate changes - Enforcing standards in naming conventions by implementing [global variables](https://www.datavault4dbt.com/documentation/general-usage-notes/global-variables/) for technical columns    
 - A fully auditable solution for a Data Warehouse
 - Creating a centralized, snapshot-based Business interface by using a centralized snapshot table supporting logarithmic logic
 - A modern insert-only approach that avoids updating data
@@ -36,11 +37,8 @@ To use the macros efficiently, there are a few prerequisites you need to provide
 <img src="https://www.getdbt.com/ui/img/logos/dbt-logo.svg" width=33% align=right>
 
 ### Resources:
+- Find technical information about the macros, examples, and more, on [the official datavault4dbt Website](https://www.datavault4dbt.com/)!
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
-- Find [dbt events](https://events.getdbt.com) near you
 - Check out the [Scalefree-Blog](https://www.scalefree.com/blog/)
    - [Data-Vault 2.0 with dbt #1](https://www.scalefree.com/scalefree-newsletter/data-vault-2-0-with-dbt-part-1/)
    - [Data-Vault 2.0 with dbt #2](https://www.scalefree.com/scalefree-newsletter/data-vault-2-0-with-dbt-part-2/)
@@ -79,11 +77,11 @@ For further information on how to install packages in dbt, please visit the foll
 [https://docs.getdbt.com/docs/building-a-dbt-project/package-management](https://docs.getdbt.com/docs/building-a-dbt-project/package-management#how-do-i-add-a-package-to-my-project)
 
 ### Global variables
-datavault4dbt is highly customizable by using many global variables. Since they are applied on multiple levels, a high rate of standardization across your data vault 2.0 solution is guaranteed. The default values of those variables are set inside the packages `dbt_project.yml` and should be copied to your own `dbt_project.yml`. For an explanation of all global variables see [the wiki](https://github.com/ScalefreeCOM/datavault4dbt/wiki/Global-variables).
+datavault4dbt is highly customizable by using many global variables. Since they are applied on multiple levels, a high rate of standardization across your data vault 2.0 solution is guaranteed. The default values of those variables are set inside the packages `dbt_project.yml` and should be copied to your own `dbt_project.yml`. For an explanation of all global variables see [the docs](https://www.datavault4dbt.com/documentation/general-usage-notes/global-variables/).
 
 ---
 ## Usage
-The datavault4dbt package provides macros for Staging and Creation of all DataVault-Entities you need, to build your own DataVault2.0 solution. The usage of the macros is well-explained in the documentation: https://github.com/ScalefreeCOM/datavault4dbt/wiki
+The datavault4dbt package provides macros for Staging and Creation of all DataVault-Entities you need, to build your own DataVault2.0 solution. The usage of the macros is well-explained in the [documentation]([url](https://www.datavault4dbt.com/documentation/)).
 
 ---
 ## Contributing

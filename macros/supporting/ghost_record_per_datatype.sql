@@ -82,7 +82,7 @@
 
 {%- if ghost_record_type == 'unknown' -%}
 
-        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as "{{ column_name }}"
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
         {%- elif datatype.upper().startswith('VARCHAR') -%}
             {%- if col_size is not none -%}
@@ -110,7 +110,7 @@
 
 {%- elif ghost_record_type == 'error' -%}
 
-        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as "{{ column_name }}"
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
         {%- elif datatype.upper().startswith('VARCHAR') -%}
             {%- if col_size is not none -%}
@@ -267,7 +267,7 @@
 
 {%- if ghost_record_type == 'unknown' -%}
 
-        {%- if datatype in ['DATETIME', 'DATETIME2', 'DATETIMEOFFSET'] %} CONVERT({{ datatype }}, {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as "{{ column_name }}"
+        {%- if datatype in ['DATETIME', 'DATETIME2', 'DATETIMEOFFSET'] %} CONVERT({{ datatype }}, {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as "{{ alias }}"
         {%- elif 'CHAR' in datatype -%}
             {%- if col_size is not none -%}
                 {%- if (col_size | int) == -1 -%}
@@ -297,7 +297,7 @@
 
 {%- elif ghost_record_type == 'error' -%}
 
-        {%- if datatype in ['DATETIME', 'DATETIME2', 'DATETIMEOFFSET'] %} CONVERT({{ datatype }}, {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as "{{ column_name }}"
+        {%- if datatype in ['DATETIME', 'DATETIME2', 'DATETIMEOFFSET'] %} CONVERT({{ datatype }}, {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as "{{ alias }}"
         {%- elif 'CHAR' in datatype -%}
             {%- if col_size is not none -%}
                 {%- if (col_size | int) == -1 -%}
