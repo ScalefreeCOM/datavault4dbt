@@ -349,7 +349,7 @@ main_hashkey_generation AS (
 
   SELECT 
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
-    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict) -%}
+    {% set processed_hash_columns = tmp_ns.main_hashkey_dict -%}
       {{- datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
   FROM {{ last_cte }}
 
@@ -360,7 +360,7 @@ ma_hashdiff_prep AS (
 
     SELECT
       
-      {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.hashdiff_dict) -%}
+      {% set processed_hash_columns = tmp_ns.hashdiff_dict -%}
       
       {{ multi_active_config['main_hashkey_column'] }},
       {# Generates only all hashdiffs. #}
@@ -371,7 +371,7 @@ ma_hashdiff_prep AS (
     GROUP BY {{ multi_active_config['main_hashkey_column'] }}, {{ ldts_alias }}
 
     
-      {% do processed_hash_columns.update(datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict)) -%} {# Add main hashkey to list of processed columns, otherwise ghost records dont get created #}
+      {% do processed_hash_columns.update(tmp_ns.main_hashkey_dict) -%} {# Add main hashkey to list of processed columns, otherwise ghost records dont get created #}
 
 
 ),
@@ -381,12 +381,12 @@ hashed_columns AS (
     SELECT 
 
       {{ datavault4dbt.alias_all(columns=final_columns_to_select, prefix='main_hashkey_generation') }},                             {# Everything from last_cte before hashed_columns. #}
-      {% set processed_remaining_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.remaining_hashed_columns) -%}   
+      {% set processed_remaining_hash_columns = tmp_ns.remaining_hashed_columns -%}   
       {# Generates only all remaining hashkeys, that are no hashdiffs #}
       
       {%- if datavault4dbt.is_something(processed_remaining_hash_columns) %}
       {{- datavault4dbt.hash_columns(columns=processed_remaining_hash_columns) | indent(4) }},
-      {%- do processed_hash_columns.update(datavault4dbt.process_hash_column_excludes(tmp_ns.remaining_hashed_columns)) -%}                                {# All remaining hashed_columns get calculated. #}
+      {%- do processed_hash_columns.update(tmp_ns.remaining_hashed_columns) -%}                                {# All remaining hashed_columns get calculated. #}
       {% endif -%}
 
 
@@ -414,7 +414,7 @@ hashed_columns AS (
       {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
     {% endif %}
 
-    {%- set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+    {%- set processed_hash_columns = hashed_columns -%}
     {{ datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
 
     FROM {{ last_cte }}
