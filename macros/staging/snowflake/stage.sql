@@ -357,7 +357,7 @@ hashed_columns AS (
 
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
 
-    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+    {% set processed_hash_columns = hashed_columns -%}
     {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }}
 
     FROM {{ last_cte }}
@@ -377,7 +377,7 @@ hashed_columns AS (
       {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
     {% endif %}
 
-    {%- set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+    {%- set processed_hash_columns = hashed_columns -%}
     {{ datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
 
     FROM {{ last_cte }}
