@@ -367,7 +367,7 @@ main_hashkey_generation AS (
 
   SELECT 
     {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
-    {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict) -%}
+    {% set processed_hash_columns = tmp_ns.main_hashkey_dict -%}
       {{- datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
   FROM {{ last_cte }}
   {%- set last_cte = "main_hashkey_generation" -%}
@@ -379,7 +379,7 @@ ma_hashdiff_prep AS (
 
     SELECT
       
-      {% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.hashdiffs) -%}
+      {% set processed_hash_columns = tmp_ns.hashdiff_dict -%}
       
       {# Generates only all hashdiffs. #}
       {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }},
@@ -395,7 +395,7 @@ hashed_columns AS (
     SELECT
 
       {{ datavault4dbt.alias_all(columns=final_columns_to_select, prefix='main_hashkey_generation') }},                             {# Everything from last_cte before hashed_columns. #}
-      {% set processed_remaining_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.remaining_hashed_columns) -%}   
+      {% set processed_remaining_hash_columns = tmp_ns.remaining_hashed_columns -%}   
       {# Generates only all remaining hashkeys, that are no hashdiffs #}
       
       {%- if datavault4dbt.is_something(processed_remaining_hash_columns) %}
@@ -426,7 +426,7 @@ hashed_columns AS (
       {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }},
     {% endif %}
 
-    {%- set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+    {%- set processed_hash_columns = hashed_columns -%}
     {{ datavault4dbt.hash_columns(columns=processed_hash_columns) | indent(4) }}
 
     FROM {{ last_cte }}
@@ -436,7 +436,7 @@ hashed_columns AS (
 ),
 
 {%- endif -%}
-{% set processed_hash_columns = datavault4dbt.process_hash_column_excludes(hashed_columns) -%}
+{% set processed_hash_columns = hashed_columns -%}
 {%- endif -%}
 
 {%- if enable_ghost_records and not is_incremental() %}
