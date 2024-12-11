@@ -75,37 +75,46 @@
 {%- endmacro -%}
 
 
-{%- macro process_hash_column_excludes(hash_columns=none, source_columns=none) -%}
+{%- macro exclude_hashdiff_columns(source_model=none,hash_columns=none) -%}
+    {# Get all source columns #}
+    {#- Check for source format or ref format and create relation object from source_model -#}
+    {% if source_model is mapping and source_model is not none -%}
 
+        {%- set source_name = source_model | first -%}
+        {%- set source_table_name = source_model[source_name] -%}
+
+        {%- set source_relation = source(source_name, source_table_name) -%}
+        {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
+
+    {%- elif source_model is not mapping and source_model is not none -%}
+
+        {{ log('source_model is not mapping and not none: ' ~ source_model, false) }}
+
+        {%- set source_relation = ref(source_model) -%}
+        {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
+    {%- else -%}
+        {%- set all_source_columns = [] -%}
+    {%- endif -%}
+
+    {{ log('source_relation: ' ~ source_relation, false) }}
+
+    {# Exclude columns #}
     {%- set processed_hash_columns = {} -%}
-
-    {%- for col, col_mapping in hash_columns.items() -%}
-        
+    {%- for col, col_mapping in hash_columns.items() -%}    
         {%- if col_mapping is mapping -%}
-            {%- if col_mapping.exclude_columns -%}
-
-                {%- if col_mapping.columns -%}
-
-                    {%- set columns_to_hash = datavault4dbt.process_columns_to_select(source_columns, col_mapping.columns) -%}
-
-                    {%- do hash_columns[col].pop('exclude_columns') -%}
-                    {%- do hash_columns[col].update({'columns': columns_to_hash}) -%}
-
-                    {%- do processed_hash_columns.update({col: hash_columns[col]}) -%}
-                {%- else -%}
-
-                    {%- do hash_columns[col].pop('exclude_columns') -%}
-                    {%- do hash_columns[col].update({'columns': source_columns}) -%}
-
-                    {%- do processed_hash_columns.update({col: hash_columns[col]}) -%}
-                {%- endif -%}
+            {%- if datavault4dbt.is_something(col_mapping.columns) and datavault4dbt.is_something(col_mapping.exclude_columns)-%}
+                {{- exceptions.raise_compiler_error("You can only use 'columns' or 'exclude_columns'.") -}}
+            {%- elif datavault4dbt.is_something(col_mapping.exclude_columns) -%}
+                {%- set columns_to_hash = datavault4dbt.process_columns_to_select(all_source_columns, col_mapping.exclude_columns) -%}
+                {%- do hash_columns[col].pop('exclude_columns') -%}
+                {%- do hash_columns[col].update({'columns': columns_to_hash}) -%}
+                {%- do processed_hash_columns.update({col: hash_columns[col]}) -%}
             {%- else -%}
-                {%- do processed_hash_columns.update({col: col_mapping}) -%}
+                {%- do processed_hash_columns.update({col: hash_columns[col]}) -%}
             {%- endif -%}
         {%- else -%}
             {%- do processed_hash_columns.update({col: col_mapping}) -%}
         {%- endif -%}
-
     {%- endfor -%}
 
     {%- do return(processed_hash_columns) -%}

@@ -120,6 +120,8 @@
     {%- if datavault4dbt.is_nothing(ldts) -%}
       {%- set ldts = datavault4dbt.current_timestamp() -%}
     {%- endif -%}
+
+    {% set hashed_columns= datavault4dbt.exclude_hashdiff_columns(source_model,hashed_columns)%}
     
     {{- adapter.dispatch('stage', 'datavault4dbt')(include_source_columns=include_source_columns,
                                         ldts=ldts,
