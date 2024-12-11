@@ -101,7 +101,6 @@
 {%- set exclude_column_names = hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
 {%- set all_columns = adapter.get_columns_in_relation( source_relation ) -%}
-
 {%- set columns_without_excluded_columns = [] -%}
 {%- set final_columns_to_select = [] -%}
 
@@ -183,6 +182,8 @@
 
 {# Setting the ldts default datatype #}
 {% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
+
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
