@@ -54,23 +54,26 @@
                 {# Do nothing. No source column required. #}    
             {%- elif value is mapping and value.is_hashdiff -%}
                 {%- do extracted_input_columns.append(value['columns']) -%}
-            {%- elif value is mapping and 'this_column_name' in value.keys() -%}
-                {%- if datavault4dbt.is_list(value['this_column_name'])-%}
-                    {%- for column in value['this_column_name'] -%}
-                        {%- do extracted_input_columns.append(column) -%}
-                    {%- endfor -%}
-                {%- else -%}
-                    {%- do extracted_input_columns.append(value['this_column_name']) -%}
-                {%- endif -%}
             {%- else -%}
                 {%- do extracted_input_columns.append(value) -%}
             {%- endif -%}
         {%- endfor -%}
-
-        {%- do return(extracted_input_columns) -%}
+    
+    {%- elif datavault4dbt.is_list(columns_dict) -%}
+        {% for prejoin in columns_dict %}
+            {%- if datavault4dbt.is_list(prejoin['this_column_name'])-%}
+                {%- for column in prejoin['this_column_name'] -%}
+                    {%- do extracted_input_columns.append(column) -%}
+                {%- endfor -%}
+            {%- else -%}
+                {%- do extracted_input_columns.append(prejoin['this_column_name']) -%}
+            {%- endif -%}
+        {% endfor %}
     {%- else -%}
         {%- do return([]) -%}
     {%- endif -%}
+
+    {%- do return(extracted_input_columns) -%}
 
 {%- endmacro -%}
 
@@ -127,96 +130,85 @@
 
 
 {%- macro process_prejoined_columns(prejoined_columns=none) -%}
-{# Check if the new list syntax is used for prejoined columns
-    If so parse it to dictionaries #}
+    {# Check if the old syntax is used for prejoined columns
+        If so parse it to new list syntax #}
 
-{% if not datavault4dbt.is_list(prejoined_columns) %}
-    {% do return(prejoined_columns) %}
-{% else %}
-    {# if the (new) list syntax for prejoins is used
-    it needs to be converted to the old syntax #}
+    {% if datavault4dbt.is_list(prejoined_columns) %}
+        {% do return(prejoined_columns) %}
+    {% else %}
+        {% set output = [] %}
 
-    {# Initialize emtpy dict which will be filled by each entry #}
-    {% set return_dict = {} %}
-
-    {# Iterate over each dictionary in the prejoined_colums-list #}
-    {% for dict_item in prejoined_columns %}
-
-        {# If column aliases are present they they have to map 1:1 to the extract_columns #}
-        {% if datavault4dbt.is_something(dict_item.aliases) 
-            and not dict_item.aliases|length ==  dict_item.extract_columns|length %}
-            {{ exceptions.raise_compiler_error("Prejoin aliases must have the same length as extract_columns. Got "
-             ~ dict_item.extract_columns|length ~ " extract_columns and " ~ dict_item.aliases|length ~ " aliases.") }}
-        {% endif %}
-
-        {# If multiple columns from the same source should be extracted each column has to be processed once #}
-        {% if datavault4dbt.is_list(dict_item.extract_columns) %}
-            {% for column in dict_item.extract_columns %}
-                {# If aliases are defined they should be used as dict keys
-                These will be used as new column names #}
-                {% if datavault4dbt.is_something(dict_item.aliases) %}
-                    {% set dict_key = dict_item.aliases[loop.index0] %}
-                {% else %}
-                    {% set dict_key = dict_item.extract_columns[loop.index0] %}
-                {% endif %}
-
-                {# To make sure each column or alias is present only once #}
-                {% if dict_key|lower in return_dict.keys()|map('lower') %}
-                    {{ exceptions.raise_compiler_error("Prejoined Column name or alias '" ~ dict_key ~ "' is defined twice.") }}
-                {% endif %}
-
-                {% set tmp_dict %}
-                {{dict_key}}:
-                    {%- if 'ref_model' in dict_item.keys()|map('lower') %}
-                    ref_model: {{dict_item.ref_model}}
-                    {%- elif 'src_name' in dict_item.keys()|map('lower') and 'src_table' in dict_item.keys()|map('lower') %}
-                    src_name: {{dict_item.src_name}}
-                    src_table: {{dict_item.src_table}}
-                    {%- else %}
-                        {{ exceptions.raise_compiler_error("Either ref_model or src_name and src_table have to be defined for each prejoin") }}
-                    {%- endif %}
-                    bk: {{dict_item.extract_columns[loop.index0]}}
-                    this_column_name: {{dict_item.this_column_name}}
-                    ref_column_name: {{dict_item.ref_column_name}}
-                {% endset %}
-                {% do return_dict.update(fromyaml(tmp_dict)) %}
-            {% endfor %}
-
-        {% else %}
-
-            {# If aliases are defined they should be used as dict keys
-            These will be used as new column names #}
-            {% if datavault4dbt.is_something(dict_item.aliases) %}
-                {% set dict_key = dict_item.aliases[loop.index0] %}
+        {% for key, value in prejoined_columns.items() %}
+            {% set ref_model = value.get('ref_model') %}
+            {% set src_name = value.get('src_name') %}
+            {% set src_table = value.get('src_table') %}
+            {%- if 'operator' not in value.keys() -%}  
+                {%- do value.update({'operator': 'AND'}) -%}
+                {%- set operator = 'AND' -%}
+            {%- else -%}
+                {%- set operator = value.get('operator') -%}
+            {%- endif -%}
+            
+    {% set match_criteria = (
+            ref_model and output | selectattr('ref_model', 'equalto', ref_model) or
+            src_name and output | selectattr('src_name', 'equalto', src_name) | selectattr('src_table', 'equalto', src_table)
+        ) | selectattr('this_column_name', 'equalto', value.this_column_name)
+        | selectattr('ref_column_name', 'equalto', value.ref_column_name)
+        | selectattr('operator', 'equalto', value.operator)
+        | list | first %}
+        
+            {% if match_criteria %}
+                {% do match_criteria['extract_columns'].append(value.bk) %}
+                {% do match_criteria['aliases'].append(key) %}
             {% else %}
-                {% set dict_key = dict_item.extract_columns[loop.index0] %}
+                {% set new_item = {
+                    'extract_columns': [value.bk],
+                    'aliases': [key],
+                    'this_column_name': value.this_column_name,
+                    'ref_column_name': value.ref_column_name,
+                    'operator': operator
+                } %}
+                
+                {% if ref_model %}
+                    {% do new_item.update({'ref_model': ref_model}) %}
+                {% elif src_name and src_table %}
+                    {% do new_item.update({'src_name': src_name, 'src_table': src_table}) %}
+                {% endif %}
+                
+                {% do output.append(new_item) %}
             {% endif %}
+        {% endfor %}
+    {% endif %}
 
-            {# To make sure each column or alias is present only once #}
-            {% if dict_key|lower in return_dict.keys()|map('lower') %}
-                {{ exceptions.raise_compiler_error("Prejoined Column name or alias '" ~ dict_key ~ "' is defined twice.") }}
-            {% endif %}
+    {%- do return(output) -%}
 
-            {% set tmp_dict %}
-            {{dict_key}}:
-                {%- if 'ref_model' in dict_item.keys()|map('lower') %}
-                ref_model: {{dict_item.ref_model}}
-                {%- elif 'src_name' in dict_item.keys()|map('lower') and 'src_table' in dict_item.keys()|map('lower') %}
-                src_name: {{dict_item.src_name}}
-                src_table: {{dict_item.src_table}}
-                {%- else %}
-                    {{ exceptions.raise_compiler_error("Either ref_model or src_name and src_table have to be defined for each prejoin") }}
-                {%- endif %}
-                bk: {{dict_item.extract_columns[loop.index0]}}
-                this_column_name: {{dict_item.this_column_name}}
-                ref_column_name: {{dict_item.ref_column_name}}
-            {% endset %}
-            {% do return_dict.update(fromyaml(tmp_dict)) %}
+{%- endmacro -%}
+
+
+{%- macro extract_prejoin_column_names(prejoined_columns=none) -%}
+
+    {%- set extracted_column_names = [] -%}
+    
+    {% if not datavault4dbt.is_something(prejoined_columns) %}
+        {%- do return(extracted_column_names) -%}
+    {% endif %}
+
+    {% for prejoin in prejoined_columns %}
+        {% if datavault4dbt.is_list(prejoin['aliases']) %}
+            {% for alias in prejoin['aliases'] %}
+                {%- do extracted_column_names.append(alias) -%}
+            {% endfor %}
+        {% elif datavault4dbt.is_something(prejoin['aliases']) %}
+            {%- do extracted_column_names.append(prejoin['aliases']) -%}
+        {% elif datavault4dbt.is_list(prejoin['extract_columns']) %}
+            {% for column in prejoin['extract_columns'] %}
+                {%- do extracted_column_names.append(column) -%}
+            {% endfor %}
+        {% else %}
+            {%- do extracted_column_names.append(prejoin['extract_columns']) -%}
         {% endif %}
-    {% endfor %}
-
-    {%- do return(return_dict) -%}
-
-{% endif %}
+    {%- endfor -%}
+    
+    {%- do return(extracted_column_names) -%}
 
 {%- endmacro -%}
