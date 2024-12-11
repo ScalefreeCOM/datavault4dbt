@@ -42,7 +42,7 @@
 
 #}
 
-{%- macro control_snap_v0(yaml_metadata, start_date, daily_snapshot_time, sdts_alias=none, end_date=none) -%}
+{%- macro control_snap_v0(yaml_metadata=none, start_date=none, daily_snapshot_time=none, sdts_alias=none, end_date=none) -%}
 
 
     {% set start_date_description = "
