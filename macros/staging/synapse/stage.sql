@@ -89,7 +89,7 @@
 {# Getting the column names for all additional columns #}
 {%- set derived_column_names = datavault4dbt.extract_column_names(derived_columns) -%}
 {%- set hashed_column_names = datavault4dbt.extract_column_names(hashed_columns) -%}
-{%- set prejoined_column_names = datavault4dbt.extract_column_names(prejoined_columns) -%}
+{%- set prejoined_column_names = datavault4dbt.extract_prejoin_column_names(prejoined_columns) -%}
 {%- set missing_column_names = datavault4dbt.extract_column_names(missing_columns) -%}
 {%- set exclude_column_names = derived_column_names + hashed_column_names + prejoined_column_names + missing_column_names + ldts_rsrc_input_column_names %}
 {%- set source_and_derived_column_names = (all_source_columns + derived_column_names) | unique | list -%}
