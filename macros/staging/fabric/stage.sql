@@ -288,7 +288,7 @@ prejoined_columns AS (
 
     {# Generate the columns for the SELECT-statement #}
     {%- for column in prejoin['extract_columns'] %}
-          ,{{ prejoin_alias }}.{{ column }} {% if datavault4dbt.is_something(prejoin['aliases']) -%} AS {{ prejoin['aliases'][loop.index0] }} {% endif -%}
+          ,{{ prejoin_alias }}.{{ datavault4dbt.escape_column_names(column) }} {% if datavault4dbt.is_something(prejoin['aliases']) -%} AS {{ datavault4dbt.escape_column_names(prejoin['aliases'][loop.index0]) }} {% endif -%}
     {%- endfor -%}
   {%- endfor %}
 
@@ -335,7 +335,7 @@ prejoined_columns AS (
       {%- set prejoin_alias = 'pj_' + loop.index|string %}
       
       left join {{ relation }} as {{ prejoin_alias }}
-        on {{ datavault4dbt.multikey(columns=prejoin['this_column_name'], prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=prejoin['ref_column_name']) }}
+        on {{ datavault4dbt.multikey(columns=datavault4dbt.escape_column_names(prejoin['this_column_name']), prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=datavault4dbt.escape_column_names(prejoin['ref_column_name'])) }}
   {%- endfor -%}
 
   {% set last_cte = "prejoined_columns" -%}
@@ -502,7 +502,7 @@ unknown_values AS (
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
               {{ log('column found? yes, for column: ' ~ column.name , false) }}
-              ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown', alias=prejoin['aliases'][prejoin_col_index]) }}
+              ,{{ datavault4dbt.ghost_record_per_datatype(column_name=datavault4dbt.escape_column_names(column.name), datatype=column.dtype, ghost_record_type='unknown', alias=datavault4dbt.escape_column_names(prejoin['aliases'][prejoin_col_index])) }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -568,7 +568,7 @@ error_values AS (
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
               {{ log('column found? yes, for column: ' ~ column.name , false) }}
-             ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error', alias=prejoin['aliases'][prejoin_col_index]) }}
+             ,{{ datavault4dbt.ghost_record_per_datatype(column_name=datavault4dbt.escape_column_names(column.name), datatype=column.dtype, ghost_record_type='error', alias=datavault4dbt.escape_column_names(prejoin['aliases'][prejoin_col_index])) }}
           {%- endif -%}
 
         {%- endfor -%}
