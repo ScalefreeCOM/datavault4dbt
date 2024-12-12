@@ -259,6 +259,8 @@ missing_columns AS (
 {%- if datavault4dbt.is_something(prejoined_columns) %}
 {# Prejoining Business Keys of other source objects for Link purposes #}
 
+{%- set final_columns_to_select = (final_columns_to_select + derived_input_columns) | unique | list -%}
+
 prejoined_columns AS (
 
   SELECT

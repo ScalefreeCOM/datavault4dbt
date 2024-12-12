@@ -262,6 +262,8 @@ missing_columns AS (
 {# Prejoining Business Keys of other source objects for Link purposes #}
 prejoined_columns AS (
 
+{%- set final_columns_to_select = (final_columns_to_select + derived_input_columns) | unique | list -%}
+
   SELECT
   {% if final_columns_to_select | length > 0 -%}
     {{ datavault4dbt.print_list(datavault4dbt.prefix(columns=datavault4dbt.escape_column_names(final_columns_to_select), prefix_str='lcte').split(',')) }}
