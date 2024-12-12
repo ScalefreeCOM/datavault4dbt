@@ -390,7 +390,7 @@ ma_hashdiff_prep AS (
 
     SELECT
       
-      {% set processed_hash_columns = tmp_ns.hashdiff_dict -%}
+      {% set processed_hash_columns = hashed_columns -%}
       
       {# Generates only all hashdiffs. #}
       {{- datavault4dbt.hash_columns(columns=processed_hash_columns, multi_active_key=multi_active_config['multi_active_key'], main_hashkey_column=multi_active_config['main_hashkey_column']) | indent(4) }},
