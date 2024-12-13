@@ -12,6 +12,8 @@
             {% do exceptions.warn("[" ~ this ~ "] Warning: yaml-metadata given, but parameter '" ~ name ~ "' not defined in there. Using '" ~ name ~ "' parameter defined outside. We advise to use only one method of parameter passing.") %}
         {% elif required %}
             {{ exceptions.raise_compiler_error("[" ~ this ~ "] Error: yaml-metadata given, but required parameter '" ~ name ~ "' not defined in there or outside in the parameter. \n Description of parameter '" ~ name ~ "': \n" ~ documentation ) }}
+        {% else %}
+            {% set return_value = None %}
         {% endif %}
     {% elif datavault4dbt.is_something(parameter) %}
         {% set return_value = parameter %}
