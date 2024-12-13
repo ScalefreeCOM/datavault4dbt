@@ -100,11 +100,11 @@
 
     {# Exclude columns #}
     {%- set processed_hash_columns = {} -%}
-    {%- for col, col_mapping in hash_columns.items() -%}    
+    {%- for col, col_mapping in hash_columns.items() -%} 
         {%- if col_mapping is mapping -%}
-            {%- if datavault4dbt.is_something(col_mapping.columns) and datavault4dbt.is_something(col_mapping.exclude_columns)-%}
-                {{- exceptions.raise_compiler_error("You can only use 'columns' or 'exclude_columns'.") -}}
-            {%- elif datavault4dbt.is_something(col_mapping.exclude_columns) -%}
+            {% if ('columns' in col_mapping.keys()) and ('exclude_columns' in col_mapping.keys()) %}
+                {{- exceptions.raise_compiler_error("hashed_columns: You can only use 'columns' or 'exclude_columns'.") -}}
+            {%- elif 'exclude_columns' in col_mapping.keys() -%}
                 {%- set columns_to_hash = datavault4dbt.process_columns_to_select(all_source_columns, col_mapping.exclude_columns) -%}
                 {%- do hash_columns[col].pop('exclude_columns') -%}
                 {%- do hash_columns[col].update({'columns': columns_to_hash}) -%}
@@ -116,7 +116,7 @@
             {%- do processed_hash_columns.update({col: col_mapping}) -%}
         {%- endif -%}
     {%- endfor -%}
-
+{{ log('processed_hash_columns: ' ~ processed_hash_columns, info=True) }}
     {%- do return(processed_hash_columns) -%}
 
 {%- endmacro -%}
