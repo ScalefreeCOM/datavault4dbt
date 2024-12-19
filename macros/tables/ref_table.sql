@@ -92,7 +92,7 @@ Include / Exclude per Satellite:
     ref_hub::string     Name of the underlying ref_hub model.
     " %}
 
-    {% set ref_satellites = "
+    {% set ref_satellites_description = "
     ref_satellites::string|list of strings      Name(s) of the reference satellites to be included in this ref_table. Optional: 'include' & 'exclude' as dictionary keys for each satellite.
     " %}
 
