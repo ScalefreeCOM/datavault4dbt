@@ -1,34 +1,3 @@
-{#
-Example model:
-
-{{ config(materialized='incremental',
-          schema='Core') }}
-
-{%- set yaml_metadata -%}
-source_models: stg_nation
-ref_keys: N_NATIONKEY
-{%- endset -%}      
-
-{% set metadata_dict = fromyaml(yaml_metadata) %}
-
-{{ datavault4dbt.ref_hub(source_models=metadata_dict['source_models'],
-                     ref_keys=metadata_dict['ref_keys']) }}
-
-#}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 {%- macro ref_hub(yaml_metadata=none, ref_keys=none, source_models=none, src_ldts=none, src_rsrc=none) -%}
 
     {% set ref_keys_description = "
@@ -49,10 +18,10 @@ ref_keys: N_NATIONKEY
                                     Needs to use the same column name as defined as alias inside the staging model.
     " %}
 
-    {%- set ref_keys =  datavault4dbt.yaml_metadata_parser(name='ref_keys', yaml_metadata=yaml_metadata, parameter=ref_keys, required=True, documentation=ref_keys_description) -%}
-    {%- set source_models =  datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
-    {%- set src_ldts =  datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
-    {%- set src_rsrc =  datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set ref_keys        = datavault4dbt.yaml_metadata_parser(name='ref_keys', yaml_metadata=yaml_metadata, parameter=ref_keys, required=True, documentation=ref_keys_description) -%}
+    {%- set source_models   = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
+    {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 

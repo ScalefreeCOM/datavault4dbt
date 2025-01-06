@@ -77,12 +77,12 @@
                                             Needs to use the same column name as defined as alias inside the staging model.
     " %}
 
-    {%- set link_hashkey =      datavault4dbt.yaml_metadata_parser(name='link_hashkey', yaml_metadata=yaml_metadata, parameter=link_hashkey, required=True, documentation=link_hashkey_description) -%}
-    {%- set foreign_hashkeys =  datavault4dbt.yaml_metadata_parser(name='foreign_hashkeys', yaml_metadata=yaml_metadata, parameter=foreign_hashkeys, required=True, documentation=foreign_hashkeys_description) -%}
-    {%- set source_models =     datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
-    {%- set src_ldts =          datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
-    {%- set src_rsrc =          datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
-    {%- set disable_hwm =       datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
+    {%- set link_hashkey        = datavault4dbt.yaml_metadata_parser(name='link_hashkey', yaml_metadata=yaml_metadata, parameter=link_hashkey, required=True, documentation=link_hashkey_description) -%}
+    {%- set foreign_hashkeys    = datavault4dbt.yaml_metadata_parser(name='foreign_hashkeys', yaml_metadata=yaml_metadata, parameter=foreign_hashkeys, required=True, documentation=foreign_hashkeys_description) -%}
+    {%- set source_models       = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
+    {%- set src_ldts            = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc            = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set disable_hwm         = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 

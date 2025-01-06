@@ -75,13 +75,13 @@
                                             Needs to use the same column name as defined as alias inside the staging model.
     " %}
 
-    {%- set parent_hashkey =    datavault4dbt.yaml_metadata_parser(name='parent_hashkey', yaml_metadata=yaml_metadata, parameter=parent_hashkey, required=True, documentation=parent_hashkey_description) -%}
-    {%- set src_hashdiff =      datavault4dbt.yaml_metadata_parser(name='src_hashdiff', yaml_metadata=yaml_metadata, parameter=src_hashdiff, required=True, documentation=src_hashdiff_description) -%}
-    {%- set src_ma_key =        datavault4dbt.yaml_metadata_parser(name='src_ma_key', yaml_metadata=yaml_metadata, parameter=src_ma_key, required=True, documentation=src_ma_key_description) -%}
-    {%- set src_payload =       datavault4dbt.yaml_metadata_parser(name='src_payload', yaml_metadata=yaml_metadata, parameter=src_payload, required=True, documentation=src_payload_description) -%}
-    {%- set source_model =      datavault4dbt.yaml_metadata_parser(name='source_model', yaml_metadata=yaml_metadata, parameter=source_model, required=True, documentation=source_model_description) -%}
-    {%- set src_ldts =          datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
-    {%- set src_rsrc =          datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set parent_hashkey  = datavault4dbt.yaml_metadata_parser(name='parent_hashkey', yaml_metadata=yaml_metadata, parameter=parent_hashkey, required=True, documentation=parent_hashkey_description) -%}
+    {%- set src_hashdiff    = datavault4dbt.yaml_metadata_parser(name='src_hashdiff', yaml_metadata=yaml_metadata, parameter=src_hashdiff, required=True, documentation=src_hashdiff_description) -%}
+    {%- set src_ma_key      = datavault4dbt.yaml_metadata_parser(name='src_ma_key', yaml_metadata=yaml_metadata, parameter=src_ma_key, required=True, documentation=src_ma_key_description) -%}
+    {%- set src_payload     = datavault4dbt.yaml_metadata_parser(name='src_payload', yaml_metadata=yaml_metadata, parameter=src_payload, required=True, documentation=src_payload_description) -%}
+    {%- set source_model    = datavault4dbt.yaml_metadata_parser(name='source_model', yaml_metadata=yaml_metadata, parameter=source_model, required=True, documentation=source_model_description) -%}
+    {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 

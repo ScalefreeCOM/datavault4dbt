@@ -26,17 +26,6 @@
 
         is_last_rolling_year::boolean       Captures if a sdts is inside the range that starts two years ago (from the
                                             current date) and ranges until one year ago (from the current date).
-
-    Parameters:
-
-
-
-
-                                                 
-           sdts_alias::string               Defines the name of the snapshot date timestamp column inside the snapshot_table. 
-                                            It is optional, if not set will use the global variable `datavault4dbt.sdts_alias` 
-                                            set inside dbt_project.yml
-
 #}
 
 {%- macro control_snap_v1(yaml_metadata=none, control_snap_v0=none, log_logic=none, sdts_alias=none) -%}
@@ -84,9 +73,9 @@
                                 set inside dbt_project.yml
     " %}
 
-    {% set control_snap_v0 = datavault4dbt.yaml_metadata_parser(name='control_snap_v0', yaml_metadata=yaml_metadata, parameter=control_snap_v0, required=True, documentation=control_snap_v0_description) %}
-    {% set log_logic = datavault4dbt.yaml_metadata_parser(name='log_logic', yaml_metadata=yaml_metadata, parameter=log_logic, required=False, documentation=log_logic_description) %}
-    {% set sdts_alias = datavault4dbt.yaml_metadata_parser(name='sdts_alias', yaml_metadata=yaml_metadata, parameter=sdts_alias, required=False, documentation=sdts_alias_description) %}
+    {% set control_snap_v0  = datavault4dbt.yaml_metadata_parser(name='control_snap_v0', yaml_metadata=yaml_metadata, parameter=control_snap_v0, required=True, documentation=control_snap_v0_description) %}
+    {% set log_logic        = datavault4dbt.yaml_metadata_parser(name='log_logic', yaml_metadata=yaml_metadata, parameter=log_logic, required=False, documentation=log_logic_description) %}
+    {% set sdts_alias       = datavault4dbt.yaml_metadata_parser(name='sdts_alias', yaml_metadata=yaml_metadata, parameter=sdts_alias, required=False, documentation=sdts_alias_description) %}
 
 
     {%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}

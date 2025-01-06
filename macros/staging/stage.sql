@@ -62,8 +62,8 @@
                                                                      'datatype': 'INT64'},                                              the number of days between two columns available inside the source data.
                                              'country_isocode':     {'value': '!GER',                                                   The column 'country_isocode' inserts the static string 'EUR' for all rows.
                                                                      'datatype': 'STRING'},                                             The column 'account_name' duplicates an already existing column and gives
-                                             'account_name':        {'value': 'name',                                                   it another name. More derived columns can be added as other keys of
-                                                                     'datatype': 'String'}}   
+                                             'account_name':        {'value': 'name',                                                   it another name. More derived columns can be added as additional keys of
+                                                                     'datatype': 'String'}}                                             the dictionary.
   " %}
 
   {% set sequence_description = "
@@ -89,12 +89,12 @@
                                                                 'bk': 'contractnumber',                     name (specified in 'bk') from the source table 'contract' in the source 'source_data'
                                                                 'this_column_name': 'ContractId',           by joining on 'this.ContractId = contract.Id'. In this case the prejoined
                                                                 'ref_column_name': 'Id'},                   column alias equals the name of the original business key column, which should be
-                                            'master_account_key' {'ref_model': 'account_prep',              or a self-prejoin happens, and then you would have to rename the final columns to not
+                                            'master_account_key': {'ref_model': 'account_prep',             or a self-prejoin happens, and then you would have to rename the final columns to not
                                                                 'bk': 'account_key',                        have duplicate column names. The column 'master_account_key' holds values of the column
                                                                 'this_column_name': 'master_account_id',    'account_key' inside the pre-populated dbt model 'account_prep'. If this prejoin is done inside account,
                                                                 'ref_column_name': 'Id'}}                   we would now have a self-prejoin ON 'account.master_account_id = account.Id'. Because
                                                                                                             the table 'account' already has a column 'account_key', we rename the prejoined column
-                                                                                                            to 'master_account_key'. More prejoined columns can be added as other keys of the dictionary.
+                                                                                                            to 'master_account_key'. More prejoined columns can be added as additional keys of the dictionary.
   " %}
 
   {% set missing_columns_description = "
@@ -122,20 +122,20 @@
   " %}
 
   {% set enable_ghost_records_description = "
-    enable_ghost_records::boolean       If set to true, the stage will be created with ghost records. By default, ghost records are enabled. Optional Parameter
+    enable_ghost_records::boolean       If set to true, the stage will be created with ghost records. By default, ghost records are enabled. Optional Parameter.
   " %}
 
-  {%- set ldts =  datavault4dbt.yaml_metadata_parser(name='ldts', yaml_metadata=yaml_metadata, parameter=ldts, required=True, documentation=ldts_description) -%}
-  {%- set rsrc =  datavault4dbt.yaml_metadata_parser(name='rsrc', yaml_metadata=yaml_metadata, parameter=rsrc, required=True, documentation=rsrc_description) -%}
-  {%- set source_model =  datavault4dbt.yaml_metadata_parser(name='source_model', yaml_metadata=yaml_metadata, parameter=source_model, required=True, documentation=source_model_description) -%}
-  {%- set include_source_columns =  datavault4dbt.yaml_metadata_parser(name='include_source_columns', yaml_metadata=yaml_metadata, parameter=include_source_columns, required=False, documentation=include_source_columns_description) -%}
-  {%- set hashed_columns =  datavault4dbt.yaml_metadata_parser(name='hashed_columns', yaml_metadata=yaml_metadata, parameter=hashed_columns, required=False, documentation=hashed_columns_description) -%}
-  {%- set derived_columns =  datavault4dbt.yaml_metadata_parser(name='derived_columns', yaml_metadata=yaml_metadata, parameter=derived_columns, required=False, documentation=derived_columns_description) -%}
-  {%- set sequence =  datavault4dbt.yaml_metadata_parser(name='sequence', yaml_metadata=yaml_metadata, parameter=sequence, required=False, documentation=sequence_description) -%}
-  {%- set prejoined_columns =  datavault4dbt.yaml_metadata_parser(name='prejoined_columns', yaml_metadata=yaml_metadata, parameter=prejoined_columns, required=False, documentation=prejoined_columns_description) -%}
-  {%- set missing_columns =  datavault4dbt.yaml_metadata_parser(name='missing_columns', yaml_metadata=yaml_metadata, parameter=missing_columns, required=False, documentation=missing_columns_description) -%}
-  {%- set multi_active_config =  datavault4dbt.yaml_metadata_parser(name='multi_active_config', yaml_metadata=yaml_metadata, parameter=multi_active_config, required=False, documentation=multi_active_config_description) -%}
-  {%- set enable_ghost_records =  datavault4dbt.yaml_metadata_parser(name='enable_ghost_records', yaml_metadata=yaml_metadata, parameter=enable_ghost_records, required=False, documentation=enable_ghost_records_description) -%}
+  {%- set ldts                    = datavault4dbt.yaml_metadata_parser(name='ldts', yaml_metadata=yaml_metadata, parameter=ldts, required=True, documentation=ldts_description) -%}
+  {%- set rsrc                    = datavault4dbt.yaml_metadata_parser(name='rsrc', yaml_metadata=yaml_metadata, parameter=rsrc, required=True, documentation=rsrc_description) -%}
+  {%- set source_model            = datavault4dbt.yaml_metadata_parser(name='source_model', yaml_metadata=yaml_metadata, parameter=source_model, required=True, documentation=source_model_description) -%}
+  {%- set include_source_columns  = datavault4dbt.yaml_metadata_parser(name='include_source_columns', yaml_metadata=yaml_metadata, parameter=include_source_columns, required=False, documentation=include_source_columns_description) -%}
+  {%- set hashed_columns          = datavault4dbt.yaml_metadata_parser(name='hashed_columns', yaml_metadata=yaml_metadata, parameter=hashed_columns, required=False, documentation=hashed_columns_description) -%}
+  {%- set derived_columns         = datavault4dbt.yaml_metadata_parser(name='derived_columns', yaml_metadata=yaml_metadata, parameter=derived_columns, required=False, documentation=derived_columns_description) -%}
+  {%- set sequence                = datavault4dbt.yaml_metadata_parser(name='sequence', yaml_metadata=yaml_metadata, parameter=sequence, required=False, documentation=sequence_description) -%}
+  {%- set prejoined_columns       = datavault4dbt.yaml_metadata_parser(name='prejoined_columns', yaml_metadata=yaml_metadata, parameter=prejoined_columns, required=False, documentation=prejoined_columns_description) -%}
+  {%- set missing_columns         = datavault4dbt.yaml_metadata_parser(name='missing_columns', yaml_metadata=yaml_metadata, parameter=missing_columns, required=False, documentation=missing_columns_description) -%}
+  {%- set multi_active_config     = datavault4dbt.yaml_metadata_parser(name='multi_active_config', yaml_metadata=yaml_metadata, parameter=multi_active_config, required=False, documentation=multi_active_config_description) -%}
+  {%- set enable_ghost_records    = datavault4dbt.yaml_metadata_parser(name='enable_ghost_records', yaml_metadata=yaml_metadata, parameter=enable_ghost_records, required=False, documentation=enable_ghost_records_description) -%}
 
   {# If include_source_columns is passed but its empty then it is set with the default value (true) #}
   {%- if include_source_columns is none or include_source_columns == "" -%}

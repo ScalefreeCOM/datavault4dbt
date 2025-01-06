@@ -73,12 +73,12 @@
     src_stg::string                 Name of the source stage model. Is optional, will use the global variable  'datavault4dbt.stg_alias'.
     " %}
 
-    {%- set tracked_hashkey =  datavault4dbt.yaml_metadata_parser(name='tracked_hashkey', yaml_metadata=yaml_metadata, parameter=tracked_hashkey, required=True, documentation=tracked_hashkey_description) -%}
-    {%- set source_models =  datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
-    {%- set src_ldts =  datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
-    {%- set src_rsrc =  datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
-    {%- set src_stg =  datavault4dbt.yaml_metadata_parser(name='src_stg', yaml_metadata=yaml_metadata, parameter=src_stg, required=False, documentation=src_stg_description) -%}
-    {%- set disable_hwm =  datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
+    {%- set tracked_hashkey = datavault4dbt.yaml_metadata_parser(name='tracked_hashkey', yaml_metadata=yaml_metadata, parameter=tracked_hashkey, required=True, documentation=tracked_hashkey_description) -%}
+    {%- set source_models   = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
+    {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set src_stg         = datavault4dbt.yaml_metadata_parser(name='src_stg', yaml_metadata=yaml_metadata, parameter=src_stg, required=False, documentation=src_stg_description) -%}
+    {%- set disable_hwm     = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 

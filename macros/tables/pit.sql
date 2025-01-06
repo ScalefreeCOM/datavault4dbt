@@ -11,8 +11,6 @@
         - Allows to insert a static string as record source column, matching business vault definition of a record source
 #}
 
-
-
 {%- macro pit(yaml_metadata=none, tracked_entity=none, hashkey=none, sat_names=none, snapshot_relation=none, dimension_key=none, snapshot_trigger_column=none, ldts=none, custom_rsrc=none, ledts=none, sdts=none, pit_type=none) -%}
 
     {% set tracked_entity_description = "
@@ -72,17 +70,17 @@
                                         Is optional, if not set, no column will be added.
     " %}
 
-    {%- set tracked_entity =            datavault4dbt.yaml_metadata_parser(name='tracked_entity', yaml_metadata=yaml_metadata, parameter=tracked_entity, required=True, documentation=tracked_entity_description) -%}
-    {%- set hashkey =                   datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
-    {%- set sat_names =                 datavault4dbt.yaml_metadata_parser(name='sat_names', yaml_metadata=yaml_metadata, parameter=sat_names, required=True, documentation=sat_names_description) -%}
-    {%- set snapshot_relation =         datavault4dbt.yaml_metadata_parser(name='snapshot_relation', yaml_metadata=yaml_metadata, parameter=snapshot_relation, required=True, documentation=snapshot_relation_description) -%}
-    {%- set dimension_key =             datavault4dbt.yaml_metadata_parser(name='dimension_key', yaml_metadata=yaml_metadata, parameter=dimension_key, required=True, documentation=dimension_key_description) -%}
-    {%- set snapshot_trigger_column =   datavault4dbt.yaml_metadata_parser(name='snapshot_trigger_column', yaml_metadata=yaml_metadata, parameter=snapshot_trigger_column, required=False, documentation=snapshot_trigger_column_description) -%}
-    {%- set ldts =                      datavault4dbt.yaml_metadata_parser(name='ldts', yaml_metadata=yaml_metadata, parameter=ldts, required=False, documentation=ldts_description) -%}
-    {%- set custom_rsrc =               datavault4dbt.yaml_metadata_parser(name='custom_rsrc', yaml_metadata=yaml_metadata, parameter=custom_rsrc, required=False, documentation=custom_rsrc_description) -%}
-    {%- set ledts =                     datavault4dbt.yaml_metadata_parser(name='ledts', yaml_metadata=yaml_metadata, parameter=ledts, required=False, documentation=ledts_description) -%}
-    {%- set sdts =                      datavault4dbt.yaml_metadata_parser(name='sdts', yaml_metadata=yaml_metadata, parameter=sdts, required=False, documentation=sdts_description) -%}
-    {%- set pit_type =                  datavault4dbt.yaml_metadata_parser(name='pit_type', yaml_metadata=yaml_metadata, parameter=pit_type, required=False, documentation=pit_type_description) -%}
+    {%- set tracked_entity          = datavault4dbt.yaml_metadata_parser(name='tracked_entity', yaml_metadata=yaml_metadata, parameter=tracked_entity, required=True, documentation=tracked_entity_description) -%}
+    {%- set hashkey                 = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
+    {%- set sat_names               = datavault4dbt.yaml_metadata_parser(name='sat_names', yaml_metadata=yaml_metadata, parameter=sat_names, required=True, documentation=sat_names_description) -%}
+    {%- set snapshot_relation       = datavault4dbt.yaml_metadata_parser(name='snapshot_relation', yaml_metadata=yaml_metadata, parameter=snapshot_relation, required=True, documentation=snapshot_relation_description) -%}
+    {%- set dimension_key           = datavault4dbt.yaml_metadata_parser(name='dimension_key', yaml_metadata=yaml_metadata, parameter=dimension_key, required=True, documentation=dimension_key_description) -%}
+    {%- set snapshot_trigger_column = datavault4dbt.yaml_metadata_parser(name='snapshot_trigger_column', yaml_metadata=yaml_metadata, parameter=snapshot_trigger_column, required=False, documentation=snapshot_trigger_column_description) -%}
+    {%- set ldts                    = datavault4dbt.yaml_metadata_parser(name='ldts', yaml_metadata=yaml_metadata, parameter=ldts, required=False, documentation=ldts_description) -%}
+    {%- set custom_rsrc             = datavault4dbt.yaml_metadata_parser(name='custom_rsrc', yaml_metadata=yaml_metadata, parameter=custom_rsrc, required=False, documentation=custom_rsrc_description) -%}
+    {%- set ledts                   = datavault4dbt.yaml_metadata_parser(name='ledts', yaml_metadata=yaml_metadata, parameter=ledts, required=False, documentation=ledts_description) -%}
+    {%- set sdts                    = datavault4dbt.yaml_metadata_parser(name='sdts', yaml_metadata=yaml_metadata, parameter=sdts, required=False, documentation=sdts_description) -%}
+    {%- set pit_type                = datavault4dbt.yaml_metadata_parser(name='pit_type', yaml_metadata=yaml_metadata, parameter=pit_type, required=False, documentation=pit_type_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if ldts, sdts and ledts are not set. #}
 
