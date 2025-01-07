@@ -32,6 +32,7 @@
 
 {%- if ghost_record_type == 'unknown' -%}
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
+        {%- elif datatype == 'DATETIME'%} CAST({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} AS {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'DATE'-%} PARSE_DATE('{{date_format}}','{{ beginning_of_all_times_date }}') as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'INT64' %} CAST({{unknown_value__numeric}} as INT64) as {{ alias }}
@@ -41,6 +42,7 @@
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ alias }}
+        {%- elif datatype == 'DATETIME'%} CAST({{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} AS {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'DATE'-%} PARSE_DATE('{{date_format}}', '{{ end_of_all_times_date }}') as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'INT64' %} CAST({{error_value__numeric}} as INT64) as {{ alias }}
