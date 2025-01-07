@@ -607,7 +607,7 @@
 {%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
 
 {%- if ghost_record_type == 'unknown' -%}
-        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH TIMEZONE' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH TIME ZONE' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
         {%- elif datatype == 'VARCHAR'-%} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'VARCHAR2'-%} '{{unknown_value__STRING}}' as {{ alias }}
@@ -620,7 +620,7 @@
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
-        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH TIMEZONE' or datatype == 'TIMESTAMP WITH LOCAL TIMEZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ alias }}
+        {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH TIME ZONE' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
         {%- elif datatype == 'VARCHAR'-%} CAST('{{error_value__STRING}}' as VARCHAR2(40)) as {{ alias }}
         {%- elif datatype == 'VARCHAR2'-%} '{{error_value__STRING}}' as {{ alias }}
