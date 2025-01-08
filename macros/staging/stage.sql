@@ -151,7 +151,12 @@
   {%- if datavault4dbt.is_nothing(ldts) -%}
     {%- set ldts = datavault4dbt.current_timestamp() -%}
   {%- endif -%}
-  
+
+  {# To parse the list syntax of prejoined columns #}
+  {%- if datavault4dbt.is_something(prejoined_columns) -%}
+    {%- set prejoined_columns = datavault4dbt.process_prejoined_columns(prejoined_columns) -%}
+  {%- endif -%}
+
   {{- adapter.dispatch('stage', 'datavault4dbt')(include_source_columns=include_source_columns,
                                       ldts=ldts,
                                       rsrc=rsrc,
