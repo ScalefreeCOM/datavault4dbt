@@ -99,9 +99,11 @@
 {%- set columns_without_excluded_columns = [] -%}
 {%- set final_columns_to_select = [] -%}
 
+{%- set derived_input_columns = datavault4dbt.extract_input_columns(derived_columns) -%}
 
 {%- if include_source_columns -%}
   {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_source_columns, exclude_column_names) | list -%}
+  {%- set source_columns_to_select = (source_columns_to_select + derived_input_columns) | unique | list -%}
 
   {%- for column in all_columns -%}
 
