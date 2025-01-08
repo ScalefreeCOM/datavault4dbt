@@ -467,7 +467,7 @@
 
 {%- if ghost_record_type == 'unknown' -%}
 
-    {%- if datatype in ['DATETIME2'] %} CONVERT(datetime2(6),{{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as {{ alias }}
+    {%- if 'DATETIME2' in datatype %} CONVERT(datetime2(6),{{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as {{ alias }}
     {%- elif datatype in ['DATETIMEOFFSET'] %} CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as {{ alias }}
     {%- elif 'CHAR' in datatype -%}
         {%- if col_size is not none -%}
@@ -499,7 +499,7 @@
 
 {%- elif ghost_record_type == 'error' -%}
 
-    {%- if datatype in ['DATETIME2'] %} CONVERT(datetime2(6),{{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ alias }}
+    {%- if 'DATETIME2' in datatype %} CONVERT(datetime2(6),{{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ alias }}
     {%- elif datatype in ['DATETIMEOFFSET'] %} CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ alias }}
     {%- elif 'CHAR' in datatype -%}
         {%- if col_size is not none -%}
