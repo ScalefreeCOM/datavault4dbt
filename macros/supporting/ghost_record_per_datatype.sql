@@ -609,11 +609,7 @@
 {%- if ghost_record_type == 'unknown' -%}
         {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH TIME ZONE' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
-        {%- elif datatype == 'VARCHAR'-%} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'VARCHAR2'-%} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'NVARCHAR2' %} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'CHAR' %} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'NCHAR' %} '{{unknown_value__STRING}}' as {{ alias }}
+        {%- elif 'CHAR' in datatype %} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'LONG' %} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'NUMBER' %} CAST('{{unknown_value__numeric}}' as NUMBER) as {{ alias }}
         {%- elif datatype == 'FLOAT' %} CAST('{{unknown_value__numeric}}' as FLOAT) as {{ alias }}
@@ -622,11 +618,7 @@
 {%- elif ghost_record_type == 'error' -%}
         {%- if datatype == 'TIMESTAMP' or datatype == 'TIMESTAMP WITH TIME ZONE' or datatype == 'TIMESTAMP WITH LOCAL TIME ZONE' %} {{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as "{{ alias }}"
-        {%- elif datatype == 'VARCHAR'-%} CAST('{{error_value__STRING}}' as VARCHAR2(40)) as {{ alias }}
-        {%- elif datatype == 'VARCHAR2'-%} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'NVARCHAR2' %} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'CHAR' %} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'NCHAR' %} '{{error_value__STRING}}' as {{ alias }}
+        {%- elif 'CHAR' in datatype %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'LONG' %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype == 'NUMBER' %} CAST('{{error_value__numeric}}' as NUMBER) as {{ alias }}
         {%- elif datatype == 'FLOAT' %} CAST('{{error_value__numeric}}' as FLOAT) as {{ alias }}
