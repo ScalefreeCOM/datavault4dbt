@@ -41,44 +41,29 @@ source_data AS (
 
 {# Get the latest record for each parent hashkey in existing sat, if incremental. #}
 {%- if is_incremental() %}
-latest_entries_in_sat_prep AS (
-
-    SELECT
-        {{ parent_hashkey }},
-        {{ ns.hdiff_alias }},
-        ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) as rn
-    FROM 
-        {{ this }}
-),
-
 latest_entries_in_sat AS (
 
     SELECT
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }}
     FROM 
-        latest_entries_in_sat_prep
-    WHERE rn = 1  
+        {{ this }} redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 {%- endif %}
 
 {# Get a list of all distinct hashdiffs that exist for each parent_hashkey. #}
- lag_source_data AS (
-  SELECT 
-    {{ parent_hashkey }},
-    {{ src_ldts }},
-    {{ ns.hdiff_alias }},
-    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias
-  FROM source_data
-),
-
 deduped_row_hashdiff AS (
+
   SELECT 
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }}
-  FROM lag_source_data
-  WHERE {{ ns.hdiff_alias }} != prev_ns_hdiff_alias OR prev_ns_hdiff_alias IS NULL
+  FROM source_data redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
+  QUALIFY CASE
+            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
+            ELSE TRUE
+          END
 ),
 
 {# Dedupe the source data regarding non-delta groups. #}
