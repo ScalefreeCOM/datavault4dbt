@@ -130,13 +130,13 @@ current_status AS (
     deduplicated_incoming AS (
 
         SELECT
-            is_active.{{ tracked_hashkey }},
-            is_active.{{ src_ldts }},
-            is_active.{{ is_active_alias }}
-        FROM is_active redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
+            ia.{{ tracked_hashkey }},
+            ia.{{ src_ldts }},
+            ia.{{ is_active_alias }}
+        FROM is_active ia
         QUALIFY 
             CASE 
-                WHEN is_active.{{ is_active_alias }} = LAG(is_active.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
+                WHEN ia.{{ is_active_alias }} = LAG(ia.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
                 ELSE TRUE
             END
 
