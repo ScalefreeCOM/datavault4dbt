@@ -11,28 +11,32 @@
         - Supports multiple updates per batch and therefore initial loading
         - Using a dynamic high-water-mark to optimize loading performance of multiple loads
         - Can either track link- or hub-hashkeys
+#}
 
-    Parameters:
+{%- macro rec_track_sat(yaml_metadata=none, tracked_hashkey=none, source_models=none, src_ldts=none, src_rsrc=none, src_stg=none, disable_hwm=false) -%}
 
+    {% set tracked_hashkey_description = "
     tracked_hashkey::string         The name of the hashkey column you want to track. Needs to be available in the underlying staging layer. If you want to track multiple
                                     hashkeys out of one stage, you need to create one record tracking satellite for each hashkey.
 
                                     Examples:
-                                        "hk_contact_h"              This record tracking satellite tracks the appearance of the hashkey for the contact hub.
+                                        'hk_contact_h'              This record tracking satellite tracks the appearance of the hashkey for the contact hub.
 
-                                        "hk_contact_account_l"      This record tracking satellite tracks the appearance of the hashkey for the link between contacts and accounts.
+                                        'hk_contact_account_l'      This record tracking satellite tracks the appearance of the hashkey for the link between contacts and accounts.
+    " %}
 
+    {% set source_models_description = "
     source_models::dictionary       Dictionary with information about the source model. The key of the dict is the name of the source model, and the value
                                     is another dictionary. This inner dictionary requires to have the keys 'rsrc_static', and optionally the key 'hk_column'.
 
                                     Examples:
-                                        {'stage_account': {'hk_column': 'hk_account_h',                         This record tracking satellite tracks the hashkey "hk_account_h" inside the
-                                                        'rsrc_static': '*/SAP/Accounts/*'}}                     source model named "stage_account".
+                                        {'stage_account': {'hk_column': 'hk_account_h',                         This record tracking satellite tracks the hashkey 'hk_account_h' inside the
+                                                        'rsrc_static': '*/SAP/Accounts/*'}}                     source model named 'stage_account'.
 
                                         {'stage_contact': {'rsrc_static': '*/SALESFORCE/Contact/*'},            This tracks the appearance of one hub hashkey that is loaded from the two source
-                                        'stage_partner': {'hk_column': 'hk_partner_h',                          models "stage_contact" and "stage_partner". For "stage_account" no 'hk_column' is defined,
+                                        'stage_partner': {'hk_column': 'hk_partner_h',                          models 'stage_contact' and 'stage_partner'. For 'stage_account' no 'hk_column' is defined,
                                                           'rsrc_static': '*/SALESFORCE/Partners/*'}}            and therefore the input of the upper level variable 'tracked_hashkey' will be used.
-                                                                                                                For "stage_partner" the name of the hashkey column differs from the upper level definition
+                                                                                                                For 'stage_partner' the name of the hashkey column differs from the upper level definition
                                                                                                                 and therefore this other name is set under the variable 'hk_column.'
 
                                                                                                                 The 'rsrc_static' attribute defines a STRING or a list of strings that will always be 
@@ -53,19 +57,28 @@
                                                                                                                 If the rsrc_static is not set in one of the source models, then the assumption is made that
                                                                                                                 or this source there is always the same value for any record in the record source column. 
                                                                                                                 The macro will then get automatically this unique value querying the source model.
-                                                                                                                
+    " %}
 
+    {% set src_ldts_description = "
     src_ldts::string                Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
+    " %}
 
+    {% set src_rsrc_description = "
     src_rsrc::string                Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
+    " %}
 
+    {% set src_stg_description = "
     src_stg::string                 Name of the source stage model. Is optional, will use the global variable  'datavault4dbt.stg_alias'.
+    " %}
 
-#}
-
-{%- macro rec_track_sat(tracked_hashkey, source_models, src_ldts=none, src_rsrc=none, src_stg=none, disable_hwm=false) -%}
+    {%- set tracked_hashkey = datavault4dbt.yaml_metadata_parser(name='tracked_hashkey', yaml_metadata=yaml_metadata, parameter=tracked_hashkey, required=True, documentation=tracked_hashkey_description) -%}
+    {%- set source_models   = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
+    {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set src_stg         = datavault4dbt.yaml_metadata_parser(name='src_stg', yaml_metadata=yaml_metadata, parameter=src_stg, required=False, documentation=src_stg_description) -%}
+    {%- set disable_hwm     = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 

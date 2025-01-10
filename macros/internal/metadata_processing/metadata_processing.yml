@@ -1,0 +1,21 @@
+version: 2
+
+macros: 
+  - name: yaml_metadata_parser
+    description: A macro to parse yaml-metadata into single parameters. Used in top-level front-end macros.
+    arguments: 
+      - name: name
+        type: string
+        description: The name of the parameter you want to extract of the yaml-metadata. 
+      - name: yaml_metadata
+        type: string
+        description: The yaml-string that holds the definition of other parameters. Needs to be in yaml format. 
+      - name: parameter
+        type: variable
+        description: The forwarded parameter of the top-level macro. This is used, if the yaml-metadata is none. 
+      - name: required
+        type: boolean
+        description: Whether this parameter is required for the top-level macro. Default is False. 
+      - name: documentation
+        type: string
+        description: A string that holds documentation of this parameter. 
