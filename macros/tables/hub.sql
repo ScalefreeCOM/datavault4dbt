@@ -7,15 +7,19 @@
         - Supports multiple updates per batch and therefore initial loading
         - Can use a dynamic high-water-mark to optimize loading performance of multiple loads
         - Allows source mappings for deviations between source column names and hub column names
+#}
 
-    Parameters:
 
+{%- macro hub(yaml_metadata=none, hashkey=none, business_keys=none, source_models=none, src_ldts=none, src_rsrc=none, disable_hwm=false) -%}
+
+    {% set hashkey_description = "
     hashkey::string                             Name of the hashkey column inside the stage, that should be used as PK of the Hub.
 
                                                 Examples:
                                                     'hk_account_h'      This hashkey column was created before inside the corresponding staging area, using the stage macro.
+    " %}
 
-
+    {% set business_keys_description = "
     business_keys::string|list of strings       Name(s) of the business key columns that should be loaded into the hub and are the input of the hashkey column. Needs to be
                                                 available inside the stage model. If the names differ between multiple sources, you should define here how the business keys
                                                 should be called inside the final hub model. The actual input column names need to be defined inside the 'source_model'
@@ -25,8 +29,9 @@
                                                     'account_key'                       This hub only has one business key and therefore only one is defined here.
 
                                                     ['account_key', 'account_number']   This hub has two business keys which are both defined here.
+    " %}
 
-
+    {% set source_models_description = "
     source_models::dictionary   Dictionary with information about the source models. The keys of the dict are the names of the source models, and the value of each
                                 source model is another dictionary. This inner dictionary requires the key 'bk_columns' to be set (which contains the name of the business keys of that source model),
                                 and can have the optional keys 'hk_column', 'rsrc_static'.
@@ -68,17 +73,24 @@
                                                                                                             If the record source is the same over all loads, then it might look something like
                                                                                                             this: 'SAP/Accounts/'. Here everything would be static over all loads and
                                                                                                             therefore the rsrc_static can be set to 'SAP/Accounts/' without any wildcards in place.
+    " %}
 
+    {% set src_ldts_description = "
     src_ldts::string            Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
                                 Needs to use the same column name as defined as alias inside the staging model.
+    " %}
 
+    {% set src_rsrc_description = "
     src_rsrc::string            Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                 Needs to use the same column name as defined as alias inside the staging model.
+    " %}
 
-#}
-
-
-{%- macro hub(hashkey, business_keys, source_models, src_ldts=none, src_rsrc=none, disable_hwm=false) -%}
+    {%- set hashkey         = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
+    {%- set business_keys   = datavault4dbt.yaml_metadata_parser(name='business_keys', yaml_metadata=yaml_metadata, parameter=business_keys, required=True, documentation=business_keys_description) -%}
+    {%- set source_models   = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
+    {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set disable_hwm     = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 

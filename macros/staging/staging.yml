@@ -1,0 +1,23 @@
+version: 2
+
+macros:
+  - name: process_prejoined_columns
+    description: >
+      A macro to process prejoined columns. If a list of dictioniaries(new syntax) is provided it will do nothing and return the list.
+      If a dictionary of dictionaries if provided(old syntax) it will be transformed to the new syntax.
+      When multiple columns are to be extracted from the same prejoin-target and with the same conditions(columns and operator) they will be combined into one item.
+    arguments:
+      - name: prejoined_columns
+        type: list or dictionary
+        description: The value of the prejoined_columns as defined in the yaml_metadata of the stage-model.
+
+  - name: extract_prejoin_column_names
+    description: >
+      A macro to extract the names of the prejoined columns of each staging-model.
+      Takes a list of prejoins and will add the aliases of the prejoins to the return-list.
+      If no aliases are present it will return the names of the extracted columns.
+      Returns an empty list if the passed parameter is empty.
+    arguments:
+      - name: prejoined_columns
+        type: list
+        description: The prejoined_columns as process by the process_prejoined_columns-macro
