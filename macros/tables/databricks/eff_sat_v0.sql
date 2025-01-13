@@ -123,7 +123,6 @@ current_status AS (
 
     {#
         The rows are deduplicated on the is_active_alias, to only include status changes. 
-        Additionally, a ROW_NUMBER() is calculated in incremental runs, to use it in the next step for comparison against the current status.
     #}
     deduplicated_incoming AS (
 
@@ -131,11 +130,7 @@ current_status AS (
             is_active.{{ tracked_hashkey }},
             is_active.{{ src_ldts }},
             is_active.{{ src_rsrc }},
-            is_active.{{ is_active_alias }}
-
-            {% if is_incremental() -%}
-            , ROW_NUMBER() OVER(PARTITION BY is_active.{{ tracked_hashkey }} ORDER BY is_active.{{ src_ldts }}) as rn
-            {%- endif %}        
+            is_active.{{ is_active_alias }} 
 
         FROM is_active
         QUALIFY 
@@ -257,7 +252,7 @@ records_to_insert AS (
 
         {#
             For incremental multi-batch loads, the earliest to-be inserted status is compared to the current status. 
-            It will only be inserted if the status changed. We use the ROW_NUMBER() 
+            It will only be inserted if the status changed.
         #} 
         {%- if not source_is_single_batch %}
             WHERE NOT EXISTS (

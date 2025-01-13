@@ -257,7 +257,7 @@ records_to_insert AS (
 
         {#
             For incremental multi-batch loads, the earliest to-be inserted status is compared to the current status. 
-            It will only be inserted if the status changed. We use the ROW_NUMBER() 
+            It will only be inserted if the status changed. 
         #} 
         {%- if not source_is_single_batch %}
             WHERE NOT EXISTS (
