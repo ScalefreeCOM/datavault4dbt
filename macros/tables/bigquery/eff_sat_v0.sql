@@ -26,7 +26,8 @@ source_data AS (
 
     SELECT
         {{ tracked_hashkey }},
-        {{ src_ldts }}
+        {{ src_ldts }},
+        {{ src_rsrc }}
     FROM {{ source_relation }} src
     WHERE {{ src_ldts }} NOT IN ({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
     {%- if is_incremental() and not disable_hwm %}
@@ -47,7 +48,8 @@ current_status AS (
 
     SELECT
         {{ tracked_hashkey }},
-        {{ is_active_alias }}
+        {{ is_active_alias }},
+        {{ src_rsrc }}
     FROM {{ this }}
     QUALIFY 
         ROW_NUMBER() OVER(PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1  
@@ -108,6 +110,7 @@ current_status AS (
         SELECT
             h.{{ tracked_hashkey }},
             h.{{ src_ldts }},
+            src.{{ src_rsrc }},
             CASE 
                 WHEN src.{{ tracked_hashkey }} IS NULL THEN 0
                 ELSE 1 
@@ -129,7 +132,8 @@ current_status AS (
             is_active.{{ tracked_hashkey }},
             is_active.{{ src_ldts }},
             is_active.{{ is_active_alias }},
-            LAG(is_active.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) as lag_is_active
+            LAG(is_active.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) as lag_is_active,
+            is_active.{{ src_rsrc }}
 
         FROM is_active
 
@@ -140,7 +144,8 @@ current_status AS (
         SELECT
             deduplicated_incoming_prep.{{ tracked_hashkey }},
             deduplicated_incoming_prep.{{ src_ldts }},
-            deduplicated_incoming_prep.{{ is_active_alias }}
+            deduplicated_incoming_prep.{{ is_active_alias }},
+            deduplicated_incoming_prep.{{ src_rsrc}}
 
         FROM
             deduplicated_incoming_prep
@@ -165,6 +170,7 @@ current_status AS (
         SELECT DISTINCT
             src.{{ tracked_hashkey }},
             src.{{ src_ldts }},
+            src.{{ src_rsrc }},
             1 as {{ is_active_alias }}
         FROM source_data src
 
@@ -197,6 +203,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
+                cs.{{ src_rsrc }},
                 0 as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
@@ -219,6 +226,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
+                cs.{{ src_rsrc }},
                 0 as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
@@ -249,6 +257,7 @@ records_to_insert AS (
     SELECT
         di.{{ tracked_hashkey }},
         di.{{ src_ldts }},
+        di.{{ src_rsrc }},
         di.{{ is_active_alias }}
     FROM {{ ns.last_cte }} di
 
@@ -278,6 +287,7 @@ records_to_insert AS (
     SELECT
         {{ tracked_hashkey }},
         {{ src_ldts }},
+        {{ src_rsrc }},
         {{ is_active_alias }}
     FROM disappeared_hashkeys
 
