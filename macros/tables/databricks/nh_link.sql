@@ -1,4 +1,4 @@
-{%- macro databricks__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm, source_is_single_batch) -%}
+{%- macro databricks__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm, source_is_single_batch, union_strategy) -%}
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
@@ -25,6 +25,17 @@
 {%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
+
+{% if union_strategy|lower = 'all' %}
+    {% set union_command = 'UNION ALL' %}
+{% elif union_strategy|lower == 'distinct' %}
+    {% set union_command = 'UNION DISTINCT' %}
+{% else %}
+    {%- if execute -%}
+        {%- do exceptions.warn("[" ~ this ~ "] Warning: Parameter 'union_strategy' set to '" ~ union_strategy ~ "' which is not a supported choice. Set to 'all' or 'distinct' instead. UNION ALL is used now.") -%}
+    {% endif %}
+    {% set union_command = 'UNION ALL' %}
+{% endif %}
 
 {%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
     {%- set foreign_hashkeys = [] -%}
@@ -213,7 +224,7 @@ source_new_union AS (
     FROM src_new_{{ source_number }}
 
     {%- if not loop.last %}
-    UNION ALL
+    {{ union_command }}
     {% endif -%}
 
     {%- endfor -%}

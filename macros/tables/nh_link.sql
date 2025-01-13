@@ -6,7 +6,7 @@
     In the background a non-historized link uses exactly the same loading logic as a regular link, but adds the descriptive attributes as additional payload.
 #}
 
-{%- macro nh_link(yaml_metadata=none, link_hashkey=none, payload=none, source_models=none, foreign_hashkeys=none, src_ldts=none, src_rsrc=none, disable_hwm=false, source_is_single_batch=false) -%}
+{%- macro nh_link(yaml_metadata=none, link_hashkey=none, payload=none, source_models=none, foreign_hashkeys=none, src_ldts=none, src_rsrc=none, disable_hwm=false, source_is_single_batch=false, union_strategy='all') -%}
     
     {% set link_hashkey_description = "
     link_hashkey::string                    Name of the non-historized link hashkey column inside the stage. Should get calculated out of all business keys inside
@@ -92,6 +92,11 @@
                                             Needs to use the same column name as defined as alias inside the staging model.
     " %}
 
+    {% set union_strategy_description = "
+    union_strategy::'all' | 'distinct'      Defines how multiple sources should be unioned. 'all' will result in a UNION ALL and represents the default value. Should only be changed, if you have duplicates across
+                                            source systems, and don't want to deduplicate them upfront. 
+    " %}
+
     {%- set link_hashkey            = datavault4dbt.yaml_metadata_parser(name='link_hashkey', yaml_metadata=yaml_metadata, parameter=link_hashkey, required=True, documentation=link_hashkey_description) -%}
     {%- set payload                 = datavault4dbt.yaml_metadata_parser(name='payload', yaml_metadata=yaml_metadata, parameter=payload, required=True, documentation=payload_description) -%}
     {%- set source_models           = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
@@ -100,6 +105,7 @@
     {%- set rsrc                    = datavault4dbt.yaml_metadata_parser(name='rsrc', yaml_metadata=yaml_metadata, parameter=rsrc, required=False, documentation=rsrc_description) -%}
     {%- set disable_hwm             = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
     {%- set source_is_single_batch  = datavault4dbt.yaml_metadata_parser(name='source_is_single_batch', yaml_metadata=yaml_metadata, parameter=source_is_single_batch, required=False, documentation='Whether the source contains only one batch. Optional, default False.') -%}
+    {%- set union_strategy =  datavault4dbt.yaml_metadata_parser(name='union_strategy', yaml_metadata=yaml_metadata, parameter=union_strategy, required=False, documentation=union_strategy_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
@@ -113,6 +119,7 @@
                                                         src_rsrc=src_rsrc,
                                                         source_models=source_models,
                                                         disable_hwm=disable_hwm,
-                                                        source_is_single_batch=source_is_single_batch) -}}
+                                                        source_is_single_batch=source_is_single_batch,
+                                                        union_strategy=union_strategy) -}}
 
 {%- endmacro -%}
