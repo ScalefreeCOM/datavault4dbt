@@ -25,7 +25,7 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{% if union_strategy|lower = 'all' %}
+{% if union_strategy|lower == 'all' %}
     {% set union_command = 'UNION ALL' %}
 {% elif union_strategy|lower == 'distinct' %}
     {% set union_command = 'UNION' %}
