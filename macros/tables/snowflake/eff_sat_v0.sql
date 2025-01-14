@@ -188,7 +188,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
-                cs.{{ src_rsrc }},
+                NULL AS {{ src_rsrc }},
                 0 as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
@@ -211,7 +211,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
-                cs.{{ src_rsrc }},
+                NULL AS {{ src_rsrc }},
                 0 as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
