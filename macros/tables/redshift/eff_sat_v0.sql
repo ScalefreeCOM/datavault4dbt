@@ -12,6 +12,8 @@
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 
+{% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+
 {{ log('columns to select: '~final_columns_to_select, false) }}
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -115,7 +117,7 @@ current_status AS (
         SELECT
             h.{{ tracked_hashkey }},
             h.{{ src_ldts }},
-            src.{{ src_rsrc }},
+            COALESCE(src.{{ src_rsrc }}, '{{ unknown_value_rsrc }}') AS {{ src_rsrc }},
             CASE 
                 WHEN src.{{ tracked_hashkey }} IS NULL THEN 0
                 ELSE 1 
@@ -194,6 +196,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
+                '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
                 0 as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
@@ -216,6 +219,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
+                '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
                 0 as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
@@ -276,7 +280,7 @@ records_to_insert AS (
     SELECT
         {{ tracked_hashkey }},
         {{ src_ldts }},
-        '{{ var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') }}' AS {{ src_rsrc }},
+        {{ src_rsrc }},
         {{ is_active_alias }}
     FROM disappeared_hashkeys
 
