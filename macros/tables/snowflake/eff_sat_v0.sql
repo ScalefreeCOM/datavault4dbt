@@ -270,7 +270,7 @@ records_to_insert AS (
     SELECT
         {{ tracked_hashkey }},
         {{ src_ldts }},
-        var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') AS {{ src_rsrc }},
+        {{ var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') }} AS {{ src_rsrc }},
         {{ is_active_alias }}
     FROM disappeared_hashkeys
 
