@@ -46,18 +46,6 @@ source_data AS (
 
 {# Get the latest record for each parent ref key combination in existing sat, if incremental. #}
 {%- if is_incremental() %}
-latest_entries_in_sat_prep AS (
-
-    SELECT
-        {% for ref_key in parent_ref_keys %}
-        {{ref_key}},
-        {% endfor %}
-        {{ ns.hdiff_alias }},
-        ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key|lower}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) as rn
-    FROM 
-        {{ this }}
-),
-
 latest_entries_in_sat AS (
 
     SELECT
@@ -66,8 +54,8 @@ latest_entries_in_sat AS (
         {% endfor %}
         {{ ns.hdiff_alias }}
     FROM 
-        latest_entries_in_sat_prep
-    WHERE rn = 1  
+        {{ this }} redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 {%- endif %}
 
@@ -75,7 +63,7 @@ latest_entries_in_sat AS (
     Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each parent ref key combination.
     Additionally adding a row number based on that order, if incremental.
 #}
-deduplicated_numbered_source_prep AS (
+deduplicated_numbered_source AS (
 
     SELECT
     {% for ref_key in parent_ref_keys %}
@@ -86,24 +74,12 @@ deduplicated_numbered_source_prep AS (
     {% if is_incremental() -%}
     , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
-    , LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key|lower}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) as prev_hashdiff
-    FROM source_data
-),
-
-deduplicated_numbered_source AS (
-
-    SELECT
-    {% for ref_key in parent_ref_keys %}
-    {{ref_key}},
-    {% endfor %}
-    {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(source_cols) }}
-    FROM deduplicated_numbered_source_prep
-    WHERE 1=1
-        AND {{ ns.hdiff_alias }} <> prev_hashdiff OR prev_hashdiff IS NULL
-        {% if is_incremental() -%}
-        AND rn = 1
-        {%- endif %}
+    FROM source_data redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
+    QUALIFY
+        CASE
+            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) THEN FALSE
+            ELSE TRUE
+        END
 ),
 
 {#
@@ -128,7 +104,7 @@ records_to_insert AS (
             AND {{ datavault4dbt.multikey(ref_key, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
             {% endfor %}
             AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
-            )
+            AND deduplicated_numbered_source.rn = 1)
     {%- endif %}
 
     )

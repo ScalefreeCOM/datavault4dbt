@@ -207,21 +207,17 @@ source_new_union AS (
 
 {%- endif %}
 
-earliest_hk_over_all_sources_prep AS (
-    SELECT
-        lcte.*,
-        ROW_NUMBER() OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts
-        }}) as rn
-    FROM {{ ns.last_cte }} AS lcte),
-
 earliest_hk_over_all_sources AS (
 
     {#- Deduplicate the unionized records again to only insert the earliest one. #}
     SELECT
         lcte.*
-    FROM earliest_hk_over_all_sources_prep AS lcte
-        WHERE rn = 1
-    {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}),
+    FROM {{ ns.last_cte }} AS lcte
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}) = 1
+
+    {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
+
+),
 
 records_to_insert AS (
     {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the hub. #}

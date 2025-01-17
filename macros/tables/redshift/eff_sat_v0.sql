@@ -49,23 +49,13 @@ source_data AS (
     In all incremental cases, the current status for each hashkey is selected from the existing Effectivity Satellite.
 #}
 {%- if is_incremental() %}
-current_status_prep AS (
-
-    SELECT
-        {{ tracked_hashkey }},
-        {{ is_active_alias}},
-        ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} DESC) as rn
-    FROM {{ this }}
-
-),
-
 current_status AS (
 
     SELECT
         {{ tracked_hashkey }},
         {{ is_active_alias }}
-    FROM current_status_prep
-    WHERE rn = 1 
+    FROM {{ this }} redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1  
 
 ),
 {% endif %}
@@ -136,32 +126,19 @@ current_status AS (
 
     {#
         The rows are deduplicated on the is_active_alias, to only include status changes. 
-        Additionally, a ROW_NUMBER() is calculated in incremental runs, to use it in the next step for comparison against the current status.
     #}
-    deduplicated_incoming_prep AS (
-
-        SELECT
-            is_active.{{ tracked_hashkey }},
-            is_active.{{ src_ldts }},
-            is_active.{{ is_active_alias }},
-            LAG(is_active.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) as lag_is_active
-
-        FROM is_active
-
-    ),
-
     deduplicated_incoming AS (
 
         SELECT
-            deduplicated_incoming_prep.{{ tracked_hashkey }},
-            deduplicated_incoming_prep.{{ src_ldts }},
-            deduplicated_incoming_prep.{{ is_active_alias }}
-
-        FROM
-            deduplicated_incoming_prep
-        WHERE
-            deduplicated_incoming_prep.{{ is_active_alias }} != deduplicated_incoming_prep.lag_is_active
-            OR deduplicated_incoming_prep.lag_is_active IS NULL
+            ia.{{ tracked_hashkey }},
+            ia.{{ src_ldts }},
+            ia.{{ is_active_alias }}
+        FROM is_active ia
+        QUALIFY 
+            CASE 
+                WHEN ia.{{ is_active_alias }} = LAG(ia.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
+                ELSE TRUE
+            END
 
     ),
 
