@@ -1,4 +1,11 @@
 {%- macro process_columns_to_select(columns_list=none, exclude_columns_list=none) -%}
+
+    {{ return(adapter.dispatch('process_columns_to_select', 'datavault4dbt')(columns_list=columns_list,exclude_columns_list=exclude_columns_list)) }}
+
+{%- endmacro -%}
+
+
+{%- macro default__process_columns_to_select(columns_list, exclude_columns_list) -%}
     {% set exclude_columns_list = exclude_columns_list | map('upper') | list %}
     {% set columns_list = columns_list | map('upper') | list %}
     {% set columns_to_select = [] %}
