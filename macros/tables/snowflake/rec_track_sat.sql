@@ -32,7 +32,7 @@ WITH
 {% if is_incremental() %}
 
     distinct_concated_target AS (
-        {%- set concat_columns = [tracked_hashkey, src_ldts, src_rsrc] -%}
+        {%- set concat_columns = ["CAST(" ~ tracked_hashkey ~ " AS STRING)", src_ldts, src_rsrc] -%}
         {{ "\n" }}
         SELECT
         {{ datavault4dbt.concat_ws(concat_columns) }} as concat
