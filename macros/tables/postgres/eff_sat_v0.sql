@@ -12,6 +12,8 @@
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 
+{% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+
 {{ log('columns to select: '~final_columns_to_select, false) }}
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -35,7 +37,8 @@ source_data AS (
 
     SELECT
         {{ tracked_hashkey }},
-        {{ src_ldts }}
+        {{ src_ldts }},
+        {{ src_rsrc }}
     FROM {{ source_relation }} src
     WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
     {%- if is_incremental() and not disable_hwm %}
@@ -54,6 +57,7 @@ current_status_prep AS (
     SELECT
         {{ tracked_hashkey }},
         {{ is_active_alias}},
+        {{ src_rsrc }},
         ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} DESC) as rn
     FROM {{ this }}
 
@@ -63,7 +67,8 @@ current_status AS (
 
     SELECT
         {{ tracked_hashkey }},
-        {{ is_active_alias }}
+        {{ is_active_alias }},
+        {{ src_rsrc }}
     FROM current_status_prep
     WHERE rn = 1 
 
@@ -123,6 +128,7 @@ current_status AS (
         SELECT
             h.{{ tracked_hashkey }},
             h.{{ src_ldts }},
+            COALESCE(src.{{ src_rsrc }}, '{{ unknown_value_rsrc }}') AS {{ src_rsrc }},
             CASE 
                 WHEN src.{{ tracked_hashkey }} IS NULL THEN 0
                 ELSE 1 
@@ -136,13 +142,13 @@ current_status AS (
 
     {#
         The rows are deduplicated on the is_active_alias, to only include status changes. 
-        Additionally, a ROW_NUMBER() is calculated in incremental runs, to use it in the next step for comparison against the current status.
     #}
     deduplicated_incoming_prep AS (
 
         SELECT
             is_active.{{ tracked_hashkey }},
             is_active.{{ src_ldts }},
+            is_active.{{ src_rsrc }},
             is_active.{{ is_active_alias }},
             LAG(is_active.{{ is_active_alias }}) OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }}) as lag_is_active
 
@@ -155,6 +161,7 @@ current_status AS (
         SELECT
             deduplicated_incoming_prep.{{ tracked_hashkey }},
             deduplicated_incoming_prep.{{ src_ldts }},
+            deduplicated_incoming_prep.{{ src_rsrc }},
             deduplicated_incoming_prep.{{ is_active_alias }}
 
         FROM
@@ -180,6 +187,7 @@ current_status AS (
         SELECT DISTINCT
             src.{{ tracked_hashkey }},
             src.{{ src_ldts }},
+            src.{{ src_rsrc }},
             1 as {{ is_active_alias }}
         FROM source_data src
 
@@ -212,6 +220,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
+                '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
                 0 as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
@@ -234,6 +243,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
+                '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
                 0 as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
@@ -264,6 +274,7 @@ records_to_insert AS (
     SELECT
         di.{{ tracked_hashkey }},
         di.{{ src_ldts }},
+        di.{{ src_rsrc }},
         di.{{ is_active_alias }}
     FROM {{ ns.last_cte }} di
 
@@ -272,7 +283,7 @@ records_to_insert AS (
 
         {#
             For incremental multi-batch loads, the earliest to-be inserted status is compared to the current status. 
-            It will only be inserted if the status changed. We use the ROW_NUMBER() 
+            It will only be inserted if the status changed. 
         #} 
         {%- if not source_is_single_batch %}
             WHERE NOT EXISTS (
@@ -293,6 +304,7 @@ records_to_insert AS (
     SELECT
         {{ tracked_hashkey }},
         {{ src_ldts }},
+        {{ src_rsrc }},
         {{ is_active_alias }}
     FROM disappeared_hashkeys
 
