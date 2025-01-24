@@ -30,6 +30,7 @@ vars:
   datavault4dbt.hash_datatype: 'STRING'
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
+  datavault4dbt.clob_hashing: FALSE
   
   #Stage Configuration
   datavault4dbt.copy_rsrc_ldts_input_columns: false

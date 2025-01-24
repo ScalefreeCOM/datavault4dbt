@@ -985,3 +985,59 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
     {%- do dict_result.update({"standardise_suffix": standardise_suffix, "standardise_prefix": standardise_prefix }) -%}
     {{ return(dict_result | tojson ) }}
 {%- endmacro -%}
+
+
+{%- macro multi_active_concattenated_standardise_CLOB(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column) -%}
+
+{{ adapter.dispatch('multi_active_concattenated_standardise_CLOB', 'datavault4dbt')(case_sensitive=case_sensitive,
+                                                                              hash_alg=hash_alg,
+                                                                              datatype=datatype, 
+                                                                              zero_key=zero_key,
+                                                                              alias=alias,
+                                                                              multi_active_key=multi_active_key,
+                                                                              main_hashkey_column=main_hashkey_column) }}
+
+{%- endmacro -%}
+
+
+{%- macro default__multi_active_concattenated_standardise_CLOB(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column) -%}
+
+    {{ exceptions.raise_compiler_error("[" ~ this ~ "] Error: Clob Hashing is only implemented for Oracle, not for " ~ target.type) }}
+
+{%- endmacro -%}
+
+
+{%- macro oracle__multi_active_concattenated_standardise_CLOB(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column) -%}
+    {%- set dict_result = {} -%}
+    {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
+    
+    {%- if multi_active_key is not string and multi_active_key is iterable -%}
+        {%- set multi_active_key = multi_active_key|join(", ") -%}
+    {%- endif -%}
+
+    {%- if case_sensitive -%}
+
+        {%- set standardise_prefix = "CAST(DBMS_CRYPTO.HASH(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(XMLCAST(XMLAGG(XMLELEMENT("'XMLNAME'","-%}
+
+        {%- if alias is not none -%}
+            {%- set standardise_suffix = ")ORDER BY {}) as CLOB)), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))  AS {} ".format(multi_active_key,hash_alg, alias) -%}
+        {%- else -%}
+            {%- set standardise_suffix = ")ORDER BY {}) as CLOB)), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))  AS {} ".format(multi_active_key,hash_alg) -%}
+        {%- endif -%}
+
+    {%- else -%}
+
+        {%- set standardise_prefix = "DBMS_CRYPTO.HASH(REPLACE(REPLACE(REPLACE(REPLACE(XMLCAST(XMLAGG(XMLELEMENT("'XMLNAME'","-%}
+
+        {%- if alias is not none -%}
+            {%- set standardise_suffix = ")ORDER BY {}) as CLOB), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))  AS {} ".format(multi_active_key,hash_alg, alias) -%}
+        {%- else -%}
+            {%- set standardise_suffix = ")ORDER BY {}) as CLOB), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))  AS {} ".format(multi_active_key,hash_alg) -%}
+        {%- endif -%}
+    {%- endif -%}
+
+    {%- do dict_result.update({"standardise_suffix": standardise_suffix, "standardise_prefix": standardise_prefix }) -%}
+
+    {{ return(dict_result | tojson ) }}
+
+{%- endmacro -%}
