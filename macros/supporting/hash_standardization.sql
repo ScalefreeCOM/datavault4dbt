@@ -1022,7 +1022,7 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
         {%- if alias is not none -%}
             {%- set standardise_suffix = ")ORDER BY {}) as CLOB)), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))  AS {} ".format(multi_active_key,hash_alg, alias) -%}
         {%- else -%}
-            {%- set standardise_suffix = ")ORDER BY {}) as CLOB)), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))  AS {} ".format(multi_active_key,hash_alg) -%}
+            {%- set standardise_suffix = ")ORDER BY {}) as CLOB)), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))".format(multi_active_key,hash_alg) -%}
         {%- endif -%}
 
     {%- else -%}
@@ -1032,7 +1032,7 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
         {%- if alias is not none -%}
             {%- set standardise_suffix = ")ORDER BY {}) as CLOB), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))  AS {} ".format(multi_active_key,hash_alg, alias) -%}
         {%- else -%}
-            {%- set standardise_suffix = ")ORDER BY {}) as CLOB), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))  AS {} ".format(multi_active_key,hash_alg) -%}
+            {%- set standardise_suffix = ")ORDER BY {}) as CLOB), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), ''), {}) AS VARCHAR2(40))".format(multi_active_key,hash_alg) -%}
         {%- endif -%}
     {%- endif -%}
 
