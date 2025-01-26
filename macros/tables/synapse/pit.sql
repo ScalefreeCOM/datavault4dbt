@@ -1,4 +1,4 @@
-{%- macro synapse__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key,snapshot_trigger_column=none, custom_rsrc=none, pit_type=none) -%}
+{%- macro synapse__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key,snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, refer_to_ghost_records) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'BINARY(16)') -%}
@@ -53,9 +53,14 @@ pit_records AS (
         te.{{ hashkey }},
         snap.{{ sdts }},
         {%- for satellite in sat_names %}
+          {% if refer_to_ghost_records %}
             COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite }},
             COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
-            {{- "," if not loop.last }}
+          {% else %}
+            {{ satellite }}.{{ hashkey }} AS hk_{{ satellite }},
+            {{ satellite }}.{{ ldts }} AS {{ ldts }}_{{ satellite }}
+          {% endif %}
+        {{- "," if not loop.last }}
         {%- endfor %}
 
     FROM
