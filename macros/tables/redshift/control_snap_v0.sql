@@ -1,5 +1,8 @@
 {%- macro redshift__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date) -%}
 
+{% if datavault4dbt.is_nothing(end_date) %}
+    {% set end_date = modules.datetime.date.today().strftime('%Y-%m-%d') %}
+{% endif %}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {%- set timestamp_value = start_date ~ ' ' ~ daily_snapshot_time -%}
 {%- if not datavault4dbt.is_something(sdts_alias) -%}
@@ -11,7 +14,7 @@ with recursive generate_dates({{ sdts_alias }}) as (
   	union all
   	select {{ sdts_alias }} + 1
   	from generate_dates
-  	where {{ sdts_alias }} < current_date
+  	where {{ sdts_alias }} < {{ end_date }}
 ),
 
 initial_timestamps AS (

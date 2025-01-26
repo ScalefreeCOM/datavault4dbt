@@ -1,5 +1,8 @@
 {%- macro postgres__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
+{% if datavault4dbt.is_nothing(end_date) %}
+  {% set end_date = datavault4dbt.current_timestamp() %}
+{% endif %}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- if not datavault4dbt.is_something(sdts_alias) -%}
@@ -13,7 +16,7 @@ initial_timestamps AS (
     SELECT
         sdts::timestamp
     FROM 
-        generate_series(timestamp '{{ start_date }} {{ daily_snapshot_time }}', CURRENT_TIMESTAMP, Interval '1 day') AS sdts(day)
+        generate_series(timestamp '{{ start_date }} {{ daily_snapshot_time }}', {{ end_date }}var, Interval '1 day') AS sdts(day)
     {%- if is_incremental() %}
     WHERE
         sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})

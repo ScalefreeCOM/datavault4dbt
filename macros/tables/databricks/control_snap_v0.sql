@@ -1,5 +1,9 @@
 {%- macro databricks__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
+{% if datavault4dbt.is_nothing(end_date) %}
+{% set end_date = modules.datetime.date.today().strftime('%Y-%m-%d') %}
+{% endif %}
+
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- if not datavault4dbt.is_something(sdts_alias) -%}
@@ -23,7 +27,7 @@ initial_timestamps AS (
     FROM 
         cte
     WHERE 
-        sdts <= CURRENT_TIMESTAMP
+        sdts <= {{ end_date }}
     {%- if is_incremental() %}
     AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}
