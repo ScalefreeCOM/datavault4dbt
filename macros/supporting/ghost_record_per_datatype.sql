@@ -76,7 +76,7 @@
 {%- set unknown_value_alt__STRING = var('datavault4dbt.unknown_value_alt__STRING', 'u')  -%}
 {%- set error_value_alt__STRING = var('datavault4dbt.error_value_alt__STRING', 'e')  -%}
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set hash_default_values =  datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash)) -%}
 {%- set hash_alg= hash_default_values['hash_alg'] -%}
 {%- set unknown_value__HASHTYPE = hash_default_values['unknown_key'] -%}
 {%- set  error_value__HASHTYPE = hash_default_values['error_key'] -%}
@@ -260,7 +260,7 @@
 {%- set error_value_alt__STRING = var('datavault4dbt.error_value_alt__STRING', 'e')  -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set hash_default_values =  datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash)) -%}
 {%- set hash_alg= hash_default_values['hash_alg'] -%}
 
 {%- set unknown_value__HASHTYPE = hash_default_values['unknown_key'] -%}
@@ -401,7 +401,7 @@
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set hash_default_values =  datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash)) -%}
 {%- set hash_alg= hash_default_values['hash_alg'] -%}
 {%- set unknown_value__HASHTYPE = hash_default_values['unknown_key'] -%}
 {%- set error_value__HASHTYPE = hash_default_values['error_key'] -%}
@@ -459,7 +459,7 @@
 {%- set error_value__numeric = var('datavault4dbt.error_value__numeric', -2) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set hash_default_values =  datavault4dbt.hash_default_values(hash_function=hash) -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash)) -%}
 {%- set hash_alg= hash_default_values['hash_alg'] -%}
 {%- set unknown_value__HASHTYPE = hash_default_values['unknown_key'] -%}
 {%- set error_value__HASHTYPE = hash_default_values['error_key'] -%}
