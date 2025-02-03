@@ -1,4 +1,4 @@
-{%- macro redshift__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model) -%}
+{%- macro redshift__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model, disable_hwm, source_is_single_batch) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -17,6 +17,7 @@
 
 {%- set source_relation = ref(source_model) -%}
 
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
@@ -29,10 +30,10 @@ source_data AS (
         {{ datavault4dbt.print_list(source_cols) }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() %}
+    {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}

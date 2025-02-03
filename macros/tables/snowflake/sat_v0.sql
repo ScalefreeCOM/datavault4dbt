@@ -31,10 +31,10 @@ source_data AS (
         {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() %}
+    {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
