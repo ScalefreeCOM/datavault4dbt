@@ -21,7 +21,7 @@
 
 WITH
 
-{#- Selecting all source data, that is newer than latest data in sat if incremental and hwm not disabled -#}
+{# Selecting all source data, that is newer than latest data in sat if incremental and hwm not disabled -#}
 source_data AS (
 
     SELECT
@@ -85,7 +85,7 @@ deduped_rows AS (
 
 {%- set source_cte = 'deduped_rows' -%}
 ),
-{% endif -%}
+{% endif %}
 
 records_to_insert AS (
 

@@ -37,7 +37,7 @@ source_data AS (
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
-{% set source_cte = source_data %}
+{% set source_cte = 'source_data' %}
 ),
 
 {# Get the latest record for each parent hashkey in existing sat, if incremental. #}
@@ -81,9 +81,9 @@ deduped_rows AS (
     AND {{ datavault4dbt.multikey(src_ldts, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
 
-{% set source_cte = deduped_rows %}
+{% set source_cte = 'deduped_rows' %}
 ),
-{%- endif -%}
+{%- endif %}
 
 records_to_insert AS (
 
