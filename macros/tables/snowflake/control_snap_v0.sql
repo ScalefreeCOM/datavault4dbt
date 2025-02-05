@@ -1,7 +1,7 @@
 {%- macro snowflake__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
 {% if datavault4dbt.is_nothing(end_date) %}
-    {% set end_date = modules.datetime.date.today().strftime('%Y-%m-%d') %}
+    {% set end_date = 'CURRENT_TIMESTAMP' %}
 {% endif %}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {%- set start_date = start_date | replace('00:00:00', daily_snapshot_time) -%}

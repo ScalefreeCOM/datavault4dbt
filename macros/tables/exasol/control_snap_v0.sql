@@ -2,7 +2,7 @@
 
 
 {% if datavault4dbt.is_nothing(end_date) %}
-  {% set end_date = modules.datetime.date.today().strftime('%Y-%m-%d') %}
+  {% set end_date = CURRENT_DATE() %}
 {% endif %}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {%- set date_format_std = 'YYYY-mm-dd' -%}
