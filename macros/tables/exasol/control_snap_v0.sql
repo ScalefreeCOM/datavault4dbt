@@ -1,10 +1,14 @@
 {%- macro exasol__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
 
-{% if datavault4dbt.is_nothing(end_date) %}
-  {% set end_date = CURRENT_DATE() %}
-{% endif %}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{% if datavault4dbt.is_nothing(end_date) %}
+  {% set end_date = 'CURRENT_DATE()' %}
+{% else %}
+    {% set end_date = datavault4dbt.string_to_timestamp(timestamp_format, end_date) %}
+{% endif %}
+
 {%- set date_format_std = 'YYYY-mm-dd' -%}
 {%- set daily_snapshot_time = '0001-01-01 ' ~ daily_snapshot_time -%}
 {%- set last_cte = '' -%}

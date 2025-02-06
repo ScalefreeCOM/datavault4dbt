@@ -24,7 +24,7 @@ initial_timestamps AS (
             INTERVAL EXTRACT(MINUTE FROM TIME '{{ daily_snapshot_time }}') MINUTE),
             TIMESTAMP_ADD(
                 TIMESTAMP_ADD(
-                    TIMESTAMP_TRUNC({{ end_date }}, DAY),
+                    TIMESTAMP_TRUNC('{{ end_date }}', DAY),
                 INTERVAL EXTRACT(HOUR FROM TIME '{{ daily_snapshot_time }}') HOUR),
             INTERVAL EXTRACT(MINUTE FROM TIME '{{ daily_snapshot_time }}') MINUTE),
         INTERVAL 1 DAY)) AS sdts

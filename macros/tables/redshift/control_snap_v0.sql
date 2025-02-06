@@ -2,6 +2,8 @@
 
 {% if datavault4dbt.is_nothing(end_date) %}
     {% set end_date = 'current_date' %}
+{% else %}
+    {% set end_date = "'"~end_date~"'::timestamp" %}
 {% endif %}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {%- set timestamp_value = start_date ~ ' ' ~ daily_snapshot_time -%}
