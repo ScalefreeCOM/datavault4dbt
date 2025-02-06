@@ -2,6 +2,8 @@
 
 {% if datavault4dbt.is_nothing(end_date) %}
   {% set end_date = datavault4dbt.current_timestamp() %}
+{% else %}
+    {% set end_date = "'"~end_date~"'" %}
 {% endif %}
 
 WITH 
@@ -23,7 +25,7 @@ initial_timestamps_prep AS (
 		),
 
 initial_timestamps AS (
-    SELECT TOP (DATEDIFF(DAY, '{{ start_date }}', '{{ end_date}}') + 1)
+    SELECT TOP (DATEDIFF(DAY, '{{ start_date }}', {{ end_date}}) + 1)
     DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, '{{ start_date }}' ) AS {{ sdts_alias }}
     FROM initial_timestamps_prep s1
     CROSS JOIN initial_timestamps_prep s2

@@ -2,6 +2,8 @@
 
 {% if datavault4dbt.is_nothing(end_date) %}
     {% set end_date = 'CURRENT_TIMESTAMP()' %}
+{% else %}
+    {% set end_date = "'"~end_date~"'" %}
 {% endif %}
 
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
@@ -24,7 +26,7 @@ initial_timestamps AS (
             INTERVAL EXTRACT(MINUTE FROM TIME '{{ daily_snapshot_time }}') MINUTE),
             TIMESTAMP_ADD(
                 TIMESTAMP_ADD(
-                    TIMESTAMP_TRUNC('{{ end_date }}', DAY),
+                    TIMESTAMP_TRUNC({{ end_date }}, DAY),
                 INTERVAL EXTRACT(HOUR FROM TIME '{{ daily_snapshot_time }}') HOUR),
             INTERVAL EXTRACT(MINUTE FROM TIME '{{ daily_snapshot_time }}') MINUTE),
         INTERVAL 1 DAY)) AS sdts

@@ -2,6 +2,8 @@
 
 {% if datavault4dbt.is_nothing(end_date) %}
     {% set end_date = 'CURRENT_TIMESTAMP' %}
+{% else %}
+    {% set end_date = "'"~end_date~"'" %}
 {% endif %}
 
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
@@ -13,7 +15,7 @@
 WITH 
 
 date_array as(
-    select sequence(to_timestamp('{{ start_date }} {{ daily_snapshot_time }}'), to_timestamp(to_date('{{ end_date }}')+1), interval 1 day) AS sdts
+    select sequence(to_timestamp('{{ start_date }} {{ daily_snapshot_time }}'), to_timestamp(to_date({{ end_date }})+1), interval 1 day) AS sdts
 ),
 
 cte as(
@@ -27,7 +29,7 @@ initial_timestamps AS (
     FROM 
         cte
     WHERE 
-        sdts <= to_date('{{ end_date }}')+1
+        sdts <= to_date({{ end_date }})+1
     {%- if is_incremental() %}
     AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}
