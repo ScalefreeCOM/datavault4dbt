@@ -36,9 +36,9 @@ source_data AS (
             COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
-
-    {% set source_cte = 'source_data' %}
     {%- endif %}
+    
+    {% set source_cte = 'source_data' %}
 
 ),
 
