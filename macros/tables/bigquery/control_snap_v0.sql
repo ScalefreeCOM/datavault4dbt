@@ -1,5 +1,11 @@
 {%- macro default__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
+{% if datavault4dbt.is_nothing(end_date) %}
+    {% set end_date = 'CURRENT_TIMESTAMP()' %}
+{% else %}
+    {% set end_date = "'"~end_date~"'" %}
+{% endif %}
+
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- if not datavault4dbt.is_something(sdts_alias) -%}
@@ -20,7 +26,7 @@ initial_timestamps AS (
             INTERVAL EXTRACT(MINUTE FROM TIME '{{ daily_snapshot_time }}') MINUTE),
             TIMESTAMP_ADD(
                 TIMESTAMP_ADD(
-                    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY),
+                    TIMESTAMP_TRUNC({{ end_date }}, DAY),
                 INTERVAL EXTRACT(HOUR FROM TIME '{{ daily_snapshot_time }}') HOUR),
             INTERVAL EXTRACT(MINUTE FROM TIME '{{ daily_snapshot_time }}') MINUTE),
         INTERVAL 1 DAY)) AS sdts

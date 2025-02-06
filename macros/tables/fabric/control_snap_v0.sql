@@ -2,6 +2,8 @@
 
 {% if datavault4dbt.is_nothing(end_date) %}
   {% set end_date = datavault4dbt.current_timestamp() %}
+{% else %}
+    {% set end_date = "'"~end_date~"'" %}
 {% endif %}
 
 WITH 
