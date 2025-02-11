@@ -1,5 +1,12 @@
 {%- macro snowflake__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
+
+{% if datavault4dbt.is_nothing(end_date) %}
+    {% set end_date = 'CURRENT_TIMESTAMP' %}
+{% else %}
+    {% set end_date = "DATEADD(day, 1, TO_DATE('"~end_date~"'))" %}
+{% endif %}
+
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {%- set start_date = start_date | replace('00:00:00', daily_snapshot_time) -%}
 
@@ -16,7 +23,7 @@ initial_timestamps AS (
     FROM 
         TABLE(GENERATOR(ROWCOUNT => 100000))
     WHERE 
-        sdts <= CURRENT_TIMESTAMP
+        sdts <= {{ end_date }}
     {%- if is_incremental() %}
     AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}

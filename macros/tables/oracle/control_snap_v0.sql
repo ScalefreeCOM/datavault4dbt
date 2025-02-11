@@ -1,5 +1,11 @@
 {%- macro oracle__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
+{% if datavault4dbt.is_nothing(end_date) %}
+    {% set end_date = 'current_date' %}
+{% else %}
+    {% set end_date = "TO_DATE('"~end_date~"', '"~datavault4dbt.date_format()~"')" %}
+{% endif %}
+
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {%- set timestamp_value = start_date ~ ' ' ~ daily_snapshot_time -%}
 {%- if not datavault4dbt.is_something(sdts_alias) -%}
@@ -12,7 +18,7 @@ with generate_dates({{ sdts_alias }}) as (
   	union all
   	select {{ sdts_alias }} + 1
   	from generate_dates
-  	where {{ sdts_alias }} < current_date
+  	where {{ sdts_alias }} < {{ end_date }}
 ),
 
 initial_timestamps AS (
