@@ -931,40 +931,40 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
 {%- if datatype == 'STRING' -%}
 
     {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(ARRAY_JOIN(SORT_ARRAY(ARRAY_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
+        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')), false),','))), {}) AS {}".format(zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2)))), {}) AS {}".format(zero_key, alias, mak=multi_active_key)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')), false),','))), {})".format(zero_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2)))), {})".format(zero_key, mak=multi_active_key)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(ARRAY_JOIN(SORT_ARRAY(ARRAY_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg) -%}
+        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key) -%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')), false),','))), {}) AS {}".format(zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2)))), {}) AS {}".format(zero_key, alias, mak=multi_active_key)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')), false),','))), {})".format(zero_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2)))), {})".format(zero_key, mak=multi_active_key)-%}
         {%- endif -%}
     {%- endif -%}
 
 {%- else -%}
 
     {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}(ARRAY_JOIN(SORT_ARRAY(ARRAY_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
+        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')), false),',')) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2))) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias, mak=multi_active_key)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')), false),',')) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2))) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype, mak=multi_active_key)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}(ARRAY_JOIN(SORT_ARRAY(ARRAY_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
+        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')), false),',')) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2))) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias, mak=multi_active_key)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')), false),',')) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2))) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype, mak=multi_active_key)-%}
         {%- endif -%}
     {%- endif -%}
 
