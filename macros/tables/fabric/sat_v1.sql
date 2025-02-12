@@ -20,9 +20,9 @@
 {% set hashkey = datavault4dbt.escape_column_names(hashkey) %}
 {% set hashdiff = datavault4dbt.escape_column_names(hashdiff) %}
 
-{{ datavault4dbt.prepend_generated_by() }}
-
 WITH
+
+{{ datavault4dbt.prepend_generated_by() }}
 
 {# Calculate ledts based on the ldts of the earlier record. #}
 end_dated_source AS (

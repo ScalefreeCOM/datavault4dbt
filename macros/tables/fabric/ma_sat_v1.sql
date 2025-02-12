@@ -22,10 +22,9 @@
 {% set hashkey = datavault4dbt.escape_column_names(hashkey) %}
 {% set hashdiff = datavault4dbt.escape_column_names(hashdiff) %}
 
+WITH
 
 {{ datavault4dbt.prepend_generated_by() }}
-
-WITH
 
 {# Getting everything from the underlying v0 satellite. #}
 source_satellite AS (

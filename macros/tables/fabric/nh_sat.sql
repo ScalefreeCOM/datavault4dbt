@@ -16,10 +16,9 @@
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 
+WITH
 
 {{ datavault4dbt.prepend_generated_by() }}
-
-WITH
 
 {# Selecting all source data, that is newer than latest data in sat if incremental #}
 source_data AS (
