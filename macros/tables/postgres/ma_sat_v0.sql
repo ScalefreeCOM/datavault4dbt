@@ -33,10 +33,12 @@ source_data AS (
     {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
+    
+    {% set source_cte = 'source_data' %}
 
 ),
 
@@ -63,6 +65,7 @@ latest_entries_in_sat AS (
 ),
 {%- endif %}
 
+{%- if not source_is_single_batch -%}
 {# Get a list of all distinct hashdiffs that exist for each parent_hashkey. #}
  lag_source_data AS (
   SELECT 
@@ -95,21 +98,23 @@ deduped_rows AS (
     AND {{ datavault4dbt.multikey(src_ldts, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
 
+{%- set source_cte = 'deduped_rows' -%}
 ),
+{%- endif %}
 
 records_to_insert AS (
 
     SELECT
-        deduped_rows.{{ parent_hashkey }},
-        deduped_rows.{{ ns.hdiff_alias }},
-        {{ datavault4dbt.alias_all(columns=source_cols, prefix='deduped_rows') }}
-    FROM deduped_rows
+        {{ source_cte }}.{{ parent_hashkey }},
+        {{ source_cte }}.{{ ns.hdiff_alias }},
+        {{ datavault4dbt.alias_all(columns=source_cols, prefix=source_cte) }}
+    FROM {{ source_cte }}
     {%- if is_incremental() %}
     WHERE NOT EXISTS (
         SELECT 1
         FROM latest_entries_in_sat
-        WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduped_rows'], condition='=') }}
-            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', 'deduped_rows'], condition='=') }} 
+        WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
+            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }} 
             )
     {%- endif %}
 
