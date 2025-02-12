@@ -39,10 +39,9 @@
 {%- set sdts_alias = datavault4dbt.escape_column_names(sdts_alias) -%}
 {%- set is_current_col_alias = datavault4dbt.escape_column_names(is_current_col_alias) -%}
 
+WITH 
 
 {{ datavault4dbt.prepend_generated_by() }}
-
-WITH 
 
 dates AS (
 

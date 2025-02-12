@@ -23,9 +23,9 @@
 {% set parent_hashkey = datavault4dbt.escape_column_names(parent_hashkey) %}
 {% set src_hashdiff = datavault4dbt.escape_column_names(src_hashdiff) %}
 
-{{ datavault4dbt.prepend_generated_by() }}
-
 WITH
+
+{{ datavault4dbt.prepend_generated_by() }}
 
 {# Selecting all source data, that is newer than latest data in sat if incremental #}
 source_data AS (

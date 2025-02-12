@@ -22,10 +22,9 @@
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 {%- set ledts_alias = datavault4dbt.escape_column_names(ledts_alias) -%}
 
+WITH
 
 {{ datavault4dbt.prepend_generated_by() }}
-
-WITH
 
 {# Calculate ledts based on the ldts of the earlier record. #}
 end_dated_source AS (

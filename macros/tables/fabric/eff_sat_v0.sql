@@ -16,9 +16,9 @@
 
 {{ log('columns to select: '~final_columns_to_select, false) }}
 
-{{ datavault4dbt.prepend_generated_by() }}
-
 WITH 
+
+{{ datavault4dbt.prepend_generated_by() }}
 
 {#
     In all cases, the source model is selected, and optionally a HWM is applied. 
