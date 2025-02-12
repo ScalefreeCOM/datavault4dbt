@@ -38,6 +38,9 @@ source_data AS (
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
+
+    {%- set source_cte = 'source_data' -%}
+
 ),
 
 {# Get the latest record for each parent hashkey in existing sat, if incremental. #}
@@ -63,6 +66,7 @@ latest_entries_in_sat AS (
 ),
 {%- endif %}
 
+{%- if not source_is_single_batch %}
 {#
     Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each hashkey.
     Additionally adding a row number based on that order, if incremental.
@@ -93,7 +97,11 @@ deduplicated_numbered_source AS (
         {% if is_incremental() -%}
         AND rn = 1
         {%- endif %}
+    {%- set source_cte = 'deduplicated_numbered_source' -%}
+
 ),
+
+{% endif -%}
 
 {#
     Select all records from the previous CTE. If incremental, compare the oldest incoming entry to
@@ -105,13 +113,14 @@ records_to_insert AS (
     {{ parent_hashkey }},
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}
-    FROM deduplicated_numbered_source
+    FROM {{ source_cte }}
     {%- if is_incremental() %}
     WHERE NOT EXISTS (
         SELECT 1
         FROM latest_entries_in_sat
-        WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
-            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }})
+        WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
+            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
+    )
     {%- endif %}
 
     )
