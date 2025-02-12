@@ -27,9 +27,9 @@
 {%- set source_cols = datavault4dbt.escape_column_names(source_cols) -%}
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 
-{{ datavault4dbt.prepend_generated_by() }}
-
 WITH
+
+{{ datavault4dbt.prepend_generated_by() }}
 
 {# Selecting all source data, that is newer than latest data in ref_sat if incremental #}
 source_data AS (

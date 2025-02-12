@@ -34,9 +34,9 @@
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 
-{{ datavault4dbt.prepend_generated_by() }}
-
 WITH
+
+{{ datavault4dbt.prepend_generated_by() }}
 
 {% if is_incremental() %}
 {# Get all link hashkeys out of the existing link for later incremental logic. #}

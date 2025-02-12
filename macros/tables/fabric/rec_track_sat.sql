@@ -30,10 +30,9 @@
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 {%- set src_stg = datavault4dbt.escape_column_names(src_stg) -%}
 
+WITH
 
 {{ datavault4dbt.prepend_generated_by() }}
-
-WITH
 
 {% if is_incremental() %}
 

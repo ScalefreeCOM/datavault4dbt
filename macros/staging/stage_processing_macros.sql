@@ -101,6 +101,13 @@
     {%- endif -%}
 
     {%- do return(columns_to_select) -%}
+    
+{%- endmacro -%}
+
+
+{%- macro synapse__process_columns_to_select(columns_list, exclude_columns_list) -%}
+
+    {{ return (datavault4dbt.default__process_columns_to_select(columns_list=columns_list,exclude_columns_list=exclude_columns_list)) }}
 
 {%- endmacro -%}
 
