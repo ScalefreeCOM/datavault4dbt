@@ -55,6 +55,7 @@ latest_entries_in_sat AS (
 ),
 {%- endif %}
 
+{% if not source_is_single_batch %}
 {# Get a list of all distinct hashdiffs that exist for each parent_hashkey. #}
 deduped_row_hashdiff AS (
 
