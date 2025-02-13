@@ -919,52 +919,79 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
 {%- endmacro -%}
 
 
+{# To accomodate the missing support for listagg/stringagg of databricks sql #}
+{% macro generate_comparator(ma_attributes) %}
+    {% if ma_attributes is iterable and ma_attributes is not string %}
+        {% set comparator = namespace(value='') %} 
+        {% set comparator = namespace(end_string='') %} 
+
+        {% for ma_attribute in ma_attributes %}
+
+            {% set comparator.value = comparator.value ~ ' CASE WHEN left.' ~ ma_attribute ~ ' < right.' ~ ma_attribute ~ ' THEN -1  WHEN left.' ~ ma_attribute ~ ' > right.' ~ ma_attribute ~ ' THEN 1 ELSE '  %}
+
+            {% set comparator.end_string = comparator.end_string ~ ' END '%}
+            {% if loop.last %}
+                {% set comparator.value = comparator.value ~ ' 0 '~ comparator.end_string ~'),x -> x.col'~(loop.index+1)~')' %}
+            {% endif %}
+        {% endfor %}
+
+        {{ return(comparator.value) }}
+    {% else %}
+
+        {{ return ('CASE WHEN left.'~ma_attributes~' < right.'~ma_attributes~' THEN -1 WHEN left.'~ma_attributes~' > right.'~ma_attributes~' THEN 1 ELSE 0 END),x -> x.col2)') }}
+
+    {% endif %}
+{% endmacro %}
+
+
 {%- macro databricks__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column) -%}
 {%- set dict_result = {} -%}
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
 {%- if datavault4dbt.is_list(multi_active_key) -%}
-    {%- set multi_active_key = multi_active_key|join(", ") -%}
+    {%- set multi_active_key_string = multi_active_key|join(", ") -%}
+{%- else -%}    
+    {%- set multi_active_key_string = multi_active_key -%}
 {%- endif -%}
 
 {%- if datatype == 'STRING' -%}
 
     {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key)-%}
+        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key_string)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2)))), {}) AS {}".format(zero_key, alias, mak=multi_active_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~datavault4dbt.generate_comparator(multi_active_key)~"))), {}) AS {}".format(zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2)))), {})".format(zero_key, mak=multi_active_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~datavault4dbt.generate_comparator(multi_active_key)~"))), {})".format(zero_key)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key) -%}
+        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key_string) -%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2)))), {}) AS {}".format(zero_key, alias, mak=multi_active_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~datavault4dbt.generate_comparator(multi_active_key)~"))), {}) AS {}".format(zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2)))), {})".format(zero_key, mak=multi_active_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~datavault4dbt.generate_comparator(multi_active_key)~"))), {})".format(zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
 {%- else -%}
 
     {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key)-%}
+        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key_string)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2))) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias, mak=multi_active_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2))) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype, mak=multi_active_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key)-%}
+        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key_string)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2))) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias, mak=multi_active_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> case when left.{mak} < right.{mak} then -1 when left.{mak} > right.{mak} then 1 else 0 end),x -> x.col2))) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype, mak=multi_active_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype)-%}
         {%- endif -%}
     {%- endif -%}
 
