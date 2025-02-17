@@ -26,14 +26,3 @@
     {{ return(return_value) }}
 
 {% endmacro %}
-
-
-{% macro is_something_or_false(obj) %}
-
-    {%- if obj is not none and obj is defined -%}
-        {%- do return(true) -%}
-    {%- else -%}
-        {%- do return(false) -%}
-    {%- endif -%}
-    
-{% endmacro %}
