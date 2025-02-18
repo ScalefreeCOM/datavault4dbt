@@ -27,10 +27,9 @@
 {%- set ldts = datavault4dbt.escape_column_names(ldts) -%}
 {%- set ledts = datavault4dbt.escape_column_names(ledts) -%}
 
+WITH
 
 {{ datavault4dbt.prepend_generated_by() }}
-
-WITH
 
 {%- if is_incremental() %}
 

@@ -1,6 +1,14 @@
 {%- macro exasol__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
+
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{% if datavault4dbt.is_nothing(end_date) %}
+  {% set end_date = 'CURRENT_DATE()' %}
+{% else %}
+    {% set end_date = datavault4dbt.string_to_timestamp(timestamp_format, end_date) %}
+{% endif %}
+
 {%- set date_format_std = 'YYYY-mm-dd' -%}
 {%- set daily_snapshot_time = '0001-01-01 ' ~ daily_snapshot_time -%}
 {%- set last_cte = '' -%}
@@ -12,7 +20,7 @@ initial_timestamps AS
                                                         EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) 
                                                     ), level-1) as sdts
     from dual
-    connect by level <= days_between(ADD_MINUTES(ADD_HOURS(CURRENT_DATE(), EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) ),
+    connect by level <= days_between(ADD_MINUTES(ADD_HOURS({{ end_date }}, EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) ),
                                                         EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) 
                                                     ), TO_DATE('{{ start_date}}', '{{ date_format_std }}')
                                     )+1

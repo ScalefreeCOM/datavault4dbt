@@ -1,5 +1,11 @@
 {%- macro databricks__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
+{% if datavault4dbt.is_nothing(end_date) %}
+    {% set end_date = 'CURRENT_TIMESTAMP' %}
+{% else %}
+    {% set end_date = "'"~end_date~"'" %}
+{% endif %}
+
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- if not datavault4dbt.is_something(sdts_alias) -%}
@@ -9,7 +15,7 @@
 WITH 
 
 date_array as(
-    select sequence(to_timestamp('{{ start_date }} {{ daily_snapshot_time }}'), to_timestamp(current_date()+1), interval 1 day) AS sdts
+    select sequence(to_timestamp('{{ start_date }} {{ daily_snapshot_time }}'), to_timestamp(to_date({{ end_date }})+1), interval 1 day) AS sdts
 ),
 
 cte as(
@@ -23,7 +29,7 @@ initial_timestamps AS (
     FROM 
         cte
     WHERE 
-        sdts <= CURRENT_TIMESTAMP
+        sdts <= to_date({{ end_date }})+1
     {%- if is_incremental() %}
     AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}

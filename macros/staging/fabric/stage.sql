@@ -177,9 +177,9 @@
 {#- Setting the rsrc default datatype -#}
 {%- set rsrc_default_dtype = datavault4dbt.string_default_dtype(type=rsrc) -%}
 
-{{ datavault4dbt.prepend_generated_by() }}
-
 WITH
+
+{{ datavault4dbt.prepend_generated_by() }}
 
 {# Selecting everything that we need from the source relation. #}
 source_data AS (
