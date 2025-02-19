@@ -86,16 +86,34 @@
     {%- set unknown_key = '' -%}
     {%- set error_key = '' -%}
 
-    {%- if hash_function == 'MD5' -%}
-        {%- set hash_alg = 'HASHTYPE_MD5' -%}
+    {%- if 'MD5' in hash_function -%}
+
+        {%- if 'HASHTYPE' in hash_datatype -%}
+            {%- set hash_alg = 'HASHTYPE_MD5' -%}
+        {%- elif 'CHAR' in hash_datatype -%}
+            {%- set hash_alg = 'HASH_MD5' -%}
+        {%- endif -%}
+
         {%- set unknown_key = '!00000000000000000000000000000000' -%}
         {%- set error_key = '!ffffffffffffffffffffffffffffffff' -%}
     {%- elif (hash_function == 'SHA' or hash_function == 'SHA1') -%}
-        {%- set hash_alg = 'HASHTYPE_SHA1' -%}
+
+        {%- if 'HASHTYPE' in hash_datatype -%}
+            {%- set hash_alg = 'HASHTYPE_SHA1' -%}
+        {%- elif 'CHAR' in hash_datatype -%}
+            {%- set hash_alg = 'HASH_SHA1' -%}
+        {%- endif -%}
+
         {%- set unknown_key = '!0000000000000000000000000000000000000000' -%}
         {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
     {%- elif (hash_function == 'SHA2' or hash_function == 'SHA256') -%}
-        {%- set hash_alg = 'HASHTYPE_SHA256' -%}
+
+        {%- if 'HASHTYPE' in hash_datatype -%}
+            {%- set hash_alg = 'HASHTYPE_SHA256' -%}
+        {%- elif 'CHAR' in hash_datatype -%}
+            {%- set hash_alg = 'HASH_SHA256' -%}
+        {%- endif -%}
+        
         {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
         {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
     {%- endif -%}

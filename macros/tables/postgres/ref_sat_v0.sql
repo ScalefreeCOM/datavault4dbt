@@ -38,10 +38,11 @@ source_data AS (
     {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
+    {%- set source_cte = 'source_data' -%}
 ),
 
 {# Get the latest record for each parent ref key combination in existing sat, if incremental. #}
@@ -70,7 +71,7 @@ latest_entries_in_sat AS (
     WHERE rn = 1  
 ),
 {%- endif %}
-
+{%- if not source_is_single_batch %}
 {#
     Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each parent ref key combination.
     Additionally adding a row number based on that order, if incremental.
@@ -104,8 +105,9 @@ deduplicated_numbered_source AS (
         {% if is_incremental() -%}
         AND rn = 1
         {%- endif %}
+    {%- set source_cte = 'deduplicated_numbered_source' -%}
 ),
-
+{% endif -%}
 {#
     Select all records from the previous CTE. If incremental, compare the oldest incoming entry to
     the existing records in the satellite.
@@ -118,16 +120,16 @@ records_to_insert AS (
     {% endfor %}
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}
-    FROM deduplicated_numbered_source
+    FROM {{ source_cte }} 
     {%- if is_incremental() %}
     WHERE NOT EXISTS (
         SELECT 1
         FROM latest_entries_in_sat
         WHERE 1=1
             {% for ref_key in parent_ref_keys %}
-            AND {{ datavault4dbt.multikey(ref_key, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
+            AND {{ datavault4dbt.multikey(ref_key, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             {% endfor %}
-            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
+            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             )
     {%- endif %}
 
