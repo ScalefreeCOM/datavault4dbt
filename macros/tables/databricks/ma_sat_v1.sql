@@ -4,6 +4,7 @@
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
+{%- set is_current_col_alias = datavault4dbt.escape_column_names(is_current_col_alias) -%}
 
 {%- set source_relation = ref(sat_v0) -%}
 {%- set all_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}

@@ -3,7 +3,8 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'is_current') -%}
+{%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
+{%- set is_current_col_alias = datavault4dbt.escape_column_names(is_current_col_alias) -%}
 
 {%- set source_relation = ref(sat_v0) -%}
 
