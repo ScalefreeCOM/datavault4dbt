@@ -1,3 +1,8 @@
+{#
+    Usage example:
+    dbt run-operation rehash_satellite --args '{satellite: customer_n0_s, hashkey: HK_CUSTOMER_H, hashdiff: HD_CUSTOMER_N_S, payload: [C_ACCTBAL, C_MKTSEGMENT, C_COMMENT], parent_entity: customer_h, business_keys: C_CUSTKEY, overwrite_hash_values: true}'
+#}
+
 {% macro rehash_satellite(satellite, hashkey, hashdiff, payload, parent_entity, business_keys, overwrite_hash_values=false) %}
 
     {% set satellite_relation = ref(satellite) %}
