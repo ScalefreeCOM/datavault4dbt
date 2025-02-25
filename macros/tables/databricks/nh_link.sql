@@ -42,6 +42,13 @@
 {%- endif -%}
 {%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + payload -%}
 
+{%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
+{%- set link_hashkey = datavault4dbt.escape_column_names(link_hashkey) -%}
+{%- set foreign_hashkeys = datavault4dbt.escape_column_names(foreign_hashkeys) -%}
+{%- set payload = datavault4dbt.escape_column_names(payload) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH
@@ -163,14 +170,14 @@ WITH
 src_new_{{ source_number }} AS (
 
     SELECT
-            {{ link_hk }} AS {{ link_hashkey }},
+            {{ datavault4dbt.escape_column_names(link_hk) }} AS {{ link_hashkey }},
             {% for fk in source_model['fk_columns'] -%}
-            {{ fk }},
+            {{ datavault4dbt.escape_column_names(fk) }},
             {% endfor -%}
         {{ src_ldts }},
         {{ src_rsrc }},
 
-        {{ datavault4dbt.print_list(source_model['payload']) | indent(3) }}
+        {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_model['payload'])) | indent(3) }}
 
     FROM {{ ref(source_model.name) }} src
     {# If the model is incremental and all sources has rsrc_static defined and valid and the source was already included before in the target transactional link #}
@@ -210,7 +217,7 @@ source_new_union AS (
     SELECT
         {{ link_hashkey }},
         {% for fk in source_model['fk_columns']|list %}
-            {{ fk }} AS {{ foreign_hashkeys[loop.index - 1] }},
+            {{ datavault4dbt.escape_column_names(fk) }} AS {{ datavault4dbt.escape_column_names(foreign_hashkeys[loop.index - 1]) }},
         {% endfor -%}
 
         {{ src_ldts }},

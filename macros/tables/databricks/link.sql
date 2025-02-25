@@ -29,6 +29,13 @@
 
 {%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] -%}
 
+{%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
+{%- set link_hashkey = datavault4dbt.escape_column_names(link_hashkey) -%}
+{%- set foreign_hashkeys = datavault4dbt.escape_column_names(foreign_hashkeys) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH

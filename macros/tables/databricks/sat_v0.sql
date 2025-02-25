@@ -18,6 +18,11 @@
 
 {%- set source_relation = ref(source_model) -%}
 
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+{%- set parent_hashkey = datavault4dbt.escape_column_names(parent_hashkey) -%}
+{%- set src_hashdiff = datavault4dbt.escape_column_names(src_hashdiff) -%}
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH

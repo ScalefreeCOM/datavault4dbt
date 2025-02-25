@@ -12,6 +12,13 @@
 {%- set exclude = [hashkey, hashdiff, src_ldts, src_rsrc] -%}
 
 {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_columns, exclude) -%}
+{%- set source_columns_to_select = datavault4dbt.escape_column_names(source_columns_to_select) -%}
+
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+{%- set ledts_alias = datavault4dbt.escape_column_names(ledts_alias) -%}
+{%- set hashkey = datavault4dbt.escape_column_names(hashkey) -%}
+{%- set hashdiff = datavault4dbt.escape_column_names(hashdiff) -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 

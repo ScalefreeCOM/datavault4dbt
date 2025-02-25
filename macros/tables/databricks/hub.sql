@@ -25,6 +25,13 @@
 {{ log('source_models: '~source_models, false) }}
 
 {%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] -%}
+{%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
+
+{%- set hashkey = datavault4dbt.escape_column_names(hashkey) -%}
+{%- set business_keys = datavault4dbt.escape_column_names(business_keys) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+
 
 {{ datavault4dbt.prepend_generated_by() }}
 
