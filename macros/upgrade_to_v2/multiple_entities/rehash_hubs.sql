@@ -1,0 +1,21 @@
+
+
+{% macro rehash_hubs(hub_yaml) %}
+
+    {% set hub_dict = fromyaml(hub_yaml) %}
+
+    {% set overwrite_hash_values = hub_dict.config.get('overwrite_hash_values', false) %}
+
+    {% for hub in hub_dict.get('hubs') %}
+        {% set specific_hub_overwrite_hash = hub.get('overwrite_hash_values', overwrite_hash_values) %}
+         
+        {% do datavault4dbt.rehash_single_hub(hub=hub.name, 
+                                       hashkey=hub.hashkey,
+                                       business_keys=hub.business_keys,
+                                       overwrite_hash_values=specific_hub_overwrite_hash,
+                                       output_logs=false) %}
+                        
+        {{ log(hub.name ~ ' rehashed successfully.', true) }}                
+    {% endfor %}
+
+{% endmacro %}
