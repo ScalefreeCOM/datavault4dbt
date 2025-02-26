@@ -22,6 +22,11 @@
 
 {%- set final_columns_to_select = ref_keys + [src_ldts] + [src_rsrc] -%}
 
+{%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
+{%- set ref_keys = datavault4dbt.escape_column_names(ref_keys) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH
@@ -135,7 +140,7 @@ WITH
 
         SELECT
             {% for ref_key in source_model['ref_keys'] -%}
-            {{ ref_key}},
+            {{ datavault4dbt.escape_column_names(ref_key)}},
             {% endfor -%}
 
             {{ src_ldts }},
@@ -167,7 +172,7 @@ source_new_union AS (
 
     SELECT
         {% for ref_key in source_model['ref_keys'] -%}
-            {{ ref_key }} AS {{ ref_keys[loop.index - 1] }},
+            {{ datavault4dbt.escape_column_names(ref_key) }} AS {{ datavault4dbt.escape_column_names(ref_keys[loop.index - 1]) }},
         {% endfor -%}
 
         {{ src_ldts }},
@@ -202,7 +207,7 @@ earliest_ref_key_over_all_sources AS (
 records_to_insert AS (
     {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the hub. #}
     SELECT
-        {{ datavault4dbt.print_list(final_columns_to_select) }}
+        {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
     FROM {{ ns.last_cte }}
 
     {%- if is_incremental() %}

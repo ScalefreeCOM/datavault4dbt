@@ -4,6 +4,7 @@
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
+{%- set is_current_col_alias = datavault4dbt.escape_column_names(is_current_col_alias) -%}
 
 {%- set source_relation = ref(ref_sat_v0) -%}
 
@@ -13,6 +14,13 @@
 {%- set exclude = ref_keys + [hashdiff, src_ldts, src_rsrc] -%}
 
 {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_columns, exclude) -%}
+
+{%- set source_columns_to_select = datavault4dbt.escape_column_names(source_columns_to_select) -%}
+{%- set ref_keys = datavault4dbt.escape_column_names(ref_keys) -%}
+{%- set hashdiff = datavault4dbt.escape_column_names(hashdiff) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+{%- set ledts_alias = datavault4dbt.escape_column_names(ledts_alias) -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 

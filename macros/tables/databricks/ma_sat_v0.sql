@@ -14,9 +14,19 @@
 {%- endif -%}
 
 {%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_ma_key, src_payload]) -%}
+{%- set source_cols = datavault4dbt.escape_column_names(source_cols) -%}
 
 {%- set source_relation = ref(source_model) -%}
 
+{%- set parent_hashkey = datavault4dbt.escape_column_names(parent_hashkey) -%}
+{%- set ns.src_hashdiff = datavault4dbt.escape_column_names(ns.src_hashdiff) -%}
+{%- set ns.hdiff_alias = datavault4dbt.escape_column_names(ns.hdiff_alias) -%}
+{%- set src_ma_key = datavault4dbt.escape_column_names(src_ma_key) -%}
+{%- set src_payload = datavault4dbt.escape_column_names(src_payload) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+ 
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 

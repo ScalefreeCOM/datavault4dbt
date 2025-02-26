@@ -25,6 +25,11 @@
 
 {%- set final_columns_to_select = [tracked_hashkey] + [src_ldts] + [src_rsrc] + [src_stg] -%}
 
+{%- set tracked_hashkey = datavault4dbt.escape_column_names(tracked_hashkey) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+{%- set src_stg = datavault4dbt.escape_column_names(src_stg) -%}
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH
@@ -124,7 +129,7 @@ WITH
 {%- for source_model in source_models %}
 
     {%- set source_number = source_model.id | string -%}
-    {%- set hk_column = source_model['hk_column'] -%}
+    {%- set hk_column = datavault4dbt.escape_column_names(source_model['hk_column']) -%}
     {%- if ns.has_rsrc_static_defined -%}
         {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number|string] -%}
 
@@ -209,7 +214,7 @@ source_new_union AS (
 records_to_insert AS (
 
     SELECT
-    {{ datavault4dbt.print_list(final_columns_to_select) }}
+    {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(final_columns_to_select)) }}
     FROM {{ ns.last_cte }}
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} 
     AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
