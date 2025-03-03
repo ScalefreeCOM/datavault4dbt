@@ -14,7 +14,7 @@
                                        additional_hash_input_cols=link.additional_hash_input_cols,
                                        overwrite_hash_values=specific_link_overwrite_hash,
                                        hub_config=link.hub_config,
-                                       output_logs=true) %}
+                                       output_logs=false) %}
                         
         {{ log(link.name ~ ' rehashed successfully.', true) }}                
     {% endfor %}
