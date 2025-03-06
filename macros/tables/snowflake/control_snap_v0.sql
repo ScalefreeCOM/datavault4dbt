@@ -54,9 +54,25 @@ enriched_timestamps AS (
             ELSE FALSE
         END AS is_monthly,
         CASE
+            WHEN CAST(sdts AS DATE) = LAST_DAY(sdts) THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_month,
+        CASE
+            WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) IN (1, 4, 7, 10) THEN TRUE
+            ELSE FALSE
+        END AS is_quarterly,
+        CASE
+            WHEN EXTRACT(MONTH FROM sdts) IN (3, 6, 9, 12) AND CAST(sdts AS DATE) = LAST_DAY(sdts) THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_quarter,
+        CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN TRUE
             ELSE FALSE
         END AS is_yearly,
+        CASE
+            WHEN EXTRACT(MONTH FROM sdts) = 12 AND EXTRACT(DAY FROM sdts) = 31 THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_year,
         NULL AS comment
     FROM initial_timestamps
 
