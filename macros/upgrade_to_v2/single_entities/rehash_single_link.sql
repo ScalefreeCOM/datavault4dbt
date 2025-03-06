@@ -1,13 +1,6 @@
 {#
-hub_config:
-    - hub_hashkey: hk_customer_h
-      hub_name: customer_h
-      business_keys:
-        - c_custkey
-    - hub_hashkey: hk_nation_h
-      hub_name: nation_h
-      business_keys:
-        - n_nationkey
+
+Works for standard links and non-historized links.
 
 Example usage: 
 
@@ -95,6 +88,8 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {% endif %}
 
+    {{ return(ns.columns_to_drop) }}
+
 {% endmacro %}
 
 
@@ -133,7 +128,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         {% set ns.link_hashkey_input_cols = ns.link_hashkey_input_cols + additional_hash_input_cols %}
         {% do ns.hash_config_dict.update({new_link_hashkey_name: ns.link_hashkey_input_cols}) %}
 
-    {{ log('hash_config: ' ~ ns.hash_config_dict, true)}}
+    {{ log('hash_config: ' ~ ns.hash_config_dict, false)}}
 
     {% set ns.update_sql_part2 %}
     FROM (

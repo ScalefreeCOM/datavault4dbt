@@ -73,6 +73,11 @@
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
+    {% set columns_to_drop = [
+        {"name": hashkey + '_deprecated'},
+        {"name": hashdiff + '_deprecated'}
+    ]%}
+
     {# renaming existing hash columns #}
     {% if overwrite_hash_values %}
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
@@ -85,17 +90,14 @@
         {% endset %}
 
         {% do run_query(overwrite_sql) %}
-
-        {% set columns_to_drop = [
-            {"name": hashkey + '_deprecated'},
-            {"name": hashdiff + '_deprecated'}
-        ]%}
         
         {{ alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
         
         {{ log('Existing Hash values overwritten!', output_logs) }}
 
     {% endif %}
+
+    {{ return(columns_to_drop) }}
 
 {% endmacro %}
 
