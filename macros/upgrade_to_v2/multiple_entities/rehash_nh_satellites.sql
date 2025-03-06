@@ -1,6 +1,6 @@
 
 
-{% macro rehash_nh_satellites(nh_satellite_yaml) %}
+{% macro rehash_nh_satellites(nh_satellite_yaml, drop_old_values=true) %}
 
     {% set ns = namespace(columns_to_drop=[]) %}
 
@@ -16,7 +16,8 @@
                                                                                 parent_entity=nh_satellite.parent_entity,
                                                                                 business_keys=nh_satellite.business_keys,
                                                                                 overwrite_hash_values=specific_nh_satellite_overwrite_hash,
-                                                                                output_logs=false) %}
+                                                                                output_logs=false,
+                                                                                drop_old_values=drop_old_values) %}
                         
         {{ log(nh_satellite.name ~ ' rehashed successfully.', true) }}         
 

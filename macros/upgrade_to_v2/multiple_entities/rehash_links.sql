@@ -1,6 +1,6 @@
 
 
-{% macro rehash_links(link_yaml) %}
+{% macro rehash_links(link_yaml, drop_old_values=true) %}
 
     {% set ns = namespace(columns_to_drop=[]) %}
 
@@ -16,7 +16,8 @@
                                                                         additional_hash_input_cols=link.additional_hash_input_cols,
                                                                         overwrite_hash_values=specific_link_overwrite_hash,
                                                                         hub_config=link.hub_config,
-                                                                        output_logs=false) %}
+                                                                        output_logs=false,
+                                                                        drop_old_values=drop_old_values) %}
                         
         {{ log(link.name ~ ' rehashed successfully.', true) }}      
 

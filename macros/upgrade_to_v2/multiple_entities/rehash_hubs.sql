@@ -1,6 +1,6 @@
 
 
-{% macro rehash_hubs(hub_yaml) %}
+{% macro rehash_hubs(hub_yaml, drop_old_values=true) %}
 
     {% set ns = namespace(columns_to_drop=[]) %}
 
@@ -15,7 +15,8 @@
                                                                     hashkey=hub.hashkey,
                                                                     business_keys=hub.business_keys,
                                                                     overwrite_hash_values=specific_hub_overwrite_hash,
-                                                                    output_logs=true) %}
+                                                                    output_logs=false,
+                                                                    drop_old_values=drop_old_values) %}
                         
         {{ log(hub.name ~ ' rehashed successfully.', true) }}     
 

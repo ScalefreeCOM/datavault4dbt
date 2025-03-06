@@ -3,7 +3,7 @@
     dbt run-operation rehash_single_hub --args '{hub: customer_h, hashkey: HK_CUSTOMER_H, business_keys: C_CUSTKEY, overwrite_hash_values: true}'
 #}
 
-{% macro rehash_single_hub(hub, hashkey, business_keys, overwrite_hash_values=false, output_logs=true) %}
+{% macro rehash_single_hub(hub, hashkey, business_keys, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
     {% set hub_relation = ref(hub) %}
 
@@ -51,9 +51,10 @@
 
         {% do run_query(overwrite_sql) %}
         
-        {{ alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
-        
-        {{ log('Existing Hash values overwritten!', output_logs) }}
+        {% if drop_old_values %}
+            {{ alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
+            {{ log('Existing Hash values overwritten!', output_logs) }}
+        {% endif %}
 
     {% endif %}
 

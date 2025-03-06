@@ -10,7 +10,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
 
 
-{% macro rehash_single_link(link, link_hashkey, hub_config, additional_hash_input_cols=[], overwrite_hash_values=false, output_logs=true) %}
+{% macro rehash_single_link(link, link_hashkey, hub_config, additional_hash_input_cols=[], overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
     {% set new_link_hashkey_name = link_hashkey ~ '_new' %}
     {% set hash_datatype = var('datavault4dbt.hash_datatype', 'STRING') %}
@@ -82,9 +82,10 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
         {% do run_query(overwrite_sql) %}
         
-        {{ alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
-        
-        {{ log('Existing Hash values overwritten!', output_logs) }}
+        {% if drop_old_values %}
+            {{ alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
+            {{ log('Existing Hash values overwritten!', output_logs) }}
+        {% endif %}
 
     {% endif %}
 

@@ -3,7 +3,7 @@
     dbt run-operation rehash_single_satellite --args '{satellite: customer_n0_s, hashkey: HK_CUSTOMER_H, hashdiff: HD_CUSTOMER_N_S, payload: [C_ACCTBAL, C_MKTSEGMENT, C_COMMENT], parent_entity: customer_h, business_keys: C_CUSTKEY, overwrite_hash_values: true}'
 #}
 
-{% macro rehash_single_satellite(satellite, hashkey, hashdiff, payload, parent_entity, business_keys=none, overwrite_hash_values=false, output_logs=true) %}
+{% macro rehash_single_satellite(satellite, hashkey, hashdiff, payload, parent_entity, business_keys=none, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
     {% set satellite_relation = ref(satellite) %}
     {% set parent_relation = ref(parent_entity) %}
@@ -82,9 +82,10 @@
 
         {% do run_query(overwrite_sql) %}
         
-        {{ alter_relation_add_remove_columns(relation=satellite_relation, remove_columns=columns_to_drop) }}
-        
-        {{ log('Existing Hash values overwritten!', output_logs) }}
+        {% if drop_old_values %}
+            {{ alter_relation_add_remove_columns(relation=satellite_relation, remove_columns=columns_to_drop) }}
+            {{ log('Existing Hash values overwritten!', output_logs) }}
+        {% endif %}
 
     {% endif %}
 
