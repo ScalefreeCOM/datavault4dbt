@@ -67,6 +67,10 @@ enriched_timestamps AS (
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH from sdts) IN (1,4,7,10) THEN TRUE
             ELSE FALSE
         END AS is_quarterly,
+        CASE 
+            WHEN MONTH(sdts) IN (3, 6, 9, 12) AND DAY(sdts) = DAY(LAST_DAY(sdts)) THEN TRUE 
+            ELSE FALSE 
+        END AS is_end_of_quarter, 
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN TRUE
             ELSE FALSE
