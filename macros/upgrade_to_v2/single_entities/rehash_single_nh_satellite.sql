@@ -64,6 +64,7 @@
 
     {# Executing the UPDATE statement. #}
     {{ log('Executing UPDATE statement...', output_logs) }}
+    {{ '/* UPDATE STATEMENT FOR ' ~ nh_satellite ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
@@ -108,6 +109,31 @@
 
 {% macro default__nh_satellite_update_statement(nh_satellite_relation, new_hashkey_name, hashkey, ldts_col, parent_relation, hash_config_dict=none) %}
 
+    {% set ns = namespace(parent_already_rehashed=false) %}
+
+    {#
+        If parent entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
+        hashkey column needs to be used for joining, and the regular hashkey should be selected. 
+
+        Otherwise, the regular hashkey should be used for joining. 
+    #}
+    {% set all_parent_columns = adapter.get_columns_in_relation(parent_relation) %}
+    {% for column in all_parent_columns %}
+        {{ log('parent column names: ' ~ all_parent_columns, true) }}
+        {% if column.name|lower == hashkey|lower + '_deprecated' %}
+            {% set ns.parent_already_rehashed = true %}
+            {{ log('parent_already hashed set to true for ' ~ nh_satellite_relation.name, true) }}
+        {% endif %}
+    {% endfor %}
+
+    {% if ns.parent_already_rehashed %}
+        {% set join_hashkey_col = hashkey + '_deprecated' %}
+        {% set select_hashkey_col = hashkey %}
+    {% else %}
+        {% set join_hashkey_col = hashkey %}
+        {% set select_hashkey_col = new_hashkey_name %}
+    {% endif %}
+
     {% set update_sql %}
     UPDATE {{ nh_satellite_relation }} sat
     SET 
@@ -120,11 +146,11 @@
             {% if datavault4dbt.is_something(hash_config_dict) %}
                 {{ datavault4dbt.hash_columns(columns=hash_config_dict) }}
             {% else %}
-                parent.{{ new_hashkey_name }}
+                parent.{{ select_hashkey_col }} as {{ new_hashkey_name }},
             {% endif %}
         FROM {{ nh_satellite_relation }} sat
         LEFT JOIN {{ parent_relation }} parent
-            ON sat.{{ hashkey }} = parent.{{ hashkey }}
+            ON sat.{{ hashkey }} = parent.{{ join_hashkey_col }}
             
     ) nh
     WHERE nh.{{ ldts_col }} = sat.{{ ldts_col }}

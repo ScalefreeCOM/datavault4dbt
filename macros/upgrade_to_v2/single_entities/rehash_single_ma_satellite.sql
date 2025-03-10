@@ -69,7 +69,8 @@
                                                 parent_relation=parent_relation) %}
 
     {# Executing the UPDATE statement. #}
-    {{ log('Executing UPDATE statement...', output_logs) }}
+    {{ log('Executing UPDATE statement...' ~ update_sql, true) }}
+    {{ '/* UPDATE STATEMENT FOR ' ~ ma_satellite ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
@@ -121,9 +122,31 @@
 
 {% macro default__ma_satellite_update_statement(ma_satellite_relation, new_hashkey_name, new_hashdiff_name, hashkey, business_key_list, ma_keys, ldts_col, hash_config_dict, parent_relation) %}
 
-    {% set ns = namespace(update_where_condition='') %}
+    {% set ns = namespace(update_where_condition='', parent_already_rehashed=false) %}
 
     {% set prefixed_hashkey = 'sat.' ~ hashkey %}
+
+    {#
+        If parent entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
+        hashkey column needs to be used for joining, and the regular hashkey should be selected. 
+
+        Otherwise, the regular hashkey should be used for joining. 
+    #}
+    {% set all_parent_columns = adapter.get_columns_in_relation(parent_relation) %}
+    {% for column in all_parent_columns %}
+        {% if column.name|lower == hashkey|lower + '_deprecated' %}
+            {% set ns.parent_already_rehashed = true %}
+            {{ log('parent_already hashed set to true for ' ~ ma_satellite_relation.name, true) }}
+        {% endif %}
+    {% endfor %}
+
+    {% if ns.parent_already_rehashed %}
+        {% set join_hashkey_col = hashkey + '_deprecated' %}
+        {% set select_hashkey_col = hashkey %}
+    {% else %}
+        {% set join_hashkey_col = hashkey %}
+        {% set select_hashkey_col = new_hashkey_name %}
+    {% endif %}
 
     {% set update_sql %}
     UPDATE {{ ma_satellite_relation }} sat
@@ -133,22 +156,28 @@
     FROM (
 
         SELECT 
-            sat.{{ datavault4dbt.escape_column_names(hashkey) }},
-            sat.{{ datavault4dbt.escape_column_names(ldts_col) }},
-            {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(ma_keys)) }},
+            sat.{{ hashkey }},
+            sat.{{ ldts_col }},
+            {{ datavault4dbt.print_list(ma_keys) }},
+
+            {% if new_hashkey_name not in hash_config_dict.keys() %}
+                {# If Business Keys are not defined for parent entity, use new hashkey already existing in parent entitiy. #}
+                parent.{{ select_hashkey_col }} as {{ new_hashkey_name }},
+            {% endif %}            
             {{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=ma_keys) }}
+
         FROM {{ ma_satellite_relation }} sat
         LEFT JOIN (
             SELECT 
-                {{ datavault4dbt.escape_column_names(hashkey) }},
-                {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(business_key_list)) }}
+                {{ hashkey }},
+                {{ datavault4dbt.print_list(business_key_list) }}
             FROM {{ parent_relation }} 
         ) parent
-            ON sat.{{ datavault4dbt.escape_column_names(hashkey) }} = parent.{{ datavault4dbt.escape_column_names(hashkey) }}
+            ON sat.{{ hashkey }} = parent.{{ join_hashkey_col }}
             
     ) nh
-    WHERE nh.{{ datavault4dbt.escape_column_names(ldts_col) }} = sat.{{ datavault4dbt.escape_column_names(ldts_col) }}
-    AND nh.{{ datavault4dbt.escape_column_names(hashkey) }} = sat.{{ datavault4dbt.escape_column_names(hashkey) }}
+    WHERE nh.{{ ldts_col }} = sat.{{ ldts_col }}
+    AND nh.{{ hashkey }} = sat.{{ hashkey }}
     {% endset %}
 
     {% for ma_key in ma_keys %}

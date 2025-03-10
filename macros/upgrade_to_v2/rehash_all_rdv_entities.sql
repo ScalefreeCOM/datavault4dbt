@@ -1,4 +1,4 @@
-{% macro rehash_all_rdv_entities(entity_yaml, overwrite_hash_values=none) %}
+{% macro rehash_all_rdv_entities(entity_yaml, drop_old_values=none) %}
 
     {# {% do entity_yaml.config.update({'overwrite_hash_values': false}) %} #}
 
@@ -10,9 +10,9 @@
 
     {% set all_cols_to_drop = hub_cols_to_drop + link_cols_to_drop + satellite_cols_to_drop + ma_satellite_cols_to_drop + nh_satellite_cols_to_drop %}
 
-    {{ log('all_cols_to_drop: ' ~ all_cols_to_drop, false) }}
+    {{ log('all_cols_to_drop: ' ~ all_cols_to_drop, true) }}
 
-    {% if overwrite_hash_values == true %}
+    {% if drop_old_values == true %}
         {% for model in all_cols_to_drop %}
 
             {% set model_relation = ref(model.model_name) %}

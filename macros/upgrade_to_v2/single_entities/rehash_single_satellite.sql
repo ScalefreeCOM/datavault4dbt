@@ -62,6 +62,7 @@
 
     {# Executing the UPDATE statement. #}
     {{ log('Executing UPDATE statement...', output_logs) }}
+    {{ '/* UPDATE STATEMENT FOR ' ~ satellite ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
@@ -109,10 +110,35 @@
 
 {% macro default__satellite_update_statement(satellite_relation, new_hashkey_name, new_hashdiff_name, hashkey, ldts_col, hash_config_dict, parent_relation) %}
 
+    {% set ns = namespace(parent_already_rehashed=false) %}
+
+    {#
+        If parent entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
+        hashkey column needs to be used for joining, and the regular hashkey should be selected. 
+
+        Otherwise, the regular hashkey should be used for joining. 
+    #}
+    {% set all_parent_columns = adapter.get_columns_in_relation(parent_relation) %}
+    {% for column in all_parent_columns %}
+        {{ log('parent column names: ' ~ all_parent_columns, true) }}
+        {% if column.name|lower == hashkey|lower + '_deprecated' %}
+            {% set ns.parent_already_rehashed = true %}
+            {{ log('parent_already hashed set to true for ' ~ satellite_relation.name, true) }}
+        {% endif %}
+    {% endfor %}
+
+    {% if ns.parent_already_rehashed %}
+        {% set join_hashkey_col = hashkey + '_deprecated' %}
+        {% set select_hashkey_col = hashkey %}
+    {% else %}
+        {% set join_hashkey_col = hashkey %}
+        {% set select_hashkey_col = new_hashkey_name %}
+    {% endif %}
+
     {% set update_sql %}
     UPDATE {{ satellite_relation }} sat
     SET 
-        {{ new_hashkey_name}} = nh.{{ new_hashkey_name}},
+        {{ new_hashkey_name}} = nh.{{ new_hashkey_name }},
         {{ new_hashdiff_name}} = nh.{{ new_hashdiff_name }}
     FROM (
 
@@ -122,13 +148,13 @@
             
             {% if new_hashkey_name not in hash_config_dict.keys() %}
                 {# If Business Keys are not defined for parent entity, use new hashkey already existing in parent entitiy. #}
-                parent.{{ new_hashkey_name }},
+                parent.{{ select_hashkey_col }} as {{ new_hashkey_name }},
             {% endif %}
 
             {{ datavault4dbt.hash_columns(columns=hash_config_dict) }}
         FROM {{ satellite_relation }} sat
         LEFT JOIN {{ parent_relation }} parent
-            ON sat.{{ hashkey }} = parent.{{ hashkey }}
+            ON sat.{{ hashkey }} = parent.{{ join_hashkey_col }}
             
     ) nh
     WHERE nh.{{ ldts_col }} = sat.{{ ldts_col }}

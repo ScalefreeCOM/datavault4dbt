@@ -35,14 +35,17 @@
 
     {# Executing the UPDATE statement. #}
     {{ log('Executing UPDATE statement...', output_logs) }}
+    {{ '/* UPDATE STATEMENT FOR ' ~ hub ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
     {% set columns_to_drop = [{"name": hashkey + '_deprecated'}]%}
 
+    {{ log('Overwrite_hash_values for hubs: ' ~ overwrite_hash_values, true ) }}
+
     {# renaming existing hash columns #}
     {% if overwrite_hash_values %}
-        {{ log('Replacing existing hash values with new ones...', output_logs) }}
+        {{ log('Replacing existing hash values with new ones...', true) }}
 
         {% set overwrite_sql %}
         {{ get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
@@ -51,9 +54,9 @@
 
         {% do run_query(overwrite_sql) %}
         
-        {% if drop_old_values %}
+        {% if drop_old_values == 'true' %}
             {{ alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
-            {{ log('Existing Hash values overwritten!', output_logs) }}
+            {{ log('Existing Hash values overwritten!', true) }}
         {% endif %}
 
     {% endif %}

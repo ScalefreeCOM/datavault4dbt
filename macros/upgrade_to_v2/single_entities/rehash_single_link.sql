@@ -56,6 +56,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {# Executing the UPDATE statement. #}
     {{ log('Executing UPDATE statement...' ~ update_sql, output_logs) }}
+    {{ '/* UPDATE STATEMENT FOR ' ~ link ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
