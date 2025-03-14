@@ -1,4 +1,45 @@
+{#
 
+    Parameters: 
+        satellite_yaml: a yaml that describes all standard satellites to be rehashed
+            Example: 
+                config: 
+                    overwrite_hash_values: true
+                satellites:
+                    - name: customer_n0_s
+                      hashkey: HK_CUSTOMER_H
+                      hashdiff: HD_CUSTOMER_N_S
+                      payload: 
+                          - C_ACCTBAL
+                          - C_MKTSEGMENT
+                          - C_COMMENT
+                      parent_entity: customer_h
+                      business_keys:
+                          - C_CUSTKEY
+                    - name: customer_p0_s
+                      hashkey: hk_customer_h
+                      hashdiff: hd_customer_p_s
+                      payload: 
+                          - c_name
+                          - c_address
+                          - c_phone
+                      parent_entity: customer_h
+                      business_keys:
+                          - c_custkey
+                    - name: part_supplier_n0_s
+                      hashkey: hk_part_supplier_l
+                      hashdiff: hd_part_supplier_n_s
+                      payload: 
+                          - ps_availqty
+                          - ps_supplycost
+                          - ps_comment
+                      parent_entity: part_supplier_l
+
+        drop_old_values: true|false (default true)
+            If set to true, the old hash values will be automatically dropped. This will make your satellite structure look like before rehashing. 
+            If set to false, the old hash values will remain in the satellite, with a "_deprecated" suffix. 
+    
+#}
 
 {% macro rehash_satellites(satellite_yaml, drop_old_values=true) %}
 

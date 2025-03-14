@@ -1,4 +1,22 @@
+{#
+    Expects a yaml file that describes all hubs to be rehashed.
 
+    Parameters: 
+        hub_yaml: a yaml that describes all hubs to be rehashed
+            Example: 
+                config: 
+                    overwrite_hash_values: true
+                hubs:
+                    - name: customer_h
+                      hashkey: hk_customer_h
+                      business_keys: 
+                          - c_custkey
+
+        drop_old_values: true|false (default true)
+            If set to true, the old hashkeys will be automatically dropped. This will make your Hub structure look like before rehashing. 
+            If set to false, the old hashkeys will remain in the hub, with a "_deprecated" suffix. 
+    
+#}
 
 {% macro rehash_hubs(hub_yaml, drop_old_values=true) %}
 
