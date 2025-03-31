@@ -84,10 +84,10 @@
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
         {% set overwrite_sql %}
-        {{ get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
-        {{ get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated') }}
-        {{ get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
-        {{ get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff ) }}
+        {{ datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
+        {{ datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated') }}
+        {{ datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
+        {{ datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff ) }}
         {% endset %}
 
         {% do run_query(overwrite_sql) %}

@@ -48,8 +48,8 @@
         {{ log('Replacing existing hash values with new ones...', true) }}
 
         {% set overwrite_sql %}
-        {{ get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
-        {{ get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
+        {{ datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
+        {{ datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
         {% endset %}
 
         {% do run_query(overwrite_sql) %}
