@@ -66,11 +66,6 @@ macros:
                     hub_name: customer_h
                     business_keys:
                       - c_custkey
-
-        drop_old_values: true|false (default true)
-            If set to true, the old hashkeys will be automatically dropped. This will make your Link structure look like before rehashing. 
-            If set to false, the old hashkeys will remain in the link, with a "_deprecated" suffix. 
-    
       - name: drop_old_values
         type: boolean
         description: >
