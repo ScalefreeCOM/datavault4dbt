@@ -21,15 +21,12 @@ macros:
       - name: overwrite_hash_values
         type: boolean
         description: Whether to overwrite the old hashkey with the new one.
-        default: false
       - name: output_logs
         type: boolean
         description: Whether to output logs during the macro execution.
-        default: true
       - name: drop_old_values
         type: boolean
         description: Whether to drop the old hashkey column after renaming.
-        default: true
 
   - name: hub_update_statement
     description: >
@@ -70,19 +67,15 @@ macros:
       - name: additional_hash_input_cols
         type: list
         description: A list of additional columns to include in the link hashkey calculation.
-        default: []
       - name: overwrite_hash_values
         type: boolean
         description: Whether to overwrite the old hashkeys with the new ones.
-        default: false
       - name: output_logs
         type: boolean
         description: Whether to output logs during the macro execution.
-        default: true
       - name: drop_old_values
         type: boolean
         description: Whether to drop the old hashkey columns after renaming.
-        default: true
 
   - name: link_update_statement
     description: >
@@ -137,15 +130,12 @@ macros:
       - name: overwrite_hash_values
         type: boolean
         description: Whether to overwrite the old hashkey and hashdiff with the new ones.
-        default: false
       - name: output_logs
         type: boolean
         description: Whether to output logs during the macro execution.
-        default: true
       - name: drop_old_values
         type: boolean
         description: Whether to drop the old hashkey and hashdiff columns after renaming.
-        default: true
 
   - name: ma_satellite_update_statement
     description: >
@@ -207,19 +197,15 @@ macros:
       - name: business_keys
         type: string or list
         description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
-        default: null
       - name: overwrite_hash_values
         type: boolean
         description: Whether to overwrite the old hashkey with the new one.
-        default: false
       - name: output_logs
         type: boolean
         description: Whether to output logs during the macro execution.
-        default: true
       - name: drop_old_values
         type: boolean
         description: Whether to drop the old hashkey column after renaming.
-        default: true
 
   - name: nh_satellite_update_statement
     description: >
@@ -271,19 +257,15 @@ macros:
       - name: business_keys
         type: string or list
         description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
-        default: null
       - name: overwrite_hash_values
         type: boolean
         description: Whether to overwrite the old hashkey and hashdiff with the new ones.
-        default: false
       - name: output_logs
         type: boolean
         description: Whether to output logs during the macro execution.
-        default: true
       - name: drop_old_values
         type: boolean
         description: Whether to drop the old hashkey and hashdiff columns after renaming.
-        default: true
 
   - name: satellite_update_statement
     description: >

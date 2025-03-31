@@ -26,7 +26,6 @@ macros:
         description: >
           Whether to drop the old hashkey columns after rehashing.
           If true, the old hashkeys are dropped. If false, they are renamed with a "_deprecated" suffix.
-        default: true
 
   - name: rehash_links
     description: >
@@ -77,7 +76,6 @@ macros:
         description: >
           Whether to drop the old hashkey columns after rehashing.
           If true, the old hashkeys are dropped. If false, they are renamed with a "_deprecated" suffix.
-        default: true
 
   - name: rehash_ma_satellites
     description: >
@@ -107,7 +105,6 @@ macros:
         description: >
           Whether to drop the old hashkey and hashdiff columns after rehashing.
           If true, the old columns are dropped. If false, they are renamed with a "_deprecated" suffix.
-        default: true
 
   - name: rehash_nh_satellites
     description: >
@@ -133,7 +130,6 @@ macros:
         description: >
           Whether to drop the old hashkey column after rehashing.
           If true, the old column is dropped. If false, it is renamed with a "_deprecated" suffix.
-        default: true
 
   - name: rehash_satellites
     description: >
@@ -166,4 +162,3 @@ macros:
         description: >
           Whether to drop the old hashkey and hashdiff columns after rehashing.
           If true, the old columns are dropped. If false, they are renamed with a "_deprecated" suffix.
-        default: true
