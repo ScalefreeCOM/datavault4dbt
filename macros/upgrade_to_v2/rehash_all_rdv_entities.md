@@ -7,6 +7,8 @@
           Since this is a macro, it could be called in a run-operation execution. But that will make it hard to pass a long yaml as a parameter. 
           Therefore, we recommend calling this macro in a new model, which allows to easily define a longer yaml. 
 
+      
+      {#
       Example: 
 
       new model 'rehash_model.sql'
@@ -133,6 +135,6 @@
 
           SELECT 'test' as test
 
-
+        #}
 
 {% enddocs %}
