@@ -16,4 +16,3 @@ macros:
           A boolean flag that determines whether to drop the old hashkey columns after the rehash operation. 
           If set to `true`, the old hashkey columns are dropped. If set to `false`, they are retained with a 
           "_deprecated" suffix.
-        default: none
