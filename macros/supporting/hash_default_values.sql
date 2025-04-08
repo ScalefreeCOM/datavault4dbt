@@ -212,6 +212,7 @@
     {%- set hash_alg = '' -%}
     {%- set unknown_key = '' -%}
     {%- set error_key = '' -%}
+    {%- set hash_bits = '' -%}
 
     {%- if hash_function == 'MD5' -%}
         {%- set hash_alg = 'MD5' -%}
@@ -223,11 +224,17 @@
         {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
     {%- elif hash_function == 'SHA2' or hash_function == 'SHA256' -%}
         {%- set hash_alg = 'SHA2' -%}
+        {%- set hash_bits = ', 256' -%}
+        {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
+        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+    {%- elif hash_function == 'SHA512' -%}
+        {%- set hash_alg = 'SHA2' -%}
+        {%- set hash_bits = ', 512' -%}
         {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
         {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
     {%- endif -%}
 
-    {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}
+    {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key, "hash_bits": hash_bits }) -%}
 
     {{ return(dict_result | tojson ) }}
 
