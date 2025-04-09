@@ -230,8 +230,8 @@
     {%- elif hash_function == 'SHA512' -%}
         {%- set hash_alg = 'SHA2' -%}
         {%- set hash_bits = ', 512' -%}
-        {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
-        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- set unknown_key = '!00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' -%}
+        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
     {%- endif -%}
 
     {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key, "hash_bits": hash_bits }) -%}
