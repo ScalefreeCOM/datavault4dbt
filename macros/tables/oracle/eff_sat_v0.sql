@@ -28,7 +28,7 @@ WITH
 max_ldts_prep AS (
 
     SELECT
-        MAX({{ src_ldts }}) AS max_ldts
+        COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS max_ldts
     FROM {{ this }}
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
 ),
