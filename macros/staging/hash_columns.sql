@@ -19,6 +19,7 @@
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
                                 is_hashdiff=columns[col]['is_hashdiff'],
+                                rtrim_hashdiff=columns[col]['use_rtrim'],
                                 multi_active_key=multi_active_key,
                                 main_hashkey_column=main_hashkey_column) -}}
             
@@ -78,6 +79,7 @@
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
                                 is_hashdiff=columns[col]['is_hashdiff'],
+                                rtrim_hashdiff=columns[col]['use_rtrim'],
                                 multi_active_key=multi_active_key,
                                 main_hashkey_column=main_hashkey_column) -}}
 
