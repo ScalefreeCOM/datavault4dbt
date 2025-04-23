@@ -38,7 +38,8 @@
 
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
-                                is_hashdiff=columns[col]['is_hashdiff']) -}}
+                                is_hashdiff=columns[col]['is_hashdiff'],
+                                rtrim_hashdiff=columns[col]['use_rtrim']) -}}
 
             {%- elif columns[col] is not mapping -%}
 
@@ -95,7 +96,8 @@
 
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
-                                is_hashdiff=columns[col]['is_hashdiff']) -}}
+                                is_hashdiff=columns[col]['is_hashdiff'],
+                                rtrim_hashdiff=columns[col]['use_rtrim']) -}}
 
             {%- elif columns[col] is not mapping -%}
 
