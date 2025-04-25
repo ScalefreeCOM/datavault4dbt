@@ -508,7 +508,7 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
 
 {%- if is_hashdiff and rtrim_hashdiff -%}
     {%- set hdiff_prefix = "RTRIM('[NULL_PLACEHOLDER_STRING][CONCAT_STRING]',"-%}
-    {%- set hdiff_suffix = ",)"-%}
+    {%- set hdiff_suffix = ")"-%}
 {%- else -%}
     {%- set hdiff_prefix = "" -%}
     {%- set hdiff_suffix = "" -%}
@@ -1097,8 +1097,8 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
 
 
 {%- if is_hashdiff and rtrim_hashdiff -%}
-    {%- set hdiff_prefix = "RTRIM("-%}
-    {%- set hdiff_suffix = ",'[NULL_PLACEHOLDER_STRING][CONCAT_STRING]')"-%}
+    {%- set hdiff_prefix = "RTRIM('[NULL_PLACEHOLDER_STRING][CONCAT_STRING]',"-%}
+    {%- set hdiff_suffix = ")"-%}
 {%- else -%}
     {%- set hdiff_prefix = "" -%}
     {%- set hdiff_suffix = "" -%}
@@ -1113,40 +1113,40 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
 {%- if datatype == 'STRING' -%}
 
     {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key_string)-%}
+        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, {}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key_string, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~datavault4dbt.generate_comparator(multi_active_key)~"))), {}) AS {}".format(zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}))),(left, right) -> ".format(hdiff_suffix)~datavault4dbt.generate_comparator(multi_active_key)~"))), {}) AS {}".format(zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~datavault4dbt.generate_comparator(multi_active_key)~"))), {})".format(zero_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}))),(left, right) -> ".format(hdiff_suffix)~datavault4dbt.generate_comparator(multi_active_key)~"))), {})".format(zero_key)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key_string) -%}
+        {%- set standardise_prefix = "IFNULL(LOWER({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, {}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key_string, hdiff_prefix) -%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~datavault4dbt.generate_comparator(multi_active_key)~"))), {}) AS {}".format(zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}))),(left, right) -> ".format(hdiff_suffix)~datavault4dbt.generate_comparator(multi_active_key)~"))), {}) AS {}".format(zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~datavault4dbt.generate_comparator(multi_active_key)~"))), {})".format(zero_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}))),(left, right) -> ".format(hdiff_suffix)~datavault4dbt.generate_comparator(multi_active_key)~"))), {})".format(zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
 {%- else -%}
 
     {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key_string)-%}
+        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, {}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, multi_active_key_string, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}))),(left, right) -> ".format(hdiff_suffix)~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}))),(left, right) -> ".format(hdiff_suffix)~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key_string)-%}
+        {%- set standardise_prefix = "IFNULL(CAST({}(CONCAT_WS(',', TRANSFORM(ARRAY_SORT(COLLECT_LIST(STRUCT({}, {}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, multi_active_key_string, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}))),(left, right) -> ".format(hdiff_suffix)~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {})) AS {}".format(datatype, zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))),(left, right) -> "~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}))),(left, right) -> ".format(hdiff_suffix)~generate_comparator(multi_active_key)~")) AS {}), CAST({} AS {}))".format(datatype, zero_key, datatype)-%}
         {%- endif -%}
     {%- endif -%}
 

@@ -485,7 +485,7 @@
     {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
     {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
 
-{{ standardise_prefix }}
+{{ standardise_prefix | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string) }}
 
 {%- for column in columns -%}
 
