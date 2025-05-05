@@ -42,15 +42,7 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
                                     
 {%- macro postgres__attribute_standardise(hash_type) -%}
 
-{%- if hash_type == 'hashkey' -%}
-
-    '"' || REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRESSION] AS VARCHAR)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
-
-{%- else -%}
-
-    CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRESSION] AS VARCHAR)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
-
-{%- endif -%}
+'"' || REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRESSION] AS VARCHAR)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
 
 {%- endmacro -%}
 
@@ -864,40 +856,40 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
 {%- if datatype == 'VARCHAR' -%}
 
     {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "COALESCE(LOWER({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
+        {%- set standardise_prefix = "COALESCE(LOWER({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'), ',' ORDER BY {}))), {}) AS {}".format(multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'), ',' ORDER BY {}))), {})".format(multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "COALESCE(LOWER({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
+        {%- set standardise_prefix = "COALESCE(LOWER({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'), ',' ORDER BY {}))), {}) AS {}".format(multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'), ',' ORDER BY {}))), {})".format(multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
 {%- else -%}
 
     {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "COALESCE({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
+        {%- set standardise_prefix = "COALESCE({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'), ',' ORDER BY {})), {}) AS {}".format(multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {})), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'), ',' ORDER BY {})), {})".format(multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {})), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- else -%}
-        {%- set standardise_prefix = "COALESCE({}(STRING_AGG(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
+        {%- set standardise_prefix = "COALESCE({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'), ',' ORDER BY {})), {}) AS {}".format(multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {})), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'), ',' ORDER BY {})), {})".format(multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {})), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
