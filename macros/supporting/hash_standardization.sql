@@ -13,8 +13,8 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
 {%- set concat_string = var('concat_string', '||') -%}
 {%- set quote = var('quote', '"') -%}
 {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
-CASE WHEN [EXPRESSION] IS NULL THEN NULL
-ELSE CONCAT('"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS VARCHAR(20000) UTF8 )), '\\\', '\\\\\'), '[QUOTE]', '"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"') END
+
+ NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS VARCHAR(20000) UTF8 )), '\\\', '\\\\\'), '[QUOTE]', '"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"'), '""')
 
 {%- endmacro -%}
 
@@ -60,7 +60,8 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
 
 {%- macro oracle__attribute_standardise(hash_type) -%}
 
- NULLIF('"' || REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS VARCHAR2(2000) )), '\\\', '\\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"', '""')
+NULLIF('"' || REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS VARCHAR2(2000) )), '\\\', '\\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"', '""')
+
 {%- endmacro -%}
 
 
