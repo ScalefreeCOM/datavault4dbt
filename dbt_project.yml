@@ -33,7 +33,7 @@ vars:
   
   #Stage Configuration
   datavault4dbt.copy_rsrc_ldts_input_columns: false
-  datavault4dbt.max_days_for_late_arriving_data: 7
+  datavault4dbt.max_days_for_late_arriving_data: 
 
   #General Configuration
   datavault4dbt.include_business_objects_before_appearance: false
