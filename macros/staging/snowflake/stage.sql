@@ -1,4 +1,4 @@
-{# This is the default version of the stage macro, designed for Snowflake. Additionally a horizont of x days can be set to limit the amount of data and partitions that get loaded (Snowflake partition pruning does not work with subqueries) #}
+{# This is the default version of the stage macro, designed for Snowflake. #}
 
 {%- macro snowflake__stage(include_source_columns,
                 ldts,
