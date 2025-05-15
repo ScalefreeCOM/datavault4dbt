@@ -1,4 +1,4 @@
-{# This is the default version of the stage macro, designed for Snowflake. #}
+{# This is the default version of the stage macro, designed for Snowflake. Additionally a horizont of x days can be set to limit the amount of data and partitions that get loaded (Snowflake partition pruning does not work with subqueries) #}
 
 {%- macro snowflake__stage(include_source_columns,
                 ldts,
@@ -54,6 +54,8 @@
 {# Setting the column name for load date timestamp and record source to the alias coming from the attributes #}
 {%- set ldts_alias = var('datavault4dbt.ldts_alias', 'ldts') -%}
 {%- set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
+{%- set max_days_for_late_arriving_data = var('datavault4dbt.max_days_for_late_arriving_data', 'rsrc') -%}
+
 {%- set copy_input_columns = var('datavault4dbt.copy_rsrc_ldts_input_columns', false) -%}
 {%- set load_datetime_col_name = ldts_alias -%}
 {%- set record_source_col_name = rsrc_alias -%}
@@ -201,9 +203,14 @@ source_data AS (
     {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
 
   FROM {{ source_relation }}
+  WHERE 1 = 1
+  {% if max_days_for_late_arriving_data|int != 0 %}
+
+  AND {{ ldts }} >=  DATEADD(day, {{ max_days_for_late_arriving_data }}*-1, CURRENT_DATE)
+  {%- endif -%}
 
   {% if is_incremental() %}
-  WHERE {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) 
+  AND {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) 
                       FROM {{ this }} 
                       WHERE {{ load_datetime_col_name}} != {{ datavault4dbt.string_to_timestamp(timestamp_format , end_of_all_times) }} )
   {%- endif -%}
