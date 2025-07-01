@@ -10,7 +10,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
 
 
-{% macro rehash_single_link(link, link_hashkey, hub_config, additional_hash_input_cols=[], overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
+{% macro bigquery__rehash_single_link(link, link_hashkey, hub_config, additional_hash_input_cols=[], overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
     {% set new_link_hashkey_name = link_hashkey ~ '_new' %}
     {% set hash_datatype = var('datavault4dbt.hash_datatype', 'STRING') %}
@@ -68,24 +68,12 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         {# Rename Link Hashkey #}
             ALTER TABLE {{ link_relation }} 
                 RENAME COLUMN {{ link_hashkey }} TO {{ link_hashkey }}_deprecated;
-            ALTER TABLE {{ link_relation }} 
-                RENAME COLUMN {{ new_link_hashkey_name }} TO {{ link_hashkey }};
-{#
-            {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=link_hashkey, new_col_name=link_hashkey + '_deprecated') }}
-            {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=new_link_hashkey_name, new_col_name=link_hashkey) }}
-#}
 
             {# Rename All Hub Hashkeys #}
             {% for hub_hashkey in ns.hub_hashkeys %}
                 ALTER TABLE {{ link_relation }} 
                     RENAME COLUMN {{ hub_hashkey.current_hashkey_name }} TO {{ hub_hashkey.current_hashkey_name }}_deprecated;
-{#   
-                ALTER TABLE {{ link_relation }} 
-                    RENAME COLUMN {{ hub_hashkey.new_hashkey_name }} TO {{ hub_hashkey.current_hashkey_name }};
-     
-                {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.current_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name + '_deprecated') }}
-                {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.new_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name) }}
-#}
+
                 {# Prepare list of 'deprecated' hub hashkey columns to drop them later on. #}
                 {% do ns.columns_to_drop.append({"name": hub_hashkey.current_hashkey_name + '_deprecated'}) %}
 
@@ -96,8 +84,17 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         {% do run_query(overwrite_sql) %}
         
         {% if drop_old_values %}
-            {{ bigquery__alter_relation_drop_columns(relation=link_relation, drop_columns=ns.columns_to_drop) }}
-            {{ log('Existing Hash values overwritten!', output_logs) }}
+            {# Drop old table and rename _rehashed #}
+            {% set old_table_name = link_relation %}
+            {% set new_table_name = link_relation.database ~ '.' ~ link_relation.schema ~ '.' ~ link_relation.identifier ~ '_rehashed' %}
+
+            {{ log('Dropping old table: ' ~ old_table_name, output_logs) }}
+            {% do run_query(bigquery__drop_table(old_table_name)) %}
+
+            {% set rename_sql = bigquery__get_rename_table_sql(new_table_name, link_relation.identifier) %}
+            {{ log('Renaming rehashed table to original name: ' ~ rename_sql, output_logs) }}
+            {% do run_query(rename_sql) %}
+
         {% endif %}
 
     {% endif %}
@@ -107,18 +104,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 {% endmacro %}
 
 
-{% macro link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols=[]) %}
-
-    {{ adapter.dispatch('link_update_statement', 'datavault4dbt')(link_relation=link_relation,
-                                                                hub_hashkeys=hub_hashkeys,
-                                                                link_hashkey=link_hashkey,
-                                                                new_link_hashkey_name=new_link_hashkey_name,
-                                                                additional_hash_input_cols=additional_hash_input_cols) }}
-
-{% endmacro %}
-
-
-{% macro default__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
+{% macro bigquery__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
 
     {% set ns = namespace(link_hashkey_input_cols=[], hash_config_dict={}) %}
     
