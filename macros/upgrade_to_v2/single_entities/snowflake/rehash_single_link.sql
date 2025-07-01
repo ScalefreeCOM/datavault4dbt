@@ -10,7 +10,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
 
 
-{% macro rehash_single_link(link, link_hashkey, hub_config, additional_hash_input_cols=[], overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
+{% macro snowflake__rehash_single_link(link, link_hashkey, hub_config, additional_hash_input_cols=[], overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
     {% set new_link_hashkey_name = link_hashkey ~ '_new' %}
     {% set hash_datatype = var('datavault4dbt.hash_datatype', 'STRING') %}
@@ -95,18 +95,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 {% endmacro %}
 
 
-{% macro link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols=[]) %}
-
-    {{ adapter.dispatch('link_update_statement', 'datavault4dbt')(link_relation=link_relation,
-                                                                hub_hashkeys=hub_hashkeys,
-                                                                link_hashkey=link_hashkey,
-                                                                new_link_hashkey_name=new_link_hashkey_name,
-                                                                additional_hash_input_cols=additional_hash_input_cols) }}
-
-{% endmacro %}
-
-
-{% macro default__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
+{% macro snowflake__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
 
     {% set ns = namespace(link_hashkey_input_cols=[], hash_config_dict={}, update_sql_part1='', update_sql_part2='') %}
 
