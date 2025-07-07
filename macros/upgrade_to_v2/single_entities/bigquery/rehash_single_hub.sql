@@ -34,11 +34,11 @@
     {% do run_query(create_sql) %}
     {{ log('CREATE statement completed!', output_logs) }}
 
-    {{ log('Renaming old hash columns for hubs: ' ~ overwrite_hash_values, true ) }}
+    {{ log('Renaming old hash columns for hubs: ' ~ overwrite_hash_values, output_logs) }}
 
     {# Renaming existing hash columns. #}
     {% if overwrite_hash_values %}
-        {{ log('Renaming existing hash values...', true) }}
+        {{ log('Renaming existing hash columns...', output_logs) }}
         
         {% set rename_statement %}
             ALTER TABLE {{ hub_relation }} 
@@ -84,7 +84,7 @@
     CREATE TABLE {{ hub_relation.database }}.{{ hub_relation.schema }}.{{hub_relation.identifier ~ '_rehashed'}} AS (
         SELECT
             {{ datavault4dbt.hash_columns(columns=hash_config_dict) }},
-            {{ datavault4dbt.print_list(business_key_list, indent=8, src_alias='hub')}},
+            {{ datavault4dbt.print_list(business_key_list, src_alias='hub')}},
             hub.{{ ldts_alias }},
             hub.{{ rsrc_alias }}
         FROM {{ hub_relation }} hub
