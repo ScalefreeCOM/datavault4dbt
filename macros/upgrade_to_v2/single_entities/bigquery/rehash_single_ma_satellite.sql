@@ -82,13 +82,14 @@
         {% if drop_old_values %}
             {# Drop old Hub table and rename _rehashed Hub table to original Hub name. #}
             {% set old_table_name = ma_satellite_relation %}
-            {% set new_table_name = ma_satellite_relation.render() ~ '_rehashed' %}
+            {% set new_table_name = ma_satellite_relation.database ~ '.' ~ ma_satellite_relation.schema ~ '.' ~ ma_satellite_relation.identifier ~ '_rehashed' %}
 
             {{ log('Dropping old table: ' ~ old_table_name, output_logs) }}
             {% do run_query(bigquery__drop_table(old_table_name)) %}
 
             {% set rename_sql = bigquery__get_rename_table_sql(new_table_name, ma_satellite_relation.identifier) %}
             {{ log('Renaming rehashed Hub to original Hub name: ' ~ rename_sql, output_logs) }}
+            {% do run_query(rename_sql) %}
         {% endif %}
 
     {% endif %}
