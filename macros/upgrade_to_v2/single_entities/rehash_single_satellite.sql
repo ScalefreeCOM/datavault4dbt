@@ -5,15 +5,13 @@
 
 {% macro rehash_single_satellite(satellite, hashkey, hashdiff, payload, parent_entity, business_keys=none, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
-    {{ adapter.dispatch('rehash_single_ma_satellite', 'datavault4dbt')(satellite=satellite,
+    {{ adapter.dispatch('rehash_single_satellite', 'datavault4dbt')(satellite=satellite,
                                                                         hashkey=hashkey,
                                                                         hashdiff=hashdiff,
                                                                         payload=payload,
                                                                         parent_entity=parent_entity,
                                                                         business_keys=business_keys,
-                                                                        overwrite_hash_values=overwrite_hash_values,
-                                                                        output_logs=output_logs,
-                                                                        drop_old_values=drop_old_values)}}
+                                                                        overwrite_hash_values=overwrite_hash_values)}}
 
 {% endmacro %}
 

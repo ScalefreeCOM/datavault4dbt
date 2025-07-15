@@ -14,7 +14,7 @@
 
 {% macro rehash_single_nh_satellite(nh_satellite, hashkey, parent_entity, business_keys=none, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
-    {{ adapter.dispatch('rehash_single_ma_satellite', 'datavault4dbt')(nh_satellite=nh_satellite,
+    {{ adapter.dispatch('rehash_single_nh_satellite', 'datavault4dbt')(nh_satellite=nh_satellite,
                                                                         hashkey=hashkey,
                                                                         parent_entity=parent_entity,
                                                                         business_keys=business_keys,
