@@ -86,6 +86,15 @@
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
     {%- set src_stg = datavault4dbt.replace_standard(src_stg, 'datavault4dbt.stg_alias', 'stg') -%}
 
+    {%- if var('datavault4dbt.use_premium_package') == True -%}
+        {{ datavault4dbt_premium_package.insert_metadata_rec_sat(tracked_hashkey=tracked_hashkey,
+                                                                      source_models=source_models,
+                                                                      src_ldts=src_ldts,
+                                                                      src_rsrc=src_rsrc,
+                                                                      src_stg=src_stg,
+                                                                      disable_hwm=disable_hwm) }}
+    {%- endif %}
+    
     {{ return(adapter.dispatch('rec_track_sat', 'datavault4dbt')(tracked_hashkey=tracked_hashkey,
                                                                       source_models=source_models,
                                                                       src_ldts=src_ldts,
