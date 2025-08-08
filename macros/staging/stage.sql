@@ -131,7 +131,7 @@
   {%- set include_source_columns  = datavault4dbt.yaml_metadata_parser(name='include_source_columns', yaml_metadata=yaml_metadata, parameter=include_source_columns, required=False, documentation=include_source_columns_description) -%}
   {%- set hashed_columns          = datavault4dbt.yaml_metadata_parser(name='hashed_columns', yaml_metadata=yaml_metadata, parameter=hashed_columns, required=False, documentation=hashed_columns_description) -%}
   {%- set derived_columns         = datavault4dbt.yaml_metadata_parser(name='derived_columns', yaml_metadata=yaml_metadata, parameter=derived_columns, required=False, documentation=derived_columns_description) -%}
-  {%- set sequence                = datavault4dbt.yaml_metadata_parser(name='sequence', yaml_metadata=yaml_metadata, parameter=sequence, required=False, documentation=sequence_description) -%}
+  {%- set stage_sequence                = datavault4dbt.yaml_metadata_parser(name='sequence', yaml_metadata=yaml_metadata, parameter=sequence, required=False, documentation=sequence_description) -%}
   {%- set prejoined_columns       = datavault4dbt.yaml_metadata_parser(name='prejoined_columns', yaml_metadata=yaml_metadata, parameter=prejoined_columns, required=False, documentation=prejoined_columns_description) -%}
   {%- set missing_columns         = datavault4dbt.yaml_metadata_parser(name='missing_columns', yaml_metadata=yaml_metadata, parameter=missing_columns, required=False, documentation=missing_columns_description) -%}
   {%- set multi_active_config     = datavault4dbt.yaml_metadata_parser(name='multi_active_config', yaml_metadata=yaml_metadata, parameter=multi_active_config, required=False, documentation=multi_active_config_description) -%}
@@ -156,6 +156,20 @@
   {%- if datavault4dbt.is_something(prejoined_columns) -%}
     {%- set prejoined_columns = datavault4dbt.process_prejoined_columns(prejoined_columns) -%}
   {%- endif -%}
+  
+  {%- if var('datavault4dbt.use_premium_package') == True -%}
+    {{- datavault4dbt_premium_package.insert_metadata_stage(include_source_columns=include_source_columns,
+                                        ldts=ldts,
+                                        rsrc=rsrc,
+                                        source_model=source_model,
+                                        hashed_columns=hashed_columns,
+                                        derived_columns=derived_columns,
+                                        sequence=sequence,
+                                        prejoined_columns=prejoined_columns,
+                                        missing_columns=missing_columns,
+                                        multi_active_config=multi_active_config,
+                                        enable_ghost_records=enable_ghost_records) -}}
+  {%- endif %}
 
   {{- adapter.dispatch('stage', 'datavault4dbt')(include_source_columns=include_source_columns,
                                       ldts=ldts,
