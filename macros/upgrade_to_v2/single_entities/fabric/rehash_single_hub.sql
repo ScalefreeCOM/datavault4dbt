@@ -30,15 +30,7 @@
     {% set depr_update_sql %}
         UPDATE {{ hub_relation }}
         SET 
-            {{ old_hashkey }} = nh.{{ old_hashkey }}
-        FROM (
-
-            SELECT 
-                hub.{{ hashkey }},
-                hub.{{ hashkey }} as  {{ old_hashkey }}
-            FROM {{ hub_relation }} hub            
-        ) nh
-        WHERE nh.{{ hashkey }} = {{ hub_relation }}.{{ hashkey }}
+            {{ old_hashkey }} = {{ hashkey }};
     {% endset %}
 
 
@@ -78,7 +70,7 @@
     {% set columns_to_drop = [{"name": hashkey + '_deprecated'}]%}
 
     {# Deleting old hashkey #}
-    {% if drop_old_values %}
+    {% if drop_old_values or not overwrite_hash_values %}
         {{ alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
         {{ log('Existing Hash values overwritten!', true) }}
     {% endif %}
