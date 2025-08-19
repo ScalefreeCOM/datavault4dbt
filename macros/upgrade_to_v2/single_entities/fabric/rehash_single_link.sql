@@ -126,6 +126,12 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
 {% macro fabric__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
 
+    {% set ldts_alias = var('datavault4dbt.ldts_alias', 'ldts') %}
+    {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
+
+    {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+    {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
+
     {% set ns = namespace(link_hashkey_input_cols=[], hash_config_dict={}, update_sql_part1='', update_sql_part2='') %}
 
     {% set ns.update_sql_part1 %}
@@ -166,6 +172,22 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         {% endfor %}
 
     {% set update_sql_part3 %}
+        WHERE link.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
+
+        UNION ALL
+
+        SELECT 
+            link.{{ link_hashkey }}
+            
+            {% for hub in hub_hashkeys %}
+
+            , link.{{ hub.current_hashkey_name }}
+
+            {% endfor %}
+            , link.{{ new_link_hashkey_name }}
+            
+        FROM {{ link_relation }} link
+        WHERE link.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
     ) nh
     WHERE {{ link_relation }}.{{ link_hashkey }} = nh.{{ link_hashkey }}
     {% endset %}
@@ -173,5 +195,5 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% set update_sql = ns.update_sql_part1 + ns.update_sql_part2 + update_sql_part3 %}
 
     {{ return(update_sql) }}
-    
+
 {% endmacro %}
