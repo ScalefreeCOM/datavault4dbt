@@ -128,7 +128,7 @@
 
     {# Deleting old hashkey #}
     {% if drop_old_values or not overwrite_hash_values %}
-        {{ alter_relation_add_remove_columns(relation=link_relation, remove_columns=columns_to_drop) }}
+        {{ alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
         {{ log('Existing Hash values overwritten!', true) }}
     {% endif %}
 
@@ -226,7 +226,11 @@
     {% for ma_key in ma_keys %}
 
         {% set where_condition %}
-            AND nh.{{ datavault4dbt.escape_column_names(ma_key) }} = sat.{{ datavault4dbt.escape_column_names(ma_key) }}
+            AND (
+                (sat.{{ datavault4dbt.escape_column_names(ma_key) }} IS NULL AND nh.{{ datavault4dbt.escape_column_names(ma_key) }} IS NULL)
+                OR
+                (sat.{{ datavault4dbt.escape_column_names(ma_key) }} = nh.{{ datavault4dbt.escape_column_names(ma_key) }})
+            )
         {% endset %}
 
         {% set ns.update_where_condition = ns.update_where_condition + where_condition %}
