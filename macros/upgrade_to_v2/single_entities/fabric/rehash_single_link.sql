@@ -126,13 +126,13 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
 {% macro fabric__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
 
+    {% set ns = namespace(link_hashkey_input_cols=[], hash_config_dict={}, update_sql_part1='', update_sql_part2='') %}
+
     {% set ldts_alias = var('datavault4dbt.ldts_alias', 'ldts') %}
     {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
 
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
-
-    {% set ns = namespace(link_hashkey_input_cols=[], hash_config_dict={}, update_sql_part1='', update_sql_part2='') %}
 
     {% set ns.update_sql_part1 %}
     UPDATE {{ link_relation }}
@@ -167,7 +167,24 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         
         {% for hub in hub_hashkeys %}
 
-            {% set ns.update_sql_part2 = ns.update_sql_part2 + '\n LEFT JOIN ' + ref(hub.hub_name).render() + ' ' + hub.hub_join_alias + '\n    ON link.' + hub.old_hashkey_name + ' = ' + hub.hub_join_alias + '.' + hub.current_hashkey_name %}
+            {% set hub_ns = namespace(hub_correct_hashkey=hub.current_hashkey_name) %}
+
+            {#
+                If hub entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
+                hashkey column needs to be used for joining, and the regular hashkey should be selected. 
+
+                Otherwise, the regular hashkey should be used for joining. 
+            #}
+            
+            {% set all_hub_columns = adapter.get_columns_in_relation(ref(hub.hub_name)) %}
+            {% for column in all_hub_columns %}
+                {% if column.name|lower == hashkey|lower + '_deprecated' %}
+                    {% set hub_ns.hub_correct_hashkey = hub.old_hashkey_name %}
+                    {{ log('hub_already hashed set to true for ', true) }}
+                {% endif %}
+            {% endfor %}
+
+            {% set ns.update_sql_part2 = ns.update_sql_part2 + '\n LEFT JOIN ' + ref(hub.hub_name).render() + ' ' + hub.hub_join_alias + '\n    ON link.' + hub.old_hashkey_name + ' = ' + hub.hub_join_alias + '.' + hub_ns.hub_correct_hashkey %}
 
         {% endfor %}
 
