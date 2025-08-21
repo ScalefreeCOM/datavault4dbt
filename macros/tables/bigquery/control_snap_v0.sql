@@ -32,7 +32,7 @@ initial_timestamps AS (
         INTERVAL 1 DAY)) AS sdts
 
     {%- if is_incremental() %}
-    WHERE sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
+    WHERE sdts > (SELECT MAX({{ sdts_alias }}) FROM ({{ this }}))
     {%- endif -%}
 
 ),

@@ -42,7 +42,7 @@ WITH
 
         SELECT
             {{ hashkey }}
-        FROM {{ this }}
+        FROM ({{ this }})
 
     ),
     {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
@@ -58,7 +58,7 @@ WITH
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }} t
+                    FROM ({{ this }}) t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -74,7 +74,7 @@ WITH
                     SELECT 
                     t.*,
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }} t
+                    FROM ({{ this }}) t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -158,7 +158,7 @@ WITH
 
             {{ src_ldts }},
             {{ src_rsrc }}
-        FROM {{ ref(source_model.name) }} src
+        FROM ({{ ref(source_model.name) }}) src
         {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
 
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
@@ -172,7 +172,7 @@ WITH
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
         WHERE src.{{ src_ldts }} > (
             SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
-            FROM {{ this }}
+            FROM ({{ this }})
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
     {%- endif %}

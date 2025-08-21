@@ -28,7 +28,7 @@ end_dated_source AS (
         {%- if include_payload -%},
             {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_columns_to_select)) if source_columns_to_select else " *" }}
         {%- endif %}
-    FROM {{ source_relation }}
+    FROM ({{ source_relation }})
 
 )
 

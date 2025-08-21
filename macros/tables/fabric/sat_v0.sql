@@ -34,12 +34,12 @@ source_data AS (
         {{ parent_hashkey }},
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
         {{ datavault4dbt.print_list(source_cols) }}
-    FROM {{ source_relation }}
+    FROM ({{ source_relation }})
 
     {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
-            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM ({{ this }})
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
@@ -64,7 +64,7 @@ latest_entries_in_sat_prep AS (
         tgt.{{ parent_hashkey }},
         tgt.{{ ns.hdiff_alias }},
         ROW_NUMBER() OVER(PARTITION BY tgt.{{ parent_hashkey }} ORDER BY tgt.{{ src_ldts }} DESC) as rn
-    FROM {{ this }} tgt
+    FROM ({{ this }}) tgt
     INNER JOIN distinct_incoming_hashkeys src
         ON tgt.{{ parent_hashkey }} = src.{{ parent_hashkey }}
 ),

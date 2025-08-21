@@ -30,7 +30,7 @@ end_dated_source AS (
         {{ src_ldts }},
         COALESCE(LEAD(DATEADD(ns, -100, {{ src_ldts }})) OVER (PARTITION BY {%- for ref_key in ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts_alias }},
         {{ datavault4dbt.print_list(source_columns_to_select) }}
-    FROM {{ source_relation }}
+    FROM ({{ source_relation }})
 
 )
 

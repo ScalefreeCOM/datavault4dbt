@@ -38,7 +38,7 @@ source_data AS (
         {{ parent_hashkey }},
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
         {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
-    FROM {{ source_relation }}
+    FROM ({{ source_relation }})
 
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > '{{ max_ldts }}'
@@ -53,7 +53,7 @@ latest_entries_in_sat AS (
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }}
     FROM
-        {{ this }}
+        ({{ this }})
     QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1
 ),
 {%- endif %}

@@ -60,7 +60,7 @@ SELECT
 	*,
 	ROW_NUMBER() OVER (ORDER BY {{ sdts_alias }} desc) as rn
 
-FROM {{ ref(control_snap_v0) }}
+FROM ({{ ref(control_snap_v0) }}
 WHERE CONVERT(DATE, {{ sdts_alias }}) <= CONVERT(DATE, GETDATE() )
 ),
 
@@ -95,7 +95,7 @@ dynamic as (SELECT
 
 
 
-FROM {{ ref(control_snap_v0) }} src
+FROM {{ ref(control_snap_v0) }}) src
 INNER JOIN in_the_past itp ON src.{{ sdts_alias }} = itp.{{ sdts_alias }}),
 
 log_logic AS (

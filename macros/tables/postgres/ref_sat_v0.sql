@@ -33,12 +33,12 @@ source_data AS (
         {% endfor %}
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
         {{ datavault4dbt.print_list(source_cols) }}
-    FROM {{ source_relation }}
+    FROM ({{ source_relation }})
 
     {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
+            MAX({{ src_ldts }}) FROM ({{ this }})
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
@@ -55,7 +55,7 @@ latest_entries_in_sat_prep AS (
         {{ ns.hdiff_alias }},
         ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key|lower}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) as rn
     FROM 
-        {{ this }}
+        ({{ this }})
 ),
 
 latest_entries_in_sat AS (

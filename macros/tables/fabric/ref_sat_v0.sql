@@ -40,12 +40,12 @@ source_data AS (
         {%- endfor %}
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
         {{ datavault4dbt.print_list(source_cols) }}
-    FROM {{ source_relation }}
+    FROM ({{ source_relation }})
 
     {%- if is_incremental()  and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
-            COALESCE (MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
+            COALESCE (MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM ({{ this }})
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     AND {{ src_ldts }} <> {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
@@ -67,7 +67,7 @@ target_data AS (
         {{ ns.hdiff_alias }}
         , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ ref_key }} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) AS rn
     FROM 
-        {{ this }}
+        ({{ this }})
 ),
 {%- endif %}
 

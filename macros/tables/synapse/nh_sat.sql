@@ -25,13 +25,13 @@ source_data AS (
     {%- endif %}
 
     FROM 
-        {{ source_relation }}
+        ({{ source_relation }})
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
         SELECT
             COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
         FROM 
-            {{ this }}
+            ({{ this }})
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
@@ -61,7 +61,7 @@ distinct_hashkeys AS
     SELECT DISTINCT
         {{ parent_hashkey }}
     FROM 
-        {{ this }}    
+        ({{ this }})    
     ),
 {%- endif %}
 

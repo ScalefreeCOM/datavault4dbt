@@ -56,7 +56,7 @@ FROM initial_timestamps )
 SELECT * FROM enriched_timestamps
 
 {% if is_incremental() -%}
-WHERE {{ sdts_alias }} NOT IN (SELECT {{ sdts_alias }} FROM {{ this }})
+WHERE {{ sdts_alias }} NOT IN (SELECT {{ sdts_alias }} FROM ({{ this }}))
 {%- endif -%}
 
 {%- endmacro -%}

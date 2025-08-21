@@ -16,13 +16,13 @@ source_data AS
     SELECT
         {{ datavault4dbt.print_list(source_cols) }}
     FROM 
-        {{ source_relation }}
+        ({{ source_relation }})
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
         SELECT 
             MAX({{ src_ldts }}) 
         FROM 
-            {{ this }}
+            ({{ this }})
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
@@ -42,7 +42,7 @@ distinct_hashkeys AS
     SELECT DISTINCT
         {{ parent_hashkey }}
     FROM 
-        {{ this }}    
+        ({{ this }})    
 ),
 {%- endif %}
 {#- Select all records from the source. If incremental, insert only records, where the

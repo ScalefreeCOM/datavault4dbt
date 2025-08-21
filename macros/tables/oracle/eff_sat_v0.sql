@@ -29,7 +29,7 @@ max_ldts_prep AS (
 
     SELECT
         MAX({{ src_ldts }}) AS max_ldts
-    FROM {{ this }}
+    FROM ({{ this }})
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
 ),
 {% endif %}
@@ -40,7 +40,7 @@ source_data AS (
         {{ tracked_hashkey }},
         {{ src_ldts }},
         {{ src_rsrc }}
-    FROM {{ source_relation }} src
+    FROM ({{ source_relation }}) src
     WHERE {{ src_ldts }} NOT IN ({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
     {%- if is_incremental() and not disable_hwm %}
     AND src.{{ src_ldts }} > (
@@ -60,7 +60,7 @@ current_status_prep AS (
         {{ is_active_alias}},
         {{ src_rsrc }},
         ROW_NUMBER() OVER (PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} DESC) as rn
-    FROM {{ this }}
+    FROM ({{ this }})
 
 ),
 
@@ -294,7 +294,7 @@ records_to_insert AS (
                     AND {{ datavault4dbt.multikey(is_active_alias, prefix=['current_status', 'di'], condition='=') }}
                     AND di.{{ src_ldts }} = (SELECT MIN({{ src_ldts }}) FROM deduplicated_incoming)
                 )
-            AND di.{{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM {{ this }})
+            AND di.{{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM ({{ this }}))
         {% endif %}
 
     {#
@@ -319,7 +319,7 @@ FROM records_to_insert ri
 {% if is_incremental() %}
 WHERE NOT EXISTS (
     SELECT 1
-    FROM {{ this }} t
+    FROM ({{ this }}) t
     WHERE t.{{ tracked_hashkey }} = ri.{{ tracked_hashkey }}
         AND t.{{ src_ldts }} = ri.{{ src_ldts }}
 )

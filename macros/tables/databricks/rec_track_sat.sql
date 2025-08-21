@@ -41,7 +41,7 @@ WITH
         {{ "\n" }}
         SELECT
         {{ datavault4dbt.concat_ws(concat_columns) }} as concat
-        FROM {{ this }}
+        FROM ({{ this }})
     ),
     {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
         rsrc_static_unionized AS (
@@ -58,7 +58,7 @@ WITH
                     {{ tracked_hashkey }},
                     {{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM ({{ this }})
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %} 
                         UNION ALL
@@ -73,7 +73,7 @@ WITH
                     {{ tracked_hashkey }},
                     {{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }}
+                    FROM ({{ this }})
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %} 
                         UNION ALL
@@ -140,7 +140,7 @@ WITH
                 {{ src_ldts }},
                 CAST('{{ rsrc_static }}' AS {{ rsrc_default_dtype }} ) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }})  AS {{ src_stg }}
-            FROM {{ ref(source_model.name) }} src
+            FROM ({{ ref(source_model.name) }}) src
 
 
             {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
@@ -161,12 +161,12 @@ WITH
                 {{ src_ldts }},
                 CAST({{ src_rsrc }} AS {{ rsrc_default_dtype }}) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }}) AS {{ src_stg }}
-            FROM {{ ref(source_model.name) }} src
+            FROM ({{ ref(source_model.name) }} src
             {%- if is_incremental() and source_models | length == 1 and not disable_hwm %}
                 WHERE src.{{ src_ldts }} > (
             SELECT MAX({{ src_ldts }})
-            FROM {{ this }}
-            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            FROM ({{ this }})
+            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
             )
             {%- endif %}
         ),

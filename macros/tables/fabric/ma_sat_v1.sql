@@ -30,7 +30,7 @@ WITH
 source_satellite AS (
 
     SELECT src.*
-    FROM {{ source_relation }} as src
+    FROM ({{ source_relation }}) as src
 
 ),
 

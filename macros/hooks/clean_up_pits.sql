@@ -39,8 +39,8 @@
 
 {%- macro default__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
-DELETE {{ this }} pit
-WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
+DELETE ({{ this }}) pit
+WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM ({{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
 {%- if execute -%}
 {{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
@@ -50,7 +50,7 @@ WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }}
 
 {%- macro snowflake__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
-DELETE FROM {{ this }} pit
+DELETE FROM ({{ this }}) pit
 WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
 {%- if execute -%}
@@ -61,7 +61,7 @@ WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }}
 
 {%- macro exasol__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
-DELETE FROM {{ this }} pit
+DELETE FROM ({{ this }}) pit
 WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
 {%- if execute -%}
@@ -74,7 +74,7 @@ WHERE pit.{{ sdts }} NOT IN (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }}
 {%- macro synapse__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
 DELETE pit
-FROM {{ this }} AS pit 
+FROM ({{ this }}) AS pit 
 LEFT JOIN {{ ref(snapshot_relation) }} AS snap
 ON pit.{{ sdts }} = snap.{{ sdts }} AND {{ snapshot_trigger_column }}=1
 WHERE snap.{{ sdts }} IS NULL
@@ -88,7 +88,7 @@ WHERE snap.{{ sdts }} IS NULL
 
 {%- macro postgres__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
-DELETE FROM {{ this }} pit
+DELETE FROM ({{ this }}) pit
 WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} snap WHERE pit.{{ sdts }} = snap.{{ sdts }} AND snap.{{ snapshot_trigger_column }}=TRUE)
 
 {%- if execute -%}
@@ -100,8 +100,8 @@ WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} snap WHERE pit.{{ s
 
 {%- macro redshift__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
-DELETE FROM {{ this }}
-WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{ sdts }} = {{ ref(snapshot_relation) }}.{{ sdts }} AND {{ ref(snapshot_relation) }}.{{ snapshot_trigger_column }}=TRUE)
+DELETE FROM ({{ this }})
+WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE ({{ this }}).{{ sdts }} = {{ ref(snapshot_relation) }}.{{ sdts }} AND {{ ref(snapshot_relation) }}.{{ snapshot_trigger_column }}=TRUE)
 
 
 {%- if execute -%}
@@ -114,7 +114,7 @@ WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{
 {%- macro fabric__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
 DELETE pit
-FROM {{ this }} AS pit 
+FROM ({{ this }}) AS pit 
 LEFT JOIN {{ ref(snapshot_relation) }} AS snap
 ON pit.{{ sdts }} = snap.{{ sdts }} AND {{ snapshot_trigger_column }}=1
 WHERE snap.{{ sdts }} IS NULL
@@ -127,7 +127,7 @@ WHERE snap.{{ sdts }} IS NULL
 
 {%- macro databricks__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
-DELETE FROM {{ this }} pit
+DELETE FROM ({{ this }}) pit
 WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE)
 
 {%- if execute -%}
@@ -139,12 +139,12 @@ WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }}
 
 {%- macro oracle__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
-DELETE FROM {{ this }}
-WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{ sdts }} = {{ ref(snapshot_relation) }}.{{ sdts }} AND {{ ref(snapshot_relation) }}.{{ snapshot_trigger_column }}= 1)
+DELETE FROM ({{ this }})
+WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE ({{ this }}).{{ sdts }} = {{ ref(snapshot_relation) }}.{{ sdts }} AND {{ ref(snapshot_relation) }}.{{ snapshot_trigger_column }}= 1)
 
 
 {%- if execute -%}
-{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }})
 {%- endif -%}
 
 {%- endmacro -%}

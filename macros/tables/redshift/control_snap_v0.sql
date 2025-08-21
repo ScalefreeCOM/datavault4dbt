@@ -27,7 +27,7 @@ initial_timestamps AS (
         generate_dates
     {%- if is_incremental() %}
     WHERE
-        {{ sdts_alias }} > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
+        {{ sdts_alias }} > (SELECT MAX({{ sdts_alias }}) FROM ({{ this }}))
     {%- endif %}
 
 ),

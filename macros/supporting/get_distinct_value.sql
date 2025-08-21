@@ -9,7 +9,7 @@
 
 {% set query %}
     SELECT DISTINCT {{ column_name }}
-    from {{ source_relation }}
+    from ({{ source_relation }})
     {% if exclude_values is not none %}
         where {{ column_name }} not in ( {%- for value in exclude_values -%} 
                                             '{{ value }}'

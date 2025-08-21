@@ -52,7 +52,7 @@ WITH
 
         SELECT
         {{ link_hashkey }}
-        FROM {{ this }}
+        FROM ({{ this }})
 
     ),
     {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
@@ -68,7 +68,7 @@ WITH
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }} t
+                    FROM ({{ this }}) t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -81,7 +81,7 @@ WITH
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT t.*,
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }} t
+                    FROM ({{ this }}) t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -172,7 +172,7 @@ src_new_{{ source_number }} AS (
 
         {{ datavault4dbt.print_list(source_model['payload']) | indent(3) }}
 
-    FROM {{ ref(source_model.name) }} src
+    FROM ({{ ref(source_model.name) }}) src
     {# If the model is incremental and all sources has rsrc_static defined and valid and the source was already included before in the target transactional link #}
     {# then an inner join is performed on the CTE for the maximum load date timestamp per record source static to get the records
     that match any of the rsrc_static present in it #}
@@ -188,7 +188,7 @@ src_new_{{ source_number }} AS (
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
         WHERE src.{{ src_ldts }} > (
             SELECT MAX({{ src_ldts }})
-            FROM {{ this }}
+            FROM ({{ this }})
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
     {%- endif %}

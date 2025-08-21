@@ -36,7 +36,7 @@ existing_dimension_keys AS (
 
     SELECT
         {{ dimension_key }}
-    FROM {{ this }}
+    FROM ({{ this }})
 
 ),
 
@@ -69,26 +69,26 @@ pit_records AS (
         {%- endfor %}
 
     FROM
-            {{ ref(tracked_entity) }} te
+            ({{ ref(tracked_entity) }} te
             {% if datavault4dbt.is_something(snapshot_trigger_column) -%}            
         FULL OUTER JOIN
             {{ ref(snapshot_relation) }} snap
                 ON snap.{{ snapshot_trigger_column }} = true
             {% else -%}
                 CROSS JOIN
-            {{ ref(snapshot_relation) }} snap
+            {{ ref(snapshot_relation) }}) snap
             {%- endif %}
         {% for satellite in sat_names %}
         {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
         {%- if ledts|string|lower in sat_columns|map('lower') %}
-        LEFT JOIN {{ ref(satellite) }}
+        LEFT JOIN ({{ ref(satellite) }})
         {%- else %}
         LEFT JOIN (
             SELECT
                 {{ hashkey }},
                 {{ ldts }},
                 COALESCE(LEAD({{ ldts }} - interval '00:00:00.000001') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
-            FROM {{ ref(satellite) }}
+            FROM ({{ ref(satellite) }})
         ) {{ satellite }}
         {% endif %}
             ON

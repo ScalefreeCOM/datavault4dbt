@@ -37,7 +37,7 @@ WITH
 
         SELECT
             {{ datavault4dbt.concat_ws(ref_keys) }}
-        FROM {{ this }}
+        FROM ({{ this }})
 
     ),
     {%- if ns.has_rsrc_static_defined -%}
@@ -53,7 +53,7 @@ WITH
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }} t
+                    FROM ({{ this }}) t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -67,7 +67,7 @@ WITH
                     SELECT 
                     t.{{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
-                    FROM {{ this }} t
+                    FROM ({{ this }}) t
                     WHERE {{ src_rsrc }} LIKE '{{ rsrc_static }}'
                     {%- if not loop.last %}
                         UNION ALL
@@ -145,7 +145,7 @@ WITH
 
             {{ src_ldts }},
             {{ src_rsrc }}
-        FROM {{ ref(source_model.name) }} src
+        FROM ({{ ref(source_model.name) }}) src
 
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON

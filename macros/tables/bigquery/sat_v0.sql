@@ -29,12 +29,12 @@ source_data AS (
         {{ parent_hashkey }},
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
         {{ datavault4dbt.print_list(source_cols) }}
-    FROM {{ source_relation }}
+    FROM ({{ source_relation }})
 
     {%- if is_incremental() %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
+            MAX({{ src_ldts }}) FROM ({{ this }})
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
@@ -48,7 +48,7 @@ latest_entries_in_sat AS (
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }}
     FROM 
-        {{ this }}
+        ({{ this }})
     QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 {%- endif %}

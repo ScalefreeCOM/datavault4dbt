@@ -36,7 +36,7 @@ initial_timestamps AS
         src.* 
     FROM initial_timestamps src
 
-    WHERE src.sdts > (SELECT MAX(t.{{ sdts_alias }}) FROM {{ this }} t)
+    WHERE src.sdts > (SELECT MAX(t.{{ sdts_alias }}) FROM ({{ this }}) t)
     {%- set last_cte = 'incremental_cte' -%}
 
 )

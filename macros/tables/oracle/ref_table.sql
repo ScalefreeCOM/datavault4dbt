@@ -55,7 +55,7 @@ dates AS (
     {% for satellite in ref_satellites_dict.keys() -%}
     SELECT distinct 
         {{ src_ldts }}
-    FROM {{ ref(satellite|string) }}
+    FROM ({{ ref(satellite|string) }}
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     {% if not loop.last -%} UNION {% endif %}
     {%- endfor %}
@@ -72,14 +72,14 @@ dates AS (
         
         SELECT 
             {{ sdts_alias }}
-        FROM {{ ref(snapshot_relation) }}
+        FROM {{ ref(snapshot_relation) }})
         WHERE {{ snapshot_trigger_column }} = 1
     )
 
 {%- endif %}
 
 {%- if is_incremental() -%}
-    WHERE {{ date_column }} > (SELECT MAX({{ date_column }}) FROM {{ this }})
+    WHERE {{ date_column }} > (SELECT MAX({{ date_column }}) FROM ({{ this }}))
 {%- endif -%}
 
 
@@ -119,7 +119,7 @@ ref_table AS (
 
     {% endfor %} 
 
-    FROM {{ ref(ref_hub) }} h
+    FROM ({{ ref(ref_hub) }}) h
     
     FULL OUTER JOIN dates ld
         ON 1 = 1  
@@ -128,7 +128,7 @@ ref_table AS (
 
         {%- set sat_alias = 's_' + loop.index|string -%}
 
-    LEFT JOIN {{ ref(satellite) }} {{ sat_alias }}
+    LEFT JOIN ({{ ref(satellite) }}) {{ sat_alias }}
         ON {{ datavault4dbt.multikey(columns=ref_key_cols, prefix=['h', sat_alias], condition='=') }}
         AND  ld.{{ date_column }} BETWEEN {{ sat_alias }}.{{ src_ldts }} AND {{ sat_alias }}.{{ ledts_alias }}
     

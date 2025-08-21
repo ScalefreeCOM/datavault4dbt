@@ -31,7 +31,7 @@ initial_timestamps AS (
     WHERE 
         sdts <= to_date({{ end_date }})+1
     {%- if is_incremental() %}
-    AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
+    AND sdts > (SELECT MAX({{ sdts_alias }}) FROM ({{ this }}))
     {%- endif %}
 
 ),
