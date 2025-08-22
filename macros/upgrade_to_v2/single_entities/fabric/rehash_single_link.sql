@@ -14,7 +14,9 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {% set new_link_hashkey_name = link_hashkey ~ '_new' %}
     {% set old_link_hashkey_name = link_hashkey ~ '_deprecated' %}
+
     {% set hash_datatype = var('datavault4dbt.hash_datatype', 'VARBINARY(8000)') %}
+
     {% set ns = namespace(hub_hashkeys=[], old_hash_columns=[{"name": old_link_hashkey_name, "data_type": hash_datatype}], new_hash_columns=[{"name": new_link_hashkey_name, "data_type": hash_datatype}], columns_to_drop=[{"name": old_link_hashkey_name}]) %}
 
     {% set link_relation = ref(link) %}
@@ -72,12 +74,12 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {% endfor %}
 
-
     {# Executing the UPDATE statement. #}
     {{ log('Executing UPDATE statement...', output_logs) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ hub ~ '\n' ~ update_ns.depr_update_sql ~ '*/' }}
     {% do run_query(update_ns.depr_update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
+
 
     {% if overwrite_hash_values %}
         
@@ -95,7 +97,6 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% else %}
 
         {# Alter existing Hub to add new hashkey column. #}
-
         {{ log('Executing ALTER TABLE statement...', output_logs) }}
         {{ alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.new_hash_columns) }}
         {{ log('ALTER TABLE statement completed!', output_logs) }}
@@ -104,7 +105,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {# generating the UPDATE statement that populates the new columns. #}
     {% set update_sql = datavault4dbt.link_update_statement(link_relation=link_relation,
                                                 hub_hashkeys=ns.hub_hashkeys,
-                                                link_hashkey=old_link_hashkey_name,
+                                                link_hashkey=link_hashkey,
                                                 new_link_hashkey_name=new_link_hashkey_name,
                                                 additional_hash_input_cols=additional_hash_input_cols) %}
 
@@ -117,12 +118,14 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {# Deleting old hashkey #}
     {% if drop_old_values or not overwrite_hash_values %}
         {{ alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
-        {{ log('Existing Hash values overwritten!', true) }}
+        {{ log('Deprecated hashkey column removed!', output_logs) }}
     {% endif %}
 
     {{ return(columns_to_drop) }}
 
 {% endmacro %}
+
+
 
 {% macro fabric__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
 
@@ -133,6 +136,8 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
+
+    {% set old_link_hashkey_name = link_hashkey ~ '_deprecated' %}
 
     {% set ns.update_sql_part1 %}
     UPDATE {{ link_relation }}
@@ -154,13 +159,12 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         {% set ns.link_hashkey_input_cols = ns.link_hashkey_input_cols + additional_hash_input_cols %}
         {% do ns.hash_config_dict.update({new_link_hashkey_name: ns.link_hashkey_input_cols}) %}
 
-    {{ log('hash_config: ' ~ ns.hash_config_dict, true)}}
 
     {% set ns.update_sql_part2 %}
     FROM (
 
         SELECT
-            link.{{ link_hashkey }},
+            link.{{ old_link_hashkey_name }},
             {{ datavault4dbt.hash_columns(columns=ns.hash_config_dict) }}
         FROM {{ link_relation }} link
     {% endset %}
@@ -171,16 +175,16 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
             {#
                 If hub entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
-                hashkey column needs to be used for joining, and the regular hashkey should be selected. 
+                hashkey column needs to be used for joining.
 
                 Otherwise, the regular hashkey should be used for joining. 
             #}
             
             {% set all_hub_columns = adapter.get_columns_in_relation(ref(hub.hub_name)) %}
             {% for column in all_hub_columns %}
-                {% if column.name|lower == hashkey|lower + '_deprecated' %}
+                {% if column.name|lower == hub.current_hashkey_name|lower + '_deprecated' %}
                     {% set hub_ns.hub_correct_hashkey = hub.old_hashkey_name %}
-                    {{ log('hub_already hashed set to true for ', true) }}
+                    {{ log('Hub already hashed!', true) }}
                 {% endif %}
             {% endfor %}
 
@@ -194,7 +198,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         UNION ALL
 
         SELECT 
-            link.{{ link_hashkey }}
+            link.{{ old_link_hashkey_name }}
             
             {% for hub in hub_hashkeys %}
 

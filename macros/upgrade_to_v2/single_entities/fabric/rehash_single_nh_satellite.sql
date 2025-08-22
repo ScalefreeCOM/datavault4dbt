@@ -14,7 +14,6 @@
 
 {% macro fabric__rehash_single_nh_satellite(nh_satellite, hashkey, parent_entity, business_keys=none, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
-
     {% set nh_satellite_relation = ref(nh_satellite) %}
     {% set parent_relation = ref(parent_entity) %}
 
@@ -118,7 +117,6 @@
     {# Executing the UPDATE statement. #}
     {{ log('Executing UPDATE statement...', output_logs) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ nh_satellite ~ '\n' ~ update_sql ~ '*/' }}
-    {{ log(update_sql, output_logs) }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
@@ -127,7 +125,7 @@
     {# Deleting old hashkey #}
     {% if drop_old_values or not overwrite_hash_values %}
         {{ alter_relation_add_remove_columns(relation=nh_satellite_relation, remove_columns=columns_to_drop) }}
-        {{ log('Existing Hash values overwritten!', true) }}
+        {{ log('Deprecated hashkey column removed!', output_logs) }}
     {% endif %}
 
     {{ return(columns_to_drop) }}
@@ -136,8 +134,6 @@
 
 
 {% macro fabric__nh_satellite_update_statement(nh_satellite_relation, new_hashkey_name, hashkey, ldts_col, parent_relation, hash_config_dict=none) %}
-
-    {% set old_hashkey_name = hashkey + '_deprecated' %}
     
     {% set ns = namespace(parent_already_rehashed=false) %}
 
@@ -146,6 +142,7 @@
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
+    {% set old_hashkey_name = hashkey + '_deprecated' %}
 
     {#
         If parent entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
