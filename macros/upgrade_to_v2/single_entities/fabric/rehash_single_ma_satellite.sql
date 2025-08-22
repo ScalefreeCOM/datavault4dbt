@@ -43,7 +43,6 @@
     {# Executing the UPDATE statement. #}
     {{ log('Executing UPDATE statement...', output_logs) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ hub ~ '\n' ~ depr_update_sql ~ '*/' }}
-
     {% do run_query(depr_update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
@@ -116,27 +115,38 @@
                                                 parent_relation=parent_relation) %}
 
     {# Executing the UPDATE statement. #}
-    {{ log('Executing UPDATE statement...' ~ update_sql, true) }}
+    {{ log('Executing UPDATE statement...', true) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ ma_satellite ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
     {% set columns_to_drop = [
-        {"name": hashkey + '_deprecated'},
-        {"name": hashdiff + '_deprecated'}
+        {"name": old_hashkey_name},
+        {"name": old_hashdiff_name}
     ]%}
 
     {# Deleting old hashkey #}
     {% if drop_old_values or not overwrite_hash_values %}
         {{ alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
-        {{ log('Existing Hash values overwritten!', true) }}
+        {{ log('Deprecated hashkey column removed!', output_logs) }}
     {% endif %}
 
     {{ return(columns_to_drop) }}
 
 {% endmacro %}
 
+
+
 {% macro fabric__ma_satellite_update_statement(ma_satellite_relation, new_hashkey_name, new_hashdiff_name, hashkey, business_key_list, ma_keys, ldts_col, hash_config_dict, parent_relation) %}
+
+    {% set ns = namespace(parent_already_rehashed=false) %}
+
+    {% set prefixed_hashkey = 'sat.' ~ hashkey %}
+
+    {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
+
+    {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+    {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
     {% set old_hashkey_name = hashkey + '_deprecated' %}
     
@@ -145,15 +155,6 @@
         {% set old_hashdiff_name = old_hashdiff_name[:-4] %}
     {% endif %}
     {% set old_hashdiff_name = old_hashdiff_name + '_deprecated' %}
-    
-    {% set ns = namespace(update_where_condition='', parent_already_rehashed=false) %}
-
-    {% set prefixed_hashkey = 'sat.' ~ hashkey %}
-
-    {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
-
-    {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
-    {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
 
     {#
@@ -166,7 +167,7 @@
     {% for column in all_parent_columns %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ ma_satellite_relation.name, true) }}
+            {{ log('Parent hub already rehashed for ' ~ ma_satellite_relation.name, true) }}
         {% endif %}
     {% endfor %}
 
@@ -182,30 +183,27 @@
             SELECT 
                 sat.{{ old_hashkey_name }},
                 sat.{{ ldts_col }},
-                {{ datavault4dbt.print_list(ma_keys) }},
      
                 {{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=ma_keys) }}
 
             FROM {{ ma_satellite_relation }} sat
             LEFT JOIN (
                 SELECT 
-                    {{ hashkey }},
+                    {{ join_hashkey_col }},
                     {{ datavault4dbt.print_list(business_key_list) }}
                 FROM {{ parent_relation }} 
             ) parent
                 ON sat.{{ hashkey }} = parent.{{ join_hashkey_col }}
             WHERE sat.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
-            GROUP BY sat.{{ old_hashkey_name }}
-                     ,sat.{{ ldts_col }} 
-                     ,{{ datavault4dbt.print_list(ma_keys, src_alias='sat') }}
-                     ,{{ datavault4dbt.print_list(business_key_list, src_alias='parent') }} 
+            GROUP BY sat.{{ old_hashkey_name }},
+                     sat.{{ ldts_col }},
+                     {{ datavault4dbt.print_list(business_key_list, src_alias='parent') }} 
 
             UNION ALL
-
+             
             SELECT
                 sat.{{ old_hashkey_name }},
                 sat.{{ ldts_col }},
-                {{ datavault4dbt.print_list(ma_keys) }},
                 sat.{{ old_hashkey_name }} AS {{ new_hashkey_name }},
                 sat.{{ old_hashdiff_name }} AS {{ new_hashdiff_name }}
             FROM {{ ma_satellite_relation }} sat
@@ -222,22 +220,6 @@
             AND sat.{{ ldts_col }} = nh.{{ ldts_col }}
     
     {% endset %}
-
-    {% for ma_key in ma_keys %}
-
-        {% set where_condition %}
-            AND (
-                (sat.{{ datavault4dbt.escape_column_names(ma_key) }} IS NULL AND nh.{{ datavault4dbt.escape_column_names(ma_key) }} IS NULL)
-                OR
-                (sat.{{ datavault4dbt.escape_column_names(ma_key) }} = nh.{{ datavault4dbt.escape_column_names(ma_key) }})
-            )
-        {% endset %}
-
-        {% set ns.update_where_condition = ns.update_where_condition + where_condition %}
-
-    {% endfor %}
-
-    {% set update_sql = update_sql + ns.update_where_condition %}
 
     {{ return(update_sql) }}
 
