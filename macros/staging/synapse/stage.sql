@@ -335,9 +335,14 @@ prejoined_columns AS (
     {%- else -%}
       {%- set operator = prejoin['operator'] -%}
     {%- endif -%}
+    {%- if 'join_type' not in prejoin.keys() -%}
+      {%- set join_type = 'LEFT' -%}
+    {%- else -%}
+      {%- set join_type = prejoin['join_type'] -%}
+    {%- endif -%}
       {%- set prejoin_alias = 'pj_' + loop.index|string %}
       
-      left join {{ relation }} as {{ prejoin_alias }}
+      {{ join_type }} join {{ relation }} as {{ prejoin_alias }}
         on {{ datavault4dbt.multikey(columns=prejoin['this_column_name'], prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=prejoin['ref_column_name']) }}
   {%- endfor -%}
 
