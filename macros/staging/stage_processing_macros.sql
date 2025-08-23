@@ -1,141 +1,141 @@
 {%- macro process_columns_to_select(columns_list=none, exclude_columns_list=none) -%}
 
-{{ return(adapter.dispatch('process_columns_to_select', 'datavault4dbt')(columns_list=columns_list,exclude_columns_list=exclude_columns_list)) }}
+    {{ return(adapter.dispatch('process_columns_to_select', 'datavault4dbt')(columns_list=columns_list,exclude_columns_list=exclude_columns_list)) }}
 
 {%- endmacro -%}
 
 
 {%- macro default__process_columns_to_select(columns_list, exclude_columns_list) -%}
-{% set exclude_columns_list = exclude_columns_list | map('upper') | list %}
-{% set columns_list = columns_list | map('upper') | list %}
-{% set columns_to_select = [] %}
+    {% set exclude_columns_list = exclude_columns_list | map('upper') | list %}
+    {% set columns_list = columns_list | map('upper') | list %}
+    {% set columns_to_select = [] %}
 
-{% if not datavault4dbt.is_list(columns_list) or not datavault4dbt.is_list(exclude_columns_list) %}
+    {% if not datavault4dbt.is_list(columns_list) or not datavault4dbt.is_list(exclude_columns_list)  %}
 
-{{- exceptions.raise_compiler_error("One or both arguments are not of list type.") -}}
+        {{- exceptions.raise_compiler_error("One or both arguments are not of list type.") -}}
 
-{%- endif -%}
+    {%- endif -%}
 
-{%- if datavault4dbt.is_something(columns_list) and datavault4dbt.is_something(exclude_columns_list) -%}
-{%- for col in columns_list -%}
+    {%- if datavault4dbt.is_something(columns_list) and datavault4dbt.is_something(exclude_columns_list) -%}
+        {%- for col in columns_list -%}
 
-{%- if col not in exclude_columns_list -%}
+            {%- if col not in exclude_columns_list -%}
                 {%- do columns_to_select.append(col) -%}
             {%- endif -%}
 
         {%- endfor -%}
     {%- elif datavault4dbt.is_something(columns_list) and not datavault4dbt.is_something(exclude_columns_list) %}
-{% set columns_to_select = columns_list %}
-{%- endif -%}
+        {% set columns_to_select = columns_list %}
+    {%- endif -%}
 
-{%- do return(columns_to_select) -%}
+    {%- do return(columns_to_select) -%}
 
 {%- endmacro -%}
 
     
 {%- macro fabric__process_columns_to_select(columns_list, exclude_columns_list) -%}
 
-{% set set_casing = var('datavault4dbt.set_casing', none) %}
-{% if set_casing|lower in ['upper', 'uppercase'] %}
+    {% set set_casing = var('datavault4dbt.set_casing', none) %}
+    {% if set_casing|lower in ['upper', 'uppercase'] %}
         {% set exclude_columns_list = exclude_columns_list | map('upper') | list %}
         {% set columns_list = columns_list | map('upper') | list %}
     {% elif set_casing|lower in ['lower', 'lowercase'] %}
-{% set exclude_columns_list = exclude_columns_list | map('lower') | list %}
-{% set columns_list = columns_list | map('lower') | list %}
-{% endif %}
+        {% set exclude_columns_list = exclude_columns_list | map('lower') | list %}
+        {% set columns_list = columns_list | map('lower') | list %}
+    {% endif %}
 
-{% set columns_to_select = [] %}
+    {% set columns_to_select = [] %}
 
-{% if not datavault4dbt.is_list(columns_list) or not datavault4dbt.is_list(exclude_columns_list) %}
+    {% if not datavault4dbt.is_list(columns_list) or not datavault4dbt.is_list(exclude_columns_list)  %}
 
-{{- exceptions.raise_compiler_error("One or both arguments are not of list type.") -}}
+        {{- exceptions.raise_compiler_error("One or both arguments are not of list type.") -}}
 
-{%- endif -%}
+    {%- endif -%}
 
-{%- if datavault4dbt.is_something(columns_list) and datavault4dbt.is_something(exclude_columns_list) -%}
-{%- for col in columns_list -%}
+    {%- if datavault4dbt.is_something(columns_list) and datavault4dbt.is_something(exclude_columns_list) -%}
+        {%- for col in columns_list -%}
 
-{%- if col not in exclude_columns_list -%}
+            {%- if col not in exclude_columns_list -%}
                 {%- do columns_to_select.append(col) -%}
             {%- endif -%}
 
         {%- endfor -%}
     {%- elif datavault4dbt.is_something(columns_list) and not datavault4dbt.is_something(exclude_columns_list) %}
-{% set columns_to_select = columns_list %}
-{%- endif -%}
+        {% set columns_to_select = columns_list %}
+    {%- endif -%}
 
-{%- do return(columns_to_select) -%}
+    {%- do return(columns_to_select) -%}
 
 {%- endmacro -%}
 
 
 {%- macro databricks__process_columns_to_select(columns_list, exclude_columns_list) -%}
 
-{% set set_casing = var('datavault4dbt.set_casing', none) %}
-{% if set_casing|lower in ['upper', 'uppercase'] %}
+    {% set set_casing = var('datavault4dbt.set_casing', none) %}
+    {% if set_casing|lower in ['upper', 'uppercase'] %}
         {% set exclude_columns_list = exclude_columns_list | map('upper') | list %}
         {% set columns_list = columns_list | map('upper') | list %}
     {% elif set_casing|lower in ['lower', 'lowercase'] %}
-{% set exclude_columns_list = exclude_columns_list | map('lower') | list %}
-{% set columns_list = columns_list | map('lower') | list %}
-{% endif %}
+        {% set exclude_columns_list = exclude_columns_list | map('lower') | list %}
+        {% set columns_list = columns_list | map('lower') | list %}
+    {% endif %}
 
-{% set columns_to_select = [] %}
+    {% set columns_to_select = [] %}
 
-{% if not datavault4dbt.is_list(columns_list) or not datavault4dbt.is_list(exclude_columns_list) %}
+    {% if not datavault4dbt.is_list(columns_list) or not datavault4dbt.is_list(exclude_columns_list)  %}
 
-{{- exceptions.raise_compiler_error("One or both arguments are not of list type.") -}}
+        {{- exceptions.raise_compiler_error("One or both arguments are not of list type.") -}}
 
-{%- endif -%}
+    {%- endif -%}
 
-{%- if datavault4dbt.is_something(columns_list) and datavault4dbt.is_something(exclude_columns_list) -%}
-{%- for col in columns_list -%}
+    {%- if datavault4dbt.is_something(columns_list) and datavault4dbt.is_something(exclude_columns_list) -%}
+        {%- for col in columns_list -%}
 
-{%- if col not in exclude_columns_list -%}
+            {%- if col not in exclude_columns_list -%}
                 {%- do columns_to_select.append(col) -%}
             {%- endif -%}
 
         {%- endfor -%}
     {%- elif datavault4dbt.is_something(columns_list) and not datavault4dbt.is_something(exclude_columns_list) %}
-{% set columns_to_select = columns_list %}
-{%- endif -%}
+        {% set columns_to_select = columns_list %}
+    {%- endif -%}
 
-{%- do return(columns_to_select) -%}
+    {%- do return(columns_to_select) -%}
     
 {%- endmacro -%}
 
 
 {%- macro synapse__process_columns_to_select(columns_list, exclude_columns_list) -%}
 
-{{ return (datavault4dbt.default__process_columns_to_select(columns_list=columns_list,exclude_columns_list=exclude_columns_list)) }}
+    {{ return (datavault4dbt.default__process_columns_to_select(columns_list=columns_list,exclude_columns_list=exclude_columns_list)) }}
 
 {%- endmacro -%}
 
 
 {%- macro extract_column_names(columns_dict=none) -%}
 
-{%- set extracted_column_names = [] -%}
+    {%- set extracted_column_names = [] -%}
 
-{%- if columns_dict is mapping -%}
-{%- for key, value in columns_dict.items() -%}
+    {%- if columns_dict is mapping -%}
+        {%- for key, value in columns_dict.items() -%}
             {%- do extracted_column_names.append(key) -%}
         {%- endfor -%}
 
         {%- do return(extracted_column_names) -%}
     {%- else -%}
-{%- do return([]) -%}
-{%- endif -%}
+        {%- do return([]) -%}
+    {%- endif -%}
 
 {%- endmacro -%}
 
 {%- macro extract_input_columns(columns_dict=none) -%}
 
-{%- set extracted_input_columns = [] -%}
+    {%- set extracted_input_columns = [] -%}
 
-{%- if columns_dict is mapping -%}
-{%- for key, value in columns_dict.items() -%}
-{%- if value is mapping and 'src_cols_required' in value.keys() -%}
-{% if datavault4dbt.is_list(value['src_cols_required']) %}
+    {%- if columns_dict is mapping -%}
+        {%- for key, value in columns_dict.items() -%}
+            {%- if value is mapping and 'src_cols_required' in value.keys() -%}
+                {% if datavault4dbt.is_list(value['src_cols_required']) %}
                     {% set extracted_input_columns = extracted_input_columns + value['src_cols_required'] %}
                 {% else %}
                     {%- do extracted_input_columns.append(value['src_cols_required']) -%}
@@ -150,9 +150,9 @@
         {%- endfor -%}
     
     {%- elif datavault4dbt.is_list(columns_dict) -%}
-{% for prejoin in columns_dict %}
-{%- if datavault4dbt.is_list(prejoin['this_column_name']) -%}
-{%- for column in prejoin['this_column_name'] -%}
+        {% for prejoin in columns_dict %}
+            {%- if datavault4dbt.is_list(prejoin['this_column_name'])-%}
+                {%- for column in prejoin['this_column_name'] -%}
                     {%- do extracted_input_columns.append(column) -%}
                 {%- endfor -%}
             {%- else -%}
@@ -160,24 +160,24 @@
             {%- endif -%}
         {% endfor %}
     {%- else -%}
-{%- do return([]) -%}
-{%- endif -%}
+        {%- do return([]) -%}
+    {%- endif -%}
 
-{%- do return(extracted_input_columns) -%}
+    {%- do return(extracted_input_columns) -%}
 
 {%- endmacro -%}
 
 
 {%- macro process_hash_column_excludes(hash_columns=none, source_columns=none) -%}
 
-{%- set processed_hash_columns = {} -%}
+    {%- set processed_hash_columns = {} -%}
 
-{%- for col, col_mapping in hash_columns.items() -%}
+    {%- for col, col_mapping in hash_columns.items() -%}
         
-{%- if col_mapping is mapping -%}
-{%- if col_mapping.exclude_columns -%}
+        {%- if col_mapping is mapping -%}
+            {%- if col_mapping.exclude_columns -%}
 
-{%- if col_mapping.columns -%}
+                {%- if col_mapping.columns -%}
 
                     {%- set columns_to_hash = datavault4dbt.process_columns_to_select(source_columns, col_mapping.columns) -%}
 
@@ -196,25 +196,25 @@
                 {%- do processed_hash_columns.update({col: col_mapping}) -%}
             {%- endif -%}
         {%- else -%}
-{%- do processed_hash_columns.update({col: col_mapping}) -%}
-{%- endif -%}
+            {%- do processed_hash_columns.update({col: col_mapping}) -%}
+        {%- endif -%}
 
-{%- endfor -%}
+    {%- endfor -%}
 
-{%- do return(processed_hash_columns) -%}
+    {%- do return(processed_hash_columns) -%}
 
 {%- endmacro -%}
 
 
 {%- macro print_list(list_to_print=none, indent=4, src_alias=none) -%}
 
-{%- for col_name in list_to_print -%}
-{%- if src_alias %}
+    {%- for col_name in list_to_print -%}
+        {%- if src_alias %}
         {{ (src_alias ~ '.' ~ col_name) | indent(indent) }}{{ "," if not loop.last }}
         {%- else %}
-{{ col_name | indent(indent) }}{{ "," if not loop.last }}
-{%- endif %}
-{%- endfor -%}
+        {{ col_name | indent(indent) }}{{ "," if not loop.last }}
+        {%- endif %}
+    {%- endfor -%}
 
 {%- endmacro -%}
 
@@ -223,28 +223,28 @@
     {# Check if the old syntax is used for prejoined columns
         If so parse it to new list syntax #}
 
-{% if datavault4dbt.is_list(prejoined_columns) %}
+    {% if datavault4dbt.is_list(prejoined_columns) %}
         {% do return(prejoined_columns) %}
     {% else %}
-{% set output = [] %}
+        {% set output = [] %}
 
-{% for key, value in prejoined_columns.items() %}
-{% set ref_model = value.get('ref_model') %}
-{% set src_name = value.get('src_name') %}
-{% set src_table = value.get('src_table') %}
-{%- if 'operator' not in value.keys() -%}  
+        {% for key, value in prejoined_columns.items() %}
+            {% set ref_model = value.get('ref_model') %}
+            {% set src_name = value.get('src_name') %}
+            {% set src_table = value.get('src_table') %}
+            {%- if 'operator' not in value.keys() -%}  
                 {%- do value.update({'operator': 'AND'}) -%}
                 {%- set operator = 'AND' -%}
             {%- else -%}
-{%- set operator = value.get('operator') -%}
-{%- endif -%}
-{%- if 'join_type' not in value.keys() -%}  
-                {%- do value.update({'join_type': 'LEFT'}) -%}
-                {%- set join_type = 'LEFT' -%}
-            {%- else -%}
-{%- set join_type = value.get('join_type') -%}
-{%- endif -%}
-            
+                {%- set operator = value.get('operator') -%}
+            {%- endif -%}
+            {%- if 'join_type' not in value.keys() -%}  
+                            {%- do value.update({'join_type': 'LEFT'}) -%}
+                            {%- set join_type = 'LEFT' -%}
+                        {%- else -%}
+            {%- set join_type = value.get('join_type') -%}
+            {%- endif -%}
+                        
     {% set match_criteria = (
             ref_model and output | selectattr('ref_model', 'equalto', ref_model) or
             src_name and output | selectattr('src_name', 'equalto', src_name) | selectattr('src_table', 'equalto', src_table)
@@ -254,7 +254,7 @@
         | selectattr('join_type', 'equalto', value.join_type)
         | list | first %}
         
-{% if match_criteria %}
+            {% if match_criteria %}
                 {% do match_criteria['extract_columns'].append(value.bk) %}
                 {% do match_criteria['aliases'].append(key) %}
             {% else %}
@@ -265,48 +265,48 @@
                     'ref_column_name': value.ref_column_name,
                     'operator': operator,
                     'join_type': join_type
-                } %}
+                } %}            
                 
-{% if ref_model %}
+                {% if ref_model %}
                     {% do new_item.update({'ref_model': ref_model}) %}
                 {% elif src_name and src_table %}
-{% do new_item.update({'src_name': src_name, 'src_table': src_table}) %}
-{% endif %}
+                    {% do new_item.update({'src_name': src_name, 'src_table': src_table}) %}
+                {% endif %}
                 
-{% do output.append(new_item) %}
-{% endif %}
-{% endfor %}
-{% endif %}
+                {% do output.append(new_item) %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 
-{%- do return(output) -%}
+    {%- do return(output) -%}
 
 {%- endmacro -%}
 
 
 {%- macro extract_prejoin_column_names(prejoined_columns=none) -%}
 
-{%- set extracted_column_names = [] -%}
+    {%- set extracted_column_names = [] -%}
     
-{% if not datavault4dbt.is_something(prejoined_columns) %}
-{%- do return(extracted_column_names) -%}
-{% endif %}
+    {% if not datavault4dbt.is_something(prejoined_columns) %}
+        {%- do return(extracted_column_names) -%}
+    {% endif %}
 
-{% for prejoin in prejoined_columns %}
-{% if datavault4dbt.is_list(prejoin['aliases']) %}
-{% for alias in prejoin['aliases'] %}
+    {% for prejoin in prejoined_columns %}
+        {% if datavault4dbt.is_list(prejoin['aliases']) %}
+            {% for alias in prejoin['aliases'] %}
                 {%- do extracted_column_names.append(alias) -%}
             {% endfor %}
         {% elif datavault4dbt.is_something(prejoin['aliases']) %}
             {%- do extracted_column_names.append(prejoin['aliases']) -%}
         {% elif datavault4dbt.is_list(prejoin['extract_columns']) %}
-{% for column in prejoin['extract_columns'] %}
+            {% for column in prejoin['extract_columns'] %}
                 {%- do extracted_column_names.append(column) -%}
             {% endfor %}
         {% else %}
-{%- do extracted_column_names.append(prejoin['extract_columns']) -%}
-{% endif %}
-{%- endfor -%}
+            {%- do extracted_column_names.append(prejoin['extract_columns']) -%}
+        {% endif %}
+    {%- endfor -%}
     
-{%- do return(extracted_column_names) -%}
+    {%- do return(extracted_column_names) -%}
 
 {%- endmacro -%}
