@@ -412,7 +412,13 @@
     {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
     {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
 
-{{ standardise_prefix | replace('[CONCAT_STRING]', concat_string) }}
+{%- if columns | length == 1 -%}
+    {%- set concat_function = 'CONCAT(' -%}
+{%- elif columns | length > 1 -%}
+    {%- set concat_function = 'CONCAT_WS(\'' ~ concat_string ~ '\', ' -%}
+{%- endif -%}
+
+{{ standardise_prefix | replace('[CONCAT_FUNCTION]', concat_function) }}
 
 {%- for column in columns -%}
 
