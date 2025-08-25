@@ -69,7 +69,7 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- else -%}
 
-    CONCAT('"', REPLACE(REPLACE(REPLACE(LTRIM(RTRIM([EXPRESSION])), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
+    CONCAT('"', REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(CONVERT(VARCHAR(4000), [EXPRESSION], 1))), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
 
 {%- endif -%}
 
