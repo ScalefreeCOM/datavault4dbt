@@ -239,8 +239,8 @@
                 {%- set operator = value.get('operator') -%}
             {%- endif -%}
             {%- if 'join_type' not in value.keys() -%}  
-                            {%- do value.update({'join_type': 'LEFT'}) -%}
-                            {%- set join_type = 'LEFT' -%}
+                            {%- do value.update({'join_type': 'left'}) -%}
+                            {%- set join_type = 'left' -%}
                         {%- else -%}
             {%- set join_type = value.get('join_type') -%}
             {%- endif -%}

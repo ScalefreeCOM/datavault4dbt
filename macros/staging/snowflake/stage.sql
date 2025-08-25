@@ -343,7 +343,7 @@ prejoined_columns AS (
       {%- set operator = prejoin['operator'] -%}
     {%- endif -%}
     {%- if 'join_type' not in prejoin.keys() -%}
-      {%- set join_type = 'LEFT' -%}
+      {%- set join_type = 'left' -%}
     {%- else -%}
       {%- set join_type = prejoin['join_type'] -%}
     {%- endif -%}
