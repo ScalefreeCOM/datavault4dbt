@@ -238,13 +238,20 @@
             {%- else -%}
                 {%- set operator = value.get('operator') -%}
             {%- endif -%}
-            
+            {%- if 'join_type' not in value.keys() -%}  
+                            {%- do value.update({'join_type': 'left'}) -%}
+                            {%- set join_type = 'left' -%}
+                        {%- else -%}
+            {%- set join_type = value.get('join_type') -%}
+            {%- endif -%}
+                        
     {% set match_criteria = (
             ref_model and output | selectattr('ref_model', 'equalto', ref_model) or
             src_name and output | selectattr('src_name', 'equalto', src_name) | selectattr('src_table', 'equalto', src_table)
         ) | selectattr('this_column_name', 'equalto', value.this_column_name)
         | selectattr('ref_column_name', 'equalto', value.ref_column_name)
         | selectattr('operator', 'equalto', value.operator)
+        | selectattr('join_type', 'equalto', value.join_type)
         | list | first %}
         
             {% if match_criteria %}
@@ -256,8 +263,9 @@
                     'aliases': [key],
                     'this_column_name': value.this_column_name,
                     'ref_column_name': value.ref_column_name,
-                    'operator': operator
-                } %}
+                    'operator': operator,
+                    'join_type': join_type
+                } %}            
                 
                 {% if ref_model %}
                     {% do new_item.update({'ref_model': ref_model}) %}
