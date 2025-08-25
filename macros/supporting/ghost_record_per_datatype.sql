@@ -199,7 +199,8 @@
      {%- elif datatype.startswith('NUMERIC') %} {{unknown_value__numeric}} AS {{ alias }}
      {%- elif datatype.startswith('DECIMAL') %} {{unknown_value__numeric}} AS {{ alias }}
      {%- elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
-     {%- elif datatype in ['ARRAY', 'VARIANT'] %} CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) AS {{ alias }}
+     {%- elif datatype in ['ARRAY'] %} CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) AS {{ alias }}
+     {%- elif datatype in ['VARIANT'] %} object_construct('{{ unknown_value__STRING }}', '{{ unknown_value__STRING }}') AS {{ alias }}
      {%- else %}NULL AS {{ alias }}
      {% endif %}
 {%- elif ghost_record_type == 'error' -%}
@@ -230,7 +231,8 @@
      {%- elif datatype.startswith('NUMERIC') %} {{error_value__numeric}} AS {{ alias }}
      {%- elif datatype.startswith('DECIMAL') %} {{error_value__numeric}} AS {{ alias }}
      {% elif datatype == 'BOOLEAN' %}CAST('FALSE' AS BOOLEAN) AS {{ alias }}
-     {%- elif datatype in ['ARRAY', 'VARIANT'] %} CAST('{{ error_value__STRING }}' as {{ datatype }} ) AS {{ alias }}
+     {%- elif datatype in ['ARRAY'] %} CAST('{{ error_value__STRING }}' as {{ datatype }} ) AS {{ alias }}
+     {%- elif datatype in ['VARIANT'] %} object_construct('{{ error_value__STRING }}', '{{ error_value__STRING }}') AS {{ alias }}
      {% else %}NULL AS {{ alias }}
       {% endif %}
 {%- else -%}
