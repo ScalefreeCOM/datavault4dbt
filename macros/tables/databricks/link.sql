@@ -1,11 +1,11 @@
 
-{%- macro databricks__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc, disable_hwm) -%}
+{%- macro databricks__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc, disable_hwm, additional_columns) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
 
-    {%- if execute -%}
-        {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
-    {%- endif %}
+{%- if execute -%}
+{{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
+{%- endif %}
 
 {%- endif -%}
 
@@ -14,11 +14,14 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{# Select the extra source columns from the hub model and put them in an array. #}
+{%- set additional_columns = datavault4dbt.expand_column_list(columns=[additional_columns]) -%}
+
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
 {%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
-    {%- set source_models = {source_models: {}} -%}
+{%- set source_models = {source_models: {}} -%}
 {%- endif -%}
 
 {%- set source_model_values = fromjson(datavault4dbt.source_model_processing(source_models=source_models, parameters={'link_hk':link_hashkey}, foreign_hashkeys=foreign_hashkeys)) -%}
@@ -27,13 +30,14 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] -%}
+{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc]  + (additional_columns if additional_columns is not none else []) -%}
 
 {%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
 {%- set link_hashkey = datavault4dbt.escape_column_names(link_hashkey) -%}
 {%- set foreign_hashkeys = datavault4dbt.escape_column_names(foreign_hashkeys) -%}
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+{%- set additional_columns = datavault4dbt.escape_column_names(additional_columns) -%}
 
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -49,13 +53,13 @@ WITH
         FROM {{ this }}
 
     ),
-    {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
-        {% for source_model in source_models %}
+{%- if ns.has_rsrc_static_defined and not disable_hwm -%}
+{% for source_model in source_models %}
         {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
             {%- set source_number = source_model.id | string -%}
             {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number] -%}
 
-            {{log('rsrc_statics: '~ rsrc_statics, false) }}
+            {{ log('rsrc_statics: '~ rsrc_statics, false) }}
 
             {%- set rsrc_static_query_source -%}
                 SELECT count(*) FROM (
@@ -162,7 +166,8 @@ WITH
             {{ fk }},
             {% endfor -%}
             {{ src_ldts }},
-            {{ src_rsrc }}
+            {{ src_rsrc }},
+            {{ datavault4dbt.print_list(additional_columns) | indent(4) }}
         FROM {{ ref(source_model.name) }} src
         {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
 
@@ -202,7 +207,8 @@ source_new_union AS (
             {{ fk }} AS {{ foreign_hashkeys[loop.index - 1] }},
         {% endfor -%}
         {{ src_ldts }},
-        {{ src_rsrc }}
+        {{ src_rsrc }},
+        {{ datavault4dbt.print_list(additional_columns) | indent(4) }}
     FROM src_new_{{ source_number }}
 
     {%- if not loop.last %}
@@ -226,7 +232,7 @@ earliest_hk_over_all_sources AS (
 
     QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
 
-    {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
+{%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 
 ),
 
@@ -237,7 +243,7 @@ records_to_insert AS (
         {{ datavault4dbt.print_list(final_columns_to_select) | indent(4) }}
     FROM {{ ns.last_cte }}
 
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     WHERE {{ link_hashkey }} NOT IN (SELECT * FROM distinct_target_hashkeys)
     {% endif %}
 )
