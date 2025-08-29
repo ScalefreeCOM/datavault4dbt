@@ -59,7 +59,7 @@
                         
         {{ log(link.name ~ ' rehashed successfully.', true) }}      
 
-        {% set columns_to_drop_dict = {'model_name': link.name, 'columns_to_drop': columns_to_drop_list} %}
+        {% set columns_to_drop_dict = {'model_name': link.name, 'columns_to_drop': (columns_to_drop_list | trim)} %}
 
         {% do ns.columns_to_drop.append(columns_to_drop_dict) %}
 
