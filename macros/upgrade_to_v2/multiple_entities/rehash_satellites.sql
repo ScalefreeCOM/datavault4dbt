@@ -42,7 +42,6 @@
 #}
 
 {% macro rehash_satellites(satellite_yaml, drop_old_values=true) %}
-
     {% set ns = namespace(columns_to_drop=[]) %}
 
     {% set satellite_dict = fromyaml(satellite_yaml) %}
@@ -51,7 +50,8 @@
 
     {% for satellite in satellite_dict.get('satellites') %}
         {% set specific_satellite_overwrite_hash = satellite.get('overwrite_hash_values', overwrite_hash_values) %}
-         
+{{log(drop_old_values,true)}}
+
         {% set columns_to_drop_list =  datavault4dbt.rehash_single_satellite(satellite=satellite.name, 
                                                                                 hashkey=satellite.hashkey,
                                                                                 hashdiff=satellite.hashdiff,
@@ -64,7 +64,7 @@
                         
         {{ log(satellite.name ~ ' rehashed successfully.', true) }}             
 
-        {% set columns_to_drop_dict = {'model_name': satellite.name, 'columns_to_drop': columns_to_drop_list} %}
+        {% set columns_to_drop_dict = {'model_name': satellite.name, 'columns_to_drop': (columns_to_drop_list | trim) } %}
 
         {% do ns.columns_to_drop.append(columns_to_drop_dict) %}
    

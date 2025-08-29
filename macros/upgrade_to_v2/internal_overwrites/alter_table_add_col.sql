@@ -28,6 +28,8 @@
             {% endfor %}
     {%- endset -%}
 
+     {{ log('alter sql: ' ~ sql, false)}}
+    
     {% do run_query(sql) %}
 
     {% endif %}

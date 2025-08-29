@@ -4,7 +4,6 @@
 #}
 
 {% macro fabric__rehash_single_ma_satellite(ma_satellite, hashkey, hashdiff, ma_keys, payload, parent_entity, business_keys, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
-
     {% set ma_satellite_relation = ref(ma_satellite) %}
     {% set parent_relation = ref(parent_entity) %}
 
@@ -28,7 +27,7 @@
 
     {# ALTER existing satellite to add deprecated hashkey and deprecated hashdiff. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=old_hash_columns) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=old_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# Update SQL statement to copy hashkey to _depr column  #}
@@ -98,7 +97,7 @@
 
         {# ALTER existing satellite to add new hashkey and new hashdiff. #}
         {{ log('Executing ALTER TABLE statement...', output_logs) }}
-        {{ alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
+        {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
         {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {% endif %}
@@ -115,7 +114,7 @@
                                                 parent_relation=parent_relation) %}
 
     {# Executing the UPDATE statement. #}
-    {{ log('Executing UPDATE statement...', true) }}
+    {{ log('Executing UPDATE statement...', output_logs) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ ma_satellite ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
@@ -126,8 +125,10 @@
     ]%}
 
     {# Deleting old hashkey #}
+        {{ log('drop_old_values: '~drop_old_values, true) }}
+        {{ log('overwrite_hash_values: '~overwrite_hash_values, true) }}
     {% if drop_old_values or not overwrite_hash_values %}
-        {{ alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
+        {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
         {{ log('Deprecated hashkey column removed!', output_logs) }}
     {% endif %}
 
@@ -167,7 +168,7 @@
     {% for column in all_parent_columns %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('Parent hub already rehashed for ' ~ ma_satellite_relation.name, true) }}
+            {{ log('Parent hub already rehashed for ' ~ ma_satellite_relation.name, output_logs) }}
         {% endif %}
     {% endfor %}
 

@@ -23,7 +23,7 @@
 
     {# Alter existing Hub to add deprecated hashkey column. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ alter_relation_add_remove_columns(relation=hub_relation, add_columns=deprecated_hash_col) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=hub_relation, add_columns=deprecated_hash_col) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# Update SQL statement to copy hashkey to _depr column  #}
@@ -48,7 +48,7 @@
         {% set new_hash_col = [{"name": new_hashkey_name, "data_type": hash_datatype}] %}
 
         {{ log('Executing ALTER TABLE statement...', output_logs) }}
-        {{ alter_relation_add_remove_columns(relation=hub_relation, add_columns=new_hash_col) }}
+        {{ datavault4dbt.alter_relation_add_remove_columns(relation=hub_relation, add_columns=new_hash_col) }}
         {{ log('ALTER TABLE statement completed!', output_logs) }}
     {% endif %}
 
@@ -68,7 +68,7 @@
 
     {# Deleting old hashkey #}
     {% if drop_old_values or not overwrite_hash_values %}
-        {{ alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
+        {{ datavault4dbt.alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
         {{ log('Deprecated hashkey column removed!', output_logs) }}
     {% endif %}
 

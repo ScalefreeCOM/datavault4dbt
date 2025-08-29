@@ -57,7 +57,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     
     {# ALTER existing link to add deprecated link hashkey and deprecated hub hashkeys. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.old_hash_columns) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.old_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {% set update_ns = namespace(depr_update_sql='') %}
@@ -98,7 +98,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
         {# Alter existing Hub to add new hashkey column. #}
         {{ log('Executing ALTER TABLE statement...', output_logs) }}
-        {{ alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.new_hash_columns) }}
+        {{ datavault4dbt.alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.new_hash_columns) }}
         {{ log('ALTER TABLE statement completed!', output_logs) }}
     {% endif %}
 
@@ -117,7 +117,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {# Deleting old hashkey #}
     {% if drop_old_values or not overwrite_hash_values %}
-        {{ alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
+        {{ datavault4dbt.alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
         {{ log('Deprecated hashkey column removed!', output_logs) }}
     {% endif %}
 
@@ -184,7 +184,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
             {% for column in all_hub_columns %}
                 {% if column.name|lower == hub.current_hashkey_name|lower + '_deprecated' %}
                     {% set hub_ns.hub_correct_hashkey = hub.old_hashkey_name %}
-                    {{ log('Hub already hashed!', true) }}
+                    {{ log('Hub already hashed!', output_logs) }}
                 {% endif %}
             {% endfor %}
 

@@ -33,7 +33,7 @@
 
     {# ALTER existing satellite to add deprecated hashkey and deprecated hashdiff. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ alter_relation_add_remove_columns(relation=nh_satellite_relation, add_columns=old_hash_columns) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=nh_satellite_relation, add_columns=old_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# Update SQL statement to copy hashkey to _depr column  #}
@@ -78,7 +78,7 @@
 
             {# ALTER existing satellite to add new hashkey. #}
             {{ log('Executing ALTER TABLE statement...', output_logs) }}
-            {{ alter_relation_add_remove_columns(relation=nh_satellite_relation, add_columns=new_hash_columns) }}
+            {{ datavault4dbt.alter_relation_add_remove_columns(relation=nh_satellite_relation, add_columns=new_hash_columns) }}
             {{ log('ALTER TABLE statement completed!', output_logs) }}
 
         {% endif %}
@@ -99,7 +99,7 @@
 
             {# ALTER existing satellite to add new hashkey. #}
             {{ log('Executing ALTER TABLE statement...', output_logs) }}
-            {{ alter_relation_add_remove_columns(relation=nh_satellite_relation, add_columns=new_hash_columns) }}
+            {{ datavault4dbt.alter_relation_add_remove_columns(relation=nh_satellite_relation, add_columns=new_hash_columns) }}
             {{ log('ALTER TABLE statement completed!', output_logs) }}
 
         {% endif %}
@@ -124,7 +124,7 @@
 
     {# Deleting old hashkey #}
     {% if drop_old_values or not overwrite_hash_values %}
-        {{ alter_relation_add_remove_columns(relation=nh_satellite_relation, remove_columns=columns_to_drop) }}
+        {{ datavault4dbt.alter_relation_add_remove_columns(relation=nh_satellite_relation, remove_columns=columns_to_drop) }}
         {{ log('Deprecated hashkey column removed!', output_logs) }}
     {% endif %}
 
@@ -154,7 +154,7 @@
     {% for column in all_parent_columns %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ nh_satellite_relation.name, true) }}
+            {{ log('parent_already hashed set to true for ' ~ nh_satellite_relation.name, output_logs) }}
         {% endif %}
     {% endfor %}
 
