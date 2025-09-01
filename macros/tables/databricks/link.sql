@@ -30,7 +30,7 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc]  + (additional_columns if additional_columns is not none else []) -%}
+{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + (additional_columns if additional_columns is not none else []) -%}
 
 {%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
 {%- set link_hashkey = datavault4dbt.escape_column_names(link_hashkey) -%}
@@ -38,7 +38,6 @@
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 {%- set additional_columns = datavault4dbt.escape_column_names(additional_columns) -%}
-
 
 {{ datavault4dbt.prepend_generated_by() }}
 
