@@ -10,8 +10,8 @@
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
 {%- set business_keys = datavault4dbt.expand_column_list(columns=[business_keys]) -%}
 
-{# Select the additional_columns values from the hub model and put them in an array. #}
-{%- set additional_columns = datavault4dbt.expand_column_list(columns=[additional_columns]) -%}
+{# Select the additional_columns from the hub model and put them in an array. If additional_colums none, then empty array#}
+{%- set additional_columns = additional_columns | default([],true) -%}
 
 {# If no specific bk_columns is defined for each source, we apply the values set in the business_keys variable. #}
 {# If no specific hk_column is defined for each source, we apply the values set in the hashkey variable. #}
@@ -27,7 +27,7 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] + (additional_columns if additional_columns is not none else []) -%}
+{%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] + additional_columns -%}
 {%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
 
 {%- set hashkey = datavault4dbt.escape_column_names(hashkey) -%}
@@ -160,9 +160,12 @@ WITH
             {{ bk }} AS {{ business_keys[loop.index - 1] }},
             {% endfor -%}
 
+            {% for col in additional_columns -%}
+            {{ col }},
+            {% endfor -%}
+
             {{ src_ldts }},
-            {{ src_rsrc }},
-            {{ datavault4dbt.print_list(additional_columns) | indent(4) }}
+            {{ src_rsrc }}
         FROM {{ ref(source_model.name) }} src
         {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
 
@@ -202,9 +205,12 @@ source_new_union AS (
             {{ business_keys[loop.index - 1] }},
         {% endfor -%}
 
+        {% for col in additional_columns -%}
+            {{ col }},
+        {% endfor -%}
+
         {{ src_ldts }},
-        {{ src_rsrc }},
-        {{ datavault4dbt.print_list(additional_columns) | indent(4) }}
+        {{ src_rsrc }}
     FROM src_new_{{ source_number }}
 
     {%- if not loop.last %}
