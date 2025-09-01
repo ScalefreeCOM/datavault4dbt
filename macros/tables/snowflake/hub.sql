@@ -1,4 +1,4 @@
-{%- macro snowflake__hub(hashkey, business_keys, src_ldts, src_rsrc, source_models, disable_hwm) -%}
+{%- macro snowflake__hub(hashkey, business_keys, src_ldts, src_rsrc, source_models, disable_hwm, additional_columns) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
@@ -9,6 +9,9 @@
 
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
 {%- set business_keys = datavault4dbt.expand_column_list(columns=[business_keys]) -%}
+
+{# Select the additional_columns values from the hub model and put them in an array. #}
+{%- set additional_columns = datavault4dbt.expand_column_list(columns=[additional_columns]) -%}
 
 {# If no specific bk_columns is defined for each source, we apply the values set in the business_keys variable. #}
 {# If no specific hk_column is defined for each source, we apply the values set in the hashkey variable. #}
@@ -24,7 +27,7 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] -%}
+{%- set final_columns_to_select = [hashkey] + business_keys + [src_ldts] + [src_rsrc] + (additional_columns if additional_columns is not none else []) -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -151,7 +154,8 @@ WITH
             {% endfor -%}
 
             {{ src_ldts }},
-            {{ src_rsrc }}
+            {{ src_rsrc }},
+            {{ datavault4dbt.print_list(additional_columns) | indent(4) }}
         FROM {{ ref(source_model.name) }} src
         {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
 
@@ -192,7 +196,8 @@ source_new_union AS (
         {% endfor -%}
 
         {{ src_ldts }},
-        {{ src_rsrc }}
+        {{ src_rsrc }},
+        {{ datavault4dbt.print_list(additional_columns) | indent(4) }}
     FROM src_new_{{ source_number }}
 
     {%- if not loop.last %}
