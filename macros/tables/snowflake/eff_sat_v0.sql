@@ -112,10 +112,11 @@ current_status AS (
             h.{{ tracked_hashkey }},
             h.{{ src_ldts }},
             COALESCE(src.{{ src_rsrc }}, '{{ unknown_value_rsrc }}') AS {{ src_rsrc }},
-            CASE 
-                WHEN src.{{ tracked_hashkey }} IS NULL THEN 0
-                ELSE 1 
-            END as {{ is_active_alias }}
+            TO_BOOLEAN(
+                CASE 
+                    WHEN src.{{ tracked_hashkey }} IS NULL THEN 0
+                    ELSE 1 
+                END) as {{ is_active_alias }}
         FROM history h
         LEFT JOIN source_data src
             ON src.{{ tracked_hashkey }} = h.{{ tracked_hashkey }}
@@ -158,7 +159,7 @@ current_status AS (
             src.{{ tracked_hashkey }},
             src.{{ src_ldts }},
             src.{{ src_rsrc }},
-            1 as {{ is_active_alias }}
+            TO_BOOLEAN(1) as {{ is_active_alias }}
         FROM source_data src
 
         {#
@@ -191,7 +192,7 @@ current_status AS (
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
                 '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
-                0 as {{ is_active_alias }}
+                TO_BOOLEAN(0) as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
                 SELECT 
@@ -214,7 +215,7 @@ current_status AS (
                 cs.{{ tracked_hashkey }},
                 ldts.min_ldts as {{ src_ldts }},
                 '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
-                0 as {{ is_active_alias }}
+                TO_BOOLEAN(0) as {{ is_active_alias }}
             FROM current_status cs
             LEFT JOIN (
                 SELECT 
