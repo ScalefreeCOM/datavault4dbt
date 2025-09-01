@@ -195,7 +195,7 @@
             WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
         ) nh
         WHERE nh.{{ ldts_col }} = {{ nh_satellite_relation }}.{{ ldts_col }}
-        AND nh.{{ hashkey }} = {{ nh_satellite_relation }}.{{ hashkey }}
+        AND nh.{{ old_hashkey_name }} = {{ nh_satellite_relation }}.{{ old_hashkey_name }}
 
     {% endset %}
    

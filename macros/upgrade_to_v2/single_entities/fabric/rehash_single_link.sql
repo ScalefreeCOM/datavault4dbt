@@ -210,7 +210,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         FROM {{ link_relation }} link
         WHERE link.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
     ) nh
-    WHERE {{ link_relation }}.{{ link_hashkey }} = nh.{{ link_hashkey }}
+    WHERE {{ link_relation }}.{{ old_link_hashkey_name }} = nh.{{ old_link_hashkey_name }}
     {% endset %}
 
     {% set update_sql = ns.update_sql_part1 + ns.update_sql_part2 + update_sql_part3 %}

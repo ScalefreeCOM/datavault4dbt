@@ -11,7 +11,9 @@
                                                                         payload=payload,
                                                                         parent_entity=parent_entity,
                                                                         business_keys=business_keys,
-                                                                        overwrite_hash_values=overwrite_hash_values)}}
+                                                                        overwrite_hash_values=overwrite_hash_values,
+                                                                        output_logs=output_logs,
+                                                                        drop_old_values=drop_old_values)}}
 
 {% endmacro %}
 

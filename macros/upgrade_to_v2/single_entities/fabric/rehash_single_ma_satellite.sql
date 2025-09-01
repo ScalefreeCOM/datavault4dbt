@@ -125,8 +125,6 @@
     ]%}
 
     {# Deleting old hashkey #}
-        {{ log('drop_old_values: '~drop_old_values, true) }}
-        {{ log('overwrite_hash_values: '~overwrite_hash_values, true) }}
     {% if drop_old_values or not overwrite_hash_values %}
         {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
         {{ log('Deprecated hashkey column removed!', output_logs) }}

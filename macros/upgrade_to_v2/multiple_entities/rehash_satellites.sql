@@ -50,7 +50,6 @@
 
     {% for satellite in satellite_dict.get('satellites') %}
         {% set specific_satellite_overwrite_hash = satellite.get('overwrite_hash_values', overwrite_hash_values) %}
-{{log(drop_old_values,true)}}
 
         {% set columns_to_drop_list =  datavault4dbt.rehash_single_satellite(satellite=satellite.name, 
                                                                                 hashkey=satellite.hashkey,

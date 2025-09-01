@@ -28,7 +28,7 @@
 
     {# ALTER existing satellite to add deprecated hashkey and deprecated hashdiff. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ alter_relation_add_remove_columns(relation=satellite_relation, add_columns=old_hash_columns) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=satellite_relation, add_columns=old_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# Update SQL statement to copy hashkey to _depr column  #}
@@ -92,7 +92,7 @@
 
         {# ALTER existing satellite to add new hashkey and new hashdiff. #}
         {{ log('Executing ALTER TABLE statement...', output_logs) }}
-        {{ alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) }}
+        {{ datavault4dbt.alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) }}
         {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {% endif %}
@@ -107,7 +107,7 @@
                                                 parent_relation=parent_relation) %}
 
     {# Executing the UPDATE statement. #}
-    {{ log('Executing UPDATE statement...', true) }}
+    {{ log('Executing UPDATE statement...', output_logs) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ satellite ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
@@ -119,7 +119,7 @@
 
     {# Deleting old hashkey #}
     {% if drop_old_values or not overwrite_hash_values %}
-        {{ alter_relation_add_remove_columns(relation=satellite_relation, remove_columns=columns_to_drop) }}
+        {{ datavault4dbt.alter_relation_add_remove_columns(relation=satellite_relation, remove_columns=columns_to_drop) }}
         {{ log('Deprecated hashkey column removed!', output_logs) }}
     {% endif %}
 
@@ -157,7 +157,7 @@
     {% for column in all_parent_columns %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('Parent hub already rehashed for ' ~ satellite_relation.name, true) }}
+            {{ log('Parent hub already rehashed for ' ~ satellite_relation.name, output_logs) }}
         {% endif %}
     {% endfor %}
 
@@ -200,7 +200,7 @@
             WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}') 
         ) nh
         WHERE nh.{{ ldts_col }} = {{ satellite_relation }}.{{ ldts_col }}
-        AND nh.{{ hashkey }} = {{ satellite_relation }}.{{ old_hashkey_name }}
+        AND nh.{{ old_hashkey_name }} = {{ satellite_relation }}.{{ old_hashkey_name }}
     
     {% endset %}
    
