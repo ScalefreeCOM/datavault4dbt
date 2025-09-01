@@ -1,10 +1,13 @@
-{%- macro synapse__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm, source_is_single_batch, union_strategy) -%}
+{%- macro synapse__nh_link(link_hashkey, foreign_hashkeys, payload, source_models, src_ldts, src_rsrc, disable_hwm, source_is_single_batch, union_strategy, additional_columns) -%}
 
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%} {# not in other adaters#}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{# Select the additional_columns from the hub model and put them in an array. #}
+{%- set additional_columns = datavault4dbt.expand_column_list(columns=[additional_columns]) -%}
 
 {# If no specific link_hk, fk_columns, or payload are defined for each source, we apply the values set in the link_hashkey, foreign_hashkeys, and payload variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
@@ -40,7 +43,7 @@
 {%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
     {%- set foreign_hashkeys = [] -%}
 {%- endif -%}
-{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + payload -%}
+{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + (additional_columns if additional_columns is not none else []) + payload -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -169,7 +172,7 @@ src_new_{{ source_number }} AS (
             {% endfor -%}
         {{ src_ldts }},
         {{ src_rsrc }},
-
+        {{ datavault4dbt.print_list(additional_columns) | indent(4) }},
         {{ datavault4dbt.print_list(source_model['payload']) | indent(3) }}
 
     FROM {{ ref(source_model.name) }} src
@@ -215,7 +218,7 @@ source_new_union AS (
 
         {{ src_ldts }},
         {{ src_rsrc }},
-
+        {{ datavault4dbt.print_list(additional_columns) | indent(4) }},
         {% for col in source_model['payload']|list %}
             {{ col }} AS {{ payload[loop.index - 1] }}
             {%- if not loop.last %}, {%- endif %}
