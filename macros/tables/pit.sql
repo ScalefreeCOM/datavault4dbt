@@ -94,7 +94,7 @@
     {%- set ledts = datavault4dbt.replace_standard(ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
     {%- set sdts = datavault4dbt.replace_standard(sdts, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
-    {%- if var('datavault4dbt.use_premium_package') == True -%}
+    {%- if var('datavault4dbt.use_premium_package', False) == True -%}
         {{ datavault4dbt_premium_package.insert_metadata_pit(pit_type=pit_type,
                                                         tracked_entity=tracked_entity,
                                                         hashkey=hashkey,

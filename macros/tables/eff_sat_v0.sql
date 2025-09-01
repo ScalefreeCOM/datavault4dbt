@@ -13,7 +13,7 @@
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
     {%- set is_active_alias = datavault4dbt.replace_standard(is_active_alias, 'datavault4dbt.is_active_alias', 'is_active') -%}
 
-    {%- if var('datavault4dbt.use_premium_package') == True -%}
+    {%- if var('datavault4dbt.use_premium_package', False) == True -%}
         {{ datavault4dbt_premium_package.insert_metadata_eff_sat(tracked_hashkey=tracked_hashkey,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,

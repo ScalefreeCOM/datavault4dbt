@@ -157,7 +157,7 @@
     {%- set prejoined_columns = datavault4dbt.process_prejoined_columns(prejoined_columns) -%}
   {%- endif -%}
   
-  {%- if var('datavault4dbt.use_premium_package') == True -%}
+  {%- if var('datavault4dbt.use_premium_package', False) == True -%}
     {{- datavault4dbt_premium_package.insert_metadata_stage(include_source_columns=include_source_columns,
                                         ldts=ldts,
                                         rsrc=rsrc,

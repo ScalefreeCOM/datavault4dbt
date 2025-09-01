@@ -77,7 +77,7 @@
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
     {%- set ledts_alias = datavault4dbt.replace_standard(ledts_alias, 'datavault4dbt.ledts_alias', 'ledts') -%}
 
-    {%- if var('datavault4dbt.use_premium_package') == True -%}
+    {%- if var('datavault4dbt.use_premium_package', False) == True -%}
         {{ datavault4dbt_premium_package.insert_metadata_sat_v1(sat_v0=sat_v0,
                                          hashkey=hashkey,
                                          hashdiff=hashdiff,
