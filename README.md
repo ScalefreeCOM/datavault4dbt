@@ -67,7 +67,7 @@ We are working continuously at high pressure to adapt the package for large vari
 ---
 ## Looking for dedicated Support?
 While our development team is eager to answer all questions and fix bugs directly here on Github, this sometimes isn't enough for organizations looking for a guaranteed level of support. 
-To meet this requirement, Scalefree has created the [DataVault4dbt Premium Package](https://www.scalefree.com/consulting/datavault4dbt/datavault4dbt-premium-package/)! Follow the link to learn about all benefits included. 
+To meet this requirement, Scalefree has created the [DataVault4dbt Premium Package](https://kb.scalefr.ee/anexd2)! Follow the link to learn about all benefits included. 
 
 ---
 ## Installation instructions
