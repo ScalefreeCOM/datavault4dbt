@@ -115,8 +115,8 @@ current_status AS (
             h.{{ src_ldts }},
             COALESCE(src.{{ src_rsrc }}, '{{ unknown_value_rsrc }}') AS {{ src_rsrc }},
             CASE 
-                WHEN src.{{ tracked_hashkey }} IS NULL THEN false
-                ELSE true 
+                WHEN src.{{ tracked_hashkey }} IS NULL THEN 0
+                ELSE 1 
             END as {{ is_active_alias }}
         FROM history h
         LEFT JOIN source_data src
