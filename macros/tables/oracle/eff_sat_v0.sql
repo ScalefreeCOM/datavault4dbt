@@ -15,7 +15,7 @@
 
 {%- set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') -%}
 
-{%- set is_active_datatype = var('datavault4dbt.is_active_datatype', 'Boolean') -%}
+{%- set is_active_datatype = var('datavault4dbt.is_active_datatype', 'Number') -%}
 
 {{ log('columns to select: '~final_columns_to_select, false) }}
 
