@@ -262,7 +262,7 @@ records_to_insert AS (
                 SELECT 1
                 FROM current_status
                 WHERE {{ datavault4dbt.multikey(tracked_hashkey, prefix=['current_status', 'di'], condition='=') }}
-                    AND {{ datavault4dbt.multikey(is_active_alias, prefix=['current_status', 'di'], condition='=') }}
+                    AND cast(di.{{ is_active_alias }} as {{ is_active_datatype }}) = current_status.{{ is_active_alias }}
                     AND di.{{ src_ldts }} = (SELECT MIN({{ src_ldts }}) FROM deduplicated_incoming)
                 )
             AND di.{{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM {{ this }})
