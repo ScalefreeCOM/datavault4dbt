@@ -57,7 +57,7 @@ latest_entries_in_sat_prep AS (
     SELECT
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }},
-        ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) as rn
+        ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) as rn
     FROM 
         {{ this }}
 ),
