@@ -12,7 +12,9 @@
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 
-{% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+{%- set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') -%}
+
+{%- set is_active_datatype = var('datavault4dbt.is_active_datatype', 'Boolean') -%}
 
 {{ log('columns to select: '~final_columns_to_select, false) }}
 
@@ -120,8 +122,8 @@ current_status AS (
 
     {#
         All theoretical combinations are checked against the actual occurences of hashkeys in each batch / loaddate.
-        If a Hashkey is part of a load/batch, is_active_alias is set to 1, because the hashkey was active in that load/batch.
-        If a Hashkey is not part of a load/batch, is_active_alias is set to 0, because the hashkey was not active in that load/batch.
+        If a Hashkey is part of a load/batch, is_active_alias is set to true, because the hashkey was active in that load/batch.
+        If a Hashkey is not part of a load/batch, is_active_alias is set to false, because the hashkey was not active in that load/batch.
     #}
     is_active AS (
 
@@ -198,7 +200,7 @@ current_status AS (
         {% if is_incremental() %}
             LEFT JOIN current_status cs
                 ON src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
-                AND cs.{{ is_active_alias }} = 1
+                AND cs.{{ is_active_alias }} = cast(1 as {{ is_active_datatype }})
             WHERE cs.{{ tracked_hashkey }} IS NULL
         {% endif %}
 
@@ -232,7 +234,7 @@ current_status AS (
                 ON src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
                 AND  src.{{ src_ldts }} = ldts.min_ldts
             WHERE
-                cs.{{ is_active_alias }} = 1
+                cs.{{ is_active_alias }} = cast(1 as {{ is_active_datatype }})
                 AND src.{{ tracked_hashkey }} IS NULL
                 AND ldts.min_ldts IS NOT NULL
 
@@ -257,7 +259,7 @@ current_status AS (
                 FROM source_data src
                 WHERE src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
             )
-            AND cs.{{ is_active_alias }} = 1
+            AND cs.{{ is_active_alias }} = cast(1 as {{ is_active_datatype }})
             AND ldts.min_ldts IS NOT NULL
 
         ),
@@ -268,7 +270,7 @@ records_to_insert AS (
 
     {#
         This first part of the UNION includes:
-            - for single-batch loads: Only is_active_alias = 1, deactivations are handled later
+            - for single-batch loads: Only is_active_alias = true, deactivations are handled later
             - for multi-batch loads: Ativation and deactivation inside the multiple loads
     #}
     SELECT
@@ -290,7 +292,7 @@ records_to_insert AS (
                 SELECT 1
                 FROM current_status
                 WHERE {{ datavault4dbt.multikey(tracked_hashkey, prefix=['current_status', 'di'], condition='=') }}
-                    AND {{ datavault4dbt.multikey(is_active_alias, prefix=['current_status', 'di'], condition='=') }}
+                    AND cast(di.{{ is_active_alias }} as {{ is_active_datatype }}) = current_status.{{ is_active_alias }}
                     AND di.{{ src_ldts }} = (SELECT MIN({{ src_ldts }}) FROM deduplicated_incoming)
                 )
             AND di.{{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM {{ this }})
@@ -312,7 +314,11 @@ records_to_insert AS (
 
 )
 
-SELECT * 
+SELECT 
+    {{ tracked_hashkey }},
+    {{ src_ldts }},
+    {{ src_rsrc }},
+    cast({{ is_active_alias }} as {{ is_active_datatype }}) as {{ is_active_alias }}
 FROM records_to_insert ri
 
 {% if is_incremental() %}

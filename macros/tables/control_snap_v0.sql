@@ -80,6 +80,13 @@
 
     {%- set sdts_alias = datavault4dbt.replace_standard(sdts_alias, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
+    {%- if var('datavault4dbt.use_premium_package', False) == True -%}
+        {{ datavault4dbt_premium_package.insert_metadata_snap_v0(start_date=start_date,
+                                                            daily_snapshot_time=daily_snapshot_time,
+                                                            sdts_alias=sdts_alias,
+                                                            end_date=end_date) }}
+    {%- endif %}
+
     {{ adapter.dispatch('control_snap_v0', 'datavault4dbt')(start_date=start_date,
                                                             daily_snapshot_time=daily_snapshot_time,
                                                             sdts_alias=sdts_alias,
