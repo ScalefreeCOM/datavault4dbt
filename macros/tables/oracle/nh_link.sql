@@ -7,7 +7,7 @@
 {{ log('source_models: '~source_models, false) }}
 
 {# Select the additional_columns from the hub model and put them in an array. #}
-{%- set additional_columns = datavault4dbt.expand_column_list(columns=[additional_columns]) -%}
+{%- set additional_columns = additional_columns | default([],true) -%}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
@@ -43,7 +43,7 @@
 {%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
     {%- set foreign_hashkeys = [] -%}
 {%- endif -%}
-{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + (additional_columns if additional_columns is not none else []) + payload -%}
+{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + additional_columns  + payload -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -170,9 +170,13 @@ src_new_{{ source_number }} AS (
             {% for fk in source_model['fk_columns'] -%}
             {{ datavault4dbt.escape_column_names(fk) }},
             {% endfor -%}
+
+        {% for col in additional_columns -%}
+            {{ col }},
+        {% endfor -%}
+
         {{ src_ldts }},
         {{ src_rsrc }},
-        {{ datavault4dbt.print_list(additional_columns) | indent(4) }},
         {{ datavault4dbt.print_list(source_model['payload']) | indent(3) }}
 
     FROM {{ ref(source_model.name) }} src
@@ -216,9 +220,12 @@ source_new_union AS (
             {{ datavault4dbt.escape_column_names(fk) }} AS {{ datavault4dbt.escape_column_names(foreign_hashkeys[loop.index - 1]) }},
         {% endfor -%}
 
+        {% for col in additional_columns -%}
+            {{ col }},
+        {% endfor -%}
+
         {{ src_ldts }},
         {{ src_rsrc }},
-        {{ datavault4dbt.print_list(additional_columns) | indent(4) }},
         {% for col in source_model['payload']|list %}
             {{ col }} AS {{ payload[loop.index - 1] }}
             {%- if not loop.last %}, {%- endif %}
