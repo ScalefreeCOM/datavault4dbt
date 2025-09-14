@@ -14,7 +14,7 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{# Select the additional_columns from the hub model and put them in an array. If additional_colums none, then empty array#}
+{# Select the additional_columns from the link model and put them in an array. If additional_colums none, then empty array#}
 {%- set additional_columns = additional_columns | default([],true) -%}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}

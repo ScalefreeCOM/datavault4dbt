@@ -6,7 +6,7 @@
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {{ log('source_models: '~source_models, false) }}
 
-{# Select the additional_columns from the hub model and put them in an array. #}
+{# Select the additional_columns from the nh-link model and put them in an array. If additional_colums none, then empty array#}
 {%- set additional_columns = additional_columns | default([],true) -%}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
