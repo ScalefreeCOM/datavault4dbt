@@ -5,7 +5,7 @@
     all have the same number of foreign keys inside, otherwise they would not share the same business definition of that link.
 #}
 
-{%- macro link(yaml_metadata=none, link_hashkey=none, foreign_hashkeys=none, source_models=none, src_ldts=none, src_rsrc=none, disable_hwm=false) -%}
+{%- macro link(yaml_metadata=none, link_hashkey=none, foreign_hashkeys=none, source_models=none, src_ldts=none, src_rsrc=none, disable_hwm=false, additional_columns=none) -%}
 
     {% set link_hashkey_description = "
     link_hashkey::string                    Name of the link hashkey column inside the stage. Should get calculated out of all business keys inside
