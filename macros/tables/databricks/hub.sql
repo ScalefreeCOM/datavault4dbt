@@ -226,25 +226,24 @@ source_new_union AS (
 {%- endif %}
 
 earliest_hk_over_all_sources AS (
-
-{#- Deduplicate the unionized records again to only insert the earliest one. #}
+    {#- Deduplicate the unionized records again to only insert the earliest one. #}
     SELECT
-        lcte.*,
+        lcte.*
     FROM {{ ns.last_cte }} AS lcte
 
     QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}) = 1
 
-{%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
+    {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 
 ),
 
 records_to_insert AS (
-{#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the hub. #}
+    {#- Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the hub. #}
     SELECT
         {{ datavault4dbt.print_list(final_columns_to_select) | indent(4) }}
     FROM {{ ns.last_cte }}
 
-{%- if is_incremental() %}
+    {%- if is_incremental() %}
     WHERE {{ hashkey }} NOT IN (SELECT * FROM distinct_target_hashkeys)
     {% endif -%}
 )
