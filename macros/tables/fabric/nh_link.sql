@@ -43,7 +43,7 @@
 {%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
     {%- set foreign_hashkeys = [] -%}
 {%- endif -%}
-{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + additional_columns  + payload -%}
+{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + additional_columns + payload -%}
 
 {%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
 {%- set link_hashkey = datavault4dbt.escape_column_names(link_hashkey) -%}

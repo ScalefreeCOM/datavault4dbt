@@ -42,7 +42,7 @@
 {%- if not datavault4dbt.is_something(foreign_hashkeys) -%}
     {%- set foreign_hashkeys = [] -%}
 {%- endif -%}
-{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + additional_columns  + payload -%}
+{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + additional_columns + payload -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
