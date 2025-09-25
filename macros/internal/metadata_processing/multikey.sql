@@ -29,7 +29,7 @@
         {{- exceptions.raise_compiler_error(error_message) -}}
     {%- endif -%}
 
-    {%- if condition in ['<>', '!=', '='] -%}
+    {%- if condition in ['<>', '!=', '=', '<=', '>=', '<', '>'] -%}
         {%- for col in columns -%}
             {%- if prefix -%}
                 {{- datavault4dbt.prefix([col], prefix[0], alias_target='target') }} {{ condition }} {{ datavault4dbt.prefix([right_columns[loop.index0]], prefix[1]) -}}

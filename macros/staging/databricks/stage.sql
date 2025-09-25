@@ -340,10 +340,15 @@ prejoined_columns AS (
     {%- else -%}
       {%- set join_type = prejoin['join_type'] -%}
     {%- endif -%}
+    {%- if 'condition' not in prejoin.keys() -%}
+      {%- set condition = '=' -%}
+    {%- else -%}
+      {%- set condition = prejoin['condition'] -%}
+    {%- endif -%}
       {%- set prejoin_alias = 'pj_' + loop.index|string %}
       
       {{ join_type }} join {{ relation }} as {{ prejoin_alias }}
-        on {{ datavault4dbt.multikey(columns=prejoin['this_column_name'], prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=prejoin['ref_column_name']) }}
+        on {{ datavault4dbt.multikey(columns=prejoin['this_column_name'], prefix=['lcte', prejoin_alias], condition=condition, operator=operator, right_columns=prejoin['ref_column_name']) }}
   {%- endfor -%}
 
   {% set last_cte = "prejoined_columns" -%}
