@@ -243,6 +243,7 @@
                             {%- set join_type = 'left' -%}
                         {%- else -%}
             {%- set join_type = value.get('join_type') -%}
+            {%- endif -%}
             {%- if 'condition' not in value.keys() -%}  
                             {%- do value.update({'condition': '='}) -%}
                             {%- set condition = '=' -%}
