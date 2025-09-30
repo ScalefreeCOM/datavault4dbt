@@ -98,8 +98,9 @@
     " %}
 
     {% set additional_columns_description = "
-    additional_columns_description::string            Additional columns from source system or derived columns which should be part of NH-Link. Useful when you have to deviate from the normal NH-Link Structure due to organisational or governancance reasons (Multitenant, BKCC, ..). Is optional and as default the normal NH-Link columns are applied.
-                                                      Columns needs to be in all source models which are used for the Non-historized Link.
+    additional_columns::list | string       Additional columns from source system or derived columns which should be part of NH-Link. Useful when you have to deviate from the default NH-Link structure.
+                                            The columns need to be available in all source models which are used for the NH-Link.
+                                            Optional parameter, defaults to empy list.
     " %}
 
     {%- set link_hashkey            = datavault4dbt.yaml_metadata_parser(name='link_hashkey', yaml_metadata=yaml_metadata, parameter=link_hashkey, required=True, documentation=link_hashkey_description) -%}
@@ -110,8 +111,8 @@
     {%- set rsrc                    = datavault4dbt.yaml_metadata_parser(name='rsrc', yaml_metadata=yaml_metadata, parameter=rsrc, required=False, documentation=rsrc_description) -%}
     {%- set disable_hwm             = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
     {%- set source_is_single_batch  = datavault4dbt.yaml_metadata_parser(name='source_is_single_batch', yaml_metadata=yaml_metadata, parameter=source_is_single_batch, required=False, documentation='Whether the source contains only one batch. Optional, default False.') -%}
-    {%- set union_strategy =  datavault4dbt.yaml_metadata_parser(name='union_strategy', yaml_metadata=yaml_metadata, parameter=union_strategy, required=False, documentation=union_strategy_description) -%}
-    {%- set additional_columns     = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
+    {%- set union_strategy          =  datavault4dbt.yaml_metadata_parser(name='union_strategy', yaml_metadata=yaml_metadata, parameter=union_strategy, required=False, documentation=union_strategy_description) -%}
+    {%- set additional_columns      = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 

@@ -10,8 +10,9 @@
 {# Select the Business Key column from the first source model definition provided in the hub model and put them in an array. #}
 {%- set business_keys = datavault4dbt.expand_column_list(columns=[business_keys]) -%}
 
-{# Select the additional_columns from the hub model and put them in an array. If additional_colums none, then empty array#}
+{# Select the additional_columns from the hub model and put them in an array. If additional_colums none, then empty array #}
 {%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
 {# If no specific bk_columns is defined for each source, we apply the values set in the business_keys variable. #}
 {# If no specific hk_column is defined for each source, we apply the values set in the hashkey variable. #}
@@ -34,6 +35,7 @@
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 {%- set additional_columns = datavault4dbt.escape_column_names(additional_columns) -%}
+
 
 WITH
 

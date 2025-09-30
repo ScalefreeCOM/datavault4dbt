@@ -86,17 +86,18 @@
     " %}
 
     {% set additional_columns_description = "
-    additional_columns_description::string            Additional columns from source system or derived columns which should be part of Hub. Useful when you have to deviate from the normal Hub Structure due to organisational or governancance reasons (Multitenant, BKCC, ..). Is optional and as default the normal Hub columns are applied.
-                                                      Columns needs to be in all source models which are used for the Hub.
+    additional_columns::list | string       Additional columns from source system or derived columns which should be part of Hub. Useful when you have to deviate from the default Hub structure.
+                                            The columns need to be available in all source models which are used for the Hub.
+                                            Optional parameter, defaults to empty list.
     " %}
 
-    {%- set hashkey         = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
-    {%- set business_keys   = datavault4dbt.yaml_metadata_parser(name='business_keys', yaml_metadata=yaml_metadata, parameter=business_keys, required=True, documentation=business_keys_description) -%}
-    {%- set source_models   = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
-    {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
-    {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
-    {%- set disable_hwm     = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
-    {%- set additional_columns     = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
+    {%- set hashkey             = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
+    {%- set business_keys       = datavault4dbt.yaml_metadata_parser(name='business_keys', yaml_metadata=yaml_metadata, parameter=business_keys, required=True, documentation=business_keys_description) -%}
+    {%- set source_models       = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
+    {%- set src_ldts            = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc            = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set disable_hwm         = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
+    {%- set additional_columns  = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
     
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 

@@ -3,9 +3,9 @@
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
 
-{%- if execute -%}
-{{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
-{%- endif %}
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("Only one foreign key provided for this link. At least two required.") }}
+    {%- endif %}
 
 {%- endif -%}
 
@@ -14,14 +14,15 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{# Select the additional_columns from the link model and put them in an array. If additional_colums none, then empty array#}
+{# Select the additional_columns from the link model and put them in an array. If additional_colums none, then empty array #}
 {%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
 {%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
-{%- set source_models = {source_models: {}} -%}
+    {%- set source_models = {source_models: {}} -%}
 {%- endif -%}
 
 {%- set source_model_values = fromjson(datavault4dbt.source_model_processing(source_models=source_models, parameters={'link_hk':link_hashkey}, foreign_hashkeys=foreign_hashkeys)) -%}
@@ -52,8 +53,8 @@ WITH
         FROM {{ this }}
 
     ),
-{%- if ns.has_rsrc_static_defined and not disable_hwm -%}
-{% for source_model in source_models %}
+    {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
+        {% for source_model in source_models %}
         {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
             {%- set source_number = source_model.id | string -%}
             {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number] -%}
@@ -239,7 +240,7 @@ earliest_hk_over_all_sources AS (
 
     QUALIFY ROW_NUMBER() OVER (PARTITION BY {{ link_hashkey }} ORDER BY {{ src_ldts }}) = 1
 
-{%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
+    {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 
 ),
 
@@ -250,7 +251,7 @@ records_to_insert AS (
         {{ datavault4dbt.print_list(final_columns_to_select) | indent(4) }}
     FROM {{ ns.last_cte }}
 
-{%- if is_incremental() %}
+    {%- if is_incremental() %}
     WHERE {{ link_hashkey }} NOT IN (SELECT * FROM distinct_target_hashkeys)
     {% endif %}
 )

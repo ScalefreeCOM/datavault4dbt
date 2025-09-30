@@ -6,8 +6,9 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{# Select the additional_columns from the nh-link model and put them in an array. If additional_colums none, then empty array#}
+{# Select the additional_columns from the nh-link model and put them in an array. If additional_colums none, then empty array #}
 {%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
 {# If no specific link_hk, fk_columns, or payload are defined for each source, we apply the values set in the link_hashkey, foreign_hashkeys, and payload variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
@@ -177,6 +178,7 @@ src_new_{{ source_number }} AS (
 
         {{ src_ldts }},
         {{ src_rsrc }},
+
         {{ datavault4dbt.print_list(source_model['payload']) | indent(3) }}
 
     FROM {{ ref(source_model.name) }} src
@@ -226,6 +228,7 @@ source_new_union AS (
 
         {{ src_ldts }},
         {{ src_rsrc }},
+
         {% for col in source_model['payload']|list %}
             {{ col }} AS {{ payload[loop.index - 1] }}
             {%- if not loop.last %}, {%- endif %}

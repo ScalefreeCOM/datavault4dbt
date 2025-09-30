@@ -13,8 +13,9 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{# Select the additional_columns from the link model and put them in an array. If additional_colums none, then empty array#}
+{# Select the additional_columns from the link model and put them in an array. If additional_colums none, then empty array #}
 {%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
@@ -37,6 +38,7 @@
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 {%- set additional_columns = datavault4dbt.escape_column_names(additional_columns) -%}
+
 
 WITH
 
@@ -163,9 +165,13 @@ WITH
             {% for fk in source_model['fk_columns'] -%}
             {{ datavault4dbt.escape_column_names(fk) }},
             {% endfor -%}
+
+            {% for col in additional_columns -%}
+            {{ col }},
+            {% endfor -%}
+
             {{ (src_ldts) }},
-            {{ (src_rsrc) }},
-            {{ datavault4dbt.print_list(additional_columns) | indent(4) }}
+            {{ (src_rsrc) }}
         FROM {{ ref(source_model.name) }} src
         {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
 
@@ -204,9 +210,13 @@ source_new_union AS (
         {% for fk in source_model['fk_columns']|list %}
             {{ (fk) }} AS {{ (foreign_hashkeys[loop.index - 1]) }},
         {% endfor -%}
+
+        {% for col in additional_columns -%}
+        {{ col }},
+        {% endfor -%}
+
         {{ (src_ldts) }},
-        {{ (src_rsrc) }},
-        {{ datavault4dbt.print_list(additional_columns) | indent(4) }}
+        {{ (src_rsrc) }}
     FROM src_new_{{ source_number }}
 
     {%- if not loop.last %}
