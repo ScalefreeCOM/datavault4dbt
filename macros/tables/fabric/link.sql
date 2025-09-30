@@ -1,4 +1,4 @@
-{%- macro fabric__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc, disable_hwm) -%}
+{%- macro fabric__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc, disable_hwm, additional_columns) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
 
@@ -13,6 +13,10 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{# Select the additional_columns from the link model and put them in an array. If additional_colums none, then empty array #}
+{%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
+
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
@@ -26,13 +30,15 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] -%}
+{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + additional_columns  -%}
 
 {%- set final_columns_to_select = datavault4dbt.escape_column_names(final_columns_to_select) -%}
 {%- set link_hashkey = datavault4dbt.escape_column_names(link_hashkey) -%}
 {%- set foreign_hashkeys = datavault4dbt.escape_column_names(foreign_hashkeys) -%}
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+{%- set additional_columns = datavault4dbt.escape_column_names(additional_columns) -%}
+
 
 WITH
 
@@ -159,6 +165,11 @@ WITH
             {% for fk in source_model['fk_columns'] -%}
             {{ datavault4dbt.escape_column_names(fk) }},
             {% endfor -%}
+
+            {% for col in additional_columns -%}
+            {{ col }},
+            {% endfor -%}
+
             {{ (src_ldts) }},
             {{ (src_rsrc) }}
         FROM {{ ref(source_model.name) }} src
@@ -199,6 +210,11 @@ source_new_union AS (
         {% for fk in source_model['fk_columns']|list %}
             {{ (fk) }} AS {{ (foreign_hashkeys[loop.index - 1]) }},
         {% endfor -%}
+
+        {% for col in additional_columns -%}
+        {{ col }},
+        {% endfor -%}
+
         {{ (src_ldts) }},
         {{ (src_rsrc) }}
     FROM src_new_{{ source_number }}
