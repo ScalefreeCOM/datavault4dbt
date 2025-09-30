@@ -130,18 +130,22 @@
 
 {%- macro extract_input_columns(columns_dict=none) -%}
 
-    {%- set extracted_input_columns = [] -%}
+    {%- set ns = namespace(extracted_input_columns = []) -%}
 
     {%- if columns_dict is mapping -%}
         {%- for key, value in columns_dict.items() -%}
             {%- if value is mapping and 'src_cols_required' in value.keys() -%}
-                {%- do extracted_input_columns.append(value['src_cols_required']) -%}
+                {% if datavault4dbt.is_list(value['src_cols_required']) %}
+                    {% set ns.extracted_input_columns = ns.extracted_input_columns + value['src_cols_required'] %}
+                {% else %}
+                    {%- do ns.extracted_input_columns.append(value['src_cols_required']) -%}
+                {% endif %}
             {%- elif value is mapping and 'value' in value.keys() and 'src_cols_required' not in value.keys() -%}
                 {# Do nothing. No source column required. #}    
             {%- elif value is mapping and value.is_hashdiff -%}
-                {%- do extracted_input_columns.append(value['columns']) -%}
+                {%- do ns.extracted_input_columns.append(value['columns']) -%}
             {%- else -%}
-                {%- do extracted_input_columns.append(value) -%}
+                {%- do ns.extracted_input_columns.append(value) -%}
             {%- endif -%}
         {%- endfor -%}
     
@@ -149,17 +153,17 @@
         {% for prejoin in columns_dict %}
             {%- if datavault4dbt.is_list(prejoin['this_column_name'])-%}
                 {%- for column in prejoin['this_column_name'] -%}
-                    {%- do extracted_input_columns.append(column) -%}
+                    {%- do ns.extracted_input_columns.append(column) -%}
                 {%- endfor -%}
             {%- else -%}
-                {%- do extracted_input_columns.append(prejoin['this_column_name']) -%}
+                {%- do ns.extracted_input_columns.append(prejoin['this_column_name']) -%}
             {%- endif -%}
         {% endfor %}
     {%- else -%}
         {%- do return([]) -%}
     {%- endif -%}
 
-    {%- do return(extracted_input_columns) -%}
+    {%- do return(ns.extracted_input_columns) -%}
 
 {%- endmacro -%}
 
@@ -234,13 +238,20 @@
             {%- else -%}
                 {%- set operator = value.get('operator') -%}
             {%- endif -%}
-            
+            {%- if 'join_type' not in value.keys() -%}  
+                            {%- do value.update({'join_type': 'left'}) -%}
+                            {%- set join_type = 'left' -%}
+                        {%- else -%}
+            {%- set join_type = value.get('join_type') -%}
+            {%- endif -%}
+                        
     {% set match_criteria = (
             ref_model and output | selectattr('ref_model', 'equalto', ref_model) or
             src_name and output | selectattr('src_name', 'equalto', src_name) | selectattr('src_table', 'equalto', src_table)
         ) | selectattr('this_column_name', 'equalto', value.this_column_name)
         | selectattr('ref_column_name', 'equalto', value.ref_column_name)
         | selectattr('operator', 'equalto', value.operator)
+        | selectattr('join_type', 'equalto', value.join_type)
         | list | first %}
         
             {% if match_criteria %}
@@ -252,8 +263,9 @@
                     'aliases': [key],
                     'this_column_name': value.this_column_name,
                     'ref_column_name': value.ref_column_name,
-                    'operator': operator
-                } %}
+                    'operator': operator,
+                    'join_type': join_type
+                } %}            
                 
                 {% if ref_model %}
                     {% do new_item.update({'ref_model': ref_model}) %}
