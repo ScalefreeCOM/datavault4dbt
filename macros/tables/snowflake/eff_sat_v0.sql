@@ -2,6 +2,7 @@
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 
 {%- set ns = namespace(last_cte= "") -%}
 
