@@ -30,14 +30,20 @@
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
 
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=datavault4dbt.hash_method())) -%}
+{%- set hash_alg = hash_default_values['hash_alg'] -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
+
 {%- if ghost_record_type == 'unknown' -%}
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATETIME'%} CAST({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} AS {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'DATE'-%} PARSE_DATE('{{date_format}}','{{ beginning_of_all_times_date }}') as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{unknown_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'INT64' %} CAST({{unknown_value__numeric}} as INT64) as {{ alias }}
-        {%- elif datatype == 'FLOAT64' %} CAST({{unknown_value__numeric}} as FLOAT64) as {{ alias }}
+        {%- elif datatype == 'INT64' %} CAST({{ unknown_value__numeric }} as INT64) as {{ alias }}
+        {%- elif datatype == 'FLOAT64' %} CAST({{ unknown_value__numeric }} as FLOAT64) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
+        {%- elif datatype == 'BYTES' %} CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as BYTES) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
@@ -45,9 +51,10 @@
         {%- elif datatype == 'DATETIME'%} CAST({{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} AS {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'DATE'-%} PARSE_DATE('{{date_format}}', '{{ end_of_all_times_date }}') as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{error_value__STRING}}' as {{ alias }}
-        {%- elif datatype == 'INT64' %} CAST({{error_value__numeric}} as INT64) as {{ alias }}
-        {%- elif datatype == 'FLOAT64' %} CAST({{error_value__numeric}} as FLOAT64) as {{ alias }}
+        {%- elif datatype == 'INT64' %} CAST({{ error_value__numeric }} as INT64) as {{ alias }}
+        {%- elif datatype == 'FLOAT64' %} CAST({{ error_value__numeric }} as FLOAT64) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
+        {%- elif datatype == 'BYTES' %} CAST({{ datavault4dbt.as_constant(column_str=error_key) }} as BYTES) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- else -%}
