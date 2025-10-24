@@ -36,12 +36,13 @@ source_data AS (
 
 {% if is_incremental() -%}
 {# Get distinct list of hashkeys inside the existing satellite, if incremental. #}
-distinct_hashkeys AS (
+distinct_sat_hashkeys AS (
 
     SELECT DISTINCT
-        {{ parent_hashkey }}
-    FROM {{ this }}
-
+        sat.{{ parent_hashkey }}
+    FROM {{ this }} sat
+    INNER JOIN source_data sd
+        on sd.{{ parent_hashkey }} = sat.{{ parent_hashkey }}
     ),
 
 {%- endif %}
@@ -56,8 +57,7 @@ records_to_insert AS (
         {{ datavault4dbt.print_list(source_cols) }}
     FROM source_data
     {%- if is_incremental() %}
-    WHERE NOT EXISTS (SELECT 1 FROM distinct_hashkeys 
-                WHERE source_data.{{ parent_hashkey }} = distinct_hashkeys.{{ parent_hashkey }})
+    WHERE {{ parent_hashkey }} NOT IN (SELECT {{ parent_hashkey }} FROM distinct_sat_hashkeys )
     {%- endif %}
 
     )

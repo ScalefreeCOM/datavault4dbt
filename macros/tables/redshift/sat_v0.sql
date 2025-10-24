@@ -4,14 +4,14 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
+{%- set ns=namespace(src_hashdiff="", hdiff_alias="", last_cte="") -%}
 
-{%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
-    {% set ns.src_hashdiff = src_hashdiff["source_column"] %}
-    {% set ns.hdiff_alias = src_hashdiff["alias"] %}
-{% else %}
-    {% set ns.src_hashdiff = src_hashdiff %}
-    {% set ns.hdiff_alias = src_hashdiff  %}
+{%- if src_hashdiff is mapping and src_hashdiff is not none -%}
+    {%- set ns.src_hashdiff = src_hashdiff["source_column"] -%}
+    {%- set ns.hdiff_alias = src_hashdiff["alias"] -%}
+{% else -%}
+    {%- set ns.src_hashdiff = src_hashdiff -%}
+    {%- set ns.hdiff_alias = src_hashdiff  -%}
 {%- endif -%}
 
 {%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_payload]) -%}
@@ -31,7 +31,7 @@ source_data AS (
         {{ datavault4dbt.print_list(source_cols) }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() %}
+    {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
             MAX({{ src_ldts }}) FROM {{ this }}
@@ -39,17 +39,20 @@ source_data AS (
     )
     {%- endif %}
 ),
+{%- set ns.last_cte = 'source_data' %}
 
-{# Get the latest record for each parent hashkey in existing sat, if incremental. #}
+{#- Get the latest record for each parent hashkey which is in the current load in existing sat, if incremental. #}
 {%- if is_incremental() %}
 latest_entries_in_sat AS (
 
     SELECT
-        {{ parent_hashkey }},
-        {{ ns.hdiff_alias }}
+        sat.{{ parent_hashkey }},
+        sat.{{ ns.hdiff_alias }}
     FROM 
-        {{ this }} redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1  
+        {{ this }} sat
+    INNER JOIN source_data sd
+            on sat.{{ parent_hashkey }} = sd.{{ parent_hashkey }}
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY sat.{{ parent_hashkey }} ORDER BY sat.{{ src_ldts }} DESC) = 1
 ),
 {%- endif %}
 
@@ -57,15 +60,17 @@ latest_entries_in_sat AS (
     Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each hashkey.
     Additionally adding a row number based on that order, if incremental.
 #}
+{% if not source_is_single_batch %}
+
 deduplicated_numbered_source AS (
 
     SELECT
-    {{ parent_hashkey }},
-    {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(source_cols) }}
-    {% if is_incremental() -%}
-    , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
-    {%- endif %}
+        {{ parent_hashkey }},
+        {{ ns.hdiff_alias }},
+        {{ datavault4dbt.print_list(source_cols) }}
+        {% if is_incremental() -%}
+        , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
+        {%- endif %}
     FROM source_data redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
     QUALIFY
         CASE
@@ -74,6 +79,9 @@ deduplicated_numbered_source AS (
         END
 ),
 
+{% set ns.last_cte = 'deduplicated_numbered_source' %}
+{% endif %}
+
 {#
     Select all records from the previous CTE. If incremental, compare the oldest incoming entry to
     the existing records in the satellite.
@@ -81,17 +89,17 @@ deduplicated_numbered_source AS (
 records_to_insert AS (
 
     SELECT
-    {{ parent_hashkey }},
-    {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(source_cols) }}
-    FROM deduplicated_numbered_source
+        {{ parent_hashkey }},
+        {{ ns.hdiff_alias }},
+        {{ datavault4dbt.print_list(source_cols) }}
+    FROM {{ ns.last_cte }}
     {%- if is_incremental() %}
     WHERE NOT EXISTS (
         SELECT 1
         FROM latest_entries_in_sat
-        WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
-            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', 'deduplicated_numbered_source'], condition='=') }}
-            AND deduplicated_numbered_source.rn = 1)
+        WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', ns.last_cte], condition='=') }}
+            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', ns.last_cte], condition='=') }}
+            {{ 'AND deduplicated_numbered_source.rn = 1' if not source_is_single_batch }})
     {%- endif %}
 
     )

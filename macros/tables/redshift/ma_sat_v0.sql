@@ -44,11 +44,12 @@ source_data AS (
 latest_entries_in_sat AS (
 
     SELECT
-        {{ parent_hashkey }},
-        {{ ns.hdiff_alias }}
-    FROM 
-        {{ this }} redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1  
+        sat.{{ parent_hashkey }},
+        sat.{{ ns.hdiff_alias }}
+    FROM {{ this }} sat
+    INNER JOIN source_data
+        on sat.{{ parent_hashkey }} = source_data.{{ parent_hashkey }}
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1
 ),
 {%- endif %}
 
