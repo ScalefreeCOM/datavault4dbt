@@ -14,7 +14,7 @@
 
     {# Alter existing Hub to add new hashkey column. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ alter_relation_add_remove_columns(relation=hub_relation, add_columns=new_hash_col) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=hub_relation, add_columns=new_hash_col) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# Ensuring business_keys is a list. #}
@@ -41,11 +41,11 @@
 
     {% set columns_to_drop = [{"name": hashkey + '_deprecated'}]%}
 
-    {{ log('Overwrite_hash_values for hubs: ' ~ overwrite_hash_values, true ) }}
+    {{ log('Overwrite_hash_values for hubs: ' ~ overwrite_hash_values, output_logs ) }}
 
     {# renaming existing hash columns #}
     {% if overwrite_hash_values %}
-        {{ log('Replacing existing hash values with new ones...', true) }}
+        {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
         {% set overwrite_sql %}
         {{ datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
@@ -55,7 +55,7 @@
         {% do run_query(overwrite_sql) %}
         
         {% if drop_old_values == 'true' %}
-            {{ alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
+            {{ datavault4dbt.alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
             {{ log('Existing Hash values overwritten!', true) }}
         {% endif %}
 
@@ -69,6 +69,11 @@
 
 {% macro snowflake__hub_update_statement(hub_relation, new_hashkey_name, hashkey, hash_config_dict) %}
 
+    {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
+
+    {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+    {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
+
     {% set update_sql %}
     UPDATE {{ hub_relation }} hub
     SET 
@@ -78,7 +83,16 @@
         SELECT 
             hub.{{ hashkey }},
             {{ datavault4dbt.hash_columns(columns=hash_config_dict) }}
-        FROM {{ hub_relation }} hub            
+        FROM {{ hub_relation }} hub  
+        WHERE hub.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
+
+        UNION ALL
+
+        SELECT 
+            hub.{{ hashkey }},
+            hub.{{ hashkey }} as {{ new_hashkey_name }}
+        FROM {{ hub_relation }} hub
+        WHERE hub.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')          
     ) nh
     WHERE nh.{{ hashkey }} = hub.{{ hashkey }}
     {% endset %}

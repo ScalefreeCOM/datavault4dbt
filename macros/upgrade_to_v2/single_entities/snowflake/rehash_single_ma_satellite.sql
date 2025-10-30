@@ -25,7 +25,7 @@
 
     {# ALTER existing satellite to add new hashkey and new hashdiff. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# Ensuring business_keys is a list. #}
@@ -69,7 +69,7 @@
                                                 parent_relation=parent_relation) %}
 
     {# Executing the UPDATE statement. #}
-    {{ log('Executing UPDATE statement...' ~ update_sql, true) }}
+    {{ log('Executing UPDATE statement...', output_logs) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ ma_satellite ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
@@ -111,6 +111,11 @@
 
     {% set prefixed_hashkey = 'sat.' ~ hashkey %}
 
+    {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
+
+    {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+    {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
+
     {#
         If parent entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
         hashkey column needs to be used for joining, and the regular hashkey should be selected. 
@@ -121,7 +126,7 @@
     {% for column in all_parent_columns %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ ma_satellite_relation.name, true) }}
+            {{ log('parent_already hashed set to true for ' ~ ma_satellite_relation.name, false) }}
         {% endif %}
     {% endfor %}
 
@@ -159,7 +164,18 @@
             FROM {{ parent_relation }} 
         ) parent
             ON sat.{{ hashkey }} = parent.{{ join_hashkey_col }}
+        WHERE sat.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
+
+        UNION ALL
             
+        SELECT
+            sat.{{ hashkey }},
+            sat.{{ ldts_col }},
+            sat.{{ hashkey }} AS {{ new_hashkey_name }},
+            sat.{{ new_hashdiff_name | replace('_new', '') }} AS {{ new_hashdiff_name }}
+        FROM {{ ma_satellite_relation }} sat
+        WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
+
     ) nh
     WHERE nh.{{ ldts_col }} = sat.{{ ldts_col }}
     AND nh.{{ hashkey }} = sat.{{ hashkey }}

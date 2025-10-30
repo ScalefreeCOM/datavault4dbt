@@ -25,7 +25,7 @@
 
     {# ALTER existing satellite to add new hashkey and new hashdiff. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {% if datavault4dbt.is_something(business_keys) %}
@@ -99,6 +99,11 @@
 
     {% set ns = namespace(parent_already_rehashed=false) %}
 
+    {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
+
+    {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+    {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
+
     {#
         If parent entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
         hashkey column needs to be used for joining, and the regular hashkey should be selected. 
@@ -142,6 +147,17 @@
         FROM {{ satellite_relation }} sat
         LEFT JOIN {{ parent_relation }} parent
             ON sat.{{ hashkey }} = parent.{{ join_hashkey_col }}
+        WHERE sat.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
+
+        UNION ALL
+
+        SELECT
+            sat.{{ hashkey }},
+            sat.{{ ldts_col }},
+            sat.{{ hashkey }} AS {{ new_hashkey_name }},
+            sat.{{ new_hashdiff_name | replace('_new', '') }} AS {{ new_hashdiff_name }}
+        FROM {{ satellite_relation }} sat
+        WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}') 
             
     ) nh
     WHERE nh.{{ ldts_col }} = sat.{{ ldts_col }}

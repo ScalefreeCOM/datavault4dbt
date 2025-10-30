@@ -44,7 +44,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {# ALTER existing link to add new link hashkey and new hub hashkeys. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.new_hash_columns) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# generating the UPDATE statement that populates the new columns. #}
@@ -55,7 +55,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
                                                 additional_hash_input_cols=additional_hash_input_cols) %}
 
     {# Executing the UPDATE statement. #}
-    {{ log('Executing UPDATE statement...' ~ update_sql, output_logs) }}
+    {{ log('Executing UPDATE statement...', output_logs) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ link ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
@@ -99,6 +99,11 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {% set ns = namespace(link_hashkey_input_cols=[], hash_config_dict={}, update_sql_part1='', update_sql_part2='') %}
 
+    {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
+
+    {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+    {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
+
     {% set ns.update_sql_part1 %}
     UPDATE {{ link_relation }} link
     SET 
@@ -131,12 +136,52 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% endset %}
         
         {% for hub in hub_hashkeys %}
+            {#
+                If hub entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
+                hashkey column needs to be used for joining.
 
-            {% set ns.update_sql_part2 = ns.update_sql_part2 + '\n LEFT JOIN ' + ref(hub.hub_name).render() + ' ' + hub.hub_join_alias + '\n    ON link.' + hub.current_hashkey_name + ' = ' + hub.hub_join_alias + '.' + hub.current_hashkey_name %}
+                Otherwise, the regular hashkey should be used for joining. 
+            #}
+            
+            {% set hub_ns = namespace(hub_already_rehashed=false) %}
+
+            {% set all_hub_columns = adapter.get_columns_in_relation(ref(hub.hub_name)) %}
+            {% for column in all_hub_columns %}
+                {% if column.name|lower == hub.current_hashkey_name|lower + '_deprecated' %}
+                    {% set hub_ns.hub_already_rehashed = true %}
+                    {{ log('Hub already hashed!', false) }}
+                {% endif %}
+            {% endfor %}
+
+            {% if hub_ns.hub_already_rehashed %}
+                {% set join_hashkey_col = hub.current_hashkey_name + '_deprecated' %}
+                {% set select_hashkey_col = hub.current_hashkey_name %}
+            {% else %}
+                {% set join_hashkey_col = hub.current_hashkey_name %}
+                {% set select_hashkey_col = hub.new_hashkey_name %}
+            {% endif %}
+
+            {% set ns.update_sql_part2 = ns.update_sql_part2 + '\n LEFT JOIN ' + ref(hub.hub_name).render() + ' ' + hub.hub_join_alias + '\n    ON link.' + hub.current_hashkey_name + ' = ' + hub.hub_join_alias + '.' + join_hashkey_col %}
 
         {% endfor %}
 
     {% set update_sql_part3 %}
+        WHERE link.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
+
+        UNION ALL
+
+        SELECT 
+            link.{{ link_hashkey }}
+            
+            {% for hub in hub_hashkeys %}
+
+            , link.{{ hub.current_hashkey_name }} as {{ hub.new_hashkey_name }}
+
+            {% endfor %}
+            , link.{{ link_hashkey }} as {{ new_link_hashkey_name }}
+            
+        FROM {{ link_relation }} link
+        WHERE link.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
     ) nh
     WHERE link.{{ link_hashkey }} = nh.{{ link_hashkey }}
     {% endset %}
