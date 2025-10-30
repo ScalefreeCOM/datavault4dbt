@@ -3,12 +3,12 @@
     dbt run-operation rehash_single_hub --args '{hub: customer_h, hashkey: HK_CUSTOMER_H, business_keys: C_CUSTKEY, overwrite_hash_values: true}'
 #}
 
-{% macro snowflake__rehash_single_hub(hub, hashkey, business_keys, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
+{% macro redshift__rehash_single_hub(hub, hashkey, business_keys, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
     {% set hub_relation = ref(hub) %}
 
     {% set new_hashkey_name = hashkey + '_new' %}
-    {% set hash_datatype = var('datavault4dbt.hash_datatype', 'STRING') %}
+    {% set hash_datatype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') %}
 
     {% set new_hash_col = [{"name": new_hashkey_name, "data_type": hash_datatype}] %}
 
@@ -39,7 +39,7 @@
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
-    {% set columns_to_drop = [{"name": hashkey + '_deprecated'}]%}
+    {% set columns_to_drop = [{"name": hashkey + '_deprecated', "new_name": new_hashkey_name}] %}
 
     {{ log('Overwrite_hash_values for hubs: ' ~ overwrite_hash_values, output_logs ) }}
 
@@ -52,7 +52,11 @@
         {{ datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
         {% endset %}
 
+        {% do columns_to_drop[0].update({'new_name' : hashkey } )%}
+
         {% do run_query(overwrite_sql) %}
+        
+
         
         {% if drop_old_values == 'true' %}
             {{ datavault4dbt.alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
@@ -67,14 +71,14 @@
 
 
 
-{% macro snowflake__hub_update_statement(hub_relation, new_hashkey_name, hashkey, hash_config_dict) %}
-
+{% macro redshift__hub_update_statement(hub_relation, new_hashkey_name, hashkey, hash_config_dict) %}
+    
     {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
 
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
-
     {% set update_sql %}
+
     UPDATE {{ hub_relation }} hub
     SET 
         {{ new_hashkey_name}} = nh.{{ new_hashkey_name}}
@@ -83,7 +87,7 @@
         SELECT 
             hub.{{ hashkey }},
             {{ datavault4dbt.hash_columns(columns=hash_config_dict) }}
-        FROM {{ hub_relation }} hub  
+        FROM {{ hub_relation }} hub            
         WHERE hub.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
 
         UNION ALL
@@ -92,7 +96,7 @@
             hub.{{ hashkey }},
             hub.{{ hashkey }} as {{ new_hashkey_name }}
         FROM {{ hub_relation }} hub
-        WHERE hub.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')          
+        WHERE hub.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
     ) nh
     WHERE nh.{{ hashkey }} = hub.{{ hashkey }}
     {% endset %}
