@@ -4,6 +4,8 @@
 
     {%- set dict_result = {} -%}
 
+    {%- set use_execution_aware_loading = var('datavault4dbt.multi_source_models__execution_aware_loading', 'true') -%}
+
     {{ log('ref_keys: '~reference_keys, false)}}
 
     {%- if source_models is mapping -%}
@@ -34,6 +36,19 @@
         {%- set ns_source_models.source_model_list = source_models -%}
 
     {%- endif -%}
+
+    {% if execute and use_execution_aware_loading %}
+        {% set source_model_backup = ns_source_models.source_model_list %}
+        {% set ns_source_models.source_model_list = [] %}
+
+        {% for source_model in source_model_backup %}
+            {% if datavault4dbt.source_model_should_be_selected(source_model.name) %}
+                {% do ns_source_models.source_model_list.append(source_model) %}
+            {% else %}
+                {{ log( this.name ~ ': Skipping source model: ' ~ source_model.name ~ ' as it is not selected for execution', info=True) }}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 
     {%- for source_model in ns_source_models.source_model_list -%}
 
