@@ -180,7 +180,7 @@
         WHERE sat.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
         GROUP BY sat.{{ hashkey }},
                  sat.{{ ldts_col }},
-                 {{ datavault4dbt.print_list(business_key_list, src_alias='parent') }} ,
+                 {{ datavault4dbt.print_list(business_key_list, src_alias='parent') }}
                 {% if new_hashkey_name not in hash_config_dict.keys() %}
                  , parent.{{ select_hashkey_col }}                 
                 {% endif %}          
