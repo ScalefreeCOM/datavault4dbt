@@ -49,7 +49,7 @@ latest_entries_in_sat AS (
     FROM {{ this }} sat
     INNER JOIN source_data
         on sat.{{ parent_hashkey }} = source_data.{{ parent_hashkey }}
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY sat.{{ parent_hashkey }} ORDER BY sat.{{ src_ldts }} DESC) = 1
 ),
 {%- endif %}
 
