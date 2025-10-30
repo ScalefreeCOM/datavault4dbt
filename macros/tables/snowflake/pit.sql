@@ -6,6 +6,8 @@
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
+    
+{%- set include_business_objects_before_appearance = var('datavault4dbt.include_business_objects_before_appearance', 'false') -%}
 
 {%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
 
@@ -91,6 +93,10 @@ pit_records AS (
         {% endfor %}
     {% if datavault4dbt.is_something(snapshot_trigger_column) %}
         WHERE snap.{{ snapshot_trigger_column }}
+
+        {% if include_business_objects_before_appearance == 'false' -%}
+            AND h.{{ src_ldts }} <= snap.{{ sdts }}
+        {% endif %}
     {%- endif %}
 
 ),
