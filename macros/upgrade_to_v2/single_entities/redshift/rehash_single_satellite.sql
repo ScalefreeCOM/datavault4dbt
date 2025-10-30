@@ -159,15 +159,15 @@
             ON sat.{{ hashkey }} = parent.{{ join_hashkey_col }} 
         WHERE sat.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
 
-            UNION ALL
+        UNION ALL
 
-            SELECT
-                sat.{{ hashkey }},
-                sat.{{ ldts_col }},
-                sat.{{ hashkey }} AS {{ new_hashkey_name }},
-                sat.{{ new_hashdiff_name | replace('_new', '') }} AS {{ new_hashdiff_name }}
-            FROM {{ satellite_relation }} sat
-            WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}') 
+        SELECT
+            sat.{{ hashkey }},
+            sat.{{ ldts_col }},
+            sat.{{ hashkey }} AS {{ new_hashkey_name }},
+            sat.{{ new_hashdiff_name | replace('_new', '') }} AS {{ new_hashdiff_name }}
+        FROM {{ satellite_relation }} sat
+        WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}') 
         ) nh
     WHERE nh.{{ ldts_col }} = sat.{{ ldts_col }}
     AND nh.{{ hashkey }} = sat.{{ hashkey }}

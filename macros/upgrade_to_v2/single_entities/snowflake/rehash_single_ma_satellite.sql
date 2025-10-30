@@ -171,6 +171,7 @@
         SELECT
             sat.{{ hashkey }},
             sat.{{ ldts_col }},
+            {{ datavault4dbt.print_list(ma_keys) }},
             sat.{{ hashkey }} AS {{ new_hashkey_name }},
             sat.{{ new_hashdiff_name | replace('_new', '') }} AS {{ new_hashdiff_name }}
         FROM {{ ma_satellite_relation }} sat

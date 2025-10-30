@@ -158,6 +158,7 @@
         SELECT 
             sat.{{ hashkey }},
             sat.{{ ldts_col }},
+            {{ datavault4dbt.print_list(ma_keys) }},
 
             {% if new_hashkey_name not in hash_config_dict.keys() %}
                 {# If Business Keys are not defined for parent entity, use new hashkey already existing in parent entitiy. #}
@@ -180,7 +181,8 @@
         WHERE sat.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
         GROUP BY sat.{{ hashkey }},
                  sat.{{ ldts_col }},
-                 {{ datavault4dbt.print_list(business_key_list, src_alias='parent') }} 
+                 {{ datavault4dbt.print_list(business_key_list, src_alias='parent') }} ,
+                 {{ datavault4dbt.print_list(ma_keys) }}
                 {% if new_hashkey_name not in hash_config_dict.keys() %}
                  , parent.{{ select_hashkey_col }}                 
                 {% endif %}          
@@ -190,6 +192,7 @@
         SELECT
             sat.{{ hashkey }},
             sat.{{ ldts_col }},
+            {{ datavault4dbt.print_list(ma_keys) }},
             sat.{{ hashkey }} AS {{ new_hashkey_name }},
             sat.{{ new_hashdiff_name | replace('_new', '') }} AS {{ new_hashdiff_name }}
         FROM {{ ma_satellite_relation }} sat
@@ -199,6 +202,18 @@
     WHERE nh.{{ ldts_col }} = sat.{{ ldts_col }}
     AND nh.{{ hashkey }} = sat.{{ hashkey }}
     {% endset %}
+
+    {% for ma_key in ma_keys %}
+
+        {% set where_condition %}
+            AND nh.{{ datavault4dbt.escape_column_names(ma_key) }} = sat.{{ datavault4dbt.escape_column_names(ma_key) }}
+        {% endset %}
+
+        {% set ns.update_where_condition = ns.update_where_condition + where_condition %}
+
+    {% endfor %}
+
+    {% set update_sql = update_sql + ns.update_where_condition %}
 
     {{ return(update_sql) }}
 
