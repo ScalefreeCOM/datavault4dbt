@@ -10,7 +10,7 @@
         - Using a dynamic high-water-mark to optimize loading performance of multiple loads
 #}
 
-{%- macro ma_sat_v0(yaml_metadata=none, parent_hashkey=none, src_hashdiff=none, src_ma_key=none, src_payload=none, source_model=none, src_ldts=none, src_rsrc=none) -%}
+{%- macro ma_sat_v0(yaml_metadata=none, parent_hashkey=none, src_hashdiff=none, src_ma_key=none, src_payload=none, source_model=none, src_ldts=none, src_rsrc=none, additional_columns=none) -%}
 
     {% set parent_hashkey_description = "
     parent_hashkey::string                  Name of the hashkey column inside the stage of the object that this satellite is attached to.
@@ -75,14 +75,21 @@
                                             Needs to use the same column name as defined as alias inside the staging model.
     " %}
 
-    {%- set parent_hashkey  = datavault4dbt.yaml_metadata_parser(name='parent_hashkey', yaml_metadata=yaml_metadata, parameter=parent_hashkey, required=True, documentation=parent_hashkey_description) -%}
-    {%- set src_hashdiff    = datavault4dbt.yaml_metadata_parser(name='src_hashdiff', yaml_metadata=yaml_metadata, parameter=src_hashdiff, required=True, documentation=src_hashdiff_description) -%}
-    {%- set src_ma_key      = datavault4dbt.yaml_metadata_parser(name='src_ma_key', yaml_metadata=yaml_metadata, parameter=src_ma_key, required=True, documentation=src_ma_key_description) -%}
-    {%- set src_payload     = datavault4dbt.yaml_metadata_parser(name='src_payload', yaml_metadata=yaml_metadata, parameter=src_payload, required=True, documentation=src_payload_description) -%}
-    {%- set source_model    = datavault4dbt.yaml_metadata_parser(name='source_model', yaml_metadata=yaml_metadata, parameter=source_model, required=True, documentation=source_model_description) -%}
-    {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
-    {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {% set additional_columns_description = "
+    additional_columns::list | string       Additional columns from source system or derived columns which should be part of the ma_sat.
+                                            The columns need to be available in all source models.
+                                            Optional parameter, defaults to empty list.
+    " %}
 
+    {%- set parent_hashkey      = datavault4dbt.yaml_metadata_parser(name='parent_hashkey', yaml_metadata=yaml_metadata, parameter=parent_hashkey, required=True, documentation=parent_hashkey_description) -%}
+    {%- set src_hashdiff        = datavault4dbt.yaml_metadata_parser(name='src_hashdiff', yaml_metadata=yaml_metadata, parameter=src_hashdiff, required=True, documentation=src_hashdiff_description) -%}
+    {%- set src_ma_key          = datavault4dbt.yaml_metadata_parser(name='src_ma_key', yaml_metadata=yaml_metadata, parameter=src_ma_key, required=True, documentation=src_ma_key_description) -%}
+    {%- set src_payload         = datavault4dbt.yaml_metadata_parser(name='src_payload', yaml_metadata=yaml_metadata, parameter=src_payload, required=True, documentation=src_payload_description) -%}
+    {%- set source_model        = datavault4dbt.yaml_metadata_parser(name='source_model', yaml_metadata=yaml_metadata, parameter=source_model, required=True, documentation=source_model_description) -%}
+    {%- set src_ldts            = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc            = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set additional_columns  = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
+    
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
@@ -110,6 +117,7 @@
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
-                                         source_model=source_model) }}
+                                         source_model=source_model,
+                                         additional_columns=additional_columns) }}
 
 {%- endmacro -%}
