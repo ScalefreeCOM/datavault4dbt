@@ -1,13 +1,19 @@
-{%- macro fabric__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc, ledts_alias, add_is_current_flag) -%}
+{%- macro fabric__ma_sat_v1(sat_v0, hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc, ledts_alias, add_is_current_flag, additional_columns) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{# Select the additional_columns and put them in an array. If additional_colums is none, then empty array #}
+{%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 {%- set is_current_col_alias = datavault4dbt.escape_column_names(is_current_col_alias) -%}
 
 {%- set source_relation = ref(sat_v0) -%}
-{%- set all_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
+{%- set source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
+{%- set all_columns = source_columns + additional_columns -%}
+
 {%- set exclude = datavault4dbt.expand_column_list(columns=[hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc]) -%}
 
 {%- set ma_attributes = datavault4dbt.expand_column_list(columns=[ma_attribute]) -%}
