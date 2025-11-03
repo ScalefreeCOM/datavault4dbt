@@ -227,3 +227,39 @@
     {% endif %}
 
 {% endmacro %}
+
+{% macro postgres__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+
+    {% if add_columns %}
+
+    {% set sql -%}
+        {% for column in add_columns %}
+            ALTER TABLE {{ relation.render() }} ADD COLUMN {{ column.name }} {{ column.data_type }};
+        {% endfor %}
+    {%- endset -%}
+
+     {{ log('alter sql: ' ~ sql, false)}}
+
+    {% do run_query(sql) %}
+
+    {% endif %}
+
+    {% if remove_columns %}
+    
+        {%- set ns = namespace(drop_statements = "") -%}
+
+        {% for column in remove_columns %}
+
+            {%- set drop_sql = "ALTER TABLE " ~ relation ~ " DROP COLUMN " ~ column.name ~ ";\n" -%}
+            {%- set ns.drop_statements = ns.drop_statements + drop_sql -%}
+                
+        {%- endfor -%}
+        
+        {{ log('alter sql: ' ~ ns.drop_statements, false)}}
+
+    {% do run_query(ns.drop_statements) %}
+
+    {% endif %}
+
+{% endmacro %}

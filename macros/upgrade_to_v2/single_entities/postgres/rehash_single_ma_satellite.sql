@@ -3,7 +3,7 @@
     dbt run-operation rehash_single_ma_satellite --args '{ma_satellite: customer_n0_ms, hashkey: HK_CUSTOMER_H, hashdiff: HD_CUSTOMER_N_MS, ma_keys: [O_ORDERKEY], payload: [O_ORDERSTATUS, O_ORDERPRIORITY, O_CLERK, O_SHIPPRIORITY, O_COMMENT, LEGACY_ORDERKEY], parent_entity: customer_h, business_keys: C_CUSTKEY, overwrite_hash_values: true}'
 #}
 
-{% macro redshift__rehash_single_ma_satellite(ma_satellite, hashkey, hashdiff, ma_keys, payload, parent_entity, business_keys, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
+{% macro postgres__rehash_single_ma_satellite(ma_satellite, hashkey, hashdiff, ma_keys, payload, parent_entity, business_keys, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
     {% set ma_satellite_relation = ref(ma_satellite) %}
     {% set parent_relation = ref(parent_entity) %}
@@ -73,8 +73,8 @@
     {{ log('UPDATE statement completed!', output_logs) }}
 
     {% set columns_to_drop = [
-        {"name": hashkey + '_deprecated', "new_name": hashkey},
-        {"name": hashdiff + '_deprecated', "new_name": hashdiff}
+        {"name": hashkey + '_deprecated'},
+        {"name": hashdiff + '_deprecated'}
     ]%}
 
     {# renaming existing hash columns #}
@@ -104,7 +104,7 @@
 {% endmacro %}
 
 
-{% macro redshift__ma_satellite_update_statement(ma_satellite_relation, new_hashkey_name, new_hashdiff_name, hashkey, business_key_list, ma_keys, ldts_col, hash_config_dict, parent_relation) %}
+{% macro postgres__ma_satellite_update_statement(ma_satellite_relation, new_hashkey_name, new_hashdiff_name, hashkey, business_key_list, ma_keys, ldts_col, hash_config_dict, parent_relation) %}
 
     {% set ns = namespace(update_where_condition='', parent_already_rehashed=false) %}
 
@@ -138,7 +138,7 @@
         {% set select_hashkey_col = new_hashkey_name %}
     {% endif %}
 
-    {%- set tmp_ns = namespace(main_hashkey_dict={}, hashdiff_names=[]) -%}
+    {# {%- set tmp_ns = namespace(main_hashkey_dict={}, hashdiff_names=[]) -%}
 
     {%- for column in hash_config_dict.keys() -%}
         {%- if not hash_config_dict[column].is_hashdiff -%}
@@ -146,7 +146,7 @@
         {%- elif hash_config_dict[column].is_hashdiff -%}
             {%- do tmp_ns.hashdiff_names.append(column) -%}
         {%- endif -%}
-    {%- endfor -%}
+    {%- endfor -%} #}
 
     {% set update_sql %}
     UPDATE {{ ma_satellite_relation }} sat
@@ -161,13 +161,10 @@
 
             {% if new_hashkey_name not in hash_config_dict.keys() %}
                 {# If Business Keys are not defined for parent entity, use new hashkey already existing in parent entitiy. #}
-                parent.{{ select_hashkey_col }} as {{ new_hashkey_name }}
-            {% else %}
-                {%- set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict) -%}
-                {{ datavault4dbt.hash_columns(columns=processed_hash_columns) }}
+                parent.{{ select_hashkey_col }} as {{ new_hashkey_name }},
             {% endif %}
             
-            ,{{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=ma_keys) }}
+            {{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=ma_keys) }}
 
         FROM {{ ma_satellite_relation }} sat
         LEFT JOIN (
