@@ -62,6 +62,9 @@ vars:
   datavault4dbt.unknown_value__numeric: '-1'
   datavault4dbt.error_value__numeric: '-2'
 
+  #Premium package value
+  datavault4dbt.use_premium_package: False
+
 
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
