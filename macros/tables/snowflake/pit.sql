@@ -73,7 +73,6 @@ WITH
 
 	),
   {% endif %}
-{{- "," if not loop.last }}
   
 
 {%- endif %}
@@ -108,13 +107,13 @@ pit_records AS (
             {{ ref(tracked_entity) }} te
         FULL OUTER JOIN
 		  {% if snapshot_optimization and is_incremental() %}
-			relevant_snapshots snap
+			relevant_snapshots snap 
 		  {%- else %}
             {{ ref(snapshot_relation) }} snap
 		  {% endif -%}
-            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
+            {% if datavault4dbt.is_something(snapshot_trigger_column) and not snapshot_optimization %}
                 ON snap.{{ snapshot_trigger_column }} = true
-            {% else -%}
+            {% else %}
                 ON 1=1
             {%- endif %}
         {% for satellite in sat_names %}
@@ -134,7 +133,7 @@ pit_records AS (
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
                 AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
-    {% if datavault4dbt.is_something(snapshot_trigger_column) %}
+    {% if datavault4dbt.is_something(snapshot_trigger_column) and not snapshot_optimization %}
         WHERE snap.{{ snapshot_trigger_column }}
     {%- endif %}
 
