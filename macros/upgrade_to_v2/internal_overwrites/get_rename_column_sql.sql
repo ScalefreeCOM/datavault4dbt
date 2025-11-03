@@ -53,3 +53,13 @@
     {{ return(query) }}
 
 {% endmacro %}
+
+{% macro postgres__get_rename_column_sql(relation, old_col_name, new_col_name) %}
+
+    {% set query %}
+    alter table {{ relation.render() }} rename column {{ old_col_name }} to {{ new_col_name }};
+    {% endset %}
+
+    {{ return(query) }}
+
+{% endmacro %}
