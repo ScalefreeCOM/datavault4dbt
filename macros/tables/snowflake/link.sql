@@ -69,10 +69,12 @@ WITH
 
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
-                    SELECT t.*,
+                    SELECT max(t.{{src_ldts}}) as {{src_ldts}},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    AND {{src_ldts}} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+                    GROUP BY 2
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
@@ -168,13 +170,17 @@ WITH
         {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
 
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max ON
-        ({%- for rsrc_static in rsrc_statics -%}
-            max.rsrc_static = '{{ rsrc_static }}'
-            {%- if not loop.last -%} OR
+        WHERE 
+        {% for rsrc_static in rsrc_statics %}
+          (src.{{ src_rsrc }} = '{{ rsrc_static }}' AND src.{{ src_ldts }} > (
+            SELECT MAX(max_ldts)
+            FROM max_ldts_per_rsrc_static_in_target
+            WHERE rsrc_static = '{{ rsrc_static }}' AND max_ldts != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            ))
+            {%- if not loop.last %}
+            OR
             {% endif -%}
-        {%- endfor %})
-        WHERE src.{{ src_ldts }} > max.max_ldts
+        {%- endfor -%}
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
         WHERE src.{{ src_ldts }} > (
             SELECT MAX({{ src_ldts }})

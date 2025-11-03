@@ -1,4 +1,4 @@
-{%- macro snowflake__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none) -%}
+{%- macro snowflake__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
@@ -26,14 +26,55 @@
 WITH
 
 {%- if is_incremental() %}
+  {% if snapshot_optimization %}
+	sdts_max_ldts as --get the dts from all relevant snapshots and the max. ldts per satelite from the pit
+	(
+		SELECT 
+			snap.{{ sdts }} 
+		{%- for satellite in sat_names %}
+			,MAX(pit.{{ ldts }}_{{ satellite }}) max_{{ ldts }}_{{ satellite }}
+		{%- endfor %}
+		FROM 
+		(SELECT * FROM {{ ref(snapshot_relation) }} WHERE {{ snapshot_trigger_column }}) snap
+		LEFT JOIN
+		{{ this }} pit
+		ON snap.{{ sdts }} = pit.{{ sdts }}
+		GROUP BY 1
+	),
+	relevant_snapshots as --filter to snapshots which have to be handled
+	(
+		SELECT {{ sdts }} FROM sdts_max_ldts 
+		WHERE 
+		{%- for satellite in sat_names %}
+			--new snapshot
+			max_{{ ldts }}_{{ satellite }} IS NULL OR
+			--existing snapshot with max ldts of one sat -> might need to be updated
+			max_{{ ldts }}_{{ satellite }} = (SELECT MAX(max_{{ ldts }}_{{ satellite }}) FROM sdts_max_ldts)
+			{% if not loop.last %}
+			OR
+			{% endif %}
+		{%- endfor %}
+	),
 
-existing_dimension_keys AS (
+	existing_dimension_keys AS (
 
-    SELECT
-        {{ dimension_key }}
-    FROM {{ this }}
+		SELECT
+			{{ dimension_key }}
+		FROM {{ this }}
+		WHERE {{ sdts }} IN (select {{ sdts }} FROM relevant_snapshots)
+		
+	),
+  {% else %}
+	existing_dimension_keys AS (
 
-),
+		SELECT
+			{{ dimension_key }}
+		FROM {{ this }}
+
+	),
+  {% endif %}
+{{- "," if not loop.last }}
+  
 
 {%- endif %}
 
@@ -66,7 +107,11 @@ pit_records AS (
     FROM
             {{ ref(tracked_entity) }} te
         FULL OUTER JOIN
+		  {% if snapshot_optimization and is_incremental() %}
+			relevant_snapshots snap
+		  {%- else %}
             {{ ref(snapshot_relation) }} snap
+		  {% endif -%}
             {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
                 ON snap.{{ snapshot_trigger_column }} = true
             {% else -%}
@@ -102,7 +147,7 @@ records_to_insert AS (
     {%- if is_incremental() %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
     {% endif -%}
-
+    ORDER BY {{ sdts }}
 )
 
 SELECT * FROM records_to_insert
