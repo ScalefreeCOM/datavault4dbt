@@ -55,6 +55,17 @@
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
 
+    {%- if var('datavault4dbt.use_premium_package', False) == True -%}
+        {{ datavault4dbt_premium_package.insert_metadata_ref_sat_v0(parent_ref_keys=parent_ref_keys,
+                                         src_hashdiff=src_hashdiff,
+                                         src_payload=src_payload,
+                                         src_ldts=src_ldts,
+                                         src_rsrc=src_rsrc,
+                                         source_model=source_model,
+                                         disable_hwm=disable_hwm,
+                                         source_is_single_batch=source_is_single_batch) }}
+    {%- endif %}
+    
     {{ adapter.dispatch('ref_sat_v0', 'datavault4dbt')(parent_ref_keys=parent_ref_keys,
                                          src_hashdiff=src_hashdiff,
                                          src_payload=src_payload,

@@ -94,6 +94,21 @@
     {%- set ledts = datavault4dbt.replace_standard(ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
     {%- set sdts = datavault4dbt.replace_standard(sdts, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
+    {%- if var('datavault4dbt.use_premium_package', False) == True -%}
+        {{ datavault4dbt_premium_package.insert_metadata_pit(pit_type=pit_type,
+                                                        tracked_entity=tracked_entity,
+                                                        hashkey=hashkey,
+                                                        sat_names=sat_names,
+                                                        ldts=ldts,
+                                                        sdts=sdts,
+                                                        custom_rsrc=custom_rsrc,
+                                                        ledts=ledts,
+                                                        snapshot_relation=snapshot_relation,
+                                                        snapshot_trigger_column=snapshot_trigger_column,
+                                                        dimension_key=dimension_key,
+                                                        refer_to_ghost_records=refer_to_ghost_records) }}
+    {%- endif %}
+    
     {{ return(adapter.dispatch('pit','datavault4dbt')(pit_type=pit_type,
                                                         tracked_entity=tracked_entity,
                                                         hashkey=hashkey,
