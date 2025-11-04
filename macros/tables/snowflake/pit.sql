@@ -145,7 +145,7 @@ records_to_insert AS (
     FROM pit_records
     {%- if is_incremental() %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
-    {% endif -%}
+    {% endif %}
     ORDER BY {{ sdts }}
 )
 
