@@ -35,7 +35,12 @@ WITH
 			,MAX(pit.{{ ldts }}_{{ satellite }}) max_{{ ldts }}_{{ satellite }}
 		{%- endfor %}
 		FROM 
-		(SELECT * FROM {{ ref(snapshot_relation) }} WHERE {{ snapshot_trigger_column }}) snap
+		  (SELECT * 
+      FROM {{ ref(snapshot_relation) }} 
+      {% if datavault4dbt.is_something(snapshot_trigger_column) %}
+        WHERE {{ snapshot_trigger_column }}
+      {% endif %}
+      ) snap
 		LEFT JOIN
 		{{ this }} pit
 		ON snap.{{ sdts }} = pit.{{ sdts }}
