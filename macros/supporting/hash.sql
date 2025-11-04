@@ -396,6 +396,8 @@
     {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey') %}
 {%- endif -%}
 
+{{ log('attribute_standardise: '~attribute_standardise, false)}}
+
 {#- If single column to hash -#}
 {%- if columns is string -%}
     {%- set columns = [columns] -%}
@@ -414,7 +416,13 @@
     {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
     {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
 
-{{ standardise_prefix }}
+{%- if columns | length == 1 -%}
+    {%- set concat_function = 'CONCAT(' -%}
+{%- elif columns | length > 1 -%}
+    {%- set concat_function = 'CONCAT_WS(\'' ~ concat_string ~ '\', ' -%}
+{%- endif -%}
+
+{{ standardise_prefix | replace('[CONCAT_FUNCTION]', concat_function) }}
 
 {%- for column in columns -%}
 
@@ -425,10 +433,9 @@
     {%- else -%}
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
-    {{ log('attribute_standardise: '~attribute_standardise, false)}}
 
     {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
-    {{- ",'{}',".format(concat_string) if not loop.last -}}
+    {{- ", " if not loop.last -}}
     {{- ", ''" if columns|length == 1 -}}
 
     {%- if loop.last -%}
