@@ -40,14 +40,25 @@
         {% set prefixed_payload = datavault4dbt.prefix(columns=payload, prefix_str='sat').split(',') %}
         {% set prefixed_business_keys = datavault4dbt.prefix(columns=business_key_list, prefix_str='parent').split(',') %}
 
-        {% set hash_config_dict = {new_hashkey_name: prefixed_business_keys, new_hashdiff_name: prefixed_payload} %}
+        {% set hash_config_dict = {
+                new_hashkey_name: prefixed_business_keys,
+                new_hashdiff_name: {
+                    "is_hashdiff": true,
+                    "columns": prefixed_payload
+                    }
+                } %}
         
     {% else %}
 
         {# Adding prefixes to column names for proper selection. #}
         {% set prefixed_payload = datavault4dbt.prefix(columns=payload, prefix_str='sat').split(',') %}
 
-        {% set hash_config_dict = {new_hashdiff_name: prefixed_payload} %}
+        {% set hash_config_dict = {
+                new_hashdiff_name: {
+                    "is_hashdiff": true,
+                    "columns": prefixed_payload
+                    } 
+                } %}
 
     {% endif %}
 
@@ -112,10 +123,10 @@
     #}
     {% set all_parent_columns = adapter.get_columns_in_relation(parent_relation) %}
     {% for column in all_parent_columns %}
-        {{ log('parent column names: ' ~ all_parent_columns, true) }}
+        {{ log('parent column names: ' ~ all_parent_columns, false) }}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ satellite_relation.name, true) }}
+            {{ log('parent_already hashed set to true for ' ~ satellite_relation.name, false) }}
         {% endif %}
     {% endfor %}
 

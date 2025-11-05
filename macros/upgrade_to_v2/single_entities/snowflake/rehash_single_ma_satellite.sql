@@ -159,7 +159,8 @@
         FROM {{ ma_satellite_relation }} sat
         LEFT JOIN (
             SELECT 
-                {{ hashkey }},
+                {{ join_hashkey_col }},
+                {{ select_hashkey_col }},
                 {{ datavault4dbt.print_list(business_key_list) }}
             FROM {{ parent_relation }} 
         ) parent
