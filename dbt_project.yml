@@ -36,6 +36,7 @@ vars:
 
   #General Configuration
   datavault4dbt.include_business_objects_before_appearance: false
+  datavault4dbt.is_active_datatype: NUMBER(1,0)
   
   #Ghost Record Configuration  
   datavault4dbt.beginning_of_all_times: {"bigquery":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01", "postgres": "0001-01-01 00:00:01", "redshift": "0001-01-01 00:00:01", "synapse": "1901-01-01T00:00:01", "fabric": "0001-01-01T00:00:01", "oracle":"0001-01-01 00:00:01", databricks: "0001-01-01 00:00:01"}
