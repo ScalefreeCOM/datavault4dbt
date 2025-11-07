@@ -45,9 +45,20 @@
             {% if datavault4dbt.source_model_should_be_selected(source_model.name) %}
                 {% do ns_source_models.source_model_list.append(source_model) %}
             {% else %}
-                {{ log( this.name ~ ': Skipping source model: ' ~ source_model.name ~ ' as it is not selected for execution', info=True) }}
+                {{ log( this.name ~ ': Skipping source model: ' ~ source_model.name ~ ' as it is not selected for execution', info=False) }}
             {% endif %}
         {% endfor %}
+
+        {% if ns_source_models.source_model_list|length == 0 %}
+            {{ log('no source in selection, reverting to all source models', false) }}
+            {% set ns_source_models.source_model_list = source_model_backup %}
+        {% endif %}
+
+        {% if load_relation(this) is none or should_full_refresh() %}
+            {{ log('Relation does not exist or should be full refreshed', false) }}
+            {% set ns_source_models.source_model_list = source_model_backup %}
+        {% endif %}
+
     {% endif %}
 
     {%- for source_model in ns_source_models.source_model_list -%}
