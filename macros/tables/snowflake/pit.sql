@@ -27,8 +27,7 @@ WITH
 
 {%- if is_incremental() %}
   {% if snapshot_optimization %}
-	sdts_max_ldts as --get the dts from all relevant snapshots and the max. ldts per satelite from the pit
-	(
+	sdts_max_ldts as ( --get the dts from all relevant snapshots and the max. ldts per satelite from the pit
 		SELECT 
 			snap.{{ sdts }} 
 		{%- for satellite in sat_names %}
@@ -36,19 +35,23 @@ WITH
 		{%- endfor %}
 		FROM 
 		  (SELECT * 
-      FROM {{ ref(snapshot_relation) }} 
-      {% if datavault4dbt.is_something(snapshot_trigger_column) %}
-        WHERE {{ snapshot_trigger_column }}
-      {% endif %}
-      ) snap
+        FROM {{ ref(snapshot_relation) }} 
+        {% if datavault4dbt.is_something(snapshot_trigger_column) %}
+          WHERE {{ snapshot_trigger_column }}
+        {% endif %}
+        ) snap
 		LEFT JOIN
 		{{ this }} pit
 		ON snap.{{ sdts }} = pit.{{ sdts }}
-		GROUP BY 1
+		GROUP BY snap.{{ sdts }}
 	),
-	relevant_snapshots as --filter to snapshots which have to be handled
-	(
-		SELECT {{ sdts }} FROM sdts_max_ldts 
+	relevant_snapshots as ( --filter to snapshots which have to be handled
+		SELECT 
+      {{ sdts }}
+      {% if datavault4dbt.is_something(snapshot_trigger_column) %}
+      , true as {{ snapshot_trigger_column }}
+      {% endif %}
+    FROM sdts_max_ldts 
 		WHERE 
 		{%- for satellite in sat_names %}
 			--new snapshot
@@ -116,7 +119,7 @@ pit_records AS (
 		  {%- else %}
             {{ ref(snapshot_relation) }} snap
 		  {% endif -%}
-            {% if datavault4dbt.is_something(snapshot_trigger_column) and not snapshot_optimization %}
+            {% if datavault4dbt.is_something(snapshot_trigger_column) %}
                 ON snap.{{ snapshot_trigger_column }} = true
             {% else %}
                 ON 1=1

@@ -87,7 +87,7 @@ WITH
                     FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
 					AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-                    GROUP BY 2
+                    GROUP BY rsrc_static
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
