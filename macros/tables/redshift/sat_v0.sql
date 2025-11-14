@@ -50,8 +50,7 @@ latest_entries_in_sat AS (
         sat.{{ ns.hdiff_alias }}
     FROM 
         {{ this }} sat
-    INNER JOIN source_data sd
-            on sat.{{ parent_hashkey }} = sd.{{ parent_hashkey }}
+    WHERE {{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
     QUALIFY ROW_NUMBER() OVER(PARTITION BY sat.{{ parent_hashkey }} ORDER BY sat.{{ src_ldts }} DESC) = 1
 ),
 {%- endif %}

@@ -41,8 +41,7 @@ distinct_sat_hashkeys AS (
     SELECT DISTINCT
         sat.{{ parent_hashkey }}
     FROM {{ this }} sat
-    INNER JOIN source_data sd
-        on sd.{{ parent_hashkey }} = sat.{{ parent_hashkey }}
+    WHERE sat.{{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
     ),
 
 {%- endif %}
