@@ -492,7 +492,7 @@ unknown_values AS (
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%}
     {# Generating Ghost Records for all source columns, except the ldts, rsrc & edwSequence column #}
       {%- for column in columns_without_excluded_columns %}
-        ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='unknown') }}
+        ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='unknown', col_size=column.char_size) }}
       {%- endfor -%}
 
     {%- endif -%}
@@ -522,7 +522,7 @@ unknown_values AS (
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
               {{ log('column found? yes, for column: ' ~ column.name , false) }}
-              ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='unknown', alias=prejoin['aliases'][prejoin_col_index]) }}
+              ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='unknown', col_size=column.char_size, alias=prejoin['aliases'][prejoin_col_index]) }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -532,7 +532,7 @@ unknown_values AS (
     {%- if datavault4dbt.is_something(derived_columns) -%}
       {# Additionally generating Ghost Records for Derived Columns  #}
       {% for column_name, properties in derived_columns_with_datatypes_DICT.items() %}
-        ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown') }}
+        ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='unknown', col_size=properties.col_size) }}
       {%- endfor -%}
 
     {%- endif -%}
@@ -558,7 +558,7 @@ error_values AS (
     {%- if columns_without_excluded_columns is defined and columns_without_excluded_columns| length > 0 -%}
     {# Generating Ghost Records for Source Columns #}
       {%- for column in columns_without_excluded_columns %}
-        ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='error') }}
+        ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='error', col_size=column.char_size) }}
       {%- endfor -%}
 
     {%- endif -%}
@@ -588,7 +588,7 @@ error_values AS (
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
               {{ log('column found? yes, for column: ' ~ column.name , false) }}
-             ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='error', alias=prejoin['aliases'][prejoin_col_index]) }}
+             ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.data_type, ghost_record_type='error', col_size=column.char_size, alias=prejoin['aliases'][prejoin_col_index]) }}
           {%- endif -%}
 
         {%- endfor -%}
@@ -598,7 +598,7 @@ error_values AS (
     {%- if datavault4dbt.is_something(derived_columns) %}
     {# Additionally generating Ghost Records for Derived Columns #}
       {%- for column_name, properties in derived_columns_with_datatypes_DICT.items() %}
-        ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error') }}
+        ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column_name, datatype=properties.datatype, ghost_record_type='error', col_size=properties.col_size) }}
       {%- endfor -%}
 
     {%- endif -%}
