@@ -1,4 +1,4 @@
-{%- macro default__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg, disable_hwm) -%}
+{%- macro default__rec_track_sat(tracked_hashkey, source_models, src_ldts, src_rsrc, src_stg, disable_hwm, additional_columns) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -15,6 +15,10 @@
 {# Setting the ldts to the default datatype for timestamps #}
 {% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
 
+{# Select the additional_columns and put them in an array. If additional_colums is none, then empty array #}
+{%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
+
 {%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
 
 {%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
@@ -27,7 +31,7 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{%- set final_columns_to_select = [tracked_hashkey] + [src_ldts] + [src_rsrc] + [src_stg] -%}
+{%- set final_columns_to_select = [tracked_hashkey] + [src_ldts] + [src_rsrc] + [src_stg] + additional_columns -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -139,6 +143,9 @@ WITH
                 CAST({{ src_ldts }} AS {{ldts_default_dtype  }}) AS {{ src_ldts }},
                 CAST('{{ rsrc_static }}' AS {{ rsrc_default_dtype }} ) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }})  AS {{ src_stg }}
+                {% for col in additional_columns -%}
+                ,{{ col }}
+                {% endfor -%}
             FROM {{ ref(source_model.name) }} src
 
 
@@ -160,6 +167,9 @@ WITH
                 CAST({{ src_ldts }} AS {{ldts_default_dtype  }}) AS {{ src_ldts }},
                 CAST({{ src_rsrc }} AS {{ rsrc_default_dtype }}) AS {{ src_rsrc }},
                 CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }}) AS {{ src_stg }}
+                {% for col in additional_columns -%}
+                ,{{ col }}
+                {% endfor -%}
             FROM {{ ref(source_model.name) }} src
             {%- if is_incremental() and source_models | length == 1 and not disable_hwm %}
                 WHERE src.{{ src_ldts }} > (
@@ -191,6 +201,9 @@ source_new_union AS (
         {{ src_ldts }},
         {{ src_rsrc }},
         {{ src_stg }}
+        {% for col in additional_columns -%}
+        ,{{ col }}
+        {% endfor -%}
         FROM src_new_{{ source_number }}
 
         {%- if not loop.last %}

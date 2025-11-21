@@ -13,7 +13,7 @@
         - Can either track link- or hub-hashkeys
 #}
 
-{%- macro rec_track_sat(yaml_metadata=none, tracked_hashkey=none, source_models=none, src_ldts=none, src_rsrc=none, src_stg=none, disable_hwm=false) -%}
+{%- macro rec_track_sat(yaml_metadata=none, tracked_hashkey=none, source_models=none, src_ldts=none, src_rsrc=none, src_stg=none, disable_hwm=false, additional_columns=none) -%}
 
     {% set tracked_hashkey_description = "
     tracked_hashkey::string         The name of the hashkey column you want to track. Needs to be available in the underlying staging layer. If you want to track multiple
@@ -73,12 +73,19 @@
     src_stg::string                 Name of the source stage model. Is optional, will use the global variable  'datavault4dbt.stg_alias'.
     " %}
 
+    {% set additional_columns_description = "
+    additional_columns::list | string       Additional columns from source system or derived columns which should be part of the rec_track_sat.
+                                            The columns need to be available in all source models.
+                                            Optional parameter, defaults to empty list.
+    " %}
+
     {%- set tracked_hashkey = datavault4dbt.yaml_metadata_parser(name='tracked_hashkey', yaml_metadata=yaml_metadata, parameter=tracked_hashkey, required=True, documentation=tracked_hashkey_description) -%}
     {%- set source_models   = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
     {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
     {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
     {%- set src_stg         = datavault4dbt.yaml_metadata_parser(name='src_stg', yaml_metadata=yaml_metadata, parameter=src_stg, required=False, documentation=src_stg_description) -%}
     {%- set disable_hwm     = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
+    {%- set additional_columns      = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
@@ -106,6 +113,7 @@
                                                                       src_ldts=src_ldts,
                                                                       src_rsrc=src_rsrc,
                                                                       src_stg=src_stg,
-                                                                      disable_hwm=disable_hwm)) }}
+                                                                      disable_hwm=disable_hwm,
+                                                                      additional_columns=additional_columns)) }}
 
 {%- endmacro -%}
