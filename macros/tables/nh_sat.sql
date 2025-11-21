@@ -8,7 +8,7 @@
         - High-Perfomance loading of non-historized satellite data
 #}
 
-{%- macro nh_sat(yaml_metadata=none, parent_hashkey=none, src_payload=none, source_model=none, src_ldts=none, src_rsrc=none, source_is_single_batch=false) -%}
+{%- macro nh_sat(yaml_metadata=none, parent_hashkey=none, src_payload=none, source_model=none, src_ldts=none, src_rsrc=none, source_is_single_batch=false, additional_columns=none) -%}
 
     {% set parent_hashkey_description = "
     parent_hashkey::string          Name of the hashkey column inside the stage of the object that this satellite is attached to.
@@ -47,12 +47,19 @@
                                     Needs to use the same column name as defined as alias inside the staging model.
     " %}
 
+        {% set additional_columns_description = "
+    additional_columns::list | string       Additional columns from source system or derived columns which should be part of the nh_sat.
+                                            The columns need to be available in all source models.
+                                            Optional parameter, defaults to empty list.
+    " %}
+
     {%- set parent_hashkey          = datavault4dbt.yaml_metadata_parser(name='parent_hashkey', yaml_metadata=yaml_metadata, parameter=parent_hashkey, required=True, documentation=parent_hashkey_description) -%}
     {%- set src_payload             = datavault4dbt.yaml_metadata_parser(name='src_payload', yaml_metadata=yaml_metadata, parameter=src_payload, required=True, documentation=src_payload_description) -%} 
     {%- set source_model            = datavault4dbt.yaml_metadata_parser(name='source_model', yaml_metadata=yaml_metadata, parameter=source_model, required=True, documentation=source_model_description) -%}
     {%- set src_ldts                = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
     {%- set src_rsrc                = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
     {%- set source_is_single_batch  = datavault4dbt.yaml_metadata_parser(name='source_is_single_batch', yaml_metadata=yaml_metadata, parameter=source_is_single_batch, required=False, documentation='Whether the source contains only one batch. Optional, default False.') -%}
+    {%- set additional_columns      = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
@@ -72,13 +79,14 @@
                                          src_rsrc=src_rsrc,
                                          source_model=source_model,
                                          source_is_single_batch=source_is_single_batch) }}
-    {%- endif %}                                         
+    {%- endif %}
 
     {{ adapter.dispatch('nh_sat', 'datavault4dbt')(parent_hashkey=parent_hashkey,
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
                                          source_model=source_model,
-                                         source_is_single_batch=source_is_single_batch) }}
+                                         source_is_single_batch=source_is_single_batch,
+                                         additional_columns=additional_columns) }}
 
 {%- endmacro -%}
