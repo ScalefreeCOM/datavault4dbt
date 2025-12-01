@@ -101,7 +101,6 @@
         SELECT 
             hub.{{ hashkey }},
             {{ datavault4dbt.hash_columns(columns=hash_config_dict) }}
-            CONCAT(hub.{{ hashkey }}, '_TEST') as {{ new_hashkey_name }}
         FROM {{ hub_relation }} hub  
         WHERE hub.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
 
