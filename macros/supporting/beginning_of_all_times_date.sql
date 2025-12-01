@@ -246,7 +246,7 @@
 {%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
     {%- set beginning_of_all_times_date = global_var -%}
 {%- else -%}
-    {%- set beginning_of_all_times_date = "0001-01-01" -%}
+    {%- set beginning_of_all_times_date = "1901-01-01" -%}
 {%- endif -%}
 
 {{ return(beginning_of_all_times_date) }}
