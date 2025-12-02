@@ -10,10 +10,10 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
 
 
-{% macro fabric__rehash_single_link(link, link_hashkey, hub_config, additional_hash_input_cols=[], overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
+{% macro postgres__rehash_single_link(link, link_hashkey, hub_config, additional_hash_input_cols=[], overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
     {% set new_link_hashkey_name = link_hashkey ~ '_new' %}
-    {% set hash_datatype = var('datavault4dbt.hash_datatype', 'VARBINARY(8000)') %}
+    {% set hash_datatype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') %}
     {% set ns = namespace(hub_hashkeys=[], new_hash_columns=[{"name": new_link_hashkey_name, "data_type": hash_datatype}], columns_to_drop=[{"name": link_hashkey + '_deprecated'}]) %}
 
     {% set link_relation = ref(link) %}
@@ -93,10 +93,10 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 {% endmacro %}
 
 
-{% macro fabric__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
+{% macro postgres__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
 
     {% set ns = namespace(link_hashkey_input_cols=[], hash_config_dict={}, update_sql_part1='', update_sql_part2='') %}
-
+    
     {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
 
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
@@ -104,7 +104,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {% set ns.update_sql_part1 %}
 
-    UPDATE {{ link_relation }}
+    UPDATE {{ link_relation }} link
     SET 
         {{ new_link_hashkey_name }} = nh.{{ new_link_hashkey_name }}
 
@@ -183,7 +183,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         FROM {{ link_relation }} link
         WHERE link.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
     ) nh
-    WHERE {{ link_relation }}.{{ link_hashkey }} = nh.{{ link_hashkey }}
+    WHERE link.{{ link_hashkey }} = nh.{{ link_hashkey }}
     {% endset %}
 
     {% set update_sql = ns.update_sql_part1 + ns.update_sql_part2 + update_sql_part3 %}
