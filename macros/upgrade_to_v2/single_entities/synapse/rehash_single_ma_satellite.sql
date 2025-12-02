@@ -4,6 +4,7 @@
 #}
 
 {% macro synapse__rehash_single_ma_satellite(ma_satellite, hashkey, hashdiff, ma_keys, payload, parent_entity, business_keys, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
+
     {% set ma_satellite_relation = ref(ma_satellite) %}
     {% set parent_relation = ref(parent_entity) %}
 
@@ -12,38 +13,20 @@
     {% set new_hashkey_name = hashkey + '_new' %}
     {% set new_hashdiff_name = hashdiff + '_new' %}
 
-    {% set old_hashkey_name = hashkey + '_deprecated' %}
-    {% set old_hashdiff_name = hashdiff + '_deprecated' %}
+    {% set hash_datatype = var('datavault4dbt.hash_datatype', 'VARBINARY(8000)') %}
 
-    {% set hash_datatype = var('datavault4dbt.hash_datatype', 'VARBINARY(8000') %}
-
-    {# Create definition of deprecated columns for ALTER statement. #}
-    {% set old_hash_columns = [
-        {"name": old_hashkey_name,
+    {# Create definition of new columns for ALTER statement. #}
+    {% set new_hash_columns = [
+        {"name": new_hashkey_name,
          "data_type": hash_datatype},
-        {"name": old_hashdiff_name, 
+        {"name": new_hashdiff_name, 
          "data_type": hash_datatype}
     ]%}
 
-    {# ALTER existing satellite to add deprecated hashkey and deprecated hashdiff. #}
+    {# ALTER existing satellite to add new hashkey and new hashdiff. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=old_hash_columns) }}
+    {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
-
-    {# Update SQL statement to copy hashkey to _depr column  #}
-    {% set depr_update_sql %}
-        UPDATE {{ ma_satellite_relation }}
-        SET 
-            {{ old_hashkey_name }} = {{ hashkey }},
-            {{ old_hashdiff_name }} = {{ hashdiff }};
-
-    {% endset %}
-
-    {# Executing the UPDATE statement. #}
-    {{ log('Executing UPDATE statement...', output_logs) }}
-    {{ '/* UPDATE STATEMENT FOR ' ~ hub ~ '\n' ~ depr_update_sql ~ '*/' }}
-    {% do run_query(depr_update_sql) %}
-    {{ log('UPDATE statement completed!', output_logs) }}
 
     {# Ensuring business_keys is a list. #}
     {% if business_keys is iterable and business_keys is not string %}
@@ -59,48 +42,18 @@
         {% set ma_keys = [ma_keys] %}
     {% endif %}
 
-    {% set is_hashdiff = true %}
-
     {# Adding prefixes to column names for proper selection. #}
     {% set prefixed_payload = datavault4dbt.prefix(columns=payload, prefix_str='sat').split(',') %}
     {% set prefixed_business_keys = datavault4dbt.prefix(columns=business_key_list, prefix_str='parent').split(',') %}
 
-    {% if overwrite_hash_values %}
-
-        {% set new_hashkey_name = hashkey %}
-        {% set new_hashdiff_name = hashdiff %}
-        
-        {% set hash_config_dict = {
+    {% set hash_config_dict = {
             new_hashkey_name: prefixed_business_keys, 
             new_hashdiff_name: {
-                "is_hashdiff": is_hashdiff, 
+                "is_hashdiff": true, 
                 "columns": prefixed_payload
                 }
             } %}
-            
-    {% else %}
 
-        {% set hash_config_dict = {
-            new_hashkey_name: prefixed_business_keys, 
-            new_hashdiff_name: {
-                "is_hashdiff": is_hashdiff, 
-                "columns": prefixed_payload
-                }
-            } %}        
-        
-        {% set new_hash_columns = [
-            {"name": new_hashkey_name,
-            "data_type": hash_datatype},
-            {"name": new_hashdiff_name, 
-            "data_type": hash_datatype}
-        ]%}
-
-        {# ALTER existing satellite to add new hashkey and new hashdiff. #}
-        {{ log('Executing ALTER TABLE statement...', output_logs) }}
-        {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
-        {{ log('ALTER TABLE statement completed!', output_logs) }}
-
-    {% endif %}
 
     {# generating the UPDATE statement that populates the new columns. #}
     {% set update_sql = datavault4dbt.ma_satellite_update_statement(ma_satellite_relation=ma_satellite_relation,
@@ -120,14 +73,28 @@
     {{ log('UPDATE statement completed!', output_logs) }}
 
     {% set columns_to_drop = [
-        {"name": old_hashkey_name},
-        {"name": old_hashdiff_name}
+        {"name": hashkey + '_deprecated'},
+        {"name": hashdiff + '_deprecated'}
     ]%}
 
-    {# Deleting old hashkey #}
-    {% if drop_old_values or not overwrite_hash_values %}
-        {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
-        {{ log('Deprecated hashkey column removed!', output_logs) }}
+    {# renaming existing hash columns #}
+    {% if overwrite_hash_values %}
+        {{ log('Replacing existing hash values with new ones...', output_logs) }}
+
+        {% set overwrite_sql %}
+        {{ datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
+        {{ datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated') }}
+        {{ datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
+        {{ datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff ) }}
+        {% endset %}
+
+        {% do run_query(overwrite_sql) %}
+        
+        {% if drop_old_values %}
+            {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
+            {{ log('Existing Hash values overwritten!', true) }}
+        {% endif %}
+
     {% endif %}
 
     {{ return(columns_to_drop) }}
@@ -138,7 +105,7 @@
 
 {% macro synapse__ma_satellite_update_statement(ma_satellite_relation, new_hashkey_name, new_hashdiff_name, hashkey, business_key_list, ma_keys, ldts_col, hash_config_dict, parent_relation) %}
 
-    {% set ns = namespace(parent_already_rehashed=false) %}
+    {% set ns = namespace(update_where_condition='', parent_already_rehashed=false) %}
 
     {% set prefixed_hashkey = 'sat.' ~ hashkey %}
 
@@ -146,14 +113,6 @@
 
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
-
-    {% set old_hashkey_name = hashkey + '_deprecated' %}
-    
-    {% set old_hashdiff_name = new_hashdiff_name %}
-    {% if old_hashdiff_name.endswith('_new') %}
-        {% set old_hashdiff_name = old_hashdiff_name[:-4] %}
-    {% endif %}
-    {% set old_hashdiff_name = old_hashdiff_name + '_deprecated' %}
 
 
     {#
@@ -166,56 +125,63 @@
     {% for column in all_parent_columns %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('Parent hub already rehashed for ' ~ ma_satellite_relation.name, output_logs) }}
+            {{ log('Parent already hashed, using rehashed value for ' ~ ma_satellite_relation.name, false) }}
         {% endif %}
     {% endfor %}
 
     {% if ns.parent_already_rehashed %}
-        {% set join_hashkey_col = old_hashkey_name %}
+        {% set join_hashkey_col = hashkey + '_deprecated' %}
+        {% set select_hashkey_col = hashkey %}
     {% else %}
         {% set join_hashkey_col = hashkey %}
+        {% set select_hashkey_col = new_hashkey_name %}
     {% endif %}
 
+ 
     {% set update_sql %}
 
         WITH calculate_hd_correctly AS (
             SELECT 
-                sat.{{ old_hashkey_name }},
+                sat.{{ hashkey }},
                 sat.{{ ldts_col }},
-     
+                {% if new_hashkey_name not in hash_config_dict.keys() %}
+                    {# If Business Keys are not defined for parent entity, use new hashkey already existing in parent entitiy. #}
+                    parent.{{ select_hashkey_col }} as {{ new_hashkey_name }},
+                {% endif %}
                 {{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=ma_keys) }}
-
             FROM {{ ma_satellite_relation }} sat
             LEFT JOIN (
-                SELECT 
+                SELECT
                     {{ join_hashkey_col }},
-                    {{ datavault4dbt.print_list(business_key_list) }}
-                FROM {{ parent_relation }} 
+                    {{ datavault4dbt.print_list(business_key_list)}}
+                FROM {{ parent_relation }}
             ) parent
                 ON sat.{{ hashkey }} = parent.{{ join_hashkey_col }}
             WHERE sat.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
-            GROUP BY sat.{{ old_hashkey_name }},
+            GROUP BY sat.{{ hashkey }},
                      sat.{{ ldts_col }},
                      {{ datavault4dbt.print_list(business_key_list, src_alias='parent') }} 
-
+                     {% if new_hashkey_name not in hash_config_dict.keys() %}
+                     , parent.{{ select_hashkey_col }}                 
+                     {% endif %}         
             UNION ALL
-             
+                
             SELECT
-                sat.{{ old_hashkey_name }},
+                sat.{{ hashkey }},
                 sat.{{ ldts_col }},
-                sat.{{ old_hashkey_name }} AS {{ new_hashkey_name }},
-                sat.{{ old_hashdiff_name }} AS {{ new_hashdiff_name }}
+                sat.{{ hashkey }} AS {{ new_hashkey_name }},
+                sat.{{ new_hashdiff_name | replace('_new', '') }} AS {{ new_hashdiff_name }}
             FROM {{ ma_satellite_relation }} sat
-            WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')          
-        ) 
-        
+            WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')   
+        )
+
         UPDATE {{ ma_satellite_relation }}
         SET 
-            {{ new_hashkey_name}} = nh.{{ new_hashkey_name}},
-            {{ new_hashdiff_name}} = nh.{{ new_hashdiff_name }}  
+            {{ new_hashkey_name }} = nh.{{ new_hashkey_name}},
+            {{ new_hashdiff_name }} = nh.{{ new_hashdiff_name }}
         FROM {{ ma_satellite_relation }} sat
         LEFT JOIN calculate_hd_correctly nh
-            ON sat.{{ old_hashkey_name }} = nh.{{ old_hashkey_name }}
+            ON sat.{{ hashkey }} = nh.{{ hashkey }}
             AND sat.{{ ldts_col }} = nh.{{ ldts_col }}
     
     {% endset %}
