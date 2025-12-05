@@ -53,10 +53,10 @@ WITH
     SELECT 
       {{ sdts }}
       {%- for satellite in sat_names %}
-        , max_{{ ldts }}_{{ satellite }}
+        , COALESCE(max_{{ ldts }}_{{ satellite }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) as max_{{ ldts }}_{{ satellite }}
       {%- endfor %}
       {% if datavault4dbt.is_something(snapshot_trigger_column) %}
-        , true as {{ snapshot_trigger_column }}
+        , true as {{ snapshot_trigger_column }},
       {% endif %}
     FROM sdts_max_ldts 
     WHERE
@@ -144,7 +144,7 @@ pit_records AS (
     {% if snapshot_optimization and is_incremental() %}
             AND (  
         {% for satellite in sat_names %} 
-            snap.max_{{ ldts }}_{{ satellite }} < {{ satellite }}.{{ ldts }}
+            snap.max_{{ ldts }}_{{ satellite }} <= {{ satellite }}.{{ ldts }}
           {% if not loop.last %}
             OR
           {% endif %}
