@@ -52,8 +52,11 @@ WITH
   relevant_snapshots as ( --filter to snapshots which have to be handled
     SELECT 
       {{ sdts }}
+      {%- for satellite in sat_names %}
+        , max_{{ ldts }}_{{ satellite }}
+      {%- endfor %}
       {% if datavault4dbt.is_something(snapshot_trigger_column) %}
-      , true as {{ snapshot_trigger_column }}
+        , true as {{ snapshot_trigger_column }}
       {% endif %}
     FROM sdts_max_ldts 
     WHERE
@@ -66,14 +69,6 @@ WITH
     {%- endfor %}
   ),
 
-  existing_dimension_keys AS (
-
-    SELECT
-      {{ dimension_key }}
-    FROM {{ this }}
-    WHERE {{ sdts }} IN (select {{ sdts }} FROM relevant_snapshots)
-    
-  ),
   {%- else %}
   existing_dimension_keys AS (
 
@@ -142,9 +137,20 @@ pit_records AS (
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
                 AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
+        WHERE 1 = 1
     {% if datavault4dbt.is_something(snapshot_trigger_column) %}
-        WHERE snap.{{ snapshot_trigger_column }}
+         AND snap.{{ snapshot_trigger_column }}
     {%- endif %}
+    {% if snapshot_optimization and is_incremental() %}
+            AND (  
+        {% for satellite in sat_names %} 
+            snap.max_{{ ldts }}_{{ satellite }} < {{ satellite }}.{{ ldts }}
+          {% if not loop.last %}
+            OR
+          {% endif %}
+        {% endfor %}
+            )
+    {% endif %}
 
 ),
 
@@ -152,7 +158,7 @@ records_to_insert AS (
 
     SELECT DISTINCT *
     FROM pit_records
-    {%- if is_incremental() %}
+    {%- if is_incremental() and not snapshot_optimization %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
     {% endif %}
     ORDER BY {{ sdts }}
