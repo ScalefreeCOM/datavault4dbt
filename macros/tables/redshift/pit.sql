@@ -28,24 +28,13 @@
 
 {{ datavault4dbt.prepend_generated_by() }}
 
+
 WITH
 
-{%- if is_incremental() %}
-
-existing_dimension_keys AS (
-
-    SELECT
-        {{ dimension_key }}
-    FROM {{ this }}
-
-),
-
-{%- endif %}
-
 pit_records AS (
-
-    SELECT
+    SELECT DISTINCT
         
+        snap.{{ sdts }},
         {% if datavault4dbt.is_something(pit_type) -%}
             CAST({{ datavault4dbt.as_constant(pit_type) }} as {{ string_default_dtype }} ) as type,
         {%- endif %}
@@ -54,23 +43,22 @@ pit_records AS (
         {%- endif %}
         {{ datavault4dbt.hash(columns=hashed_cols,
                     alias=dimension_key,
-                    is_hashdiff=false)   }} ,
+                    is_hashdiff=false)   }},
         te.{{ hashkey }},
-        snap.{{ sdts }},
         {% for satellite in sat_names %}
-          {% if refer_to_ghost_records %}
+            {% if refer_to_ghost_records %}
             COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite }},
             COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
-          {% else %}
+            {% else %}
             {{ satellite }}.{{ hashkey }} AS hk_{{ satellite }},
             {{ satellite }}.{{ ldts }} AS {{ ldts }}_{{ satellite }}
-          {% endif %}
+            {% endif %}
         {{- "," if not loop.last }}
         {%- endfor %}
 
     FROM
             {{ ref(tracked_entity) }} te
-            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}            
+            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
         FULL OUTER JOIN
             {{ ref(snapshot_relation) }} snap
                 ON snap.{{ snapshot_trigger_column }} = true
@@ -98,20 +86,14 @@ pit_records AS (
     {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
         WHERE snap.{{ snapshot_trigger_column }}
     {%- endif %}
-
-),
-
-records_to_insert AS (
-
-    SELECT DISTINCT *
-    FROM pit_records
-    {%- if is_incremental() %}
-    WHERE NOT EXISTS (SELECT 1 FROM existing_dimension_keys 
-                        WHERE existing_dimension_keys.{{ dimension_key }} = pit_records.{{ dimension_key }})
-    {% endif -%}
-
 )
 
-SELECT * FROM records_to_insert
+select
+    *
+from pit_records
+    {%- if is_incremental() %}
+        WHERE NOT EXISTS (SELECT 1 FROM {{ this }} current_pit
+                        WHERE current_pit.{{ dimension_key }} = pit_records.{{ dimension_key }})
+    {% endif -%}
 
 {%- endmacro -%}
