@@ -18,6 +18,16 @@
 
 {% endmacro %}
 
+{% macro databricks__get_rename_column_sql(relation, old_col_name, new_col_name) %}
+
+    {% set query %}
+    ALTER TABLE {{ relation.render() }} RENAME COLUMN {{ old_col_name }} TO {{ new_col_name }};
+    {% endset %}
+
+    {{ return(query) }}
+
+{% endmacro %}
+
 {% macro snowflake__get_rename_column_sql(relation, old_col_name, new_col_name) %}
 
     {% if relation.is_dynamic_table -%}

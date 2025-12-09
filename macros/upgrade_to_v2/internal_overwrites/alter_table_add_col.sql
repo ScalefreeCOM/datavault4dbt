@@ -36,6 +36,38 @@
 
 {% endmacro %}
 
+{% macro databricks__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {% if add_columns or remove_columns %}
+
+    {# 1. Handle ADD COLUMNS (Can be done in one batch) #}
+    {% if add_columns %}
+        {% set add_sql -%}
+            ALTER TABLE {{ relation.render() }} ADD COLUMNS (
+              {% for column in add_columns %}
+                {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+              {% endfor %}
+            )
+        {%- endset %}
+        {{ log('Executing ADD COLUMNS on Databricks: ' ~ add_sql, true) }}
+        {% do run_query(add_sql) %}
+    {% endif %}
+
+    {# 2. Handle REMOVE COLUMNS (Execute sequentially to avoid Syntax Errors) #}
+    {% if remove_columns %}
+        {% for column in remove_columns %}
+            {% set remove_sql -%}
+                ALTER TABLE {{ relation.render() }} DROP COLUMN IF EXISTS {{ column.name }}
+            {%- endset %}
+            {{ log('Executing DROP COLUMN on Databricks: ' ~ remove_sql, true) }}
+            {% do run_query(remove_sql) %}
+        {% endfor %}
+    {% endif %}
+
+    {% endif %}
+
+{% endmacro %}
+
 {% macro snowflake__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {% if relation.is_dynamic_table -%}
