@@ -1,13 +1,16 @@
 {% macro source_model_should_be_selected(source_model_name) -%}
 
-    {{ log('contect_project_name: ' ~ context['project_name'], false) }}
+    {% set ns = namespace(selected_models=[]) %}
+    
+    {% set source_model_name = source_model_name.replace('.','_')%}
+    {% for item in selected_resources %}
+        {% set model_name = item.split('.')[2:] | join('_') %}
 
-    {% set model_id = 'model.' + context['project_name'] + '.' + source_model_name %}
+        {% set ns.selected_models = ns.selected_models + [model_name] %}
+    {% endfor %}
 
-    {{ log('model_id: ' ~ model_id, false) }}
     {{ log('selected_resources: ' ~ selected_resources, false) }}
-    {% set model_is_selected = (model_id in selected_resources) %}
-
+    {% set model_is_selected = (source_model_name in ns.selected_models) %}
     {{ return(model_is_selected) }}
 
 {%- endmacro -%}
