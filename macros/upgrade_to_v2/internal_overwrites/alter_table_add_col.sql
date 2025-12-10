@@ -263,3 +263,35 @@
     {% endif %}
 
 {% endmacro %}
+
+{% macro exasol__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {# Handle adding columns #}
+    {% if add_columns %}
+        {% for column in add_columns %}
+            {% set sql -%}
+                ALTER TABLE {{ relation.render() }} 
+                ADD COLUMN {{ column.name }} {{ column.data_type }};
+            {%- endset -%}
+            
+            {{ log('alter sql (add column): ' ~ sql, true)}}
+            
+            {% do run_query(sql) %}
+        {% endfor %}
+    {% endif %}
+    
+    {# Handle removing columns #}
+    {% if remove_columns %}
+        {% for column in remove_columns %}
+            {% set sql -%}
+                ALTER TABLE {{ relation.render() }} 
+                DROP COLUMN {{ column.name }}
+            {%- endset -%}
+            
+            {{ log('alter sql (drop column): ' ~ sql, false)}}
+            
+            {% do run_query(sql) %}
+        {% endfor %}
+    {% endif %}
+
+{% endmacro %}
