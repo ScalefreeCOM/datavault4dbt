@@ -291,19 +291,17 @@ records_to_insert AS (
 )
 
 SELECT 
-    {{ tracked_hashkey }},
-    {{ src_ldts }},
-    {{ src_rsrc }},
-    cast({{ is_active_alias }} as {{ is_active_datatype }}) as {{ is_active_alias }}
+    ri.{{ tracked_hashkey }},
+    ri.{{ src_ldts }},
+    ri.{{ src_rsrc }},
+    cast(ri.{{ is_active_alias }} as {{ is_active_datatype }}) as {{ is_active_alias }}
 FROM records_to_insert ri
 
 {% if is_incremental() %}
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM {{ this }} t
-    WHERE t.{{ tracked_hashkey }} = ri.{{ tracked_hashkey }}
-        AND t.{{ src_ldts }} = ri.{{ src_ldts }}
-)
+LEFT JOIN {{ this }} t
+    ON t.{{ tracked_hashkey }} = ri.{{ tracked_hashkey }}
+    AND t.{{ src_ldts }} = ri.{{ src_ldts }}
+WHERE t.{{ tracked_hashkey }} IS NULL
 {% endif %}
 
 {%- endmacro -%}
