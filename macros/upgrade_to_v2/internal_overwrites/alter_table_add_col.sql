@@ -274,7 +274,7 @@
                 ADD COLUMN {{ column.name }} {{ column.data_type }};
             {%- endset -%}
             
-            {{ log('alter sql (add column): ' ~ sql, true)}}
+            {{ log('alter sql (add column): ' ~ sql, false)}}
             
             {% do run_query(sql) %}
         {% endfor %}

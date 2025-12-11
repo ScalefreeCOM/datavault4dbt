@@ -61,24 +61,27 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% if overwrite_hash_values %}
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
-        {% set overwrite_sql %}
         {# Rename Link Hashkey (Calls the translated macro) #}
-            {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=link_hashkey, new_col_name=link_hashkey + '_deprecated') }}
-            {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=new_link_hashkey_name, new_col_name=link_hashkey) }}
-            
-            {# Rename All Hub Hashkeys (Calls the translated macro) #}
-            {% for hub_hashkey in ns.hub_hashkeys %}
-                {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.current_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name + '_deprecated') }}
-                {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.new_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name) }}
+        {% set overwrite_sql1 = datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=link_hashkey, new_col_name=link_hashkey + '_deprecated') %}
+        {% do run_query(overwrite_sql1) %}
 
-                {# Prepare list of 'deprecated' hub hashkey columns to drop them later on. #}
-                {% do ns.columns_to_drop.append({"name": hub_hashkey.current_hashkey_name + '_deprecated'}) %}
+        {% set overwrite_sql2 = datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=new_link_hashkey_name, new_col_name=link_hashkey) %}
+        {% do run_query(overwrite_sql2) %}
+        
+        {# Rename All Hub Hashkeys (Calls the translated macro) #}
+        {% for hub_hashkey in ns.hub_hashkeys %}
 
-            {% endfor %}
+            {% set overwrite_sql1 = datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.current_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name + '_deprecated') %}
+            {% do run_query(overwrite_sql1) %}
 
-        {% endset %}
+            {% set overwrite_sql2 = datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.new_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name) %}
+            {% do run_query(overwrite_sql2) %}
 
-        {% do run_query(overwrite_sql) %}
+            {# Prepare list of 'deprecated' hub hashkey columns to drop them later on. #}
+            {% do ns.columns_to_drop.append({"name": hub_hashkey.current_hashkey_name + '_deprecated'}) %}
+
+        {% endfor %}
+
         
         {% if drop_old_values %}
             {{ datavault4dbt.alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
@@ -94,7 +97,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
 {% macro exasol__link_update_statement(link_relation, hub_hashkeys, link_hashkey, new_link_hashkey_name, additional_hash_input_cols) %}
 
-    {% set ns = namespace(link_hashkey_input_cols=[], hash_config_dict={}, update_sql_set_clause='') %}
+    {% set ns = namespace(link_hashkey_input_cols=[], hash_config_dict={}, update_sql='', update_sql_set_clause='') %}
 
     {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
 
@@ -121,7 +124,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {{ log('hash_config: ' ~ ns.hash_config_dict, false)}}
 
-    {% set update_sql %}
+    {% set ns.update_sql %}
     MERGE INTO {{ link_relation }} hub
     USING (
 
@@ -131,7 +134,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         FROM {{ link_relation }} link
     {% endset %}
         
-    {% set update_sql = update_sql ~ '\n' %}
+    {% set ns.update_sql = ns.update_sql ~ '\n' %}
     
     {% for hub in hub_hashkeys %}
             
@@ -151,11 +154,11 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
             {% set join_hashkey_col = hub.current_hashkey_name %}
         {% endif %}
 
-        {% set update_sql = update_sql + '\n LEFT JOIN ' + ref(hub.hub_name).render() + ' ' + hub.hub_join_alias + '\n    ON link.' + hub.current_hashkey_name + ' = ' + hub.hub_join_alias + '.' + join_hashkey_col %}
+        {% set ns.update_sql = ns.update_sql + '\n LEFT JOIN ' + ref(hub.hub_name).render() + ' ' + hub.hub_join_alias + '\n    ON link.' + hub.current_hashkey_name + ' = ' + hub.hub_join_alias + '.' + join_hashkey_col %}
 
     {% endfor %}
 
-    {% set update_sql = update_sql ~ '\n' %}
+    {% set ns.update_sql = ns.update_sql ~ '\n' %}
     
     {% set update_sql_part3 %}
         WHERE link.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
@@ -181,8 +184,8 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
             {{ ns.update_sql_set_clause }};
     {% endset %}
 
-    {% set update_sql = update_sql + update_sql_part3 %}
+    {% set ns.update_sql = ns.update_sql + update_sql_part3 %}
 
-    {{ return(update_sql) }}
+    {{ return(ns.update_sql) }}
 
 {% endmacro %}

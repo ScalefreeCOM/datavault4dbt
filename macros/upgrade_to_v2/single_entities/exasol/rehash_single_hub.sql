@@ -35,7 +35,7 @@
                                                            hash_config_dict=hash_config_dict) %}
 
     {# Executing the UPDATE/MERGE statement. #}
-    {{ log('Executing MERGE statement...'~update_sql, output_logs) }}
+    {{ log('Executing MERGE statement...', output_logs) }}
     {{ '/* MERGE STATEMENT FOR ' ~ hub ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('MERGE statement completed!', output_logs) }}
@@ -48,13 +48,12 @@
     {% if overwrite_hash_values %}
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
-        {% set overwrite_sql %}
-        {{ datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
-        {{ datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
-        {% endset %}
+        {% set overwrite_sql1 = datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') %}
+        {% do run_query(overwrite_sql1) %}
 
-        {% do run_query(overwrite_sql) %}
-        {{log(' columns overqeite') }}
+        {% set overwrite_sql2 = datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) %}
+        {% do run_query(overwrite_sql2) %}
+        
         {% if drop_old_values == 'true' %}
             {# Dropping the deprecated column (Calls the translated macro) #}
             {{ datavault4dbt.alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}

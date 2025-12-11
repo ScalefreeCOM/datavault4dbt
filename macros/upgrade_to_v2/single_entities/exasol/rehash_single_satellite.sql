@@ -85,14 +85,17 @@
     {% if overwrite_hash_values %}
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
-        {% set overwrite_sql %}
-        {{ datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
-        {{ datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated') }}
-        {{ datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
-        {{ datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff ) }}
-        {% endset %}
+        {% set overwrite_hkey1 = datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') %}
+        {% do run_query(overwrite_hkey1) %}
 
-        {% do run_query(overwrite_sql) %}
+        {% set overwrite_hkey2 = datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) %}
+        {% do run_query(overwrite_hkey2) %}
+
+        {% set overwrite_hdiff1 = datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated') %}
+        {% do run_query(overwrite_hdiff1) %}
+
+        {% set overwrite_hdiff2 = datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff ) %}
+        {% do run_query(overwrite_hdiff2) %}
         
         {% if drop_old_values %}
             {{ datavault4dbt.alter_relation_add_remove_columns(relation=satellite_relation, remove_columns=columns_to_drop) }}

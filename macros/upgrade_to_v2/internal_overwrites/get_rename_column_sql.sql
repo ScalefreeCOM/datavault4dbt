@@ -70,6 +70,8 @@
         ALTER TABLE {{ relation.render() }} RENAME COLUMN {{ old_col_name }} TO {{ new_col_name }};
     {% endset %}
 
+    {{ log(query, false) }}
+
     {{ return(query) }}
 
 {% endmacro %}
