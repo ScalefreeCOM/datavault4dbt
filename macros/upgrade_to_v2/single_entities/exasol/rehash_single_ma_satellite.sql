@@ -56,7 +56,6 @@
                      }
                  } %}
 
-
     {# generating the MERGE statement that populates the new columns. #}
     {% set update_sql = datavault4dbt.ma_satellite_update_statement(ma_satellite_relation=ma_satellite_relation,
                                                                    new_hashkey_name=new_hashkey_name,
@@ -69,7 +68,7 @@
                                                                    parent_relation=parent_relation) %}
 
     {# Executing the MERGE statement. #}
-    {{ log('Executing MERGE statement...'~update_sql, true) }}
+    {{ log('Executing MERGE statement...', output_logs) }}
     {{ '/* MERGE STATEMENT FOR ' ~ ma_satellite ~ '\n' ~ update_sql ~ '*/' }}
     {% do run_query(update_sql) %}
     {{ log('MERGE statement completed!', output_logs) }}
@@ -151,23 +150,17 @@
         SELECT 
             sat.{{ hashkey }},
             sat.{{ ldts_col }},
-            {# Include Multi-Active Keys in the SELECT for the MERGE ON clause #}
-            {# {{ datavault4dbt.print_list(ma_keys) }},  #}
-
             {% if new_hashkey_name not in hash_config_dict.keys() %}
                 {# If Business Keys are not defined for parent entity, use new hashkey already existing in parent entitiy. #}
-                parent.{{ select_hashkey_col }} as {{ new_hashkey_name }}
-                ,{{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=ma_keys) }}
-
+                parent.{{ select_hashkey_col }} as {{ new_hashkey_name }},
+                {{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=ma_keys) }}
             {% else %}
                 {%- set processed_hash_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.main_hashkey_dict) -%}
-                {{ datavault4dbt.hash_columns(columns=processed_hash_columns) }}
+                {{ datavault4dbt.hash_columns(columns=processed_hash_columns) }},
                 
                 {% set processed_hashdiff_columns = datavault4dbt.process_hash_column_excludes(tmp_ns.hashdiff_dict) -%}
-                {{ datavault4dbt.hash_columns(columns=processed_hashdiff_columns, multi_active_key=ma_keys, main_hashkey_column=prefixed_hashkey) }},
-      
+                {{ datavault4dbt.hash_columns(columns=processed_hashdiff_columns, multi_active_key=ma_keys, main_hashkey_column=prefixed_hashkey) }}
             {% endif %}
-            
             
         FROM {{ ma_satellite_relation }} sat
         LEFT JOIN (
@@ -180,13 +173,8 @@
             ON sat.{{ hashkey }} = parent.{{ join_hashkey_col }}
         WHERE sat.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
         
-        {#
-           The GROUP BY in the original macro is unusual for this specific SELECT
-           but is retained for fidelity. Exasol supports the syntax.
-        #}
         GROUP BY sat.{{ hashkey }},
                  sat.{{ ldts_col }},
-                 {# {{ datavault4dbt.print_list(ma_keys) }}, #}
                  {{ datavault4dbt.print_list(business_key_list, src_alias='parent') }}
                 {% if new_hashkey_name not in hash_config_dict.keys() %}
                  , parent.{{ select_hashkey_col }}                 
@@ -197,26 +185,15 @@
         SELECT
             sat.{{ hashkey }},
             sat.{{ ldts_col }},
-            {# Include Multi-Active Keys in the SELECT for the MERGE ON clause #}
-            {{ datavault4dbt.print_list(ma_keys) }},
             sat.{{ hashkey }} AS {{ new_hashkey_name }},
             sat.{{ new_hashdiff_name | replace('_new', '') }} AS {{ new_hashdiff_name }}
         FROM {{ ma_satellite_relation }} sat
         WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')          
                     
     ) nh
-    {# Build the ON clause using Hashkey, LDTS, and MA Keys #}
     ON sat.{{ ldts_col }} = nh.{{ ldts_col }}
     AND sat.{{ hashkey }} = nh.{{ hashkey }}
     {% endset %}
-
-    {# Add the multi-active keys to the ON condition #}
-    {% for ma_key in ma_keys %}
-        {% set where_condition %}
-        AND sat.{{ datavault4dbt.escape_column_names(ma_key) }} = nh.{{ datavault4dbt.escape_column_names(ma_key) }}
-        {% endset %}
-        {% set ns.update_sql = ns.update_sql + where_condition %}
-    {% endfor %}
 
     {# Add the final update statement #}
     {% set update_sql_set_clause %}
