@@ -94,6 +94,12 @@
     {%- set ledts = datavault4dbt.replace_standard(ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
     {%- set sdts = datavault4dbt.replace_standard(sdts, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
+    {# For Fusion static_analysis overwrite #}
+    {% set static_analysis_config = datavault4dbt.get_static_analysis_config('pit') %}
+    {%- if datavault4dbt.is_something(static_analysis_config) -%}
+        {{ config(static_analysis='off') }}
+    {%- endif -%}
+
     {%- if var('datavault4dbt.use_premium_package', False) == True -%}
         {{ datavault4dbt_premium_package.insert_metadata_pit(pit_type=pit_type,
                                                         tracked_entity=tracked_entity,

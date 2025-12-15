@@ -156,6 +156,15 @@
   {%- if datavault4dbt.is_something(prejoined_columns) -%}
     {%- set prejoined_columns = datavault4dbt.process_prejoined_columns(prejoined_columns) -%}
   {%- endif -%}
+
+  {# For Fusion static_analysis overwrite #}
+  {% set static_analysis_config = datavault4dbt.get_static_analysis_config('stage') %}
+  {%- if datavault4dbt.is_something(static_analysis_config) -%}
+    {{ config(static_analysis='off') }}
+  {%- endif -%}
+
+  {# Insert metadata using premium package if available #}
+
   
   {%- if var('datavault4dbt.use_premium_package', False) == True -%}
     {{- datavault4dbt_premium_package.insert_metadata_stage(include_source_columns=include_source_columns,
