@@ -449,13 +449,17 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
     {%- if case_sensitive -%}
         {%- set standardise_prefix = "IFNULL(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg)-%}
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')){}), {}) AS {}".format(hash_bits, zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){})), {}) AS {}".format(hash_bits, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'))){}), {})".format(hash_bits, zero_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){})), {})".format(hash_bits, zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL(LOWER({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
-        {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]')){}), {}) AS {}".format(hash_bits, zero_key, alias)-%}
+        {%- if alias is not none -%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){})), {}) AS {}".format(hash_bits, zero_key, alias)-%}
+        {%- else -%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){})), {})".format(hash_bits, zero_key)-%}
+        {%- endif -%}
     {%- endif -%}
 
 {%- else -%}
@@ -469,7 +473,11 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STR
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL(CAST({}(NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg)-%}
-        {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}) as {}), CAST({} AS {})) AS {}".format(hash_bits, datatype, zero_key, datatype, alias)-%}
+        {%- if alias is not none -%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}) as {}), CAST({} AS {})) AS {}".format(hash_bits, datatype, zero_key, datatype, alias)-%}
+        {%- else -%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}) as {}), CAST({} AS {}))".format(hash_bits, datatype, zero_key, datatype)-%}
+        {%- endif -%}
     {%- endif -%}
 
 {%- endif -%}
