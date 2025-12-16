@@ -86,6 +86,12 @@
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
     {%- set src_stg = datavault4dbt.replace_standard(src_stg, 'datavault4dbt.stg_alias', 'stg') -%}
 
+    {# For Fusion static_analysis overwrite #}
+    {% set static_analysis_config = datavault4dbt.get_static_analysis_config('rec_track_sat') %}
+    {%- if datavault4dbt.is_something(static_analysis_config) -%}
+        {{ config(static_analysis='off') }}
+    {%- endif -%}
+
     {%- if var('datavault4dbt.use_premium_package', False) == True -%}
         {{ datavault4dbt_premium_package.insert_metadata_rec_sat(tracked_hashkey=tracked_hashkey,
                                                                       source_models=source_models,

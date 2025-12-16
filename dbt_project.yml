@@ -1,6 +1,6 @@
 name: datavault4dbt
-version: 1.4.1
-require-dbt-version: [">=1.0.0", "<2.0.0"]
+version: 1.13.0
+require-dbt-version: [">=1.0.0", "<3.0.0"]
 config-version: 2
 
 # This setting configures which "profile" dbt uses for this project.
@@ -36,6 +36,7 @@ vars:
 
   #General Configuration
   datavault4dbt.include_business_objects_before_appearance: false
+  datavault4dbt.enable_static_analysis_overwrite: true
   datavault4dbt.multi_source_models__execution_aware_loading: true
   
   #Ghost Record Configuration  
