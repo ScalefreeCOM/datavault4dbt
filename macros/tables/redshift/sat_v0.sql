@@ -50,8 +50,10 @@ latest_entries_in_sat AS (
         sat.{{ ns.hdiff_alias }}
     FROM 
         {{ this }} sat
-    WHERE {{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY sat.{{ parent_hashkey }} ORDER BY sat.{{ src_ldts }} DESC) = 1
+        
+    {{ datavault4dbt.filter_latest_entries_in_sat(parent_hashkey, src_ldts) }}
+
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1
 ),
 {%- endif %}
 

@@ -67,6 +67,9 @@ latest_entries_in_sat_prep AS (
     FROM {{ this }} tgt
     INNER JOIN distinct_incoming_hashkeys src
         ON tgt.{{ parent_hashkey }} = src.{{ parent_hashkey }}
+        
+    {{ datavault4dbt.filter_latest_entries_in_sat(parent_hashkey, src_ldts) }}
+
 ),
 
 latest_entries_in_sat AS (
