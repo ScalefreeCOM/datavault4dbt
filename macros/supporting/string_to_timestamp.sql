@@ -38,3 +38,7 @@
 {%- macro oracle__string_to_timestamp(format, timestamp) -%}
     TO_TIMESTAMP('{{ timestamp }}', '{{ format }}')
 {%- endmacro -%}
+
+{%- macro sqlserver__string_to_timestamp(format, timestamp) -%}
+    CONVERT(datetime2(6), '{{ timestamp }}', {{ format }})
+{%- endmacro -%}
