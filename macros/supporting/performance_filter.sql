@@ -125,6 +125,46 @@
 {% endmacro %}
 
 
+{% macro filter_distinct_target_hashkey_in_nh_sat() -%}
+    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_nh_sat', 'datavault4dbt')()) }}
+{%- endmacro %}
+
+{% macro default__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
+{% macro databricks__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
+{% macro exasol__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
+{% macro fabric__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
+{% macro oracle__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
+{% macro postgres__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
+{% macro redshift__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
+{% macro snowflake__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
+{% macro synapse__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
 
 {% macro filter_distinct_target_hashkey_in_hub() -%}
     {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_hub', 'datavault4dbt')()) }}

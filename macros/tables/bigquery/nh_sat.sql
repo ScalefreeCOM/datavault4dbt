@@ -44,6 +44,8 @@ distinct_hashkeys AS (
         {{ parent_hashkey }}
     FROM {{ this }}
 
+    {{ datavault4dbt.filter_distinct_target_hashkey_in_nh_sat() }}
+
     ),
 
 {%- endif %}
