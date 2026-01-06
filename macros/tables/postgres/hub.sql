@@ -234,6 +234,7 @@ earliest_hk_over_all_sources AS (
         SELECT
         {{ hashkey }}
         FROM {{ this }}
+        WHERE 1=1
 
         {{ datavault4dbt.filter_distinct_target_hashkey_in_hub() }}
 

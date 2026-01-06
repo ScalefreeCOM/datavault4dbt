@@ -1,42 +1,42 @@
-{% macro filter_latest_entries_in_sat(parent_hashkey, src_ldts) -%}
-    {{ return(adapter.dispatch('filter_latest_entries_in_sat', 'datavault4dbt')(parent_hashkey = parent_hashkey,
-                                                                         src_ldts = src_ldts
+{% macro filter_latest_entries_in_sat(parent_hashkey) -%}
+    {{ return(adapter.dispatch('filter_latest_entries_in_sat', 'datavault4dbt')(parent_hashkey = parent_hashkey
     )) }}
 {%- endmacro %}
 
-{% macro default__filter_latest_entries_in_sat(parent_hashkey, src_ldts) %}
+{% macro default__filter_latest_entries_in_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro databricks__filter_latest_entries_in_sat(parent_hashkey, src_ldts) %}
+{% macro databricks__filter_latest_entries_in_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro exasol__filter_latest_entries_in_sat(parent_hashkey, src_ldts) %}
+{% macro exasol__filter_latest_entries_in_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro fabric__filter_latest_entries_in_sat(parent_hashkey, src_ldts) %}
+{% macro fabric__filter_latest_entries_in_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro oracle__filter_latest_entries_in_sat(parent_hashkey, src_ldts) %}
+{% macro oracle__filter_latest_entries_in_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro postgres__filter_latest_entries_in_sat(parent_hashkey, src_ldts) %}
+{% macro postgres__filter_latest_entries_in_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro redshift__filter_latest_entries_in_sat(parent_hashkey, src_ldts) %}
-    WHERE {{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
+{% macro redshift__filter_latest_entries_in_sat(parent_hashkey) %}
+    AND {{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
 {% endmacro %}
 
-{% macro snowflake__filter_latest_entries_in_sat(parent_hashkey, src_ldts) %}
+{% macro snowflake__filter_latest_entries_in_sat(parent_hashkey) %}
+    AND {{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
 
 {% endmacro %}
 
-{% macro synapse__filter_latest_entries_in_sat(parent_hashkey, src_ldts) %}
+{% macro synapse__filter_latest_entries_in_sat(parent_hashkey) %}
 
 {% endmacro %}
 
@@ -125,44 +125,43 @@
 {% endmacro %}
 
 
-{% macro filter_distinct_target_hashkey_in_nh_sat() -%}
-    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_nh_sat', 'datavault4dbt')()) }}
+{% macro filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) -%}
+    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_nh_sat', 'datavault4dbt')(parent_hashkey = parent_hashkey)) }}
 {%- endmacro %}
 
-{% macro default__filter_distinct_target_hashkey_in_nh_sat() %}
+{% macro default__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro databricks__filter_distinct_target_hashkey_in_nh_sat() %}
+{% macro databricks__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro exasol__filter_distinct_target_hashkey_in_nh_sat() %}
+{% macro exasol__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro fabric__filter_distinct_target_hashkey_in_nh_sat() %}
+{% macro fabric__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro oracle__filter_distinct_target_hashkey_in_nh_sat() %}
+{% macro oracle__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro postgres__filter_distinct_target_hashkey_in_nh_sat() %}
+{% macro postgres__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro redshift__filter_distinct_target_hashkey_in_nh_sat() %}
+{% macro redshift__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
+    AND sat.{{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
+{% endmacro %}
+
+{% macro snowflake__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
 
 {% endmacro %}
 
-{% macro snowflake__filter_distinct_target_hashkey_in_nh_sat() %}
-
-{% endmacro %}
-
-{% macro synapse__filter_distinct_target_hashkey_in_nh_sat() %}
-
+{% macro synapse__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
 {% endmacro %}
 
 
