@@ -11,7 +11,7 @@
         - Allows to insert a static string as record source column, matching business vault definition of a record source
 #}
 
-{%- macro pit(yaml_metadata=none, tracked_entity=none, hashkey=none, sat_names=none, snapshot_relation=none, dimension_key=none, snapshot_trigger_column=none, ldts=none, custom_rsrc=none, ledts=none, sdts=none, pit_type=none, refer_to_ghost_records=True) -%}
+{%- macro pit(yaml_metadata=none, tracked_entity=none, hashkey=none, sat_names=none, snapshot_relation=none, dimension_key=none, snapshot_trigger_column=none, ldts=none, custom_rsrc=none, ledts=none, sdts=none, pit_type=none, refer_to_ghost_records=True, snapshot_optimization=False) -%}
 
     {% set tracked_entity_description = "
     tracked_entity::string              Name of the tracked Hub entity. Must be available as a model inside the dbt project.
@@ -75,6 +75,14 @@
                                         Optional parameter, default is True.
     " %}
 
+    {%- set snapshot_optimization_description = "
+    snapshot_optimization::boolean     If set to True, and if the model is run in incremental mode, only the relevant snapshots
+                                        (i.e. those that are newer (or equal e.g. because of late arriving data) than the max sdts in the existing PIT table) will be considered.
+                                        This can significantly improve performance of incremental loads on large snapshot tables.
+                                        If set to True, the model needs to be configured with a unique_key constraint as there may be updates due to the late arriving data.
+                                        Affected Adapters: Snowflake only! Optional parameter, default is False.
+    " -%}
+
     {%- set tracked_entity          = datavault4dbt.yaml_metadata_parser(name='tracked_entity', yaml_metadata=yaml_metadata, parameter=tracked_entity, required=True, documentation=tracked_entity_description) -%}
     {%- set hashkey                 = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
     {%- set sat_names               = datavault4dbt.yaml_metadata_parser(name='sat_names', yaml_metadata=yaml_metadata, parameter=sat_names, required=True, documentation=sat_names_description) -%}
@@ -87,6 +95,7 @@
     {%- set sdts                    = datavault4dbt.yaml_metadata_parser(name='sdts', yaml_metadata=yaml_metadata, parameter=sdts, required=False, documentation=sdts_description) -%}
     {%- set pit_type                = datavault4dbt.yaml_metadata_parser(name='pit_type', yaml_metadata=yaml_metadata, parameter=pit_type, required=False, documentation=pit_type_description) -%}
     {%- set refer_to_ghost_records  = datavault4dbt.yaml_metadata_parser(name='refer_to_ghost_records', yaml_metadata=yaml_metadata, parameter=refer_to_ghost_records, required=False, documentation=pit_type_description) -%}
+    {%- set snapshot_optimization  = datavault4dbt.yaml_metadata_parser(name='snapshot_optimization', yaml_metadata=yaml_metadata, parameter=snapshot_optimization, required=False, documentation=snapshot_optimization_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if ldts, sdts and ledts are not set. #}
 
@@ -94,7 +103,7 @@
     {%- set ledts = datavault4dbt.replace_standard(ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
     {%- set sdts = datavault4dbt.replace_standard(sdts, 'datavault4dbt.sdts_alias', 'sdts') -%}
 
-    {# For Fusion static_analysis overwrite #}
+        {# For Fusion static_analysis overwrite #}
     {% set static_analysis_config = datavault4dbt.get_static_analysis_config('pit') %}
     {%- if datavault4dbt.is_something(static_analysis_config) -%}
         {{ config(static_analysis='off') }}
@@ -112,7 +121,8 @@
                                                         snapshot_relation=snapshot_relation,
                                                         snapshot_trigger_column=snapshot_trigger_column,
                                                         dimension_key=dimension_key,
-                                                        refer_to_ghost_records=refer_to_ghost_records) }}
+                                                        refer_to_ghost_records=refer_to_ghost_records,
+                                                        snapshot_optimization=snapshot_optimization) }}
     {%- endif %}
     
     {{ return(adapter.dispatch('pit','datavault4dbt')(pit_type=pit_type,
@@ -126,6 +136,7 @@
                                                         snapshot_relation=snapshot_relation,
                                                         snapshot_trigger_column=snapshot_trigger_column,
                                                         dimension_key=dimension_key,
-                                                        refer_to_ghost_records=refer_to_ghost_records)) }}
+                                                        refer_to_ghost_records=refer_to_ghost_records,
+                                                        snapshot_optimization=snapshot_optimization)) }}
 
 {%- endmacro -%}
