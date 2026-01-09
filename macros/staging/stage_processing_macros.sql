@@ -244,6 +244,12 @@
                         {%- else -%}
             {%- set join_type = value.get('join_type') -%}
             {%- endif -%}
+            {%- if 'condition' not in value.keys() -%}  
+                            {%- do value.update({'condition': '='}) -%}
+                            {%- set condition = '=' -%}
+                        {%- else -%}
+            {%- set condition = value.get('condition') -%}
+            {%- endif -%}
                         
     {% set match_criteria = (
             ref_model and output | selectattr('ref_model', 'equalto', ref_model) or
@@ -252,6 +258,7 @@
         | selectattr('ref_column_name', 'equalto', value.ref_column_name)
         | selectattr('operator', 'equalto', value.operator)
         | selectattr('join_type', 'equalto', value.join_type)
+        | selectattr('condition', 'equalto', value.condition)
         | list | first %}
         
             {% if match_criteria %}
@@ -264,7 +271,8 @@
                     'this_column_name': value.this_column_name,
                     'ref_column_name': value.ref_column_name,
                     'operator': operator,
-                    'join_type': join_type
+                    'join_type': join_type,
+                    'condition': condition
                 } %}            
                 
                 {% if ref_model %}
