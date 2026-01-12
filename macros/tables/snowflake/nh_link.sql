@@ -50,14 +50,6 @@
 WITH
 
 {%- if is_incremental() -%}
-{# Get all link hashkeys out of the existing link for later incremental logic. #}
-    distinct_target_hashkeys AS (
-
-        SELECT
-        {{ link_hashkey }}
-        FROM {{ this }}
-
-    ),
     {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
         {% for source_model in source_models %}
         {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
@@ -263,6 +255,20 @@ earliest_hk_over_all_sources AS (
 ),
 
 {%- endif %}
+
+{%- if is_incremental() %}
+{# Get all link hashkeys out of the existing link for later incremental logic. #}
+    distinct_target_hashkeys AS (
+        
+        SELECT
+        {{ link_hashkey }}
+        FROM {{ this }}
+        WHERE 1=1
+
+        {{ datavault4dbt.filter_distinct_target_hashkey_in_nh_link() }}
+
+    ),
+{% endif %}
 
 records_to_insert AS (
 {# Select everything from the previous CTE, if its incremental then filter for hashkeys that are not already in the link. #}
