@@ -78,7 +78,7 @@
                 select MAX({{ src_ldts }}) AS {{ src_ldts }} FROM {{ this }}
                 WHERE {{ src_rsrc }} LIKE '{{ rsrc_static }}' AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
             AND src.{{ link_hk }} NOT IN (
-                select {{ link_hashkey }} FROM {{ this }} WHERE {{ src_rsrc }} LIKE '{{ rsrc_static }}' {{ datavault4dbt.filter_distinct_target_hashkey_in_link() }})
+                select {{ link_hashkey }} FROM {{ this }} WHERE 1=1 {{ datavault4dbt.filter_distinct_target_hashkey_in_link(src_rsrc = src_rsrc, rsrc_static = rsrc_static) }})
             AND src.{{ src_rsrc }} LIKE '{{ rsrc_static }}')
       {%- elif is_incremental() and not ns.has_rsrc_static_defined and not disable_hwm %}
         AND src.{{ src_ldts }} > (
