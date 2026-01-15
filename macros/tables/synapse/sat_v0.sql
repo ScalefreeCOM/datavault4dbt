@@ -64,7 +64,7 @@ latest_entries_in_sat_prep AS (
         ON tgt.{{ parent_hashkey }} = src.{{ parent_hashkey }}
      WHERE 1=1
         
-    {{ datavault4dbt.filter_latest_entries_in_sat(parent_hashkey) }}
+    {{ datavault4dbt.filter_latest_entries_in_sat() }}
 
 ),
 
