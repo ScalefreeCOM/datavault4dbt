@@ -52,7 +52,7 @@ latest_entries_in_sat AS (
         {{ this }} sat
     WHERE 1=1
         
-    {{ datavault4dbt.filter_latest_entries_in_sat(parent_hashkey) }}
+    {{ datavault4dbt.filter_latest_entries_in_sat(parent_hashkey = parent_hashkey) }}
 
     QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1
 ),

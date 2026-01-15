@@ -43,7 +43,7 @@ distinct_sat_hashkeys AS (
     FROM {{ this }} sat
     WHERE 1=1
 
-    {{ datavault4dbt.filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) }}
+    {{ datavault4dbt.filter_distinct_target_hashkey_in_nh_sat(parent_hashkey = parent_hashkey) }}
     ),
 
 {%- endif %}

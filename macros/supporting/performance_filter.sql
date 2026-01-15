@@ -1,49 +1,48 @@
-{% macro filter_latest_entries_in_sat(parent_hashkey) -%}
-    {{ return(adapter.dispatch('filter_latest_entries_in_sat', 'datavault4dbt')(parent_hashkey = parent_hashkey
-    )) }}
+{% macro filter_latest_entries_in_sat() -%}
+    {{ return(adapter.dispatch('filter_latest_entries_in_sat', 'datavault4dbt')(**kwargs)) }}
 {%- endmacro %}
 
-{% macro default__filter_latest_entries_in_sat(parent_hashkey) %}
+{% macro default__filter_latest_entries_in_sat() %}
 
 {% endmacro %}
 
-{% macro databricks__filter_latest_entries_in_sat(parent_hashkey) %}
+{% macro databricks__filter_latest_entries_in_sat() %}
 
 {% endmacro %}
 
-{% macro exasol__filter_latest_entries_in_sat(parent_hashkey) %}
+{% macro exasol__filter_latest_entries_in_sat() %}
 
 {% endmacro %}
 
-{% macro fabric__filter_latest_entries_in_sat(parent_hashkey) %}
+{% macro fabric__filter_latest_entries_in_sat() %}
 
 {% endmacro %}
 
-{% macro oracle__filter_latest_entries_in_sat(parent_hashkey) %}
+{% macro oracle__filter_latest_entries_in_sat() %}
 
 {% endmacro %}
 
-{% macro postgres__filter_latest_entries_in_sat(parent_hashkey) %}
+{% macro postgres__filter_latest_entries_in_sat() %}
 
 {% endmacro %}
 
-{% macro redshift__filter_latest_entries_in_sat(parent_hashkey) %}
-    AND {{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
+{% macro redshift__filter_latest_entries_in_sat() %}
+    AND {{ kwargs.get('parent_hashkey') }} IN (SELECT {{ kwargs.get('parent_hashkey') }} FROM source_data) 
 {% endmacro %}
 
-{% macro snowflake__filter_latest_entries_in_sat(parent_hashkey) %}
-    AND {{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
+{% macro snowflake__filter_latest_entries_in_sat() %}
+    AND {{ kwargs.get('parent_hashkey') }} IN (SELECT {{ kwargs.get('parent_hashkey') }} FROM source_data)
 
 {% endmacro %}
 
-{% macro synapse__filter_latest_entries_in_sat(parent_hashkey) %}
+{% macro synapse__filter_latest_entries_in_sat() %}
 
 {% endmacro %}
 
 
 
 {% macro filter_distinct_target_hashkey_in_link() -%}
-    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_link', 'datavault4dbt')()) }}
+    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_link', 'datavault4dbt')(**kwargs)) }}
 {%- endmacro %}
 
 {% macro default__filter_distinct_target_hashkey_in_link() %}
@@ -71,7 +70,9 @@
 {% endmacro %}
 
 {% macro redshift__filter_distinct_target_hashkey_in_link() %}
-
+{#- Otherwise dbt throws an error, that the macro does not take the parameters -#}
+{%- set src_rsrc = kwargs.get('src_rsrc') -%}
+{%- set rsrc_static = kwargs.get('rsrc_static') -%}
 {% endmacro %}
 
 {% macro snowflake__filter_distinct_target_hashkey_in_link() %}
@@ -85,7 +86,7 @@
 
 
 {% macro filter_distinct_target_hashkey_in_nh_link() -%}
-    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_nh_link', 'datavault4dbt')()) }}
+    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_nh_link', 'datavault4dbt')(**kwargs)) }}
 {%- endmacro %}
 
 {% macro default__filter_distinct_target_hashkey_in_nh_link() %}
@@ -113,7 +114,9 @@
 {% endmacro %}
 
 {% macro redshift__filter_distinct_target_hashkey_in_nh_link() %}
-
+{#- Otherwise dbt throws an error, that the macro does not take the parameters -#}
+{%- set src_rsrc = kwargs.get('src_rsrc') -%}
+{%- set rsrc_static = kwargs.get('rsrc_static') -%}
 {% endmacro %}
 
 {% macro snowflake__filter_distinct_target_hashkey_in_nh_link() %}
@@ -125,48 +128,49 @@
 {% endmacro %}
 
 
-{% macro filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) -%}
-    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_nh_sat', 'datavault4dbt')(parent_hashkey = parent_hashkey)) }}
+{% macro filter_distinct_target_hashkey_in_nh_sat() -%}
+    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_nh_sat', 'datavault4dbt')(**kwargs)) }}
 {%- endmacro %}
 
-{% macro default__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
+{% macro default__filter_distinct_target_hashkey_in_nh_sat() %}
 
 {% endmacro %}
 
-{% macro databricks__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
+{% macro databricks__filter_distinct_target_hashkey_in_nh_sat() %}
 
 {% endmacro %}
 
-{% macro exasol__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
+{% macro exasol__filter_distinct_target_hashkey_in_nh_sat() %}
 
 {% endmacro %}
 
-{% macro fabric__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
+{% macro fabric__filter_distinct_target_hashkey_in_nh_sat() %}
 
 {% endmacro %}
 
-{% macro oracle__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
+{% macro oracle__filter_distinct_target_hashkey_in_nh_sat() %}
 
 {% endmacro %}
 
-{% macro postgres__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
+{% macro postgres__filter_distinct_target_hashkey_in_nh_sat() %}
 
 {% endmacro %}
 
-{% macro redshift__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
-    AND sat.{{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
+{% macro redshift__filter_distinct_target_hashkey_in_nh_sat() %}
+    AND sat.{{ kwargs.get('parent_hashkey') }} IN (SELECT {{ kwargs.get('parent_hashkey') }} FROM source_data)
 {% endmacro %}
 
-{% macro snowflake__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
+{% macro snowflake__filter_distinct_target_hashkey_in_nh_sat() %}
 
 {% endmacro %}
 
-{% macro synapse__filter_distinct_target_hashkey_in_nh_sat(parent_hashkey) %}
+{% macro synapse__filter_distinct_target_hashkey_in_nh_sat() %}
+
 {% endmacro %}
 
 
 {% macro filter_distinct_target_hashkey_in_hub() -%}
-    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_hub', 'datavault4dbt')()) }}
+    {{ return(adapter.dispatch('filter_distinct_target_hashkey_in_hub', 'datavault4dbt')(**kwargs)) }}
 {%- endmacro %}
 
 {% macro default__filter_distinct_target_hashkey_in_hub() %}
