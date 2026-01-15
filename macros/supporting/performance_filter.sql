@@ -70,7 +70,9 @@
 {% endmacro %}
 
 {% macro redshift__filter_distinct_target_hashkey_in_link() %}
-
+{#- Otherwise dbt throws an error, that the macro does not take the parameters -#}
+{%- set src_rsrc = kwargs.get('src_rsrc') -%}
+{%- set rsrc_static = kwargs.get('rsrc_static') -%}
 {% endmacro %}
 
 {% macro snowflake__filter_distinct_target_hashkey_in_link() %}
@@ -112,7 +114,9 @@
 {% endmacro %}
 
 {% macro redshift__filter_distinct_target_hashkey_in_nh_link() %}
-
+{#- Otherwise dbt throws an error, that the macro does not take the parameters -#}
+{%- set src_rsrc = kwargs.get('src_rsrc') -%}
+{%- set rsrc_static = kwargs.get('rsrc_static') -%}
 {% endmacro %}
 
 {% macro snowflake__filter_distinct_target_hashkey_in_nh_link() %}
