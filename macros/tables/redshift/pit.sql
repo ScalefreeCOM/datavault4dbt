@@ -29,6 +29,12 @@
 {{ datavault4dbt.prepend_generated_by() }}
 
 SELECT
+    {%- if datavault4dbt.is_something(pit_type) -%}
+        CAST({{ datavault4dbt.as_constant(pit_type) }} as {{ string_default_dtype }}) AS type,
+    {%- endif -%}
+    {%- if datavault4dbt.is_something(custom_rsrc) -%}
+        CAST('{{ custom_rsrc }}' as {{ string_default_dtype }}) AS {{ rsrc }},
+    {%- endif -%}
     {%- if datavault4dbt.is_something(dimension_key) -%}
         {{ datavault4dbt.hash(columns=hashed_cols, alias=dimension_key, is_hashdiff=false) }},
     {%- endif -%}
@@ -61,9 +67,23 @@ FROM {{ ref(tracked_entity) }} te
 {%- endif %}
 
 {% for satellite in sat_names %}
+    {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
+    {%- if ledts|string|lower in sat_columns|map('lower') %}
     LEFT JOIN {{ ref(satellite) }} AS {{ satellite }}
+    {%- else %}
+    LEFT JOIN (
+        SELECT
+            {{ hashkey }},
+            {{ ldts }},
+            COALESCE(
+                LEAD({{ ldts }} - interval '00:00:00.000001') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),
+                {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            ) AS {{ ledts }}
+        FROM {{ ref(satellite) }}
+    ) AS {{ satellite }}
+    {%- endif %}
         ON {{ satellite }}.{{ hashkey }} = te.{{ hashkey }}
-        AND {{ satellite }}.{{ ldts }} <= snap.{{ sdts }}
+        AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
 {% endfor %}
 
 {%- if is_incremental() %}
@@ -74,9 +94,14 @@ FROM {{ ref(tracked_entity) }} te
 {%- endif %}
 
 {%- if datavault4dbt.is_something(dimension_key) -%}
-GROUP BY 1, 2, 3
+GROUP BY
+    {{ dimension_key }},
+    te.{{ hashkey }},
+    snap.{{ sdts }}
 {%- else -%}
-GROUP BY 1, 2
+GROUP BY
+    te.{{ hashkey }},
+    snap.{{ sdts }}
 {%- endif -%}
 
 {%- endmacro -%}
