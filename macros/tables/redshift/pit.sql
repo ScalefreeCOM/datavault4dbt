@@ -1,4 +1,4 @@
-{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key=none, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, refer_to_ghost_records, dimension_key=none, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
@@ -29,6 +29,9 @@
 {{ datavault4dbt.prepend_generated_by() }}
 
 SELECT
+    {%- if datavault4dbt.is_something(dimension_key) -%}
+        {{ datavault4dbt.hash(columns=hashed_cols, alias=dimension_key, is_hashdiff=false) }},
+    {%- endif -%}
     te.{{ hashkey }},
     snap.{{ sdts }},
     {% for satellite in sat_names %}
@@ -70,8 +73,10 @@ FROM {{ ref(tracked_entity) }} te
     )
 {%- endif %}
 
-GROUP BY
-    te.{{ hashkey }},
-    snap.{{ sdts }}
+{%- if datavault4dbt.is_something(dimension_key) -%}
+GROUP BY 1, 2, 3
+{%- else -%}
+GROUP BY 1, 2
+{%- endif -%}
 
 {%- endmacro -%}
