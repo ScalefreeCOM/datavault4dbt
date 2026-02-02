@@ -1,19 +1,25 @@
-{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none, main_hashkey_column=none) -%}
+{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none, main_hashkey_column=none, use_trim=none) -%}
 
     {%- if is_hashdiff is none -%}
         {%- set is_hashdiff = false -%}
+    {%- endif -%}
+
+    {%- set global_use_trim = var('datavault4dbt.hashdiff_use_trim', true) -%}
+    {%- if use_trim is none -%}
+        {%- set use_trim = global_use_trim -%}
     {%- endif -%}
 
     {{- adapter.dispatch('hash', 'datavault4dbt')(columns=columns,
                                              alias=alias,
                                              is_hashdiff=is_hashdiff,
                                              multi_active_key=multi_active_key,
-                                             main_hashkey_column=main_hashkey_column) -}}
+                                             main_hashkey_column=main_hashkey_column,
+                                             use_trim=use_trim) -}}
 
 {%- endmacro %}
 
 
-{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -31,8 +37,7 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
-
+{%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
 {#- If single column to hash -#}
 {%- if columns is string -%}
@@ -81,7 +86,7 @@
 
 {%- endmacro -%}
 
-{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim) -%}
 
     {%- set hash = datavault4dbt.hash_method() -%}
     {%- set concat_string = var('concat_string', '||') -%}
@@ -98,7 +103,7 @@
     {%- set unknown_key = hash_default_values['unknown_key'] -%}
     {%- set error_key = hash_default_values['error_key'] -%}
 
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
     {#- If single column to hash -#}
     {%- if columns is string -%}
@@ -149,7 +154,7 @@
 {%- endmacro -%}
 
 
-{%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -168,9 +173,9 @@
 {%- set error_key = hash_default_values['error_key'] -%}
 
 {%- if is_hashdiff -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff', use_trim=use_trim) %}
 {%- else -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey', use_trim=use_trim) %}
 {%- endif -%}
 
 {#- If single column to hash -#}
@@ -223,7 +228,7 @@
 {%- endmacro -%}    
 
 
-{%- macro postgres__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro postgres__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim) -%}
 
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
@@ -245,9 +250,9 @@
 {%- set error_key = hash_default_values['error_key'] -%}
 
 {%- if is_hashdiff -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff', use_trim=use_trim) %}
 {%- else -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey', use_trim=use_trim) %}
 {%- endif -%}
 
 
@@ -299,7 +304,7 @@
 {%- endmacro -%}
 
 
-{%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '|') -%}
@@ -317,7 +322,7 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+{%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
 {#- If single column to hash -#}
 {%- if columns is string -%}
@@ -368,7 +373,7 @@
 {%- endmacro -%}
 
 
-{%- macro fabric__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro fabric__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
@@ -387,9 +392,9 @@
 {%- set error_key = hash_default_values['error_key'] -%}
 
 {%- if is_hashdiff -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff',use_trim=use_trim) %}
 {%- else -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey',use_trim=use_trim) %}
 {%- endif -%}
 
 {{ log('attribute_standardise: '~attribute_standardise, false)}}
@@ -449,7 +454,7 @@
 {%- endmacro -%}
 
 
-{%- macro databricks__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro databricks__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -467,7 +472,7 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+{%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
 
 {#- If single column to hash -#}
@@ -518,7 +523,7 @@
 {%- endmacro -%}
 
 
-{%- macro oracle__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column) -%}
+{%- macro oracle__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '|') -%}
@@ -536,7 +541,7 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+{%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
 {#- If single column to hash -#}
 {%- if columns is string -%}

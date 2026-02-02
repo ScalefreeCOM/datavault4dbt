@@ -1,54 +1,63 @@
-{% macro attribute_standardise(hash_type=none) %}
-        {{- adapter.dispatch('attribute_standardise', 'datavault4dbt')(hash_type) -}}
+{% macro attribute_standardise(hash_type=none, use_trim=true ) %}
+        {{- adapter.dispatch('attribute_standardise', 'datavault4dbt')(hash_type=hash_type, use_trim=use_trim) -}}
 {% endmacro %}
 
-{%- macro default__attribute_standardise(hash_type) -%}
+{%- macro default__attribute_standardise(hash_type, use_trim) -%}
 
-CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\', r'\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
+{%- set expr = 'TRIM(CAST([EXPRESSION] AS STRING))' if use_trim else 'CAST([EXPRESSION] AS STRING)' -%}
+
+CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, r'\\', r'\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
 
 {%- endmacro -%}
 
-{%- macro exasol__attribute_standardise(hash_type) -%}
+{%- macro exasol__attribute_standardise(hash_type, use_trim) -%}
 
 {%- set concat_string = var('concat_string', '||') -%}
 {%- set quote = var('quote', '"') -%}
 {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set expr = 'TRIM(CAST([EXPRESSION] AS VARCHAR(20000) UTF8 ))' if use_trim else 'CAST([EXPRESSION] AS VARCHAR(20000) UTF8 )' -%}
 
-CONCAT('"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS VARCHAR(20000) UTF8 )), '\\\', '\\\\\'), '[QUOTE]', '"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
-
-{%- endmacro -%}
-
-{%- macro snowflake__attribute_standardise(hash_type) -%}
-
-CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
+CONCAT('"', REPLACE(REPLACE(REPLACE({{expr}}, '\\\', '\\\\\'), '[QUOTE]', '"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
 
 {%- endmacro -%}
 
+{%- macro snowflake__attribute_standardise(hash_type, use_trim) -%}
+{%- set expr = 'TRIM(CAST([EXPRESSION] AS STRING))' if use_trim else 'CAST([EXPRESSION] AS STRING)' -%}
 
-{%- macro synapse__attribute_standardise(hash_type) -%}
+CONCAT('\"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
+
+{%- endmacro -%}
+
+
+{%- macro synapse__attribute_standardise(hash_type, use_trim) -%}
                                     
 {%- if hash_type == 'hashkey' -%}
+    {%- set expr = 'LTRIM(RTRIM(CAST([EXPRESSION] AS NVARCHAR(4000))))' if use_trim else 'CAST([EXPRESSION] AS NVARCHAR(4000))' -%} 
 
-    CONCAT('"', REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(CAST([EXPRESSION] AS NVARCHAR(4000)))), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
+    CONCAT('"', REPLACE(REPLACE(REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
 
 {%- else -%}
+    {%- set expr = 'LTRIM(RTRIM([EXPRESSION]))' if use_trim else '[EXPRESSION]' -%}
 
-    CONCAT('"', REPLACE(REPLACE(REPLACE(LTRIM(RTRIM([EXPRESSION])), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
+    CONCAT('"', REPLACE(REPLACE(REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
 
 {%- endif -%}
 
 {%- endmacro -%}  
 
                                     
-{%- macro postgres__attribute_standardise(hash_type) -%}
+{%- macro postgres__attribute_standardise(hash_type, use_trim) -%}
+
+{%- set cast_expr = 'CAST([EXPRESSION] AS VARCHAR)' -%}
+{%- set expr = "TRIM(BOTH ' ' FROM " ~ cast_expr ~ ")" if use_trim else cast_expr -%}
 
 {% if hash_type == 'hashkey' %}
 
-    '"' || REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRESSION] AS VARCHAR)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
+  '"' || REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
 
 {% else %}
 
-    CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRESSION] AS VARCHAR)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
+    CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
 
 {% endif %}
 
@@ -56,35 +65,46 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), '\\', '
 
 {%- macro redshift__attribute_standardise(hash_type) -%}
 
-'"' ||  REPLACE(REPLACE(REPLACE(TRIM(BOTH ' ' FROM [EXPRESSION]), '\\', '\\\\'), '[QUOTE]', '\\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
+{%- set expr = "TRIM(BOTH ' ' FROM [EXPRESSION])" if use_trim else "[EXPRESSION]" -%}
+
+'"' ||  REPLACE(REPLACE(REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '\\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
 
 {%- endmacro -%}
 
 
-{%- macro fabric__attribute_standardise(hash_type) -%}
+{%- macro fabric__attribute_standardise(hash_type, use_trim) -%}
                                     
 {%- if hash_type == 'hashkey' -%}
 
-    '"' + REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(CONVERT(VARCHAR(4000), [EXPRESSION], 1))), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') + '"'
+    {%- set expr = 'LTRIM(RTRIM(CONVERT(VARCHAR(4000), [EXPRESSION], 1)))' if use_trim else 'CONVERT(VARCHAR(4000), [EXPRESSION], 1)' -%}
+
+    '"' + REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') + '"'
 
 {%- else -%}
 
-    CONCAT('"', REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(CONVERT(VARCHAR(4000), [EXPRESSION], 1))), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
+    {%- set expr = 'LTRIM(RTRIM(CONVERT(VARCHAR(4000), [EXPRESSION], 1)))' if use_trim else 'CONVERT(VARCHAR(4000), [EXPRESSION], 1)' -%}
+
+    CONCAT('"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
 
 {%- endif -%}
 
-{%- endmacro -%}  
+{%- endmacro -%} 
 
-{%- macro databricks__attribute_standardise(hash_type) -%}
+{%- macro databricks__attribute_standardise(hash_type, use_trim) -%}
 
-CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(CAST([EXPRESSION] AS STRING)), r'\\', r'\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
+{%- set expr = 'TRIM(CAST([EXPRESSION] AS STRING))' if use_trim else 'CAST([EXPRESSION] AS STRING)' -%}
+
+CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, r'\\', r'\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
 
 {%- endmacro -%}
 
 
-{%- macro oracle__attribute_standardise(hash_type) -%}
+{%- macro oracle__attribute_standardise(hash_type, use_trim) -%}
 
- '"' || REPLACE(REPLACE(REPLACE(TRIM(CAST([EXPRESSION] AS VARCHAR2(2000) )), '\\\', '\\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '\"'
+{%- set expr = 'TRIM(CAST([EXPRESSION] AS VARCHAR2(2000) ))' if use_trim else 'CAST([EXPRESSION] AS VARCHAR2(2000) )' -%}
+
+ '"' || REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '\"'
+
 {%- endmacro -%}
 
                                     
