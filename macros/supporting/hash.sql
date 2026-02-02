@@ -5,8 +5,13 @@
     {%- endif -%}
 
     {%- set global_use_trim = var('datavault4dbt.hashdiff_use_trim', true) -%}
+
     {%- if use_trim is none -%}
-        {%- set use_trim = global_use_trim -%}
+            {%- if is_hashdiff -%}
+                {%- set use_trim = global_hashdiff_trim -%}
+            {%- else -%}
+                {%- set use_trim = true -%}
+            {%- endif -%}
     {%- endif -%}
 
     {{- adapter.dispatch('hash', 'datavault4dbt')(columns=columns,
