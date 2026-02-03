@@ -1,4 +1,4 @@
-{%- macro ref_hub(yaml_metadata=none, ref_keys=none, source_models=none, src_ldts=none, src_rsrc=none) -%}
+{%- macro ref_hub(yaml_metadata=none, ref_keys=none, source_models=none, src_ldts=none, src_rsrc=none, additional_columns=none) -%}
 
     {% set ref_keys_description = "
     ref_keys::string|list of strings        Name of the reference key(s) available in the source model(s).
@@ -18,10 +18,17 @@
                                     Needs to use the same column name as defined as alias inside the staging model.
     " %}
 
-    {%- set ref_keys        = datavault4dbt.yaml_metadata_parser(name='ref_keys', yaml_metadata=yaml_metadata, parameter=ref_keys, required=True, documentation=ref_keys_description) -%}
-    {%- set source_models   = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
-    {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
-    {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {% set additional_columns_description = "
+    additional_columns::list | string       Additional columns from source system or derived columns which should be part of the ref_hub.
+                                            The columns need to be available in all source models.
+                                            Optional parameter, defaults to empty list.
+    " %}
+
+    {%- set ref_keys            = datavault4dbt.yaml_metadata_parser(name='ref_keys', yaml_metadata=yaml_metadata, parameter=ref_keys, required=True, documentation=ref_keys_description) -%}
+    {%- set source_models       = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
+    {%- set src_ldts            = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc            = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set additional_columns  = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
@@ -44,6 +51,7 @@
     {{ return(adapter.dispatch('ref_hub', 'datavault4dbt')(ref_keys=ref_keys,
                                                             src_ldts=src_ldts,
                                                             src_rsrc=src_rsrc,
-                                                            source_models=source_models)) }}
+                                                            source_models=source_models,
+                                                            additional_columns=additional_columns)) }}
 
 {%- endmacro -%}
