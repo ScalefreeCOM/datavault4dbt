@@ -1,4 +1,4 @@
-{%- macro ref_sat_v0(yaml_metadata=none, parent_ref_keys=none, src_hashdiff=none, src_payload=none, source_model=none, src_ldts=none, src_rsrc=none, disable_hwm=false, source_is_single_batch=false) -%}
+{%- macro ref_sat_v0(yaml_metadata=none, parent_ref_keys=none, src_hashdiff=none, src_payload=none, source_model=none, src_ldts=none, src_rsrc=none, disable_hwm=false, source_is_single_batch=false, additional_columns=none) -%}
 
     {% set parent_ref_keys_description = "
     parent_ref_keys::string|list of strings        Name of the reference key(s) of the parent ref_hub.
@@ -39,7 +39,13 @@
     {% set src_rsrc_description = "
     src_rsrc::string                Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
                                     Needs to use the same column name as defined as alias inside the staging model.
-    " %}    
+    " %}
+
+    {% set additional_columns_description = "
+    additional_columns::list | string       Additional columns from source system or derived columns which should be part of the ref_sat.
+                                            The columns need to be available in all source models.
+                                            Optional parameter, defaults to empty list.
+    " %}
 
 
     {%- set parent_ref_keys         = datavault4dbt.yaml_metadata_parser(name='parent_ref_keys', yaml_metadata=yaml_metadata, parameter=parent_ref_keys, required=True, documentation=parent_ref_keys_description) -%}
@@ -50,6 +56,7 @@
     {%- set src_rsrc                = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
     {%- set disable_hwm             = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
     {%- set source_is_single_batch  = datavault4dbt.yaml_metadata_parser(name='source_is_single_batch', yaml_metadata=yaml_metadata, parameter=source_is_single_batch, required=False, documentation='Whether the source contains only one batch. Optional, default False.') -%}
+    {%- set additional_columns      = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
@@ -79,6 +86,7 @@
                                          src_rsrc=src_rsrc,
                                          source_model=source_model,
                                          disable_hwm=disable_hwm,
-                                         source_is_single_batch=source_is_single_batch) 
+                                         source_is_single_batch=source_is_single_batch,
+                                         additional_columns=additional_columns) 
     }}
 {%- endmacro -%}
