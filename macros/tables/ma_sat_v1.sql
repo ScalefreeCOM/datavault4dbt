@@ -9,7 +9,7 @@
         - Allows multiple attributes to be used as the multi-active-attribute
 #}
 
-{%- macro ma_sat_v1(yaml_metadata=none, sat_v0=none, hashkey=none, hashdiff=none, ma_attribute=none, src_ldts=none, src_rsrc=none, ledts_alias=none, add_is_current_flag=false, additional_columns=none) -%}
+{%- macro ma_sat_v1(yaml_metadata=none, sat_v0=none, hashkey=none, hashdiff=none, ma_attribute=none, src_ldts=none, src_rsrc=none, ledts_alias=none, add_is_current_flag=false) -%}
 
     {% set sat_v0_description = "
     sat_v0::string                              Name of the underlying version 0 multi-active satellite.
@@ -78,12 +78,6 @@
                                                 will be set to false.
     " %}
 
-    {% set additional_columns_description = "
-    additional_columns::list | string       Additional columns from source system or derived columns which should be part of the ma_sat.
-                                            The columns need to be available in all source models.
-                                            Optional parameter, defaults to empty list.
-    " %}
-
     {%- set sat_v0              = datavault4dbt.yaml_metadata_parser(name='sat_v0', yaml_metadata=yaml_metadata, parameter=sat_v0, required=True, documentation=sat_v0_description) -%}
     {%- set hashkey             = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
     {%- set hashdiff            = datavault4dbt.yaml_metadata_parser(name='hashdiff', yaml_metadata=yaml_metadata, parameter=hashdiff, required=True, documentation=hashdiff_description) -%}
@@ -92,7 +86,6 @@
     {%- set src_rsrc            = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
     {%- set ledts_alias         = datavault4dbt.yaml_metadata_parser(name='ledts_alias', yaml_metadata=yaml_metadata, parameter=ledts_alias, required=False, documentation=ledts_alias_description) -%}
     {%- set add_is_current_flag = datavault4dbt.yaml_metadata_parser(name='add_is_current_flag', yaml_metadata=yaml_metadata, parameter=add_is_current_flag, required=False, documentation=add_is_current_flag_description) -%}
-    {%- set additional_columns  = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts, src_rsrc, and ledts_alias are not set. #}
 
@@ -124,7 +117,6 @@
                                                       src_ldts=src_ldts,
                                                       src_rsrc=src_rsrc,
                                                       ledts_alias=ledts_alias,
-                                                      add_is_current_flag=add_is_current_flag,
-                                                      additional_columns=additional_columns) }}
+                                                      add_is_current_flag=add_is_current_flag) }}
 
 {%- endmacro -%}
