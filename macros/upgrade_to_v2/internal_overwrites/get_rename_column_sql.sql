@@ -44,6 +44,16 @@
 
 {% endmacro %}
 
+{% macro synapse__get_rename_column_sql(relation, old_col_name, new_col_name) %}
+
+    {% set query %}
+    EXECUTE sp_rename '{{ relation.render() }}.{{ old_col_name }}' , '{{ new_col_name }}' , 'COLUMN';
+    {% endset %}
+
+    {{ return(query) }}
+
+{% endmacro %}
+
 {% macro fabric__get_rename_column_sql(relation, old_col_name, new_col_name) %}
 
     {% set query %}
