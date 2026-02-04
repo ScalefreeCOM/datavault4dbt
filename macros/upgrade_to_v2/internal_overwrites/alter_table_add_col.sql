@@ -36,6 +36,72 @@
 
 {% endmacro %}
 
+{% macro synapse__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {% if add_columns %}
+
+    {% set sql -%}
+       ALTER TABLE {{ relation.render() }} ADD
+          {% for column in add_columns %}
+            {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+          {% endfor %}
+    {%- endset -%}
+
+     {{ log('alter sql: ' ~ sql, false)}}
+
+    {% do run_query(sql) %}
+
+    {% endif %}
+
+    {% if remove_columns %}
+
+    {% set sql -%}
+        ALTER TABLE {{ relation.render() }} DROP COLUMN
+            {% for column in remove_columns %}
+                {{ column.name }}{{ ',' if not loop.last }}
+            {% endfor %}
+    {%- endset -%}
+
+     {{ log('alter sql: ' ~ sql, false)}}
+    
+    {% do run_query(sql) %}
+
+    {% endif %}
+
+{% endmacro %}
+
+{% macro databricks__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {% if add_columns or remove_columns %}
+
+    {# 1. Handle ADD COLUMNS (Can be done in one batch) #}
+    {% if add_columns %}
+        {% set add_sql -%}
+            ALTER TABLE {{ relation.render() }} ADD COLUMNS (
+              {% for column in add_columns %}
+                {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+              {% endfor %}
+            )
+        {%- endset %}
+        {{ log('Executing ADD COLUMNS on Databricks: ' ~ add_sql, true) }}
+        {% do run_query(add_sql) %}
+    {% endif %}
+
+    {# 2. Handle REMOVE COLUMNS (Execute sequentially to avoid Syntax Errors) #}
+    {% if remove_columns %}
+        {% for column in remove_columns %}
+            {% set remove_sql -%}
+                ALTER TABLE {{ relation.render() }} DROP COLUMN IF EXISTS {{ column.name }}
+            {%- endset %}
+            {{ log('Executing DROP COLUMN on Databricks: ' ~ remove_sql, true) }}
+            {% do run_query(remove_sql) %}
+        {% endfor %}
+    {% endif %}
+
+    {% endif %}
+
+{% endmacro %}
+
 {% macro snowflake__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {% if relation.is_dynamic_table -%}
@@ -264,6 +330,37 @@
 
 {% endmacro %}
 
+{% macro exasol__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {# Handle adding columns #}
+    {% if add_columns %}
+        {% for column in add_columns %}
+            {% set sql -%}
+                ALTER TABLE {{ relation.render() }} 
+                ADD COLUMN {{ column.name }} {{ column.data_type }};
+            {%- endset -%}
+            
+            {{ log('alter sql (add column): ' ~ sql, false)}}
+            
+            {% do run_query(sql) %}
+        {% endfor %}
+    {% endif %}
+    
+    {# Handle removing columns #}
+    {% if remove_columns %}
+        {% for column in remove_columns %}
+            {% set sql -%}
+                ALTER TABLE {{ relation.render() }} 
+                DROP COLUMN {{ column.name }}
+            {%- endset -%}
+            
+            {{ log('alter sql (drop column): ' ~ sql, false)}}
+            
+            {% do run_query(sql) %}
+        {% endfor %}
+    {% endif %}
+
+{% endmacro %}
 
 {% macro oracle__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
