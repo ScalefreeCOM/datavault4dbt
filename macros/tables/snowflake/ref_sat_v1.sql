@@ -22,18 +22,18 @@ WITH
 end_dated_source AS (
 
     SELECT
-        {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(parent_ref_keys)) }},
+        {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(ref_keys)) }},
         {{ hashdiff }},
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD({{ src_ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(parent_ref_keys)) }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }},
+        COALESCE(LEAD({{ src_ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(ref_keys)) }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }},
         {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_columns_to_select)) if source_columns_to_select else " *" }}
     FROM {{ source_relation }}
 
 )
 
 SELECT
-    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(parent_ref_keys)) }},
+    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(ref_keys)) }},
     {{ hashdiff }},
     {{ src_rsrc }},
     {{ src_ldts }},
