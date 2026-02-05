@@ -32,3 +32,14 @@
 {%- endif -%}
 
 {%- endmacro -%}
+
+
+{%- macro sqlserver__limit_rows() %}
+
+{%- if target.schema == 'prod' %}
+    {{ return('') }}
+{%- else -%}
+    {{ return('TOP 100') }}
+{%- endif -%}
+
+{%- endmacro -%}

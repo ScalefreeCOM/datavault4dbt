@@ -33,3 +33,11 @@
 {% macro databricks__current_timestamp() %}
     {{ return('current_timestamp()') }}
 {% endmacro %}
+
+{% macro sqlserver__current_timestamp() %}
+    {{ return('CAST(SYSDATETIME() AS DATETIME2(6))')}}
+{% endmacro %}
+
+{% macro sqlserver__current_timestamp_in_utc() %}
+    {{return('sysutcdatetime()')}}
+{% endmacro %}

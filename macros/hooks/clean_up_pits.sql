@@ -148,3 +148,17 @@ WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{
 {%- endif -%}
 
 {%- endmacro -%}
+
+{%- macro sqlserver__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+DELETE pit
+FROM {{ this }} AS pit 
+LEFT JOIN {{ ref(snapshot_relation) }} AS snap
+ON pit.{{ sdts }} = snap.{{ sdts }} AND {{ snapshot_trigger_column }}=1
+WHERE snap.{{ sdts }} IS NULL
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}
