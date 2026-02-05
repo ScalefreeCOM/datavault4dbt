@@ -361,3 +361,39 @@
     {% endif %}
 
 {% endmacro %}
+
+{% macro oracle__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {% if add_columns %}
+
+    {% set sql -%}
+       ALTER TABLE {{ relation.render() }} ADD (
+          {% for column in add_columns %}
+            {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+          {% endfor %}
+       )
+    {%- endset -%}
+
+     {{ log('alter sql: ' ~ sql, false)}}
+
+    {% do run_query(sql) %}
+
+    {% endif %}
+
+    {% if remove_columns %}
+
+    {% set sql -%}
+        ALTER TABLE {{ relation.render() }} DROP (
+            {% for column in remove_columns %}
+                {{ column.name }}{{ ',' if not loop.last }}
+            {% endfor %}
+        )
+    {%- endset -%}
+
+     {{ log('alter sql: ' ~ sql, false)}}
+    
+    {% do run_query(sql) %}
+
+    {% endif %}
+
+{% endmacro %}
