@@ -63,7 +63,7 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"')
 
 {%- endmacro -%}
 
-{%- macro redshift__attribute_standardise(hash_type) -%}
+{%- macro redshift__attribute_standardise(hash_type, use_trim) -%}
 
 {%- set expr = "TRIM(BOTH ' ' FROM [EXPRESSION])" if use_trim else "[EXPRESSION]" -%}
 
