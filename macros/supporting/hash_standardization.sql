@@ -31,10 +31,9 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"')
 
 {%- macro synapse__attribute_standardise(hash_type, use_trim) -%}
                                     
-{%- if hash_type == 'hashkey' -%}
-    {%- set expr = 'LTRIM(RTRIM(CAST([EXPRESSION] AS NVARCHAR(4000))))' if use_trim else 'CAST([EXPRESSION] AS NVARCHAR(4000))' -%} 
+{%- if hash_type == 'hashkey' -%} 
 
-    CONCAT('"', REPLACE(REPLACE(REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
+    CONCAT('"', REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(CAST([EXPRESSION] AS NVARCHAR(4000)))), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
 
 {%- else -%}
     {%- set expr = 'LTRIM(RTRIM([EXPRESSION]))' if use_trim else '[EXPRESSION]' -%}
@@ -48,14 +47,15 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"')
                                     
 {%- macro postgres__attribute_standardise(hash_type, use_trim) -%}
 
-{%- set cast_expr = 'CAST([EXPRESSION] AS VARCHAR)' -%}
-{%- set expr = "TRIM(BOTH ' ' FROM " ~ cast_expr ~ ")" if use_trim else cast_expr -%}
-
 {% if hash_type == 'hashkey' %}
 
-  '"' || REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
+    '"' || REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(TRIM(BOTH ' ' FROM CAST([EXPRESSION] AS VARCHAR)), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
 
 {% else %}
+
+    {%- set cast_expr = 'CAST([EXPRESSION] AS VARCHAR)' -%}
+    
+    {%- set expr = "TRIM(BOTH ' ' FROM " ~ cast_expr ~ ")" if use_trim else cast_expr -%}
 
     CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
 
@@ -76,9 +76,7 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"')
                                     
 {%- if hash_type == 'hashkey' -%}
 
-    {%- set expr = 'LTRIM(RTRIM(CONVERT(VARCHAR(4000), [EXPRESSION], 1)))' if use_trim else 'CONVERT(VARCHAR(4000), [EXPRESSION], 1)' -%}
-
-    '"' + REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') + '"'
+    '"' + REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(CONVERT(VARCHAR(4000), [EXPRESSION], 1))), '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') + '"'
 
 {%- else -%}
 
