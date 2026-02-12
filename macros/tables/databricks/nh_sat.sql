@@ -8,6 +8,12 @@
 
 {%- set source_relation = ref(source_model) -%}
 
+{%- set source_cols = datavault4dbt.escape_column_names(source_cols) -%}
+{%- set parent_hashkey = datavault4dbt.escape_column_names(parent_hashkey) -%}
+{%- set src_payload = datavault4dbt.escape_column_names(src_payload) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH
@@ -43,6 +49,9 @@ distinct_hashkeys AS (
     SELECT DISTINCT
         {{ parent_hashkey }}
     FROM {{ this }}
+    WHERE 1=1
+
+    {{ datavault4dbt.filter_distinct_target_hashkey_in_nh_sat() }}
 
     ),
 

@@ -10,7 +10,7 @@
 #}
 
 
-{%- macro hub(yaml_metadata=none, hashkey=none, business_keys=none, source_models=none, src_ldts=none, src_rsrc=none, disable_hwm=false) -%}
+{%- macro hub(yaml_metadata=none, hashkey=none, business_keys=none, source_models=none, src_ldts=none, src_rsrc=none, disable_hwm=false, additional_columns=none) -%}
 
     {% set hashkey_description = "
     hashkey::string                             Name of the hashkey column inside the stage, that should be used as PK of the Hub.
@@ -85,23 +85,46 @@
                                 Needs to use the same column name as defined as alias inside the staging model.
     " %}
 
-    {%- set hashkey         = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
-    {%- set business_keys   = datavault4dbt.yaml_metadata_parser(name='business_keys', yaml_metadata=yaml_metadata, parameter=business_keys, required=True, documentation=business_keys_description) -%}
-    {%- set source_models   = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
-    {%- set src_ldts        = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
-    {%- set src_rsrc        = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
-    {%- set disable_hwm     = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
+    {% set additional_columns_description = "
+    additional_columns::list | string       Additional columns from source system or derived columns which should be part of Hub. Useful when you have to deviate from the default Hub structure.
+                                            The columns need to be available in all source models which are used for the Hub.
+                                            Optional parameter, defaults to empty list.
+    " %}
 
+    {%- set hashkey             = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
+    {%- set business_keys       = datavault4dbt.yaml_metadata_parser(name='business_keys', yaml_metadata=yaml_metadata, parameter=business_keys, required=True, documentation=business_keys_description) -%}
+    {%- set source_models       = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
+    {%- set src_ldts            = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
+    {%- set src_rsrc            = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
+    {%- set disable_hwm         = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
+    {%- set additional_columns  = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
+    
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
+    
+    {# For Fusion static_analysis overwrite #}
+    {% set static_analysis_config = datavault4dbt.get_static_analysis_config('hub') %}
+    {%- if datavault4dbt.is_something(static_analysis_config) -%}
+        {{ config(static_analysis='off') }}
+    {%- endif -%}
+
+    {%- if var('datavault4dbt.use_premium_package', False) == True -%}
+        {{ datavault4dbt_premium_package.insert_metadata_hub(hashkey=hashkey,
+                                                    business_keys=business_keys,
+                                                    src_ldts=src_ldts,
+                                                    src_rsrc=src_rsrc,
+                                                    source_models=source_models,
+                                                    disable_hwm=disable_hwm) }}
+    {%- endif %}
 
     {{ return(adapter.dispatch('hub', 'datavault4dbt')(hashkey=hashkey,
                                                             business_keys=business_keys,
                                                             src_ldts=src_ldts,
                                                             src_rsrc=src_rsrc,
                                                             source_models=source_models,
-                                                            disable_hwm=disable_hwm)) }}
+                                                            disable_hwm=disable_hwm,
+                                                            additional_columns=additional_columns)) }}
 
 {%- endmacro -%}

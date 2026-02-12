@@ -44,6 +44,22 @@
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
     {%- set snapshot_trigger_column = datavault4dbt.replace_standard(snapshot_trigger_column, 'datavault4dbt.snapshot_trigger_column', 'is_active') -%}
 
+    {# For Fusion static_analysis overwrite #}
+    {% set static_analysis_config = datavault4dbt.get_static_analysis_config('ref_table') %}
+    {%- if datavault4dbt.is_something(static_analysis_config) -%}
+        {{ config(static_analysis='off') }}
+    {%- endif -%}
+
+    {%- if var('datavault4dbt.use_premium_package', False) == True -%}
+        {{ datavault4dbt_premium_package.insert_metadata_ref_table(ref_hub=ref_hub,
+                                                            src_ldts=src_ldts,
+                                                            src_rsrc=src_rsrc,
+                                                            ref_satellites=ref_satellites,
+                                                            historized=historized,
+                                                            snapshot_relation=snapshot_relation,
+                                                            snapshot_trigger_column=snapshot_trigger_column) }}
+    {%- endif %}
+    
     {{ return(adapter.dispatch('ref_table', 'datavault4dbt')(ref_hub=ref_hub,
                                                             src_ldts=src_ldts,
                                                             src_rsrc=src_rsrc,

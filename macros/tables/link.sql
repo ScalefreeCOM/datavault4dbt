@@ -5,7 +5,7 @@
     all have the same number of foreign keys inside, otherwise they would not share the same business definition of that link.
 #}
 
-{%- macro link(yaml_metadata=none, link_hashkey=none, foreign_hashkeys=none, source_models=none, src_ldts=none, src_rsrc=none, disable_hwm=false) -%}
+{%- macro link(yaml_metadata=none, link_hashkey=none, foreign_hashkeys=none, source_models=none, src_ldts=none, src_rsrc=none, disable_hwm=false, additional_columns=none) -%}
 
     {% set link_hashkey_description = "
     link_hashkey::string                    Name of the link hashkey column inside the stage. Should get calculated out of all business keys inside
@@ -77,21 +77,43 @@
                                             Needs to use the same column name as defined as alias inside the staging model.
     " %}
 
+    {% set additional_columns_description = "
+    additional_columns::list | string       Additional columns from source system or derived columns which should be part of Link. Useful when you have to deviate from the default Link structure.
+                                            The columns need to be available in all source models which are used for the Link.
+                                            Optional parameter, defaults to empty list.
+    " %}
+
     {%- set link_hashkey        = datavault4dbt.yaml_metadata_parser(name='link_hashkey', yaml_metadata=yaml_metadata, parameter=link_hashkey, required=True, documentation=link_hashkey_description) -%}
     {%- set foreign_hashkeys    = datavault4dbt.yaml_metadata_parser(name='foreign_hashkeys', yaml_metadata=yaml_metadata, parameter=foreign_hashkeys, required=True, documentation=foreign_hashkeys_description) -%}
     {%- set source_models       = datavault4dbt.yaml_metadata_parser(name='source_models', yaml_metadata=yaml_metadata, parameter=source_models, required=True, documentation=source_models_description) -%}
     {%- set src_ldts            = datavault4dbt.yaml_metadata_parser(name='src_ldts', yaml_metadata=yaml_metadata, parameter=src_ldts, required=False, documentation=src_ldts_description) -%}
     {%- set src_rsrc            = datavault4dbt.yaml_metadata_parser(name='src_rsrc', yaml_metadata=yaml_metadata, parameter=src_rsrc, required=False, documentation=src_rsrc_description) -%}
     {%- set disable_hwm         = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be turned off. Optional, default False.') -%}
+    {%- set additional_columns  = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if src_ldts and src_rsrc are not set. #}
 
     {%- set src_ldts = datavault4dbt.replace_standard(src_ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set src_rsrc = datavault4dbt.replace_standard(src_rsrc, 'datavault4dbt.rsrc_alias', 'rsrc') -%}
 
+    {# For Fusion static_analysis overwrite #}
+    {% set static_analysis_config = datavault4dbt.get_static_analysis_config('link') %}
+    {%- if datavault4dbt.is_something(static_analysis_config) -%}
+        {{ config(static_analysis='off') }}
+    {%- endif -%}
+
+    {%- if var('datavault4dbt.use_premium_package', False) == True -%}
+        {{- datavault4dbt_premium_package.insert_metadata_link(link_hashkey=link_hashkey, 
+                                                foreign_hashkeys=foreign_hashkeys,
+                                                src_ldts=src_ldts, src_rsrc=src_rsrc,
+                                                source_models=source_models,
+                                                disable_hwm=disable_hwm) -}}
+    {%- endif %}
+
     {{- adapter.dispatch('link', 'datavault4dbt')(link_hashkey=link_hashkey, foreign_hashkeys=foreign_hashkeys,
                                              src_ldts=src_ldts, src_rsrc=src_rsrc,
                                              source_models=source_models,
-                                             disable_hwm=disable_hwm) -}}
+                                             disable_hwm=disable_hwm,
+                                             additional_columns=additional_columns) -}}
 
 {%- endmacro -%}

@@ -1,4 +1,4 @@
-{%- macro exasol__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none) -%}
+{%- macro exasol__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'HASHTYPE') -%}

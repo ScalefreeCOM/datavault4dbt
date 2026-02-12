@@ -5,6 +5,7 @@
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- set parent_ref_keys = datavault4dbt.expand_column_list(columns=[parent_ref_keys]) -%}
+{%- set parent_ref_keys = datavault4dbt.escape_column_names(parent_ref_keys) -%}
 
 {%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
 
@@ -19,6 +20,13 @@
 {%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_payload]) -%}
 
 {%- set source_relation = ref(source_model) -%}
+
+{%- set ref_key = datavault4dbt.escape_column_names(ref_key) -%}
+{%- set ns.src_hashdiff = datavault4dbt.escape_column_names(ns.src_hashdiff) -%}
+{%- set ns.hdiff_alias = datavault4dbt.escape_column_names(ns.hdiff_alias) -%}
+{%- set source_cols = datavault4dbt.escape_column_names(source_cols) -%}
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+
 
 {{ datavault4dbt.prepend_generated_by() }}
 

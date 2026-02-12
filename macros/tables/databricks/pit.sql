@@ -1,4 +1,4 @@
-{%- macro databricks__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none) -%}
+{%- macro databricks__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
@@ -14,6 +14,7 @@
 {%- endif -%}
 
 {%- set rsrc = var('datavault4dbt.rsrc_alias', 'rsrc') -%}
+{%- set rsrc = datavault4dbt.escape_column_names(rsrc) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -24,6 +25,11 @@
 {%- else -%}
     {%- set hashed_cols = [hashkey_string, datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- endif -%}
+
+{%- set hashkey = datavault4dbt.escape_column_names(hashkey) -%}
+{%- set sdts = datavault4dbt.escape_column_names(sdts) -%}
+{%- set ldts = datavault4dbt.escape_column_names(ldts) -%}
+{%- set ledts = datavault4dbt.escape_column_names(ledts) -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -46,23 +52,23 @@ pit_records AS (
     SELECT
         
         {% if datavault4dbt.is_something(pit_type) -%}
-            {{ datavault4dbt.as_constant(pit_type) }} as type,
+            {{ datavault4dbt.as_constant(pit_type) }} as {{ datavault4dbt.escape_column_names('type') }},
         {%- endif %}
         {% if datavault4dbt.is_something(custom_rsrc) -%}
         '{{ custom_rsrc }}' as {{ rsrc }},
         {%- endif %}
         {{ datavault4dbt.hash(columns=hashed_cols,
-                    alias=dimension_key,
+                    alias=datavault4dbt.escape_column_names(dimension_key),
                     is_hashdiff=false)   }} ,
         te.{{ hashkey }},
         snap.{{ sdts }},
         {% for satellite in sat_names %}
           {% if refer_to_ghost_records %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite }},
-            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
+            COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS {{datavault4dbt.escape_column_names('hk_'~ satellite)}},
+            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ datavault4dbt.escape_column_names(ldts~'_'~satellite)}}
           {% else %}
-            {{ satellite }}.{{ hashkey }} AS hk_{{ satellite }},
-            {{ satellite }}.{{ ldts }} AS {{ ldts }}_{{ satellite }}
+            {{ satellite }}.{{ hashkey }} AS {{datavault4dbt.escape_column_names('hk_'~ satellite)}},
+            {{ satellite }}.{{ ldts }} AS {{ datavault4dbt.escape_column_names(ldts~'_'~satellite)}}
           {% endif %}
         {{- "," if not loop.last }}
         {%- endfor %}

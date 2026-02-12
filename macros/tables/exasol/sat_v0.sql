@@ -49,6 +49,10 @@ latest_entries_in_sat AS (
         {{ ns.hdiff_alias }}
     FROM 
         {{ this }}
+     WHERE 1=1
+        
+    {{ datavault4dbt.filter_latest_entries_in_sat() }}
+
     QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 {%- endif %}

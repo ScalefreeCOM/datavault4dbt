@@ -4,6 +4,9 @@
 
 
 ---
+### ⚠️ Fusion Compatibility ⚠️
+
+✅ datavault4dbt works flawlessly with dbt-fusion! For more details and considerations check our [documentation](https://www.datavault4dbt.com/documentation/general-usage-notes/fusion-compatibility/)!
 
 ### Included Macros
 - [Staging Area (For Hashing, prejoins and ghost records)](https://www.datavault4dbt.com/documentation/macro-instructions/staging/)
@@ -65,8 +68,11 @@ Currently supported platforms are:
 We are working continuously at high pressure to adapt the package for large variety of different platforms. In the future, the package will hopefully be available for SQL Server, Oracle and many more.
 
 ---
+## Looking for dedicated Support?
+While our development team is eager to answer all questions and fix bugs directly here on Github, this sometimes isn't enough for organizations looking for a guaranteed level of support. 
+To meet this requirement, Scalefree has created the [DataVault4dbt Premium Package](https://kb.scalefr.ee/anexd2)! Follow the link to learn about all benefits included. 
 
-
+---
 ## Installation instructions
 
 1. Include this package in your `packages.yml` -- check [here](https://hub.getdbt.com/scalefreecom/datavault4dbt/latest/)

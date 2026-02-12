@@ -335,9 +335,14 @@ prejoined_columns AS (
     {%- else -%}
       {%- set operator = prejoin['operator'] -%}
     {%- endif -%}
+    {%- if 'join_type' not in prejoin.keys() -%}
+      {%- set join_type = 'left' -%}
+    {%- else -%}
+      {%- set join_type = prejoin['join_type'] -%}
+    {%- endif -%}
       {%- set prejoin_alias = 'pj_' + loop.index|string %}
       
-      left join {{ relation }} as {{ prejoin_alias }}
+      {{ join_type }} join {{ relation }} as {{ prejoin_alias }}
         on {{ datavault4dbt.multikey(columns=prejoin['this_column_name'], prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=prejoin['ref_column_name']) }}
   {%- endfor -%}
 
@@ -351,7 +356,7 @@ prejoined_columns AS (
 {# Adding derived columns to the selection #}
 derived_columns AS (
 
-  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) -%}
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select | map('lower'), derived_column_names | map('lower')) -%}
 
   SELECT
 
@@ -603,7 +608,7 @@ ghost_records AS (
 {%- endif -%}
 
 {%- if not include_source_columns -%}
-  {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select, exclude_columns_list=source_columns_to_select) %}
+  {% set final_columns_to_select = datavault4dbt.process_columns_to_select(columns_list=final_columns_to_select | map('lower'), exclude_columns_list=source_columns_to_select | map('lower')) %}
 {%- endif -%}
 
 {# Combining the two ghost records with the regular data #}

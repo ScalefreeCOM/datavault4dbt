@@ -1,4 +1,4 @@
-{%- macro snowflake__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc, disable_hwm) -%}
+{%- macro snowflake__link(link_hashkey, foreign_hashkeys, source_models, src_ldts, src_rsrc, disable_hwm, additional_columns) -%}
 
 {%- if not (foreign_hashkeys is iterable and foreign_hashkeys is not string) -%}
 
@@ -13,6 +13,10 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{# Select the additional_columns from the link model and put them in an array. If additional_colums none, then empty array #}
+{%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
+
 {# If no specific link_hk and fk_columns are defined for each source, we apply the values set in the link_hashkey and foreign_hashkeys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
 {# For the use of record_source performance lookup it is required that every source model has the parameter rsrc_static defined and it cannot be an empty string #}
@@ -26,21 +30,13 @@
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
 {{ log('source_models: '~source_models, false) }}
 
-{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] -%}
+{%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + additional_columns  -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
 {% if is_incremental() %}
-{# Get all link hashkeys out of the existing link for later incremental logic. #}
-    distinct_target_hashkeys AS (
-        
-        SELECT
-        {{ link_hashkey }}
-        FROM {{ this }}
-
-    ),
     {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
         {% for source_model in source_models %}
         {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
@@ -65,10 +61,12 @@ WITH
 
             rsrc_static_{{ source_number }} AS (
                 {%- for rsrc_static in rsrc_statics -%}
-                    SELECT t.*,
+                    SELECT max(t.{{src_ldts}}) as {{src_ldts}},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
                     WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    AND {{src_ldts}} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+                    GROUP BY rsrc_static
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
@@ -153,19 +151,28 @@ WITH
             {% for fk in source_model['fk_columns'] -%}
             {{ fk }},
             {% endfor -%}
+
+            {% for col in additional_columns -%}
+            {{ col }},
+            {% endfor -%}
+
             {{ src_ldts }},
             {{ src_rsrc }}
         FROM {{ ref(source_model.name) }} src
         {{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}
 
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
-        INNER JOIN max_ldts_per_rsrc_static_in_target max ON
-        ({%- for rsrc_static in rsrc_statics -%}
-            max.rsrc_static = '{{ rsrc_static }}'
-            {%- if not loop.last -%} OR
+        WHERE 
+        {% for rsrc_static in rsrc_statics %}
+          (src.{{ src_rsrc }} = '{{ rsrc_static }}' AND src.{{ src_ldts }} > (
+            SELECT MAX(max_ldts)
+            FROM max_ldts_per_rsrc_static_in_target
+            WHERE rsrc_static = '{{ rsrc_static }}' AND max_ldts != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            ))
+            {%- if not loop.last %}
+            OR
             {% endif -%}
-        {%- endfor %})
-        WHERE src.{{ src_ldts }} > max.max_ldts
+        {%- endfor -%}
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
         WHERE src.{{ src_ldts }} > (
             SELECT MAX({{ src_ldts }})
@@ -193,6 +200,11 @@ source_new_union AS (
         {% for fk in source_model['fk_columns']|list %}
             {{ fk }} AS {{ foreign_hashkeys[loop.index - 1] }},
         {% endfor -%}
+
+        {% for col in additional_columns -%}
+            {{ col }},
+        {% endfor -%}
+
         {{ src_ldts }},
         {{ src_rsrc }}
     FROM src_new_{{ source_number }}
@@ -221,6 +233,20 @@ earliest_hk_over_all_sources AS (
     {%- set ns.last_cte = 'earliest_hk_over_all_sources' -%}
 
 ),
+
+{%- if is_incremental() %}
+{# Get all link hashkeys out of the existing link for later incremental logic. #}
+    distinct_target_hashkeys AS (
+        
+        SELECT
+        {{ link_hashkey }}
+        FROM {{ this }}
+        WHERE 1=1
+
+        {{ datavault4dbt.filter_distinct_target_hashkey_in_link() }}
+
+    ),
+{% endif %}
 
 records_to_insert AS (
     {# Select everything from the previous CTE, if incremental filter for hashkeys that are not already in the link. #}

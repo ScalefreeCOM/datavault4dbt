@@ -192,7 +192,14 @@
     {%- set escape_char_left  = var('escape_char_left',  "") -%}
     {%- set escape_char_right = var('escape_char_right', "") -%}
 
-    {%- set escaped_column_name = escape_char_left ~ column | upper | replace(escape_char_left, '') | replace(escape_char_right, '') | trim ~ escape_char_right | indent(4) -%}
+    {%- set escaped_column_name = escape_char_left ~ column | replace(escape_char_left, '') | replace(escape_char_right, '') | trim ~ escape_char_right | indent(4) -%}
+
+    {% set set_casing = var('datavault4dbt.set_casing', none) %}
+    {% if set_casing|lower in ['upper', 'uppercase'] %}
+        {%- set escaped_column_name = escaped_column_name | upper -%}
+    {% elif set_casing|lower in ['lower', 'lowercase'] %}
+        {%- set escaped_column_name = escaped_column_name | lower -%}
+    {% endif %}
 
     {%- do return(escaped_column_name) -%}
 

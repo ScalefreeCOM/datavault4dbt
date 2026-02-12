@@ -34,6 +34,12 @@
     {%- set ref_satellites_dict = ref_satellites -%}
 {%- endif -%}
 
+{%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
+{%- set ledts_alias = datavault4dbt.escape_column_names(ledts_alias) -%}
+{%- set sdts_alias = datavault4dbt.escape_column_names(sdts_alias) -%}
+{%- set is_current_col_alias = datavault4dbt.escape_column_names(is_current_col_alias) -%}
+
+{{ datavault4dbt.prepend_generated_by() }}
 
 WITH 
 
@@ -88,9 +94,9 @@ dates AS (
 ref_table AS (
 
     SELECT
-    {{ datavault4dbt.print_list(list_to_print=ref_key_cols, indent=2, src_alias='h') }},
-        ld.{{ date_column }},
-        h.{{ src_rsrc }},
+    {{ datavault4dbt.print_list(list_to_print=datavault4dbt.escape_column_names(ref_key_cols), indent=2, src_alias='h') }},
+        ld.{{ datavault4dbt.escape_column_names(date_column) }},
+        h.{{ datavault4dbt.escape_column_names(src_rsrc) }},
 
     {%- for satellite in ref_satellites_dict.keys() %}
 
@@ -98,19 +104,20 @@ ref_table AS (
     {%- set sat_columns_pre = [] -%}
         
         {%- if ref_satellites_dict[satellite] is mapping and 'include' in ref_satellites_dict[satellite].keys() -%}
-            {%- set sat_columns_pre = ref_satellites_dict[satellite]['include'] -%}
+            {%- set sat_columns_pre = ref_satellites_dict[satellite]['include'] | map('lower') -%}
         {%- elif ref_satellites_dict[satellite] is mapping and 'exclude' in ref_satellites_dict[satellite].keys() -%}
-            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
-            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, ref_satellites_dict[satellite]['exclude']) -%}
+            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) | map('lower') -%}
+            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, ref_satellites_dict[satellite]['exclude'] | map('lower')) -%}
         {%- elif datavault4dbt.is_list(ref_satellites_dict[satellite]) -%}
-            {%- set sat_columns_pre = ref_satellites_dict[satellite] -%}
+            {%- set sat_columns_pre = ref_satellites_dict[satellite] | map('lower') -%}
         {%- else -%}
-            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
-            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, sat_columns_to_exclude) -%}
+            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) | map('lower') -%}
+            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, sat_columns_to_exclude | map('lower')) -%}
         {%- endif -%}
 
-    {%- set sat_columns = datavault4dbt.process_columns_to_select(sat_columns_pre, sat_columns_to_exclude) -%}
-    
+    {%- set sat_columns = datavault4dbt.process_columns_to_select(sat_columns_pre, sat_columns_to_exclude | map('lower')) -%}
+    {%- set sat_columns = datavault4dbt.escape_column_names(sat_columns) -%}
+
     {{- log('sat_columns: '~ sat_columns, false) -}}
 
     {{ datavault4dbt.print_list(list_to_print=sat_columns, indent=2, src_alias=sat_alias) }}
@@ -129,7 +136,7 @@ ref_table AS (
         {%- set sat_alias = 's_' + loop.index|string -%}
 
     LEFT JOIN {{ ref(satellite) }} {{ sat_alias }}
-        ON {{ datavault4dbt.multikey(columns=ref_key_cols, prefix=['h', sat_alias], condition='=') }}
+        ON {{ datavault4dbt.multikey(columns=datavault4dbt.escape_column_names(ref_key_cols), prefix=['h', sat_alias], condition='=') }}
         AND  ld.{{ date_column }} BETWEEN {{ sat_alias }}.{{ src_ldts }} AND {{ sat_alias }}.{{ ledts_alias }}
     
     {% endfor %}
