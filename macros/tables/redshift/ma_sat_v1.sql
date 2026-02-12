@@ -6,9 +6,7 @@
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 
 {%- set source_relation = ref(sat_v0) -%}
-{%- set source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
-{%- set all_columns = source_columns  -%}
-
+{%- set all_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
 {%- set exclude = datavault4dbt.expand_column_list(columns=[hashkey, hashdiff, ma_attribute, src_ldts, src_rsrc]) -%}
 {%- set ma_attributes = datavault4dbt.expand_column_list(columns=[ma_attribute]) -%}
 
