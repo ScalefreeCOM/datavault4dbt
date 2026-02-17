@@ -25,7 +25,7 @@
 
     {# ALTER existing satellite to add new hashkey and new hashdiff. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ datavault4dbt.alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) }}
+    {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {% if datavault4dbt.is_something(business_keys) %}
@@ -86,15 +86,15 @@
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
         {% set overwrite_sql %}
-        {{ datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
-        {{ datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated') }}
-        {{ datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
-        {{ datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff ) }}
+        {{ datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') }}
+        {{ datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated') }}
+        {{ datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) }}
+        {{ datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff ) }}
         {% endset %}
         {% do run_query(overwrite_sql) %}
 
         {% if drop_old_values %}
-            {{ datavault4dbt.alter_relation_add_remove_columns(relation=satellite_relation, remove_columns=columns_to_drop) }}
+            {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=satellite_relation, remove_columns=columns_to_drop) }}
             {{ log('Existing Hash values overwritten!', true) }}
         {% endif %}
 

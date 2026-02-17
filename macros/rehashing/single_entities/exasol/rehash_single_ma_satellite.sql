@@ -25,7 +25,7 @@
 
     {# ALTER existing satellite to add new hashkey and new hashdiff. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
+    {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# Ensuring business_keys is a list. #}
@@ -82,20 +82,20 @@
     {% if overwrite_hash_values %}
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
-        {% set overwrite_hkey1 = datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') %}
+        {% set overwrite_hkey1 = datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') %}
         {% do run_query(overwrite_hkey1) %}
 
-        {% set overwrite_hkey2 = datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) %}
+        {% set overwrite_hkey2 = datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) %}
         {% do run_query(overwrite_hkey2) %}
 
-        {% set overwrite_hdiff1 = datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated') %}
+        {% set overwrite_hdiff1 = datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated') %}
         {% do run_query(overwrite_hdiff1) %}
 
-        {% set overwrite_hdiff2 = datavault4dbt.get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff ) %}
+        {% set overwrite_hdiff2 = datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff ) %}
         {% do run_query(overwrite_hdiff2) %}
         
         {% if drop_old_values %}
-            {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
+            {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
             {{ log('Existing Hash values overwritten!', output_logs) }}
         {% endif %}
 

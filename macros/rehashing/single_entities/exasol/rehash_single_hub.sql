@@ -14,7 +14,7 @@
 
     {# Alter existing Hub to add new hashkey column. (Calls the translated macro) #}
     {{ log('Executing ALTER TABLE statement to add column...', output_logs) }}
-    {{ datavault4dbt.alter_relation_add_remove_columns(relation=hub_relation, add_columns=new_hash_col) }}
+    {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=hub_relation, add_columns=new_hash_col) }}
 
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
@@ -48,15 +48,15 @@
     {% if overwrite_hash_values %}
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
-        {% set overwrite_sql1 = datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') %}
+        {% set overwrite_sql1 = datavault4dbt.custom_get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated') %}
         {% do run_query(overwrite_sql1) %}
 
-        {% set overwrite_sql2 = datavault4dbt.get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) %}
+        {% set overwrite_sql2 = datavault4dbt.custom_get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey) %}
         {% do run_query(overwrite_sql2) %}
         
         {% if drop_old_values == 'true' %}
             {# Dropping the deprecated column (Calls the translated macro) #}
-            {{ datavault4dbt.alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
+            {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
             {{ log('Existing Hash values overwritten!', true) }}
         {% endif %}
 

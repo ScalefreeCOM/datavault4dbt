@@ -26,7 +26,7 @@
 
     {# 1. Add new columns #}
     {{ log('Executing ALTER TABLE statement (Adding new columns)...', output_logs) }}
-    {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
+    {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# Ensuring business_keys is a list. #}
@@ -94,7 +94,7 @@
         {# 4. Drop old columns #}
         {% if drop_old_values %}
             {{ log('Dropping deprecated columns...', output_logs) }}
-            {{ datavault4dbt.alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
+            {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
             {{ log('Existing Hash values overwritten and old columns dropped!', true) }}
         {% endif %}
 

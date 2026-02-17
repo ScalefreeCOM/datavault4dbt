@@ -44,7 +44,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {# ALTER existing link to add new link hashkey and new hub hashkeys. #}
     {{ log('Executing ALTER TABLE statement...', output_logs) }}
-    {{ datavault4dbt.alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.new_hash_columns) }}
+    {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
     {# generating the UPDATE statement that populates the new columns. #}
     {% set update_sql = datavault4dbt.link_update_statement(link_relation=link_relation,
@@ -65,15 +65,15 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
         {% set overwrite_sql %}
         {# Rename Link Hashkey #}
-            {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=link_hashkey, new_col_name=link_hashkey + '_deprecated') }}
-            {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=new_link_hashkey_name, new_col_name=link_hashkey) }}
+            {{ datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=link_hashkey, new_col_name=link_hashkey + '_deprecated') }}
+            {{ datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=new_link_hashkey_name, new_col_name=link_hashkey) }}
             
             {% do ns.columns_to_drop[0].update({'new_name' : link_hashkey } )%}
 
             {# Rename All Hub Hashkeys #}
             {% for hub_hashkey in ns.hub_hashkeys %}
-                {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.current_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name + '_deprecated') }}
-                {{ datavault4dbt.get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.new_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name) }}
+                {{ datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.current_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name + '_deprecated') }}
+                {{ datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.new_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name) }}
 
                 {# Prepare list of 'deprecated' hub hashkey columns to drop them later on. #}
                 {% do ns.columns_to_drop.append({"name": hub_hashkey.current_hashkey_name + '_deprecated', "new_name": hub_hashkey.current_hashkey_name }) %}
@@ -85,7 +85,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         {% do run_query(overwrite_sql) %}
         
         {% if drop_old_values %}
-            {{ datavault4dbt.alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
+            {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
             {{ log('Existing Hash values overwritten!', true) }}
         {% endif %}
 

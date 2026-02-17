@@ -41,7 +41,7 @@
 
     {# Add New Columns #}
     {{ log('Adding new columns...', output_logs) }}
-    {{ datavault4dbt.alter_relation_add_remove_columns(relation=nh_satellite_relation, add_columns=new_hash_columns) }}
+    {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=nh_satellite_relation, add_columns=new_hash_columns) }}
 
     {# Calculate Hashes (MERGE) #}
     {% set update_sql = adapter.dispatch('nh_satellite_update_statement','datavault4dbt')(nh_satellite_relation=nh_satellite_relation,
@@ -59,8 +59,8 @@
 
     {% if overwrite_hash_values %}
         {{ log('Renaming columns...', output_logs) }}
-        {% do run_query(datavault4dbt.get_rename_column_sql(relation=nh_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
-        {% do run_query(datavault4dbt.get_rename_column_sql(relation=nh_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
+        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
+        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
         
         {% if drop_old_values %}
             {{ log('Dropping deprecated columns...', output_logs) }}

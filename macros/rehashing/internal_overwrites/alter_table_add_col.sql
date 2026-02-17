@@ -1,8 +1,12 @@
-{% macro alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
-{{ adapter.dispatch('alter_relation_add_remove_columns', 'datavault4dbt')(relation=relation, add_columns=add_columns, remove_columns=remove_columns) }}
+{% macro custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{{ adapter.dispatch('custom_alter_relation_add_remove_columns', 'datavault4dbt')(relation=relation, add_columns=add_columns, remove_columns=remove_columns) }}
 {% endmacro %}
 
-{% macro fabric__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{% macro default__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{{ alter_relation_add_remove_columns(relation, add_columns, remove_columns) }}
+{% endmacro %}
+
+{% macro fabric__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {% if add_columns %}
 
@@ -36,7 +40,7 @@
 
 {% endmacro %}
 
-{% macro synapse__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{% macro synapse__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {% if add_columns %}
 
@@ -70,7 +74,7 @@
 
 {% endmacro %}
 
-{% macro databricks__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{% macro databricks__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {% if add_columns or remove_columns %}
 
@@ -83,7 +87,7 @@
               {% endfor %}
             )
         {%- endset %}
-        {{ log('Executing ADD COLUMNS on Databricks: ' ~ add_sql, true) }}
+        {{ log('Executing ADD COLUMNS on Databricks: ' ~ add_sql, false) }}
         {% do run_query(add_sql) %}
     {% endif %}
 
@@ -93,7 +97,7 @@
             {% set remove_sql -%}
                 ALTER TABLE {{ relation.render() }} DROP COLUMN IF EXISTS {{ column.name }}
             {%- endset %}
-            {{ log('Executing DROP COLUMN on Databricks: ' ~ remove_sql, true) }}
+            {{ log('Executing DROP COLUMN on Databricks: ' ~ remove_sql, false) }}
             {% do run_query(remove_sql) %}
         {% endfor %}
     {% endif %}
@@ -102,7 +106,7 @@
 
 {% endmacro %}
 
-{% macro snowflake__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{% macro snowflake__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {% if relation.is_dynamic_table -%}
         {% set relation_type = "dynamic table" %}
@@ -140,7 +144,7 @@
 
 {% endmacro %}
 
-{% macro redshift__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{% macro redshift__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {# In redshift, distkey and sortkey columns cannot be dropped. In remove_columns an alternative column has to be provided. #}
 
@@ -294,7 +298,7 @@
 
 {% endmacro %}
 
-{% macro postgres__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{% macro postgres__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
 
     {% if add_columns %}
@@ -330,7 +334,7 @@
 
 {% endmacro %}
 
-{% macro exasol__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{% macro exasol__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {# Handle adding columns #}
     {% if add_columns %}
@@ -362,7 +366,7 @@
 
 {% endmacro %}
 
-{% macro oracle__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+{% macro oracle__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {% if add_columns %}
 

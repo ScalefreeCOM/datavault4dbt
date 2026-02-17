@@ -49,7 +49,7 @@
 
     {# Add New Columns #}
     {{ log('Executing ALTER TABLE to add columns...', output_logs) }}
-    {{ datavault4dbt.alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) }}
+    {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) }}
 
 
     {# Calculate Hashes (MERGE) #}
@@ -90,12 +90,12 @@
         {{ log('Replacing existing hash values...', output_logs) }}
 
         {# Rename Hashkey #}
-        {% do run_query(datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
-        {% do run_query(datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
+        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
+        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
 
         {# Rename Hashdiff #}
-        {% do run_query(datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) %}
-        {% do run_query(datavault4dbt.get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) %}
+        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) %}
+        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) %}
         
         {# Drop Old Values #}
         {% if drop_old_values %}

@@ -43,7 +43,7 @@
 
     {# 2. Add new columns (new Link Hash & new Hub Hashes) #}
     {{ log('Executing ALTER TABLE statement (Adding new columns)...', output_logs) }}
-    {{ datavault4dbt.alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.new_hash_columns) }}
+    {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=link_relation, add_columns=ns.new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
     {# 3. Generate Update Statement (using Oracle MERGE) #}
@@ -79,7 +79,7 @@
         {# 5. Drop deprecated columns #}
         {% if drop_old_values %}
             {{ log('Dropping deprecated columns...', output_logs) }}
-            {{ datavault4dbt.alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
+            {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
             {{ log('Existing Hash values overwritten and old columns dropped!', true) }}
         {% endif %}
 
