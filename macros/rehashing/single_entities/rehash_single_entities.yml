@@ -1,0 +1,295 @@
+version: 2
+
+macros:
+  - name: rehash_single_hub
+    description: >
+      This macro is used to rehash a single hub table by adding a new hashkey column,
+      calculating the new hash values, and optionally replacing the old hashkey.
+
+      Usage example:
+          dbt run-operation rehash_single_hub --args '{hub: customer_h, hashkey: HK_CUSTOMER_H, business_keys: C_CUSTKEY, overwrite_hash_values: true}'
+    arguments:
+      - name: hub
+        type: string
+        description: The name of the hub table to rehash.
+      - name: hashkey
+        type: string
+        description: The name of the existing hashkey column.
+      - name: business_keys
+        type: string or list
+        description: The business key(s) used to calculate the new hash.
+      - name: overwrite_hash_values
+        type: boolean
+        description: Whether to overwrite the old hashkey with the new one.
+      - name: output_logs
+        type: boolean
+        description: Whether to output logs during the macro execution.
+      - name: drop_old_values
+        type: boolean
+        description: Whether to drop the old hashkey column after renaming.
+
+  - name: hub_update_statement
+    description: >
+      Dispatches to the appropriate adapter-specific macro to generate the UPDATE statement
+      for rehashing a hub.
+    arguments:
+      - name: hub_relation
+        type: relation
+        description: The hub table relation.
+      - name: new_hashkey_name
+        type: string
+        description: The name of the new hashkey column.
+      - name: hashkey
+        type: string
+        description: The name of the existing hashkey column.
+      - name: hash_config_dict
+        type: dictionary
+        description: A dictionary containing the hash configuration.
+
+  - name: rehash_single_link
+    description: >
+      This macro is used to rehash a single link table by adding new hashkey columns
+      for the link and its related hubs, calculating the new hash values,
+      and optionally replacing the old hashkeys. Works for standard and non-historized links.
+
+      Example usage: 
+          dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hashkey: hk_customer_nation_l, overwrite_hash_values: true, hub_config: [{hub_hashkey: hk_customer_h, hub_name: customer_h, business_keys: [c_custkey]}, {hub_hashkey: hk_nation_h, hub_name: nation_h, business_keys: [n_nationkey]}]}'
+    arguments:
+      - name: link
+        type: string
+        description: The name of the link table to rehash.
+      - name: link_hashkey
+        type: string
+        description: The name of the existing link hashkey column.
+      - name: hub_config
+        type: list
+        description: A list of dictionaries, where each dictionary contains hub_hashkey, hub_name, and business_keys for each hub involved in the link.
+      - name: additional_hash_input_cols
+        type: list
+        description: A list of additional columns to include in the link hashkey calculation.
+      - name: overwrite_hash_values
+        type: boolean
+        description: Whether to overwrite the old hashkeys with the new ones.
+      - name: output_logs
+        type: boolean
+        description: Whether to output logs during the macro execution.
+      - name: drop_old_values
+        type: boolean
+        description: Whether to drop the old hashkey columns after renaming.
+
+  - name: link_update_statement
+    description: >
+      Dispatches to the appropriate adapter-specific macro to generate the UPDATE statement
+      for rehashing a link.
+    arguments:
+      - name: link_relation
+        type: relation
+        description: The link table relation.
+      - name: hub_hashkeys
+        type: list
+        description: A list of dictionaries containing hub hashkey information.
+      - name: link_hashkey
+        type: string
+        description: The name of the existing link hashkey column.
+      - name: new_link_hashkey_name
+        type: string
+        description: The name of the new link hashkey column.
+      - name: additional_hash_input_cols
+        type: list
+        description: Additional columns used in hash calculation.
+
+  - name: rehash_single_ma_satellite
+    description: >
+      This macro is used to rehash a multi-active satellite table by adding new hashkey and hashdiff columns,
+      calculating the new values, and optionally replacing the old ones.
+
+      Usage example:
+          dbt run-operation rehash_single_ma_satellite --args '{ma_satellite: customer_n0_ms, hashkey: HK_CUSTOMER_H, hashdiff: HD_CUSTOMER_N_MS, ma_keys: [O_ORDERKEY], payload: [O_ORDERSTATUS, O_ORDERPRIORITY, O_CLERK, O_SHIPPRIORITY, O_COMMENT, LEGACY_ORDERKEY], parent_entity: customer_h, business_keys: C_CUSTKEY, overwrite_hash_values: true}'
+    arguments:
+      - name: ma_satellite
+        type: string
+        description: The name of the multi-active satellite table to rehash.
+      - name: hashkey
+        type: string
+        description: The name of the existing hashkey column.
+      - name: hashdiff
+        type: string
+        description: The name of the existing hashdiff column.
+      - name: ma_keys
+        type: string or list
+        description: The multi-active key(s) of the satellite.
+      - name: payload
+        type: list
+        description: The payload columns of the satellite.
+      - name: parent_entity
+        type: string
+        description: The name of the parent entity (hub or link).
+      - name: business_keys
+        type: string or list
+        description: The business key(s) of the parent entity.
+      - name: overwrite_hash_values
+        type: boolean
+        description: Whether to overwrite the old hashkey and hashdiff with the new ones.
+      - name: output_logs
+        type: boolean
+        description: Whether to output logs during the macro execution.
+      - name: drop_old_values
+        type: boolean
+        description: Whether to drop the old hashkey and hashdiff columns after renaming.
+
+  - name: ma_satellite_update_statement
+    description: >
+      Dispatches to the appropriate adapter-specific macro to generate the UPDATE statement
+      for rehashing a multi-active satellite.
+    arguments:
+      - name: ma_satellite_relation
+        type: relation
+        description: The multi-active satellite table relation.
+      - name: new_hashkey_name
+        type: string
+        description: The name of the new hashkey column.
+      - name: new_hashdiff_name
+        type: string
+        description: The name of the new hashdiff column.
+      - name: hashkey
+        type: string
+        description: The name of the existing hashkey column.
+      - name: business_key_list
+        type: list
+        description: A list of business keys.
+      - name: ma_keys
+        type: list
+        description: A list of multi-active keys.
+      - name: ldts_col
+        type: string
+        description: The load date timestamp column name.
+      - name: hash_config_dict
+        type: dictionary
+        description: A dictionary containing the hash configuration.
+      - name: parent_relation
+        type: relation
+        description: The parent entity relation.
+
+  - name: rehash_single_nh_satellite
+    description: >
+      This macro is used to rehash a non-historized satellite table by adding a new hashkey column,
+      calculating the new hash value, and optionally replacing the old one.
+      Works for non-historized satellites attached to hubs or links.
+      If attached to Hub: 
+          Define Business Keys of Hub 
+          OR Rehash Hub first, without overwriting hash values.
+
+      If attached to (NH)Link:
+          Rehash (NH)Link first, without overwriting hash values.
+
+      Usage example:
+          dbt run-operation rehash_single_nh_satellite --args '{nh_satellite: order_customer_n_ns, hashkey: HK_ORDER_CUSTOMER_NL, parent_entity: order_customer_nl, overwrite_hash_values: true}'
+    arguments:
+      - name: nh_satellite
+        type: string
+        description: The name of the non-historized satellite table to rehash.
+      - name: hashkey
+        type: string
+        description: The name of the existing hashkey column.
+      - name: parent_entity
+        type: string
+        description: The name of the parent entity (hub or link).
+      - name: business_keys
+        type: string or list
+        description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
+      - name: overwrite_hash_values
+        type: boolean
+        description: Whether to overwrite the old hashkey with the new one.
+      - name: output_logs
+        type: boolean
+        description: Whether to output logs during the macro execution.
+      - name: drop_old_values
+        type: boolean
+        description: Whether to drop the old hashkey column after renaming.
+
+  - name: nh_satellite_update_statement
+    description: >
+      Dispatches to the appropriate adapter-specific macro to generate the UPDATE statement
+      for rehashing a non-historized satellite.
+    arguments:
+      - name: nh_satellite_relation
+        type: relation
+        description: The non-historized satellite table relation.
+      - name: new_hashkey_name
+        type: string
+        description: The name of the new hashkey column.
+      - name: hashkey
+        type: string
+        description: The name of the existing hashkey column.
+      - name: ldts_col
+        type: string
+        description: The load date timestamp column name.
+      - name: parent_relation
+        type: relation
+        description: The parent entity relation.
+      - name: hash_config_dict
+        type: dictionary
+        description: A dictionary containing the hash configuration.
+
+  - name: rehash_single_satellite
+    description: >
+      This macro is used to rehash a standard satellite table by adding new hashkey and hashdiff columns,
+      calculating the new values, and optionally replacing the old ones.
+
+      Usage example:
+          dbt run-operation rehash_single_satellite --args '{satellite: customer_n0_s, hashkey: HK_CUSTOMER_H, hashdiff: HD_CUSTOMER_N_S, payload: [C_ACCTBAL, C_MKTSEGMENT, C_COMMENT], parent_entity: customer_h, business_keys: C_CUSTKEY, overwrite_hash_values: true}'
+    arguments:
+      - name: satellite
+        type: string
+        description: The name of the satellite table to rehash.
+      - name: hashkey
+        type: string
+        description: The name of the existing hashkey column.
+      - name: hashdiff
+        type: string
+        description: The name of the existing hashdiff column.
+      - name: payload
+        type: list
+        description: The payload columns of the satellite.
+      - name: parent_entity
+        type: string
+        description: The name of the parent entity (hub or link).
+      - name: business_keys
+        type: string or list
+        description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
+      - name: overwrite_hash_values
+        type: boolean
+        description: Whether to overwrite the old hashkey and hashdiff with the new ones.
+      - name: output_logs
+        type: boolean
+        description: Whether to output logs during the macro execution.
+      - name: drop_old_values
+        type: boolean
+        description: Whether to drop the old hashkey and hashdiff columns after renaming.
+
+  - name: satellite_update_statement
+    description: >
+      Dispatches to the appropriate adapter-specific macro to generate the UPDATE statement
+      for rehashing a satellite.
+    arguments:
+      - name: satellite_relation
+        type: relation
+        description: The satellite table relation.
+      - name: new_hashkey_name
+        type: string
+        description: The name of the new hashkey column.
+      - name: new_hashdiff_name
+        type: string
+        description: The name of the new hashdiff column.
+      - name: hashkey
+        type: string
+        description: The name of the existing hashkey column.
+      - name: ldts_col
+        type: string
+        description: The load date timestamp column name.
+      - name: hash_config_dict
+        type: dictionary
+        description: A dictionary containing the hash configuration.
+      - name: parent_relation
+        type: relation
+        description: The parent entity relation.
