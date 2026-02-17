@@ -12,6 +12,8 @@
     {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
 {%- endif -%}
 
+{%- set first_day_of_week_var = var('datavault4dbt.first_day_of_week').get(target.type, 1) | int -%}
+
 with generate_dates({{ sdts_alias }}) as (
 	Select {{ datavault4dbt.string_to_timestamp(timestamp_format, timestamp_value) }} as {{ sdts_alias }}
     from dual
@@ -50,13 +52,25 @@ enriched_timestamps AS (
             ELSE 0
         END as is_daily,
         CASE
-            WHEN TRUNC(sdts) - TRUNC(sdts, 'IW') + 1 = 1 THEN 1
+            {%- if first_day_of_week_var == 7 %}
+            WHEN TRUNC(sdts) = TRUNC(sdts + 1, 'IW') - 1 THEN 1
+            {%- else %}
+            WHEN TRUNC(sdts) = TRUNC(sdts, 'IW') THEN 1
+            {%- endif %}
             ELSE 0
-        END AS is_weekly,
+        END AS is_beginning_of_week,
+        CASE
+            {%- if first_day_of_week_var == 7 %}
+            WHEN TRUNC(sdts) = TRUNC(sdts + 1, 'IW') + 5 THEN 1
+            {%- else %}
+            WHEN TRUNC(sdts) = TRUNC(sdts, 'IW') + 6 THEN 1
+            {%- endif %}
+            ELSE 0
+        END AS is_end_of_week,
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 THEN 1
             ELSE 0
-        END AS is_monthly,
+        END AS is_beginning_of_month,
         CASE 
             WHEN sdts = LAST_DAY(sdts) THEN 1 
             ELSE 0 
@@ -64,7 +78,7 @@ enriched_timestamps AS (
         CASE 
             WHEN EXTRACT(MONTH FROM sdts) IN (1, 4, 7, 10) AND EXTRACT(DAY FROM sdts) = 1 THEN 1 
             ELSE 0 
-        END AS is_quarterly,
+        END AS is_beginning_of_quarter,
         CASE 
             WHEN EXTRACT(MONTH FROM sdts) IN (3, 6, 9, 12) AND sdts = LAST_DAY(sdts) THEN 1 
             ELSE 0 
@@ -72,11 +86,24 @@ enriched_timestamps AS (
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN 1
             ELSE 0
-        END AS is_yearly,
+        END AS is_beginning_of_year,
         CASE 
             WHEN EXTRACT(MONTH FROM sdts) = 12 AND EXTRACT(DAY FROM sdts) = 31 THEN 1 
             ELSE 0 
         END AS is_end_of_year,
+        {%- if first_day_of_week_var == 7 %}
+        TRUNC(sdts + 1, 'IW') - 1 AS beginning_of_week,
+        TRUNC(sdts + 1, 'IW') + 5 AS end_of_week,
+        {%- else %}
+        TRUNC(sdts, 'IW') AS beginning_of_week,
+        TRUNC(sdts, 'IW') + 6 AS end_of_week,
+        {%- endif %}
+        TRUNC(sdts, 'MM') AS beginning_of_month,
+        LAST_DAY(sdts) AS end_of_month,
+        TRUNC(sdts, 'Q') AS beginning_of_quarter,
+        ADD_MONTHS(TRUNC(sdts, 'Q'), 3) - 1 AS end_of_quarter,
+        TRUNC(sdts, 'YYYY') AS beginning_of_year,
+        ADD_MONTHS(TRUNC(sdts, 'YYYY'), 12) - 1 AS end_of_year,
         CAST(NULL as VARCHAR2(40)) comment_text
     FROM initial_timestamps
 
