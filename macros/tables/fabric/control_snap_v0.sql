@@ -91,6 +91,13 @@ enriched_timestamps AS (
             WHEN MONTH({{ sdts_alias }}) = 12 AND DAY({{ sdts_alias }}) = 31 THEN 1 
             ELSE 0 
         END AS is_end_of_year,
+        {# 
+        Calculates week boundaries based on the configured start day. 
+        ISO weeks (Monday) use 'iso_week' truncation. For Sunday starts, the date is 
+        shifted by +1 day before the truncate (pushing Sunday into the 'next' Monday) 
+        and then the resulting boundary is shifted back to Sunday (-1) or forward 
+        to Saturday (+5).
+        #}
         {%- if first_day_of_week_var == 7 %}
         CAST(DATEADD(day, -1, DATETRUNC(iso_week, DATEADD(day, 1, {{ sdts_alias }}))) AS DATE) AS beginning_of_week,
         CAST(DATEADD(day, 5, DATETRUNC(iso_week, DATEADD(day, 1, {{ sdts_alias }}))) AS DATE) AS end_of_week,

@@ -94,6 +94,11 @@ enriched_timestamps AS (
             WHEN LAST_DAY(DATE(sdts), YEAR) = DATE(sdts) THEN TRUE
             ELSE FALSE
         END AS is_end_of_year,
+        {# 
+           Calculates week boundaries based on the configured start day. 
+           BigQuery natively supports custom week starts by passing WEEK(SUNDAY) 
+           or WEEK(MONDAY) to DATE_TRUNC and LAST_DAY.
+        #}
         DATE_TRUNC(DATE(sdts), {{ bigquery_day_of_week_arg }}) as beginning_of_week,
         LAST_DAY(DATE(sdts), {{ bigquery_day_of_week_arg }}) as end_of_week,
         DATE_TRUNC(DATE(sdts), MONTH) as beginning_of_month,

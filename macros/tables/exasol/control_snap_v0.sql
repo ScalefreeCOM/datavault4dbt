@@ -92,6 +92,13 @@ initial_timestamps AS
             WHEN LAST_DAY(sdts) = CAST(sdts AS DATE) AND EXTRACT (MONTH FROM sdts) = 12 THEN TRUE
             ELSE FALSE
         END AS is_end_of_year,
+        {# 
+        Calculates week boundaries based on the configured start day. 
+        Standard ISO weeks (Monday) use 'IW' truncation. To support a Sunday start, 
+        the logic shifts the date forward by 1 day before the 'IW' truncate (to push 
+        Sunday into the 'next' ISO week) and then shifts the result back by 1 day 
+        to align with Sunday.
+        #}
         {%- if first_day_of_week_var == 7 %}
             CAST(ADD_DAYS(TRUNC(ADD_DAYS(sdts, 1), 'IW'), -1) AS DATE) as beginning_of_week,
             CAST(ADD_DAYS(TRUNC(ADD_DAYS(sdts, 1), 'IW'), 5) AS DATE) as end_of_week,

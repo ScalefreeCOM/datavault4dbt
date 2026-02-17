@@ -90,6 +90,13 @@ enriched_timestamps AS (
             WHEN MONTH({{ sdts_alias }}) = 12 AND DAY({{ sdts_alias }}) = 31 THEN 1 
             ELSE 0 
         END AS is_end_of_year,
+        {# 
+        Calculates week boundaries based on the configured start day. 
+        Synapse uses the DATEDIFF/DATEADD 'zero date' method to find the Monday start. 
+        To support a Sunday start, the date is shifted forward by 1 day (+1) before 
+        calculating the week offset to push Sunday into the next Monday's count, 
+        then shifted back to Sunday (-1) or forward to Saturday (+5).
+        #}
         {%- if first_day_of_week_var == 7 %}
         CAST(DATEADD(day, -1, DATEADD(week, DATEDIFF(week, 0, DATEADD(day, 1, {{ sdts_alias }})), 0)) AS DATE) AS beginning_of_week,
         CAST(DATEADD(day, 5, DATEADD(week, DATEDIFF(week, 0, DATEADD(day, 1, {{ sdts_alias }})), 0)) AS DATE) AS end_of_week,
