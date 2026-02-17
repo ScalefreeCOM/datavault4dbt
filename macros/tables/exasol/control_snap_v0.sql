@@ -14,7 +14,6 @@
 {%- set last_cte = '' -%}
 
 {%- set first_day_of_week_var = var('datavault4dbt.first_day_of_week').get(target.type, 1) | int -%}
-{%- set exasol_day_of_week_target = first_day_of_week_var -%}
 
 WITH 
 initial_timestamps AS 
@@ -62,11 +61,11 @@ initial_timestamps AS
             ELSE FALSE
         END AS is_daily,
         CASE 
-            WHEN TO_NUMBER(TO_CHAR(sdts, 'ID')) = {{ exasol_day_of_week_target }} THEN TRUE
+            WHEN TO_NUMBER(TO_CHAR(sdts, 'ID')) = {{ first_day_of_week_var }} THEN TRUE
             ELSE FALSE
         END AS is_beginning_of_week,
         CASE 
-            WHEN TO_NUMBER(TO_CHAR(sdts, 'ID')) = {{ ((exasol_day_of_week_target + 5) % 7) + 1 }} THEN TRUE
+            WHEN TO_NUMBER(TO_CHAR(sdts, 'ID')) = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN TRUE
             ELSE FALSE
         END AS is_end_of_week, 
         CASE

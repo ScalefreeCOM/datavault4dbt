@@ -51,12 +51,12 @@ virtual_logic AS (
                 {%- if log_logic['daily']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
                   (1=1)
-                {%- else %}                            
+                {%- else %}                             
                     {%- set daily_duration = log_logic['daily']['duration'] -%}
                     {%- set daily_unit = log_logic['daily']['unit'] -%}
-                    {# Oracle doesn't work with INTERVAL 'WEEK'#}
-                        {% if daily_unit=='WEEK' %}
-                        {% set daily_duration = log_logic['daily']['duration']*7 %}
+                    {# Oracle doesn't work with INTERVAL 'WEEK' #}
+                        {% if daily_unit == 'WEEK' %}
+                        {% set daily_duration = daily_duration * 7 %}
                         {% set daily_unit = 'DAY' %}
                         {% endif %}    
                   TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ daily_duration }}' {{ daily_unit }} AND CURRENT_DATE
@@ -66,48 +66,48 @@ virtual_logic AS (
             {%- if 'weekly' in log_logic.keys() %} OR 
                 {%- if log_logic['weekly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-              (c.is_weekly = 1)
+              (c.is_beginning_of_week = 1)
                 {%- else %} 
                     {%- set weekly_duration = log_logic['weekly']['duration'] -%}
                     {%- set weekly_unit = log_logic['weekly']['unit'] %}
-                    {# Oracle doesn't work with INTERVAL 'WEEK'#}
-                        {% if daily_unit=='WEEK' %}
-                        {% set daily_duration = log_logic['daily']['duration']*7 %}
-                        {% set daily_unit = 'DAY' %}
+                    {# Oracle doesn't work with INTERVAL 'WEEK' #}
+                        {% if weekly_unit == 'WEEK' %}
+                        {% set weekly_duration = weekly_duration * 7 %}
+                        {% set weekly_unit = 'DAY' %}
                         {% endif %}                    
-                    (TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ weekly_duration }}' {{ weekly_unit }} AND CURRENT_DATE) AND (c.is_weekly = 1)
+                    (TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ weekly_duration }}' {{ weekly_unit }} AND CURRENT_DATE) AND (c.is_beginning_of_week = 1)
                 {%- endif -%}
             {% endif -%}
 
             {%- if 'monthly' in log_logic.keys() %} OR
                 {%- if log_logic['monthly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' %}
-              (c.is_monthly = 1)
+              (c.is_beginning_of_month = 1)
                 {%- else %}
                     {%- set monthly_duration = log_logic['monthly']['duration'] -%}
                     {%- set monthly_unit = log_logic['monthly']['unit'] %}
-                    {# Oracle doesn't work with INTERVAL 'WEEK'#}
-                        {% if daily_unit=='WEEK' %}
-                        {% set daily_duration = log_logic['daily']['duration']*7 %}
-                        {% set daily_unit = 'DAY' %}
+                    {# Oracle doesn't work with INTERVAL 'WEEK' #}
+                        {% if monthly_unit == 'WEEK' %}
+                        {% set monthly_duration = monthly_duration * 7 %}
+                        {% set monthly_unit = 'DAY' %}
                         {% endif %}          
-              ((TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ monthly_duration }}' {{ monthly_unit }} AND CURRENT_DATE) AND (c.is_monthly = 1))
+              ((TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ monthly_duration }}' {{ monthly_unit }} AND CURRENT_DATE) AND (c.is_beginning_of_month = 1))
                 {%- endif -%}
             {% endif -%}
 
             {%- if 'yearly' in log_logic.keys() %} OR 
                 {%- if log_logic['yearly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' %}
-              (c.is_yearly = 1)
+              (c.is_beginning_of_year = 1)
                 {%- else %}
                     {%- set yearly_duration = log_logic['yearly']['duration'] -%}
                     {%- set yearly_unit = log_logic['yearly']['unit'] %}
-                    {# Oracle doesn't work with INTERVAL 'WEEK'#}
-                        {% if daily_unit=='WEEK' %}
-                        {% set daily_duration = log_logic['daily']['duration']*7 %}
-                        {% set daily_unit = 'DAY' %}
+                    {# Oracle doesn't work with INTERVAL 'WEEK' #}
+                        {% if yearly_unit == 'WEEK' %}
+                        {% set yearly_duration = yearly_duration * 7 %}
+                        {% set yearly_unit = 'DAY' %}
                         {% endif %}                   
-              ((TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ yearly_duration }}' {{ yearly_unit }} AND CURRENT_DATE) AND (c.is_yearly = 1))
+              ((TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ yearly_duration }}' {{ yearly_unit }} AND CURRENT_DATE) AND (c.is_beginning_of_year = 1))
                 {%- endif -%}
             {% endif %}
             THEN 1
@@ -123,9 +123,9 @@ virtual_logic AS (
         c.caption,
         c.is_hourly,
         c.is_daily,
-        c.is_weekly,
-        c.is_monthly,
-        c.is_yearly,
+        c.is_beginning_of_week,
+        c.is_beginning_of_month,
+        c.is_beginning_of_year,
         CASE
             WHEN EXTRACT(YEAR FROM c.{{ sdts_alias }}) = EXTRACT(YEAR FROM CURRENT_DATE) THEN 1
             ELSE 0
@@ -161,9 +161,9 @@ active_logic_combined AS (
         caption,
         is_hourly,
         is_daily,
-        is_weekly,
-        is_monthly,
-        is_yearly,
+        is_beginning_of_week,
+        is_beginning_of_month,
+        is_beginning_of_year,
         is_current_year,
         is_last_year,
         is_rolling_year,

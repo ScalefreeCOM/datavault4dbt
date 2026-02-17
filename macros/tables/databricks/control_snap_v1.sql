@@ -64,7 +64,7 @@ virtual_logic AS (
             OR
                 {%- if log_logic['weekly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-                    (c.is_weekly = TRUE)
+                    (c.is_beginning_of_week = TRUE)
                 {%- else %}
 
                     {%- set weekly_duration = log_logic['weekly']['duration'] -%}
@@ -73,7 +73,7 @@ virtual_logic AS (
                     (
                 (c.{{ sdts_alias }} BETWEEN TRY_SUBTRACT(CURRENT_TIMESTAMP(), INTERVAL '{{ weekly_duration }}' {{ weekly_unit }}) AND CURRENT_TIMESTAMP() )
                 AND
-                (c.is_weekly = TRUE)
+                (c.is_beginning_of_week = TRUE)
             )
                 {%- endif -%}
             {% endif -%}
@@ -82,7 +82,7 @@ virtual_logic AS (
             OR
                 {%- if log_logic['monthly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-                    (c.is_monthly = TRUE)
+                    (c.is_beginning_of_month = TRUE)
                 {%- else %}
 
                     {%- set monthly_duration = log_logic['monthly']['duration'] -%}
@@ -91,7 +91,7 @@ virtual_logic AS (
                     (
                 (c.{{ sdts_alias }} BETWEEN TRY_SUBTRACT(CURRENT_TIMESTAMP(), INTERVAL '{{ monthly_duration }}' {{ monthly_unit }}) AND CURRENT_TIMESTAMP() )
                 AND
-                (c.is_monthly = TRUE)
+                (c.is_beginning_of_month = TRUE)
             )
                 {%- endif -%}
             {% endif -%}
@@ -100,7 +100,7 @@ virtual_logic AS (
             OR
                 {%- if log_logic['yearly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-                    (c.is_yearly = TRUE)
+                    (c.is_beginning_of_year = TRUE)
                 {%- else %}
 
                     {%- set yearly_duration = log_logic['yearly']['duration'] -%}
@@ -109,7 +109,7 @@ virtual_logic AS (
                     (
                 (c.{{ sdts_alias }} BETWEEN TRY_SUBTRACT(CURRENT_TIMESTAMP(), INTERVAL '{{ yearly_duration }}' {{ yearly_unit }}) AND CURRENT_TIMESTAMP() )
                 AND
-                (c.is_yearly = TRUE)
+                (c.is_beginning_of_year = TRUE)
             )
                 {%- endif -%}
             {% endif %}
@@ -127,9 +127,9 @@ virtual_logic AS (
         c.caption,
         c.is_hourly,
         c.is_daily,
-        c.is_weekly,
-        c.is_monthly,
-        c.is_yearly,
+        c.is_beginning_of_week,
+        c.is_beginning_of_month,
+        c.is_beginning_of_year,
         CASE
             WHEN EXTRACT(YEAR FROM c.{{ sdts_alias }}) = EXTRACT(YEAR FROM CURRENT_DATE()) THEN TRUE
             ELSE FALSE
@@ -166,9 +166,9 @@ active_logic_combined AS (
         caption,
         is_hourly,
         is_daily,
-        is_weekly,
-        is_monthly,
-        is_yearly,
+        is_beginning_of_week,
+        is_beginning_of_month,
+        is_beginning_of_year,
         is_current_year,
         is_last_year,
         is_rolling_year,
