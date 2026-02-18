@@ -12,7 +12,6 @@
 {%- set date_format_std = 'YYYY-mm-dd' -%}
 {%- set daily_snapshot_time = '0001-01-01 ' ~ daily_snapshot_time -%}
 {%- set last_cte = '' -%}
-
 {%- set first_day_of_week_var = var('datavault4dbt.first_day_of_week').get(target.type, 1) | int -%}
 
 WITH 

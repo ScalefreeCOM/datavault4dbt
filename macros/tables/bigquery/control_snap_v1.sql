@@ -1,5 +1,16 @@
 {%- macro bigquery__control_snap_v1(control_snap_v0, log_logic, sdts_alias) -%}
 
+{# Sample intervals
+   {%-set log_logic = {'daily': {'duration': 3,
+                                'unit': 'MONTH',
+                                'forever': 'FALSE'},
+                      'weekly': {'duration': 1,
+                                 'unit': 'YEAR'},
+                      'monthly': {'duration': 5,
+                                  'unit': 'YEAR'},
+                      'yearly': {'forever': 'TRUE'} } %} 
+#}
+
 {%- if log_logic is not none %}
     {%- for interval in log_logic.keys() %}
         {%- if 'forever' not in log_logic[interval].keys() -%}
@@ -112,7 +123,7 @@ virtual_logic AS (
             WHEN l.{{ sdts_alias }} IS NULL THEN FALSE
             ELSE TRUE
         END AS is_latest,
-        
+
         c.caption,
         c.is_hourly,
         c.is_daily,
