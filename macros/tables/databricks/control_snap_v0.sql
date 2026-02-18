@@ -93,26 +93,6 @@ enriched_timestamps AS (
             WHEN LAST_DAY(DATE(sdts)) = DATE(sdts) AND EXTRACT (MONTH FROM sdts) = 12 THEN TRUE
             ELSE FALSE
         END AS is_end_of_year,
-        {# 
-           Calculates week boundaries based on the configured start day. 
-           Databricks 'week' truncation follows the ISO-8601 standard (starting Monday). 
-           To support a Sunday start, the date is shifted forward by 1 day before the 
-           truncate to force Sunday into the 'next' ISO week, then shifted back by 1 day 
-           to align the boundary with Sunday, or forward by 5 days for the Saturday end.
-        #}
-        {%- if first_day_of_week_var == 7 %}
-            CAST(DATE_SUB(TRUNC(DATE_ADD(sdts, 1), 'week'), 1) AS DATE) AS beginning_of_week,
-            CAST(DATE_ADD(TRUNC(DATE_ADD(sdts, 1), 'week'), 5) AS DATE) AS end_of_week,
-        {%- else %}
-            CAST(TRUNC(sdts, 'week') AS DATE) AS beginning_of_week,
-            CAST(DATE_ADD(TRUNC(sdts, 'week'), 6) AS DATE) AS end_of_week,
-        {%- endif %}
-        trunc(sdts, 'MONTH') as beginning_of_month,
-        last_day(sdts) as end_of_month,
-        trunc(sdts, 'QUARTER') as beginning_of_quarter,
-        to_date(date_sub(add_months(trunc(sdts, 'QUARTER'), 3), 1)) as end_of_quarter,
-        trunc(sdts, 'YEAR') as beginning_of_year,
-        to_date(date_sub(add_months(trunc(sdts, 'YEAR'), 12), 1)) as end_of_year,
         '' as comment 
     FROM initial_timestamps
 

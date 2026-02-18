@@ -112,13 +112,18 @@ virtual_logic AS (
             WHEN l.{{ sdts_alias }} IS NULL THEN FALSE
             ELSE TRUE
         END AS is_latest,
-
+        
         c.caption,
         c.is_hourly,
         c.is_daily,
         c.is_beginning_of_week,
+        c.is_end_of_week,
         c.is_beginning_of_month,
+        c.is_end_of_month,
+        c.is_beginning_of_quarter,
+        c.is_end_of_quarter,
         c.is_beginning_of_year,
+        c.is_end_of_year,
         CASE
             WHEN EXTRACT(YEAR FROM c.{{ sdts_alias }}) = EXTRACT(YEAR FROM CURRENT_DATE()) THEN TRUE
             ELSE FALSE
@@ -156,8 +161,13 @@ active_logic_combined AS (
         is_hourly,
         is_daily,
         is_beginning_of_week,
+        is_end_of_week,
         is_beginning_of_month,
+        is_end_of_month,
+        is_beginning_of_quarter,
+        is_end_of_quarter,
         is_beginning_of_year,
+        is_end_of_year,
         is_current_year,
         is_last_year,
         is_rolling_year,

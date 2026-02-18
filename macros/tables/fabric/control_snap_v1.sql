@@ -65,22 +65,23 @@ WHERE CONVERT(DATE, {{ sdts_alias }}) <= CONVERT(DATE, GETDATE() )
 
 dynamic as (SELECT 
     src.{{ sdts_alias }},
-	src.{{ sdts_alias }}_date,
+    src.replacement_{{ sdts_alias }},
     src.force_active,
-	{# CASE WHEN itp.{{ sdts_alias }} is not null THEN 1 ELSE 0 END AS is_in_the_past, #}
+    {# CASE WHEN itp.{{ sdts_alias }} is not null THEN 1 ELSE 0 END AS is_in_the_past, #}
     CASE WHEN itp.rn = 1 THEN 1 ELSE 0 END AS is_latest, 
     CASE WHEN DATEPART(YEAR, src.{{ sdts_alias }}) = DATEPART(YEAR, GETDATE()) THEN 1 ELSE 0 END as is_current_year, 
     CASE WHEN DATEPART(YEAR, src.{{ sdts_alias }}) = DATEPART(YEAR, GETDATE())-1 THEN 1 ELSE 0 END as is_last_year, 
     CASE WHEN DATEDIFF(day, src.{{ sdts_alias }}, GETDATE()) between 0 and 365 THEN 1 ELSE 0 END as is_rolling_year,
     CASE WHEN DATEDIFF(day, src.{{ sdts_alias }}, GETDATE()) between 366 and 730 THEN 1 ELSE 0 END as is_last_rolling_year,
-	{# src.year, #}
-	{# src.quarter, #}
-	{# src.month, #}
-	{# src.day_of_month, #}
-	{# src.day_of_year, #}
-	{# src.weekday, #}
-	{# src.week, #}
-	{# src.iso_week, #}
+    {# src.year, #}
+    {# src.quarter, #}
+    {# src.month, #}
+    {# src.day_of_month, #}
+    {# src.day_of_year, #}
+    {# src.weekday, #}
+    {# src.week, #}
+    {# src.iso_week, #}
+    src.caption,
     src.is_hourly,
     src.is_daily,
     src.is_beginning_of_week,
@@ -90,7 +91,8 @@ dynamic as (SELECT
     src.is_beginning_of_quarter,
     src.is_end_of_quarter,
     src.is_beginning_of_year,
-    src.is_end_of_year
+    src.is_end_of_year,
+    src.comment
 
 
 

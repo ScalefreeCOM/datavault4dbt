@@ -83,26 +83,6 @@ enriched_timestamps AS (
             WHEN EXTRACT(MONTH FROM sdts) = 12 AND EXTRACT(DAY FROM sdts) = 31 THEN TRUE
             ELSE FALSE
         END AS is_end_of_year,
-        {# 
-        Calculates week boundaries based on the configured start day. 
-        Postgres 'week' truncation always returns Monday (ISO). To support a Sunday start, 
-        the date is shifted forward by 1 day before the truncate (to push Sunday 
-        into the 'next' ISO week) and then the resulting boundary is shifted 
-        back to Sunday (-1 day) or forward to Saturday (+5 days).
-        #}
-        {%- if first_day_of_week_var == 7 %}
-        CAST(DATE_TRUNC('week', sdts + INTERVAL '1 day') - INTERVAL '1 day' AS DATE) as beginning_of_week,
-        CAST(DATE_TRUNC('week', sdts + INTERVAL '1 day') + INTERVAL '5 days' AS DATE) as end_of_week,
-        {%- else %}
-        CAST(DATE_TRUNC('week', sdts) AS DATE) as beginning_of_week,
-        CAST(DATE_TRUNC('week', sdts) + INTERVAL '6 days' AS DATE) as end_of_week,
-        {%- endif %}
-        CAST(DATE_TRUNC('month', sdts) AS DATE) as beginning_of_month,
-        CAST(DATE_TRUNC('month', sdts) + INTERVAL '1 month' - INTERVAL '1 day' AS DATE) as end_of_month,
-        CAST(DATE_TRUNC('quarter', sdts) AS DATE) as beginning_of_quarter,
-        CAST(DATE_TRUNC('quarter', sdts) + INTERVAL '3 months' - INTERVAL '1 day' AS DATE) as end_of_quarter,
-        CAST(DATE_TRUNC('year', sdts) AS DATE) as beginning_of_year,
-        CAST(DATE_TRUNC('year', sdts) + INTERVAL '1 year' - INTERVAL '1 day' AS DATE) as end_of_year,
         NULL as comment
     FROM initial_timestamps
 

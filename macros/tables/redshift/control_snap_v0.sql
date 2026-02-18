@@ -89,26 +89,6 @@ enriched_timestamps AS (
             WHEN EXTRACT(mon FROM sdts) = 12 AND EXTRACT(d FROM sdts) = 31 THEN TRUE
             ELSE FALSE
         END as is_end_of_year,
-        {# 
-        Calculates week boundaries based on the configured start day. 
-        Redshift 'week' truncation follows the ISO-8601 standard (starting Monday). 
-        To support a Sunday start, the date is shifted forward by 1 day before the 
-        truncate to force Sunday into the 'next' ISO week, then shifted back by 1 day 
-        to align the boundary with Sunday, or forward by 5 days for the Saturday end.
-        #}
-        {%- if first_day_of_week_var == 7 %}
-        CAST(DATE_TRUNC('week', sdts + INTERVAL '1 day') - INTERVAL '1 day' AS DATE) as beginning_of_week,
-        CAST(DATE_TRUNC('week', sdts + INTERVAL '1 day') + INTERVAL '5 days' AS DATE) as end_of_week,
-        {%- else %}
-        CAST(DATE_TRUNC('week', sdts) AS DATE) as beginning_of_week,
-        CAST(DATE_TRUNC('week', sdts) + INTERVAL '6 days' AS DATE) as end_of_week,
-        {%- endif %}
-        CAST(DATE_TRUNC('month', sdts) AS DATE) as beginning_of_month,
-        CAST(DATE_TRUNC('month', sdts) + INTERVAL '1 month' - INTERVAL '1 day' AS DATE) as end_of_month,
-        CAST(DATE_TRUNC('quarter', sdts) AS DATE) as beginning_of_quarter,
-        CAST(DATE_TRUNC('quarter', sdts) + INTERVAL '3 months' - INTERVAL '1 day' AS DATE) as end_of_quarter,
-        CAST(DATE_TRUNC('year', sdts) AS DATE) as beginning_of_year,
-        CAST(DATE_TRUNC('year', sdts) + INTERVAL '1 year' - INTERVAL '1 day' AS DATE) as end_of_year,
         NULL as comment
     FROM initial_timestamps
 

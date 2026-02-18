@@ -86,26 +86,6 @@ enriched_timestamps AS (
             WHEN EXTRACT(MONTH FROM sdts) = 12 AND EXTRACT(DAY FROM sdts) = 31 THEN TRUE
             ELSE FALSE
         END AS is_end_of_year,
-        {# 
-        Calculates week boundaries based on the configured start day. 
-        Snowflake 'ISO_WEEK' truncation always returns Monday. To support a Sunday 
-        start, the date is shifted forward by 1 day before the truncate (to push 
-        Sunday into the 'next' ISO week) and then the resulting boundary is 
-        shifted back to Sunday (-1) or forward to Saturday (+5).
-        #}
-        {%- if first_day_of_week_var == 7 %}
-        CAST(DATEADD(day, -1, DATE_TRUNC('ISO_WEEK', DATEADD(day, 1, sdts))) AS DATE) as beginning_of_week,
-        CAST(DATEADD(day, 5, DATE_TRUNC('ISO_WEEK', DATEADD(day, 1, sdts))) AS DATE) as end_of_week,
-        {%- else %}
-        CAST(DATE_TRUNC('ISO_WEEK', sdts) AS DATE) as beginning_of_week,
-        CAST(DATEADD(day, 6, DATE_TRUNC('ISO_WEEK', sdts)) AS DATE) as end_of_week,
-        {%- endif %}
-        CAST(DATE_TRUNC('MONTH', sdts) AS DATE) as beginning_of_month,
-        CAST(LAST_DAY(sdts) AS DATE) as end_of_month,
-        CAST(DATE_TRUNC('QUARTER', sdts) AS DATE) as beginning_of_quarter,
-        CAST(LAST_DAY(sdts, 'QUARTER') AS DATE) as end_of_quarter,
-        CAST(DATE_TRUNC('YEAR', sdts) AS DATE) as beginning_of_year,
-        CAST(LAST_DAY(sdts, 'YEAR') AS DATE) as end_of_year,
         NULL AS comment
     FROM initial_timestamps
 

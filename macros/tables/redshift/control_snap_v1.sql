@@ -107,7 +107,7 @@ virtual_logic AS (
                     {%- set yearly_unit = log_logic['yearly']['unit'] -%}
 
                     (
-                DATE FROM c.{{ sdts_alias }} BETWEEN dateadd({{ yearly_unit }}, -{{ yearly_duration }}, GETDATE()) AND GETDATE() 
+                c.{{ sdts_alias }} BETWEEN dateadd({{ yearly_unit }}, -{{ yearly_duration }}, GETDATE()) AND GETDATE() 
                 AND
                 (c.is_beginning_of_year = TRUE)
             )
@@ -128,8 +128,13 @@ virtual_logic AS (
         c.is_hourly,
         c.is_daily,
         c.is_beginning_of_week,
+        c.is_end_of_week,
         c.is_beginning_of_month,
+        c.is_end_of_month,
+        c.is_beginning_of_quarter,
+        c.is_end_of_quarter,
         c.is_beginning_of_year,
+        c.is_end_of_year,
         CASE
             WHEN EXTRACT(yr FROM c.{{ sdts_alias }}) = EXTRACT(yr FROM CURRENT_DATE) THEN TRUE
             ELSE FALSE
@@ -167,8 +172,13 @@ active_logic_combined AS (
         is_hourly,
         is_daily,
         is_beginning_of_week,
+        is_end_of_week,
         is_beginning_of_month,
+        is_end_of_month,
+        is_beginning_of_quarter,
+        is_end_of_quarter,
         is_beginning_of_year,
+        is_end_of_year,
         is_current_year,
         is_last_year,
         is_rolling_year,
