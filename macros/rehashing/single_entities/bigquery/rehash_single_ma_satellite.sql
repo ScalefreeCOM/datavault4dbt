@@ -5,19 +5,19 @@
 
 {% macro bigquery__rehash_single_ma_satellite(ma_satellite, hashkey, hashdiff, ma_keys, payload, parent_entity, business_keys, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
-    {% set ma_satellite_relation = adapter.get_relation(
-    database=target.database,
-    schema=target.schema,
-    identifier=(ma_satellite)) %}
+    {% set ma_satellite_relation = ref(ma_satellite) %}
 
     {% set parent_relation = ref(parent_entity) %}
 
-    {% set ldts_col = var(datavault4dbt.ldts_alias, 'LOAD_DATE') %}
+    {% set ldts_col = var(datavault4dbt.ldts_alias, 'ldts') %}
 
-    {% set new_hashkey_name = hashkey %}
-    {% set new_hashdiff_name = hashdiff %}
-
-    {% set hash_datatype = var('datavault4dbt.hash_datatype', 'STRING') %}
+    {% if overwrite_hash_values %}
+        {% set new_hashkey_name = hashkey %}
+        {% set new_hashdiff_name = hashdiff %}
+    {% else %}
+        {% set new_hashkey_name = hashkey + '_new' %}
+        {% set new_hashdiff_name = hashdiff + '_new' %}
+    {% endif %}
 
     {# Ensuring business_keys is a list. #}
     {% if business_keys is iterable and business_keys is not string %}
@@ -48,6 +48,9 @@
             } %}
 
 
+    {% set rename_sql = get_rename_table_sql(ma_satellite_relation, ma_satellite_relation.identifier ~ '_deprecated') %}
+    {% do run_query(rename_sql) %}
+
     {# generating the CREATE statement that populates the new columns. #}
     {% set create_sql = datavault4dbt.ma_satellite_update_statement(ma_satellite_relation=ma_satellite_relation,
                                                 new_hashkey_name=new_hashkey_name,
@@ -60,40 +63,27 @@
                                                 parent_relation=parent_relation) %}
 
     {# Executing the CREATE statement. #}
-    {{ log('Executing CREATE statement...' ~ create_sql, true) }}
+    {{ log('Executing CREATE statement...' ~ create_sql, output_logs) }}
     {{ '/* CREATE STATEMENT FOR ' ~ ma_satellite ~ '\n' ~ create_sql ~ '*/' }}
     {% do run_query(create_sql) %}
     {{ log('CREATE statement completed!', output_logs) }}
 
-    {# renaming existing hash columns #}
-    {% if overwrite_hash_values %}
-        {{ log('Renaming existing hash columns...', output_logs) }}
+    {% set columns_to_drop = [
+        {"name": hashkey + '_deprecated'},
+        {"name": hashdiff + '_deprecated'}
+    ]%}
 
-        {% set overwrite_sql %}
-            ALTER TABLE {{ ma_satellite_relation }} 
-                RENAME COLUMN {{ hashkey }} TO {{ hashkey }}_deprecated;
-            ALTER TABLE {{ ma_satellite_relation }} 
-                RENAME COLUMN {{ hashdiff }} TO {{ hashdiff }}_deprecated;
-        {% endset %}
 
-        {% do run_query(overwrite_sql) %}
-        
-        
-        {% if drop_old_values %}
-            {# Drop old Hub table and rename _rehashed Hub table to original Hub name. #}
-            {% set old_table_name = ma_satellite_relation %}
-            {% set new_table_name = ma_satellite_relation.database ~ '.' ~ ma_satellite_relation.schema ~ '.' ~ ma_satellite_relation.identifier ~ '_rehashed' %}
+    {% if drop_old_values %}
+        {% set old_table_relation = make_temp_relation(ma_satellite_relation,suffix='_deprecated') %}
 
-            {{ log('Dropping old table: ' ~ old_table_name, output_logs) }}
-            {% do run_query(bigquery__drop_table(old_table_name)) %}
-
-            {% set rename_sql = bigquery__get_rename_table_sql(new_table_name, ma_satellite_relation.identifier) %}
-            {{ log('Renaming rehashed Hub to original Hub name: ' ~ rename_sql, output_logs) }}
-            {% do run_query(rename_sql) %}
-        {% endif %}
+        {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
+        {% do run_query(drop_table(old_table_relation)) %}
+        {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=ma_satellite_relation, remove_columns=columns_to_drop) }}
 
     {% endif %}
 
+    {{ return(columns_to_drop) }}
 
 {% endmacro %}
 
@@ -102,6 +92,9 @@
 
 
     {% set ns = namespace(update_where_condition='', parent_already_rehashed=false) %}
+    
+    {% set old_hashkey_name = hashkey + '_deprecated' %}
+    {% set old_table_relation = make_temp_relation(ma_satellite_relation,suffix='_deprecated') %}
 
     {% set prefixed_hashkey = 'sat.' ~ hashkey %}
 
@@ -115,7 +108,7 @@
     {% for column in all_parent_columns %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ ma_satellite_relation.name, true) }}
+            {{ log('parent_already hashed set to true for ' ~ ma_satellite_relation.name, false) }}
         {% endif %}
     {% endfor %}
 
@@ -127,32 +120,43 @@
         {% set select_hashkey_col = new_hashkey_name %}
     {% endif %}
 
-    {% set exclude_columns = [new_hashkey_name, new_hashdiff_name] %}
-    {% set all_columns = adapter.get_columns_in_relation(ma_satellite_relation) %}
+    {# Extract only the column names #}
+    {% set all_columns = adapter.get_columns_in_relation(old_table_relation) | map(attribute='name') | list %}
+    {% if new_hashdiff_name not in all_columns %}
+        {% set hashdiff_name = new_hashdiff_name | replace('_new', '') %}
+
+        {% if hashdiff_name in all_columns %}
+            {% set old_hashdiff_name = hashdiff_name + '_deprecated'%}
+            {% set exclude_columns = [new_hashkey_name, hashdiff_name] %}
+        {% endif %}
+    {% else %}    
+
+        {% set hashdiff_name = new_hashdiff_name %}
+        {% set old_hashdiff_name = new_hashdiff_name + '_deprecated'%}
+        {% set exclude_columns = [new_hashkey_name, new_hashdiff_name] %}
+    {% endif %}
 
     {# Filter out the excluded columns by name #}
     {% set filtered_columns = [] %}
     {% for col in all_columns %}
-    {% if col.name not in exclude_columns %}
+    {% if col not in exclude_columns %}
         {% do filtered_columns.append(col) %}
     {% endif %}
     {% endfor %}
-
     {# Extract only the column names #}
-    {% set selected_column_names = filtered_columns | map(attribute='name') | list %}
-    {% set select_clause = selected_column_names | join(', ') %}
-    {{ log('SELECT clause: ' ~ select_clause, output_logs) }}
+    {% set select_clause = filtered_columns | join(', ') %}
+    {{ log('SELECT clause: ' ~ select_clause, false) }}
 
     
-    {% set rsrc_alias = 'RECORD_SOURCE' %}
-    {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', '(error)') %}
-    {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', '(unknown)') %}
+    {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
+    {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
+    {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
     {# 
         This does finally kinda work, but only if the payload and ma_keys columns are not in the parent, which unfortunattly is the case for the automated test repo... (here: stage_03)
     #}
     {% set create_sql %}
-    CREATE  OR REPLACE TABLE {{ ma_satellite_relation.database }}.{{ ma_satellite_relation.schema }}.{{ma_satellite_relation.identifier ~ '_rehashed'}} AS 
+    CREATE OR REPLACE TABLE {{ ma_satellite_relation }} AS 
     
         WITH calculate_hd_correctly AS (
             SELECT
@@ -164,26 +168,33 @@
                     parent.{{ select_hashkey_col }} as {{ new_hashkey_name }},
                 {% endif %} 
                 {{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=ma_keys) }},
-            FROM {{ ma_satellite_relation }} src
-            JOIN {{ parent_relation }} parent
-            ON src.{{ hashkey }} = parent.{{ hashkey }}
-            WHERE src.{{ rsrc_alias }} NOT IN ('(error)', '(unknown)')
+            FROM {{ old_table_relation }} src
+            LEFT JOIN {{ parent_relation }} parent
+                ON src.{{ hashkey }} = parent.{{ join_hashkey_col }}
+            WHERE src.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
             GROUP BY src.{{ hashkey }}, src.{{ ldts_col }}, src.{{ rsrc_alias }}, {{ datavault4dbt.print_list(business_key_list, src_alias='parent') }}      
         )
         SELECT 
-            hd.{{ hashkey }},
+            hd.original_hashkey as {{ old_hashkey_name }},
+            sat.{{ hashdiff_name }} as {{ old_hashdiff_name }},
+            hd.{{ new_hashkey_name }},
             hd.{{ new_hashdiff_name }},
             sat.{{ select_clause }}
         FROM calculate_hd_correctly hd
-        LEFT JOIN {{ ma_satellite_relation }} sat
-        ON hd.{{ hashkey }} = sat.{{ hashkey }}
+        LEFT JOIN {{ old_table_relation }} sat
+            ON hd.original_hashkey = sat.{{ hashkey }}
+            AND hd.original_ldts = sat.{{ ldts_col }}
 
         UNION ALL
 
         SELECT 
-            * 
-        FROM {{ ma_satellite_relation }} sat
-        WHERE sat.{{ rsrc_alias }} IN ('(error)', '(unknown)')
+            {{ hashkey }} as {{ old_hashkey_name }},
+            {{ hashdiff_name }} as {{ old_hashdiff_name }},
+            {{ hashkey }} as {{ new_hashkey_name }},
+            {{ hashdiff_name }} as {{ new_hashdiff_name }},
+            {{ select_clause }} 
+        FROM {{ old_table_relation }} sat
+        WHERE sat.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
 
             
     {% endset %}

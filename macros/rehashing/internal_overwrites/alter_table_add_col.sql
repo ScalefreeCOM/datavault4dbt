@@ -6,6 +6,39 @@
 {{ alter_relation_add_remove_columns(relation, add_columns, remove_columns) }}
 {% endmacro %}
 
+{% macro bigquery__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns)%}
+
+    {% if add_columns %}
+
+    {% set sql -%}
+        ALTER TABLE {{ relation.render() }} 
+            {% for column in remove_columns %}
+            ADD COLUMN IF EXISTS {{ column.name }} {{ column.data_type }} {{ ',' if not loop.last }}
+            {% endfor %}
+    {%- endset -%}
+
+    {{ log('alter sql: ' ~ sql, false)}}
+    
+    {% do run_query(sql) %}
+    {% endif %}
+
+    {% if remove_columns %}
+
+    {% set sql -%}
+        ALTER TABLE {{ relation.render() }} 
+            {% for column in remove_columns %}
+            DROP COLUMN IF EXISTS {{ column.name }}{{ ',' if not loop.last }}
+            {% endfor %}
+    {%- endset -%}
+
+    {{ log('alter sql: ' ~ sql, false)}}
+    
+    {% do run_query(sql) %}
+
+    {% endif %}
+
+{% endmacro %}
+
 {% macro fabric__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {% if add_columns %}

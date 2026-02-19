@@ -156,7 +156,7 @@
             {% set model_relation = ref(model.model_name) %}
             {% set cleaned_string  = model.columns_to_drop | replace("'", '"') %}
             {% set cols_to_drop = fromjson(cleaned_string ) %}
-
+{{log(cols_to_drop,true)}}
             {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=model_relation, remove_columns=cols_to_drop) }}
             {{ log('Old Hash Columns dropped for ' ~ model.model_name, true) }}
 

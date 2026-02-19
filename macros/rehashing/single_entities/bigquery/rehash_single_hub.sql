@@ -5,12 +5,13 @@
 
 {% macro bigquery__rehash_single_hub(hub, hashkey, business_keys, overwrite_hash_values=false, output_logs=true, drop_old_values=true) %}
 
-    {% set hub_relation = adapter.get_relation(
-    database=target.database,
-    schema=target.schema,
-    identifier=(hub)) %}
+    {% set hub_relation = ref(hub) %}
 
-    {% set hash_datatype = var('datavault4dbt.hash_datatype', 'STRING') %}
+    {% if overwrite_hash_values %}
+        {% set new_hashkey_name = hashkey %}
+    {% else %}
+        {% set new_hashkey_name = hashkey + '_new' %}
+    {% endif %}
 
     {# Ensuring business_keys is a list. #}
     {% if business_keys is iterable and business_keys is not string %}
@@ -20,11 +21,14 @@
     {% endif %}
 
     {# Set Hash definition for new hashkey. #}
-    {% set hash_config_dict = {hashkey: business_key_list} %}
+    {% set hash_config_dict = {new_hashkey_name: business_key_list} %}
+
+    {% set rename_sql = get_rename_table_sql(hub_relation, hub_relation.identifier ~ '_deprecated') %}
+    {% do run_query(rename_sql) %}
 
     {# Get update SQL statement to calculate new hashkey. #}
     {% set create_sql = datavault4dbt.hub_update_statement(hub_relation=hub_relation,
-                                                           new_hashkey_name=hashkey,
+                                                           new_hashkey_name=new_hashkey_name,
                                                            hashkey=hashkey,
                                                            hash_config_dict=hash_config_dict) %}
 
@@ -34,32 +38,19 @@
     {% do run_query(create_sql) %}
     {{ log('CREATE statement completed!', output_logs) }}
 
-    {{ log('Renaming old hash columns for hubs: ' ~ overwrite_hash_values, output_logs) }}
+    {% set columns_to_drop = [{"name": hashkey + '_deprecated'}]%}
 
-    {# Renaming existing hash columns. #}
-    {% if overwrite_hash_values %}
-        {{ log('Renaming existing hash columns...', output_logs) }}
-        
-        {% set rename_statement %}
-            ALTER TABLE {{ hub_relation }} 
-                RENAME COLUMN {{ hashkey }} TO {{ hashkey }}_deprecated;
-        {% endset %}
-        {% do run_query(rename_statement) %}
-
-    {% endif %}
-            
     {% if drop_old_values %}
+        {% set old_table_relation = make_temp_relation(hub_relation,suffix='_deprecated') %}
+
         {# Drop old Hub table and rename _rehashed Hub table to original Hub name. #}
-        {% set old_table_name = hub_relation %}
-        {% set new_table_name = hub_relation.database ~ '.' ~ hub_relation.schema ~ '.' ~ hub_relation.identifier ~ '_rehashed' %}
+        {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
+        {% do run_query(drop_table(old_table_relation)) %}
+        {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
 
-        {{ log('Dropping old table: ' ~ old_table_name, output_logs) }}
-        {% do run_query(bigquery__drop_table(old_table_name)) %}
-
-        {% set rename_sql = bigquery__get_rename_table_sql(new_table_name, hub_relation.identifier) %}
-        {{ log('Renaming rehashed Hub to original Hub name: ' ~ rename_sql, output_logs) }}
-        {% do run_query(rename_sql) %}
     {% endif %}
+
+    {{ return(columns_to_drop) }}
     
 {% endmacro %}
 
@@ -71,6 +62,10 @@
 
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
+
+    {% set old_hashkey_name = hashkey + '_deprecated' %}
+    {% set old_table_relation = make_temp_relation(hub_relation,suffix='_deprecated') %}
+
     
     {# Extract business keys from hash_config_dict, since business_key_list is not passed directly to the macro. #}
     {% set raw_keys = hash_config_dict.values() | list | first %}
@@ -81,20 +76,25 @@
     {% endif %}
 
     {% set create_sql %}
-    CREATE TABLE {{ hub_relation.database }}.{{ hub_relation.schema }}.{{hub_relation.identifier ~ '_rehashed'}} AS (
+    CREATE TABLE {{ hub_relation }} AS (
         SELECT
+            hub.{{ hashkey }} as {{ old_hashkey_name }},
             {{ datavault4dbt.hash_columns(columns=hash_config_dict) }},
             {{ datavault4dbt.print_list(business_key_list, src_alias='hub')}},
             hub.{{ ldts_alias }},
             hub.{{ rsrc_alias }}
-        FROM {{ hub_relation }} hub
+        FROM {{ old_table_relation }} hub
         WHERE hub.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
         
         UNION ALL
 
         SELECT 
-            * 
-        FROM {{ hub_relation }} hub
+            hub.{{ hashkey }} as {{ old_hashkey_name }},
+            hub.{{ hashkey }} as {{ new_hashkey_name }},
+            {{ datavault4dbt.print_list(business_key_list, src_alias='hub')}},
+            hub.{{ ldts_alias }},
+            hub.{{ rsrc_alias }}
+        FROM {{ old_table_relation }} hub
         WHERE hub.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
 
     )
