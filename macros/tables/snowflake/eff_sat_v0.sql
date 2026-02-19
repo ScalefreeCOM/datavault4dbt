@@ -18,6 +18,15 @@
 
 {{ log('columns to select: '~final_columns_to_select, false) }}
 
+{# Get max(ldts) #}
+{% if execute %}
+    {%- if is_incremental() %}
+        {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
+        {% set max_ldts_results = run_query(max_ldts_query) %}
+        {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+    {%- endif %}
+{% endif %}
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH 
@@ -34,12 +43,7 @@ source_data AS (
     FROM {{ source_relation }} src
     WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
     {%- if is_incremental() and not disable_hwm %}
-    AND src.{{ src_ldts }} > (
-        SELECT
-            MAX({{ src_ldts }})
-        FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-    )
+    AND src.{{ src_ldts }} > '{{ max_ldts }}'
     {%- endif %}
 ),
 
