@@ -11,6 +11,8 @@
     {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
 {%- endif -%}
 
+{%- set first_day_of_week_var = var('datavault4dbt.first_day_of_week').get(target.type, 1) | int -%}
+
 WITH
 
 initial_timestamps AS (
@@ -42,17 +44,45 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_daily,
         CASE
-            WHEN EXTRACT(isodow FROM  sdts) = 1 THEN TRUE
+            {%- if first_day_of_week_var == 7 %}
+            WHEN CAST(sdts AS DATE) = CAST(DATE_TRUNC('week', sdts + INTERVAL '1 day') - INTERVAL '1 day' AS DATE) THEN TRUE
+            {%- else %}
+            WHEN CAST(sdts AS DATE) = CAST(DATE_TRUNC('week', sdts) AS DATE) THEN TRUE
+            {%- endif %}
             ELSE FALSE
-        END as is_weekly,
+        END as is_beginning_of_week,
+        CASE
+            {%- if first_day_of_week_var == 7 %}
+            WHEN CAST(sdts AS DATE) = CAST(DATE_TRUNC('week', sdts + INTERVAL '1 day') + INTERVAL '5 days' AS DATE) THEN TRUE
+            {%- else %}
+            WHEN CAST(sdts AS DATE) = CAST(DATE_TRUNC('week', sdts) + INTERVAL '6 days' AS DATE) THEN TRUE
+            {%- endif %}
+            ELSE FALSE
+        END as is_end_of_week,
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 THEN TRUE
             ELSE FALSE
-        END as is_monthly,
+        END as is_beginning_of_month,
+        CASE 
+            WHEN EXTRACT(DAY FROM (sdts + INTERVAL '1 day')) = 1 THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_month,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) IN (1, 4, 7, 10) AND EXTRACT(DAY FROM sdts) = 1 THEN TRUE
+            ELSE FALSE
+        END AS is_beginning_of_quarter,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) IN (3, 6, 9, 12) AND EXTRACT(DAY FROM (sdts + INTERVAL '1 day')) = 1 THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_quarter, 
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN TRUE
             ELSE FALSE
-        END as is_yearly,
+        END as is_beginning_of_year,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) = 12 AND EXTRACT(DAY FROM sdts) = 31 THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_year,
         NULL as comment
     FROM initial_timestamps
 

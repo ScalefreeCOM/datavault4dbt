@@ -12,6 +12,8 @@
 {%- set date_format_std = 'YYYY-mm-dd' -%}
 {%- set daily_snapshot_time = '0001-01-01 ' ~ daily_snapshot_time -%}
 {%- set last_cte = '' -%}
+{%- set first_day_of_week_var = var('datavault4dbt.first_day_of_week').get(target.type, 1) | int -%}
+
 WITH 
 initial_timestamps AS 
 (
@@ -48,7 +50,7 @@ initial_timestamps AS
         sdts as {{ sdts_alias }},
         TRUE as force_active,
         sdts AS replacement_sdts,
-        CONCAT('Snapshot ', DATE_TRUNC('day', TO_DATE(sdts))) AS caption,
+        CONCAT('Snapshot ', TO_CHAR(sdts, 'YYYY-MM-DD')) AS caption,
         CASE
             WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 THEN TRUE
             ELSE FALSE
@@ -58,17 +60,37 @@ initial_timestamps AS
             ELSE FALSE
         END AS is_daily,
         CASE 
-            WHEN to_char(sdts, 'ID') = '1' THEN TRUE
+            WHEN TO_NUMBER(TO_CHAR(sdts, 'ID')) = {{ first_day_of_week_var }} THEN TRUE
             ELSE FALSE
-        END AS is_weekly, 
+        END AS is_beginning_of_week,
+        CASE 
+            WHEN TO_NUMBER(TO_CHAR(sdts, 'ID')) = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_week, 
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 THEN TRUE
             ELSE FALSE
-        END AS is_monthly,
+        END AS is_beginning_of_month,
+        CASE 
+            WHEN LAST_DAY(sdts) = CAST(sdts AS DATE) THEN TRUE
+            ELSE FALSE
+        END as is_end_of_month,
+        CASE
+            WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH from sdts) IN (1,4,7,10) THEN TRUE
+            ELSE FALSE
+        END AS is_beginning_of_quarter,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) IN (3, 6, 9, 12) AND CAST(sdts AS DATE) = LAST_DAY(sdts) THEN TRUE 
+            ELSE FALSE 
+        END AS is_end_of_quarter, 
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN TRUE
             ELSE FALSE
-        END AS is_yearly,
+        END AS is_beginning_of_year,
+        CASE
+            WHEN LAST_DAY(sdts) = CAST(sdts AS DATE) AND EXTRACT (MONTH FROM sdts) = 12 THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_year,
         NULL AS comment
     FROM 
         {{ last_cte }}
