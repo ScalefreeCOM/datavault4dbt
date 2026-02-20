@@ -106,10 +106,10 @@
 
     {% if ns.parent_already_rehashed %}
         {% set join_hashkey_col = hashkey + '_deprecated' %}
-        {% set select_hashkey_col = hashkey %}
+        {% set select_hashkey_col = new_hashkey_name %}
     {% else %}
         {% set join_hashkey_col = hashkey %}
-        {% set select_hashkey_col = new_hashkey_name %}
+        {% set select_hashkey_col = hashkey %}
     {% endif %}
     
     {# Filter out the excluded columns by name #}
