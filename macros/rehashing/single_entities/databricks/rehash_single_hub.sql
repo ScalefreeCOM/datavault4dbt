@@ -45,6 +45,7 @@
     {% do run_query(update_sql) %}
     {{ log('Update calculation completed!', output_logs) }}
 
+    {% set columns_to_drop = [{"name": dep_hashkey_name}]%}
 
     {# Handle Renames #}
     {% if overwrite_hash_values %}
@@ -66,7 +67,7 @@
 
     {% endif %}
 
-    {{ return([]) }}
+    {{ return(columns_to_drop) }}
     
 {% endmacro %}
 
