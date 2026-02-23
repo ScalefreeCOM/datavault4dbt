@@ -65,13 +65,13 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% do run_query(create_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
+    {# Drop old table and rename _rehashed #}
+    {% set old_table_relation = make_temp_relation(link_relation,suffix='_deprecated') %}
+
+    {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
+    {% do run_query(drop_table(old_table_relation)) %}
 
     {% if drop_old_values %}
-        {# Drop old table and rename _rehashed #}
-        {% set old_table_relation = make_temp_relation(link_relation,suffix='_deprecated') %}
-
-        {{ log('Dropping old table: ' ~ old_table_name, output_logs) }}
-        {% do run_query(drop_table(old_table_name)) %}
         {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=link_relation, remove_columns=ns.columns_to_drop) }}
 
     {% endif %}

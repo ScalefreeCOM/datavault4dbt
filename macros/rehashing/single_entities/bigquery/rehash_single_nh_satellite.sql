@@ -67,11 +67,12 @@
         {"name": hashkey + '_deprecated'}
     ]%}
 
-    {% if drop_old_values %}
-        {% set old_table_relation = make_temp_relation(nh_satellite_relation,suffix='_deprecated') %}
+    {% set old_table_relation = make_temp_relation(nh_satellite_relation,suffix='_deprecated') %}
 
-        {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
-        {% do run_query(drop_table(old_table_relation)) %}
+    {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
+    {% do run_query(drop_table(old_table_relation)) %}
+
+    {% if drop_old_values %}
 
         {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=nh_satellite_relation, remove_columns=columns_to_drop) }}
 

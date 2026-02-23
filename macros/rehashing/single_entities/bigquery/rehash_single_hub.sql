@@ -39,13 +39,14 @@
     {{ log('CREATE statement completed!', output_logs) }}
 
     {% set columns_to_drop = [{"name": hashkey + '_deprecated'}]%}
+    
+    {% set old_table_relation = make_temp_relation(hub_relation,suffix='_deprecated') %}
 
+    {# Drop old Hub table and rename _rehashed Hub table to original Hub name. #}
+    {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
+    {% do run_query(drop_table(old_table_relation)) %}
     {% if drop_old_values %}
-        {% set old_table_relation = make_temp_relation(hub_relation,suffix='_deprecated') %}
 
-        {# Drop old Hub table and rename _rehashed Hub table to original Hub name. #}
-        {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
-        {% do run_query(drop_table(old_table_relation)) %}
         {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=hub_relation, remove_columns=columns_to_drop) }}
 
     {% endif %}
