@@ -48,17 +48,17 @@ enriched_timestamps AS (
         END AS is_daily,
         CASE
             {%- if first_day_of_week_var == 7 %}
-            WHEN DAYOFWEEK_ISO(sdts) = 7 THEN TRUE
+            WHEN DAYOFWEEKISO(sdts) = 7 THEN TRUE
             {%- else %}
-            WHEN DAYOFWEEK_ISO(sdts) = 1 THEN TRUE
+            WHEN DAYOFWEEKISO(sdts) = 1 THEN TRUE
             {%- endif %}
             ELSE FALSE
         END AS is_beginning_of_week,
         CASE
             {%- if first_day_of_week_var == 7 %}
-            WHEN DAYOFWEEK_ISO(sdts) = 6 THEN TRUE
+            WHEN DAYOFWEEKISO(sdts) = 6 THEN TRUE
             {%- else %}
-            WHEN DAYOFWEEK_ISO(sdts) = 7 THEN TRUE
+            WHEN DAYOFWEEKISO(sdts) = 7 THEN TRUE
             {%- endif %}
             ELSE FALSE
         END AS is_end_of_week,
