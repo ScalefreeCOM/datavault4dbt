@@ -38,7 +38,6 @@
     {# Execute Update #}
     {{ log('Executing UPDATE (MERGE) statement...', output_logs) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ hub ~ '\n' ~ update_sql ~ '*/' }}
-    {{log(update_sql,true)}}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
