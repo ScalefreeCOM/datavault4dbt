@@ -38,6 +38,7 @@
     {# Execute Update #}
     {{ log('Executing UPDATE (MERGE) statement...', output_logs) }}
     {{ '/* UPDATE STATEMENT FOR ' ~ hub ~ '\n' ~ update_sql ~ '*/' }}
+    {{log(update_sql,true)}}
     {% do run_query(update_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
@@ -83,7 +84,7 @@
     USING (
         SELECT 
             hub.{{ hashkey }} as original_hashkey,
-            {{ datavault4dbt.hash_columns(columns=hash_config_dict) }} as calculated_hash
+            {{ datavault4dbt.hash_columns(columns=hash_config_dict) }}
         FROM {{ hub_relation }} hub
         WHERE hub.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
 
@@ -91,13 +92,13 @@
 
         SELECT 
             hub.{{ hashkey }} as original_hashkey,
-            hub.{{ hashkey }} as calculated_hash
+            hub.{{ hashkey }} as {{ new_hashkey_name }}
         FROM {{ hub_relation }} hub
         WHERE hub.{{ rsrc_alias }} IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
     ) src
     ON (dest.{{ hashkey }} = src.original_hashkey)
     WHEN MATCHED THEN
-        UPDATE SET dest.{{ new_hashkey_name }} = src.calculated_hash
+        UPDATE SET dest.{{ new_hashkey_name }} = src.{{ new_hashkey_name }}
     {% endset %}
 
     {{ return(update_sql) }}
