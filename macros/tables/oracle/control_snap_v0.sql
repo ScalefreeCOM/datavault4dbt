@@ -12,7 +12,7 @@
     {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
 {%- endif -%}
 
-{%- set first_day_of_week_var = var('datavault4dbt.first_day_of_week').get(target.type, 1) | int -%}
+{%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
 
 with generate_dates({{ sdts_alias }}) as (
 	Select {{ datavault4dbt.string_to_timestamp(timestamp_format, timestamp_value) }} as {{ sdts_alias }}

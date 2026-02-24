@@ -12,7 +12,7 @@
     {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
 {%- endif -%}
 
-{%- set first_day_of_week_var = var('datavault4dbt.first_day_of_week').get(target.type, 1) | int -%}
+{%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
 
 {%- set bigquery_day_of_week_target = (first_day_of_week_var % 7) + 1 -%}
 

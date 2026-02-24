@@ -1,6 +1,6 @@
 {%- macro synapse__control_snap_v0(start_date, end_date, daily_snapshot_time, sdts_alias) -%}
 
-{%- set first_day_of_week_var = var('datavault4dbt.first_day_of_week', {}).get(target.type, 1) | int -%}
+{%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
 
 {% if datavault4dbt.is_nothing(end_date) %}
   {% set end_date = datavault4dbt.current_timestamp() %}

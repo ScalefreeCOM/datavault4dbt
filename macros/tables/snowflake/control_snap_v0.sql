@@ -9,7 +9,7 @@
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {%- set start_date = start_date | replace('00:00:00', daily_snapshot_time) -%}
 
-{%- set first_day_of_week_var = var('datavault4dbt.first_day_of_week').get(target.type, 1) | int -%}
+{%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
 
 WITH 
 
