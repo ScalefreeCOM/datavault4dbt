@@ -36,14 +36,14 @@
     {% set is_hashdiff = true %}
 
     {# Adding prefixes to column names for proper selection. #}
-    {% set prefixed_payload = datavault4dbt.prefix(columns=payload, prefix_str='sat').split(',') %}
+    {% set prefixed_payload = datavault4dbt.prefix(columns=payload, prefix_str='src').split(',') %}
     {% set prefixed_business_keys = datavault4dbt.prefix(columns=business_key_list, prefix_str='parent').split(',') %}
 
     {% set hash_config_dict = {
             new_hashkey_name: prefixed_business_keys, 
             new_hashdiff_name: {
                 "is_hashdiff": is_hashdiff, 
-                "columns": payload
+                "columns": prefixed_payload
                 }
             } %}
 
@@ -97,7 +97,8 @@
     {% set old_hashkey_name = hashkey + '_deprecated' %}
     {% set old_table_relation = make_temp_relation(ma_satellite_relation,suffix='_deprecated') %}
 
-    {% set prefixed_hashkey = 'sat.' ~ hashkey %}
+    {% set prefixed_hashkey = 'src.' ~ hashkey %}
+    {% set prefixed_ma_keys = datavault4dbt.prefix(columns=ma_keys, prefix_str='src').split(',') %}
 
     {#
         If parent entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
@@ -153,9 +154,7 @@
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
-    {# 
-        This does finally kinda work, but only if the payload and ma_keys columns are not in the parent, which unfortunattly is the case for the automated test repo... (here: stage_03)
-    #}
+
     {% set create_sql %}
     CREATE OR REPLACE TABLE {{ ma_satellite_relation }} AS 
     
@@ -168,7 +167,7 @@
                     {# If Business Keys are not defined for parent entity, use new hashkey already existing in parent entitiy. #}
                     parent.{{ select_hashkey_col }} as {{ new_hashkey_name }},
                 {% endif %} 
-                {{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=ma_keys) }},
+                {{ datavault4dbt.hash_columns(columns=hash_config_dict, main_hashkey_column=prefixed_hashkey, multi_active_key=prefixed_ma_keys) }},
             FROM {{ old_table_relation }} src
             LEFT JOIN {{ parent_relation }} parent
                 ON src.{{ hashkey }} = parent.{{ join_hashkey_col }}
