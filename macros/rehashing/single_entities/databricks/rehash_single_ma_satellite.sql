@@ -50,7 +50,6 @@
     {% set prefixed_business_keys = datavault4dbt.prefix(columns=business_key_list, prefix_str='parent').split(',') %}
     {% set prefixed_ma_keys = datavault4dbt.prefix(columns=ma_keys_list, prefix_str='sat').split(',') %}
     
-    {# Using the logic that worked previously (BK + MA Keys) #}
     {% set pk_input_list = prefixed_business_keys %}
 
     {# Config for HashDiff only #}

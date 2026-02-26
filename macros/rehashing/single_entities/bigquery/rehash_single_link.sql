@@ -65,7 +65,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% do run_query(create_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
-    {# Drop old table and rename _rehashed #}
+    {# Drop deprecated table #}
     {% set old_table_relation = make_temp_relation(link_relation,suffix='_deprecated') %}
 
     {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
@@ -132,7 +132,6 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
                 {%- endfor -%}
 
                 {%- if hub_ns.hub_already_rehashed -%}
-                    {# {% set hub.join_hashkey_col.update() = hub.old_hashkey_name %} #}
                     {%- do hub.update({'join_hashkey_col': hub.old_hashkey_name}) -%}
                 {%- endif %}
                 {{ hub.hub_join_alias }}.{{ hub.join_hashkey_col }} as {{ hub.old_hashkey_name }},

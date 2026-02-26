@@ -151,7 +151,7 @@
             LEFT JOIN {{ parent_relation }} parent
                 ON src.{{ hashkey }} = parent.{{ join_hashkey_col }}
             WHERE src.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
-                {# GROUP BY ALL #}
+                
             )    
             SELECT 
                 ha.original_hashkey as {{ old_hashkey_name }},

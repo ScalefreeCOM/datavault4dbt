@@ -179,7 +179,7 @@
             LEFT JOIN {{ parent_relation }} parent
                 ON src.{{ hashkey }} = parent.{{ join_hashkey_col }}
             WHERE src.{{ rsrc_alias }} NOT IN ('{{ unknown_value_rsrc }}', '{{ error_value_rsrc }}')
-            {# GROUP BY src.{{ hashkey }}, src.{{ ldts_col }}, src.{{ rsrc_alias }}, {{ datavault4dbt.print_list(hash_value_list)}} #}
+            
         )    
         SELECT 
             hd.original_hashkey as {{ old_hashkey_name }},
