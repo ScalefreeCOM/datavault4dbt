@@ -68,7 +68,7 @@
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
 
-    {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
     {{- ",'{}',".format(concat_string) if not loop.last -}}
 
     {%- if loop.last -%}
