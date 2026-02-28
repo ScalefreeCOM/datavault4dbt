@@ -228,3 +228,28 @@
 {{ return(timestamp_default_dtype) }}
 
 {%- endmacro -%}
+
+
+{%- macro sqlserver__timestamp_default_dtype() %}
+
+{%- set global_var = var('datavault4dbt.timestamp_default_dtype', none) -%}
+{%- set timestamp_default_dtype = '' -%}
+
+{%- if global_var is mapping -%}    
+    {%- if 'sqlserver' in global_var.keys()|map('lower') -%}
+        {% set timestamp_default_dtype = global_var['sqlserver'] %}
+    {%- else -%}
+        {%- if execute -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_default_dtype' to a dictionary, but have not included the adapter you use (sqlserver) as a key. Applying the default value.") -%}
+        {% endif %}
+        {%- set timestamp_default_dtype = "datetime2(6)" -%}
+    {% endif %}
+{%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
+    {%- set timestamp_default_dtype = global_var -%}
+{%- else -%}        
+    {%- set timestamp_default_dtype = "datetime2(6)" -%}
+{%- endif -%}
+
+{{ return(timestamp_default_dtype) }}
+
+{%- endmacro -%}
