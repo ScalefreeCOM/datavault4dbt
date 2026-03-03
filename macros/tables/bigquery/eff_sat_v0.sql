@@ -227,7 +227,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 {% for col in additional_columns -%}
-                cs.{{ col }},
+                null as {{ col }},
                 {% endfor -%}
                 ldts.min_ldts as {{ src_ldts }},
                 '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
@@ -253,7 +253,7 @@ current_status AS (
             SELECT DISTINCT 
                 cs.{{ tracked_hashkey }},
                 {% for col in additional_columns -%}
-                cs.{{ col }},
+                null as {{ col }},
                 {% endfor -%}
                 ldts.min_ldts as {{ src_ldts }},
                 '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
