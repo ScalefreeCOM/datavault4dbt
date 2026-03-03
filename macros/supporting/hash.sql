@@ -20,9 +20,10 @@
 {%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -88,9 +89,9 @@
 {%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
     {%- set hash = datavault4dbt.hash_method() -%}
-    {%- set concat_string = var('concat_string', '||') -%}
-    {%- set quote = var('quote', '"') -%}
-    {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+    {%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+    {%- set quote = var('datavault4dbt.quote_character', '"') -%}
+    {%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
     {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
     {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -156,9 +157,9 @@
 {%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -231,9 +232,9 @@
 
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -306,9 +307,9 @@
 {%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -456,9 +457,9 @@
 {%- macro databricks__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -525,9 +526,9 @@
 {%- macro oracle__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
