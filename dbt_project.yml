@@ -25,12 +25,21 @@ vars:
   datavault4dbt.stg_alias: 'stg'
   datavault4dbt.is_current_col_alias: 'IS_CURRENT'
   datavault4dbt.deleted_flag_alias: 'deleted_flag'
+
   #Hash Configuration
   datavault4dbt.hash: 'MD5'
   datavault4dbt.hash_datatype: 'STRING'
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   
+  datavault4dbt.concat_string: '||'
+  datavault4dbt.quote_character: '"'
+  datavault4dbt.null_placeholder_string: '^^'
+
+  datavault4dbt.concat_string_replacement: 'dv4dbt-concat-replacement'
+  datavault4dbt.quote_character_replacement": 'dv4dbt-quote-replacement'
+  datavault4dbt.null_placeholder_string_replacement: 'dv4dbt-null-replacement'
+
   #Stage Configuration
   datavault4dbt.copy_rsrc_ldts_input_columns: false
 
