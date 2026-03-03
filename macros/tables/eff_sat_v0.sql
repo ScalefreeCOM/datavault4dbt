@@ -33,7 +33,8 @@
                                          is_active_alias=is_active_alias,
                                          source_model=source_model,
                                          source_is_single_batch=source_is_single_batch,
-                                         disable_hwm=disable_hwm)}}
+                                         disable_hwm=disable_hwm,
+                                         additional_columns=additional_columns)}}
     {%- endif %}
 
     {{ return(adapter.dispatch('eff_sat_v0', 'datavault4dbt')(tracked_hashkey=tracked_hashkey,

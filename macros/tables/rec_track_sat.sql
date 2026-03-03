@@ -105,7 +105,8 @@
                                                                       src_ldts=src_ldts,
                                                                       src_rsrc=src_rsrc,
                                                                       src_stg=src_stg,
-                                                                      disable_hwm=disable_hwm) }}
+                                                                      disable_hwm=disable_hwm,
+                                                                      additional_columns=additional_columns) }}
     {%- endif %}
     
     {{ return(adapter.dispatch('rec_track_sat', 'datavault4dbt')(tracked_hashkey=tracked_hashkey,

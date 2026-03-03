@@ -108,7 +108,8 @@
                                          src_payload=src_payload,
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
-                                         source_model=source_model) }}
+                                         source_model=source_model,
+                                         additional_columns=additional_columns) }}
     {%- endif %}
 
     {{ adapter.dispatch('ma_sat_v0', 'datavault4dbt')(parent_hashkey=parent_hashkey,

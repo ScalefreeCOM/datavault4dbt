@@ -45,7 +45,8 @@
         {{ datavault4dbt_premium_package.insert_metadata_ref_hub(ref_keys=ref_keys,
                                                             src_ldts=src_ldts,
                                                             src_rsrc=src_rsrc,
-                                                            source_models=source_models) }}
+                                                            source_models=source_models,
+                                                            additional_columns=additional_columns) }}
     {%- endif %}
     
     {{ return(adapter.dispatch('ref_hub', 'datavault4dbt')(ref_keys=ref_keys,

@@ -78,7 +78,8 @@
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
                                          source_model=source_model,
-                                         source_is_single_batch=source_is_single_batch) }}
+                                         source_is_single_batch=source_is_single_batch,
+                                         additional_columns=additional_columns) }}
     {%- endif %}
 
     {{ adapter.dispatch('nh_sat', 'datavault4dbt')(parent_hashkey=parent_hashkey,

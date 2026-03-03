@@ -76,7 +76,8 @@
                                          src_rsrc=src_rsrc,
                                          source_model=source_model,
                                          disable_hwm=disable_hwm,
-                                         source_is_single_batch=source_is_single_batch) }}
+                                         source_is_single_batch=source_is_single_batch,
+                                         additional_columns=additional_columns) }}
     {%- endif %}
     
     {{ adapter.dispatch('ref_sat_v0', 'datavault4dbt')(parent_ref_keys=parent_ref_keys,
