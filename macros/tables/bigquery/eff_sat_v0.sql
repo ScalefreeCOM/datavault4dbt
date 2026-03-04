@@ -215,67 +215,6 @@ current_status AS (
 
 {% endif %}
 
-{#
-    In all incremental runs, the source needs to be scanned for all currently active hashkeys. 
-    If they are no longer present, they will be deactived. 
-#}
-{%- if is_incremental() %}
-
-    {%- if not source_is_single_batch %}
-        disappeared_hashkeys AS (
-
-            SELECT DISTINCT 
-                cs.{{ tracked_hashkey }},
-                {% for col in additional_columns -%}
-                null as {{ col }},
-                {% endfor -%}
-                ldts.min_ldts as {{ src_ldts }},
-                '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
-                0 as {{ is_active_alias }}
-            FROM current_status cs
-            LEFT JOIN (
-                SELECT 
-                    MIN({{ src_ldts }}) as min_ldts
-                FROM deduplicated_incoming) ldts
-                ON 1 = 1
-            LEFT JOIN deduplicated_incoming src
-                ON src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
-                AND  src.{{ src_ldts }} = ldts.min_ldts
-            WHERE
-                cs.{{ is_active_alias }} = cast(1 as {{ is_active_datatype }})
-                AND src.{{ tracked_hashkey }} IS NULL
-                AND ldts.min_ldts IS NOT NULL
-
-        ),
-    {% else %}
-        disappeared_hashkeys AS (
-
-            SELECT DISTINCT 
-                cs.{{ tracked_hashkey }},
-                {% for col in additional_columns -%}
-                null as {{ col }},
-                {% endfor -%}
-                ldts.min_ldts as {{ src_ldts }},
-                '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
-                0 as {{ is_active_alias }}
-            FROM current_status cs
-            LEFT JOIN (
-                SELECT 
-                    MIN({{ src_ldts }}) as min_ldts
-                FROM source_data) ldts
-                ON 1 = 1
-            WHERE NOT EXISTS (
-                SELECT 
-                    1 
-                FROM source_data src
-                WHERE src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
-            )
-            AND cs.{{ is_active_alias }} = cast(1 as {{ is_active_datatype }})
-            AND ldts.min_ldts IS NOT NULL
-
-        ),
-    {% endif %}
-{%- endif %}
 
 records_to_insert AS (
 
@@ -317,16 +256,69 @@ records_to_insert AS (
     #}
     UNION ALL
 
-    SELECT
-        {{ tracked_hashkey }},
-        {% for col in additional_columns -%}
-        {{ col }},
-        {% endfor -%}
-        {{ src_ldts }},
-        {{ src_rsrc }},
-        {{ is_active_alias }}
-    FROM disappeared_hashkeys
+    {# 
+        Default datatype of null-columns is INT64. By putting the distinct logic below in a subquery
+        and assigning the nulls in the select mitigates datatype mismatches on incremental runs
+    #}
 
+    SELECT
+        disappeared_hashkeys.{{ tracked_hashkey }},
+        {% for col in additional_columns -%}
+        null as {{ col }},
+        {% endfor -%}
+        disappeared_hashkeys.{{ src_ldts }},
+        disappeared_hashkeys.{{ src_rsrc }},
+        disappeared_hashkeys.{{ is_active_alias }}
+    FROM (
+        {#
+            In all incremental runs, the source needs to be scanned for all currently active hashkeys. 
+            If they are no longer present, they will be deactived. 
+        #}
+    {%- if not source_is_single_batch %}
+
+        SELECT DISTINCT 
+            cs.{{ tracked_hashkey }},
+            ldts.min_ldts as {{ src_ldts }},
+            '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
+            0 as {{ is_active_alias }}
+        FROM current_status cs
+        LEFT JOIN (
+            SELECT 
+                MIN({{ src_ldts }}) as min_ldts
+            FROM deduplicated_incoming) ldts
+            ON 1 = 1
+        LEFT JOIN deduplicated_incoming src
+            ON src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
+            AND  src.{{ src_ldts }} = ldts.min_ldts
+        WHERE
+            cs.{{ is_active_alias }} = cast(1 as {{ is_active_datatype }})
+            AND src.{{ tracked_hashkey }} IS NULL
+            AND ldts.min_ldts IS NOT NULL
+
+    {% else %}
+
+        SELECT DISTINCT 
+            cs.{{ tracked_hashkey }},
+            ldts.min_ldts as {{ src_ldts }},
+            '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
+            0 as {{ is_active_alias }}
+        FROM current_status cs
+        LEFT JOIN (
+            SELECT 
+                MIN({{ src_ldts }}) as min_ldts
+            FROM source_data) ldts
+            ON 1 = 1
+        WHERE NOT EXISTS (
+            SELECT 
+                1 
+            FROM source_data src
+            WHERE src.{{ tracked_hashkey }} = cs.{{ tracked_hashkey }}
+        )
+        AND cs.{{ is_active_alias }} = cast(1 as {{ is_active_datatype }})
+        AND ldts.min_ldts IS NOT NULL
+
+    {% endif %}
+    ) disappeared_hashkeys
     {%- endif %}
 
 )
