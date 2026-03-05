@@ -1,10 +1,15 @@
-{%- macro synapse__nh_sat(parent_hashkey, src_payload, src_ldts, src_rsrc, source_model, source_is_single_batch) -%}
+{%- macro synapse__nh_sat(parent_hashkey, src_payload, src_ldts, src_rsrc, source_model, source_is_single_batch, additional_columns) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set source_cols = datavault4dbt.expand_column_list(columns=[parent_hashkey, src_ldts, src_rsrc, src_payload]) -%}
+{# Select the additional_columns and put them in an array. If additional_colums is none, then empty array #}
+{%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
+
+{%- set source_cols = datavault4dbt.expand_column_list(columns=[parent_hashkey, src_ldts, src_rsrc, src_payload, additional_columns]) -%}
+
 {%- set source_relation = ref(source_model) -%}
 
 {%- set ns = namespace(last_cte='') -%}
@@ -61,7 +66,7 @@ distinct_hashkeys AS
     SELECT DISTINCT
         {{ parent_hashkey }}
     FROM 
-        {{ this }}    
+        {{ this }}
     WHERE 1=1
 
     {{ datavault4dbt.filter_distinct_target_hashkey_in_nh_sat() }}

@@ -1,4 +1,4 @@
-{%- macro synapse__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model, disable_hwm, source_is_single_batch) -%}
+{%- macro synapse__sat_v0(parent_hashkey, src_hashdiff, src_payload, src_ldts, src_rsrc, source_model, disable_hwm, source_is_single_batch, additional_columns) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -14,7 +14,11 @@
     {% set ns.hdiff_alias = src_hashdiff  %}
 {%- endif -%}
 
-{%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_payload]) -%}
+{# Select the additional_columns and put them in an array. If additional_colums none, then empty array #}
+{%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
+
+{%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_payload, additional_columns]) -%}
 
 {%- set source_relation = ref(source_model) -%}
 
