@@ -33,12 +33,14 @@
     {# --- STEP 2: Auto-Cleanup (Initial) --- #}
     {% set potential_stuck_cols = [new_hashkey_name, new_hashdiff_name, hashkey + '_deprecated', hashdiff + '_deprecated'] %}
     {% for col_name in potential_stuck_cols %}
+        {% do run_query("REFRESH TABLE " ~ ma_satellite_relation) %}
         {% do run_query("ALTER TABLE " ~ ma_satellite_relation ~ " DROP COLUMN IF EXISTS " ~ col_name) %}
     {% endfor %}
 
 
     {# --- STEP 3: Add New Columns --- #}
     {{ log('Adding new columns...', output_logs) }}
+    {% do run_query("REFRESH TABLE " ~ ma_satellite_relation) %}
     {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
 
 
@@ -85,12 +87,18 @@
         {{ log('Renaming columns...', output_logs) }}
         
         {# SAFETY FIX: Drop the target columns first to prevent 'Already Exists' error on dirty tables #}
+        {% do run_query("REFRESH TABLE " ~ ma_satellite_relation) %}
         {% do run_query("ALTER TABLE " ~ ma_satellite_relation ~ " DROP COLUMN IF EXISTS " ~ hashkey + '_deprecated') %}
+        {% do run_query("REFRESH TABLE " ~ ma_satellite_relation) %}
         {% do run_query("ALTER TABLE " ~ ma_satellite_relation ~ " DROP COLUMN IF EXISTS " ~ hashdiff + '_deprecated') %}
 
+        {% do run_query("REFRESH TABLE " ~ ma_satellite_relation) %}
         {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
+        {% do run_query("REFRESH TABLE " ~ ma_satellite_relation) %}
         {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
+        {% do run_query("REFRESH TABLE " ~ ma_satellite_relation) %}
         {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) %}
+        {% do run_query("REFRESH TABLE " ~ ma_satellite_relation) %}
         {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) %}
         
         {% if drop_old_values %}

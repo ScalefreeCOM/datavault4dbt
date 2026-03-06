@@ -52,16 +52,21 @@
         {{ log('Renaming columns...', output_logs) }}
 
         {% if drop_old_values %}
+            {% do run_query("REFRESH TABLE " ~ hub_relation) %}
             {% do run_query("ALTER TABLE " ~ hub_relation ~ " DROP COLUMN IF EXISTS `" ~ hashkey ~ "`") %}
+            {% do run_query("REFRESH TABLE " ~ hub_relation) %}
             {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
         
         {% else %}
+            {% do run_query("REFRESH TABLE " ~ hub_relation) %}
             {% do run_query("ALTER TABLE " ~ hub_relation ~ " DROP COLUMN IF EXISTS `" ~ dep_hashkey_name ~ "`") %}
             
             {# Rename Old -> Deprecated #}
+            {% do run_query("REFRESH TABLE " ~ hub_relation) %}
             {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=dep_hashkey_name)) %}
             
             {# Rename New -> Standard #}
+            {% do run_query("REFRESH TABLE " ~ hub_relation) %}
             {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
         {% endif %}
 
