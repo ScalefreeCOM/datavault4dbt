@@ -35,12 +35,14 @@
     {% for col_name in potential_stuck_cols %}
         {% if col_name in existing_col_names %}
             {{ log('Dropping stuck column ' ~ col_name, true) }}
+            {% do run_query("REFRESH TABLE " ~ nh_satellite_relation) %}
             {% do run_query("ALTER TABLE " ~ nh_satellite_relation ~ " DROP COLUMN " ~ col_name) %}
         {% endif %}
     {% endfor %}
 
     {# Add New Columns #}
     {{ log('Adding new columns...', output_logs) }}
+    {% do run_query("REFRESH TABLE " ~ nh_satellite_relation) %}
     {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=nh_satellite_relation, add_columns=new_hash_columns) }}
 
     {# Calculate Hashes (MERGE) #}
@@ -59,12 +61,15 @@
 
     {% if overwrite_hash_values %}
         {{ log('Renaming columns...', output_logs) }}
+        {% do run_query("REFRESH TABLE " ~ nh_satellite_relation) %}
         {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
+        {% do run_query("REFRESH TABLE " ~ nh_satellite_relation) %}
         {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
         
         {% if drop_old_values %}
             {{ log('Dropping deprecated columns...', output_logs) }}
             {% for col in columns_to_drop %}
+                {% do run_query("REFRESH TABLE " ~ nh_satellite_relation) %}
                 {% do run_query("ALTER TABLE " ~ nh_satellite_relation ~ " DROP COLUMN IF EXISTS " ~ col.name) %}
             {% endfor %}
         {% endif %}

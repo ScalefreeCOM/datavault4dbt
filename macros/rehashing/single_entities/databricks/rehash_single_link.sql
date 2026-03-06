@@ -98,6 +98,8 @@
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
         {# 6a. Rename Link Hashkeys #}
+        {% do run_query("REFRESH TABLE " ~ link_relation) %}
+        
         {% set rename_link_old = datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=link_hashkey, new_col_name=link_hashkey + '_deprecated') %}
         {% do run_query(rename_link_old) %}
         
@@ -106,6 +108,8 @@
 
         {# 6b. Rename Hub Hashkeys #}
         {% for hub_hashkey in ns.hub_hashkeys %}
+            {% do run_query("REFRESH TABLE " ~ link_relation) %}
+            
             {% set rename_hub_old = datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.current_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name + '_deprecated') %}
             {% do run_query(rename_hub_old) %}
             
