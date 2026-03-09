@@ -39,6 +39,7 @@
 
     {# --- STEP 3: Add New Columns --- #}
     {{ log('Adding new columns...', output_logs) }}
+    
     {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=ma_satellite_relation, add_columns=new_hash_columns) }}
 
 
@@ -88,11 +89,18 @@
         {% do run_query("ALTER TABLE " ~ ma_satellite_relation ~ " DROP COLUMN IF EXISTS " ~ hashkey + '_deprecated') %}
         {% do run_query("ALTER TABLE " ~ ma_satellite_relation ~ " DROP COLUMN IF EXISTS " ~ hashdiff + '_deprecated') %}
 
-        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
-        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
-        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) %}
-        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) %}
+        {% set ns = namespace(rename_queries= ['BEGIN']) %}
+        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) }}
         
+        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) }}
+        
+        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) }}
+        
+        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) }}
+
+        {{ ns.rename_queries.append('END') }}
+        {% do run_query(ns.rename_queries|join('\n')) %}
+
         {% if drop_old_values %}
             {{ log('Dropping deprecated columns...', output_logs) }}
             {% for col in columns_to_drop %}
