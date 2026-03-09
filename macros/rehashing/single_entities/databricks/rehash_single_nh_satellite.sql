@@ -59,9 +59,16 @@
 
     {% if overwrite_hash_values %}
         {{ log('Renaming columns...', output_logs) }}
-        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
-        {% do run_query(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
         
+        {% set ns_rename = namespace(rename_queries = ['BEGIN']) %}
+
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) }}
+        
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) }}
+        
+        {{ ns_rename.rename_queries.append('END') }}
+        {% do run_query(ns_rename.rename_queries|join('\n')) %}
+
         {% if drop_old_values %}
             {{ log('Dropping deprecated columns...', output_logs) }}
             {% for col in columns_to_drop %}
