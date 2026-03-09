@@ -93,20 +93,20 @@
     {% if overwrite_hash_values %}
         {{ log('Replacing existing hash values...', output_logs) }}
 
-        {% set ns = namespace(rename_queries = ['BEGIN']) %}
+        {% set ns_rename = namespace(rename_queries = ['BEGIN']) %}
 
         {# Rename Hashkey #}
-        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) }}
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) }}
 
-        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) }}
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) }}
 
         {# Rename Hashdiff #}
-        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) }}
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) }}
 
-        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) }}
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) }}
 
-        {{ ns.rename_queries.append('END') }}
-        {% do run_query(ns.rename_queries|join('\n')) %}
+        {{ ns_rename.rename_queries.append('END') }}
+        {% do run_query(ns_rename.rename_queries|join('\n')) %}
 
         {# Drop Old Values #}
         {% if drop_old_values %}

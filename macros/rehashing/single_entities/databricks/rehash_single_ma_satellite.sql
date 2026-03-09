@@ -89,17 +89,17 @@
         {% do run_query("ALTER TABLE " ~ ma_satellite_relation ~ " DROP COLUMN IF EXISTS " ~ hashkey + '_deprecated') %}
         {% do run_query("ALTER TABLE " ~ ma_satellite_relation ~ " DROP COLUMN IF EXISTS " ~ hashdiff + '_deprecated') %}
 
-        {% set ns = namespace(rename_queries= ['BEGIN']) %}
-        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) }}
+        {% set ns_rename = namespace(rename_queries= ['BEGIN']) %}
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) }}
         
-        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) }}
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) }}
         
-        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) }}
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) }}
         
-        {{ ns.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) }}
+        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=ma_satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) }}
 
-        {{ ns.rename_queries.append('END') }}
-        {% do run_query(ns.rename_queries|join('\n')) %}
+        {{ ns_rename.rename_queries.append('END') }}
+        {% do run_query(ns_rename.rename_queries|join('\n')) %}
 
         {% if drop_old_values %}
             {{ log('Dropping deprecated columns...', output_logs) }}
