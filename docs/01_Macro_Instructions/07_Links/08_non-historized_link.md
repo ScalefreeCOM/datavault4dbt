@@ -37,7 +37,7 @@ Features:
 | src_ldts               | string                   | optional     | datavault4dbt.ldts_alias   | Name of the ldts column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
 | src_rsrc               | string                   | optional     | datavault4dbt.rsrc_alias   | Name of the rsrc column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
 | union_strategy         | string                   | optional     | ALL                        | Defines how multiple sources should be unionized. ALL will result in a UNION ALL and represents the default value. Should only be changed if you have duplicates across source systems and do not want to deduplicate them upfront. Possible values: ALL or DISTINCT. |
-| additional_columns     | string \| list of strings | optional     | none                       | Column or list of columns that will be additionally be added to the non-historized link. (Available from v1.12.0) |
+| additional_columns     | string \| list of strings | optional     | none                       | Column or list of columns that will additionally be added to the non-historized link. |
 
 ## EXAMPLE 1
 

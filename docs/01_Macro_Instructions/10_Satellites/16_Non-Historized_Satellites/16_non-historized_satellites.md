@@ -16,11 +16,20 @@ Features:
 
 ### REQUIRED PARAMETERS
 
-
+| Parameters | Data Type | Required | Default Value | Explanation |
+| :--- | :--- | :--- | :--- | :--- |
+| parent_hashkey | string | mandatory | - | Name of the hashkey column inside the stage of the object that this satellite is attached to. |
+| src_payload | string \| list of strings | mandatory | - | A list of all the descriptive attributes that should be included in this satellite. |
+| source_model | string | mandatory | - | Name of the underlying staging model, must be available inside dbt as a model. |
 
 ### OPTIONAL PARAMETERS
 
-
+| Parameters | Data Type | Required | Default Value | Explanation |
+| :--- | :--- | :--- | :--- | :--- |
+| source_is_single_batch | boolean | optional | False | See below for explanation. |
+| src_ldts | string | optional | datavault4dbt.ldts_alias | Name of the ldts column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
+| src_rsrc | string | optional | datavault4dbt.rsrc_alias | Name of the rsrc column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
+| additional_columns | string \| list of strings | optional | none | Column or list of columns that will additionally be added to the non-historized satellite. |
 
 ## EXAMPLE 1
 

@@ -46,6 +46,7 @@ There is no specific Effectivity Satellite v1 macro. To calculate load end dates
 | disable_hwm            | boolean   | optional | False                             | Whether the automatic application of a High-Water Mark (HWM) should be disabled or not. |
 | source_is_single_batch | boolean   | optional | True                              | Performance boost for single source loads. Set this to FALSE only if source contains multiple batches. Model will get slower if set to FALSE, even if source only holds one batch. |
 | is_active_alias        | string    | optional | datavault4dbt.is_active_alias     | Define how the effectivity column should be called. Optional, will use the global variable `datavault4dbt.is_active_alias` if not set. |
+| additional_columns     | string \| list of strings | optional | none                              | Column or list of columns that will additionally be added to the effectivity satellite. |
 
 ## EXAMPLE 1
 
