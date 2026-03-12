@@ -32,7 +32,7 @@ Features:
 | disable_hwm        | boolean                   | optional | False                     | Whether the automatic application of a High-Water Mark (HWM) should be disabled or not. |
 | src_ldts           | string                    | optional | datavault4dbt.ldts_alias  | Name of the ldts column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
 | src_rsrc           | string                    | optional | datavault4dbt.rsrc_alias  | Name of the rsrc column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
-| additional_columns | string \| list of strings | optional | none                      | Column or list of columns that will additionally be added to the link. (Available from v1.12.0) |
+| additional_columns | string \| list of strings | optional | none                      | Column or list of columns that will additionally be added to the link. |
 
 ## EXAMPLE 1
 

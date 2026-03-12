@@ -33,6 +33,7 @@ Features:
 | src_ldts     | string    | optional | datavault4dbt.ldts_alias   | Name of the ldts column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
 | src_rsrc     | string    | optional | datavault4dbt.rsrc_alias   | Name of the rsrc column inside the source models. Is optional, will use the global variable `datavault4dbt.rsrc_alias`. Needs to use the same column name as defined as alias inside the staging model. |
 | src_stg      | string    | optional | datavault4dbt.stg_alias    | Name of the column containing information about the source stage model. |
+| additional_columns | string \| list of strings | optional | none                       | Column or list of columns that will additionally be added to the record-tracking satellite. |
 
 ## EXAMPLE 1
 

@@ -32,6 +32,7 @@ In general, a reference Hub shares the same features as a general standard Hub, 
 |-----------|----------|----------|----------------------------|-------------|
 | src_ldts  | string   | optional | datavault4dbt.ldts_alias   | Name of the ldts column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
 | src_rsrc  | string   | optional | datavault4dbt.rsrc_alias   | Name of the rsrc column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
+| additional_columns | string \| list of strings | optional | none                       | Column or list of columns that will additionally be added to the reference hub. |
 
 ## EXAMPLE 1
 

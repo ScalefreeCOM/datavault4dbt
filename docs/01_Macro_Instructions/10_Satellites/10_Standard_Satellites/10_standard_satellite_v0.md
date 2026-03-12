@@ -32,6 +32,7 @@ Features:
 | src_rsrc               | string   | optional | datavault4dbt.rsrc_alias  | Name of the rsrc column inside the source model. Is optional, will use the global variable `datavault4dbt.rsrc_alias`. Needs to use the same column name as defined as alias inside the staging model. |
 | disable_hwm            | boolean  | optional | False                     | Whether the automatic application of a High-Water Mark (HWM) should be disabled or not. |
 | source_is_single_batch | boolean  | optional | False                     | Boosts performance by disabling QUALIFY statement. Only activate this if you make sure that underlying staging model only holds one row per entry. See non-historized link for more details. |
+| additional_columns     | string \| list of strings | optional | none                      | Column or list of columns that will additionally be added to the satellite. |
 
 ## EXAMPLE 1
 
