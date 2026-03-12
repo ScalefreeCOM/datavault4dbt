@@ -1,4 +1,4 @@
-{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key=none, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
@@ -28,90 +28,80 @@
 
 {{ datavault4dbt.prepend_generated_by() }}
 
-WITH
+SELECT
+    {%- if datavault4dbt.is_something(pit_type) -%}
+        CAST({{ datavault4dbt.as_constant(pit_type) }} as {{ string_default_dtype }}) AS type,
+    {%- endif -%}
+    {%- if datavault4dbt.is_something(custom_rsrc) -%}
+        CAST('{{ custom_rsrc }}' as {{ string_default_dtype }}) AS {{ rsrc }},
+    {%- endif -%}
+    {%- if datavault4dbt.is_something(dimension_key) -%}
+        {{ datavault4dbt.hash(columns=hashed_cols, alias=dimension_key, is_hashdiff=false) }},
+    {%- endif -%}
+    te.{{ hashkey }},
+    snap.{{ sdts }},
+    {% for satellite in sat_names %}
+        {%- if refer_to_ghost_records -%}
+            COALESCE(
+                MAX({{ satellite }}.{{ hashkey }}),
+                CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})
+            ) AS hk_{{ satellite }},
+            COALESCE(
+                MAX({{ satellite }}.{{ ldts }}),
+                {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
+            ) AS {{ ldts }}_{{ satellite }}
+        {%- else -%}
+            MAX({{ satellite }}.{{ hashkey }}) AS hk_{{ satellite }},
+            MAX({{ satellite }}.{{ ldts }}) AS {{ ldts }}_{{ satellite }}
+        {%- endif -%}
+        {{- "," if not loop.last }}
+    {% endfor %}
 
-{%- if is_incremental() %}
+FROM {{ ref(tracked_entity) }} te
 
-existing_dimension_keys AS (
-
-    SELECT
-        {{ dimension_key }}
-    FROM {{ this }}
-
-),
-
+{%- if datavault4dbt.is_something(snapshot_trigger_column) %}
+    INNER JOIN {{ ref(snapshot_relation) }} snap
+        ON snap.{{ snapshot_trigger_column }} = true
+{%- else %}
+    CROSS JOIN {{ ref(snapshot_relation) }} snap
 {%- endif %}
 
-pit_records AS (
-
-    SELECT
-        
-        {% if datavault4dbt.is_something(pit_type) -%}
-            CAST({{ datavault4dbt.as_constant(pit_type) }} as {{ string_default_dtype }} ) as type,
-        {%- endif %}
-        {% if datavault4dbt.is_something(custom_rsrc) -%}
-        CAST('{{ custom_rsrc }}' as {{ string_default_dtype }} ) as {{ rsrc }},
-        {%- endif %}
-        {{ datavault4dbt.hash(columns=hashed_cols,
-                    alias=dimension_key,
-                    is_hashdiff=false)   }} ,
-        te.{{ hashkey }},
-        snap.{{ sdts }},
-        {% for satellite in sat_names %}
-          {% if refer_to_ghost_records %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite }},
-            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
-          {% else %}
-            {{ satellite }}.{{ hashkey }} AS hk_{{ satellite }},
-            {{ satellite }}.{{ ldts }} AS {{ ldts }}_{{ satellite }}
-          {% endif %}
-        {{- "," if not loop.last }}
-        {%- endfor %}
-
-    FROM
-            {{ ref(tracked_entity) }} te
-            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}            
-        FULL OUTER JOIN
-            {{ ref(snapshot_relation) }} snap
-                ON snap.{{ snapshot_trigger_column }} = true
-            {% else -%}
-                CROSS JOIN
-            {{ ref(snapshot_relation) }} snap
-            {%- endif %}
-        {% for satellite in sat_names %}
-        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
-        {%- if ledts|string|lower in sat_columns|map('lower') %}
-        LEFT JOIN {{ ref(satellite) }}
-        {%- else %}
-        LEFT JOIN (
-            SELECT
-                {{ hashkey }},
-                {{ ldts }},
-                COALESCE(LEAD({{ ldts }} - interval '00:00:00.000001') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
-            FROM {{ ref(satellite) }}
-        ) {{ satellite }}
-        {% endif %}
-            ON
-                {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
-                AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
-        {% endfor %}
-    {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
-        WHERE snap.{{ snapshot_trigger_column }}
+{% for satellite in sat_names %}
+    {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
+    {%- if ledts|string|lower in sat_columns|map('lower') %}
+    LEFT JOIN {{ ref(satellite) }} AS {{ satellite }}
+    {%- else %}
+    LEFT JOIN (
+        SELECT
+            {{ hashkey }},
+            {{ ldts }},
+            COALESCE(
+                LEAD({{ ldts }} - interval '00:00:00.000001') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),
+                {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            ) AS {{ ledts }}
+        FROM {{ ref(satellite) }}
+    ) AS {{ satellite }}
     {%- endif %}
+        ON {{ satellite }}.{{ hashkey }} = te.{{ hashkey }}
+        AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
+{% endfor %}
 
-),
+{%- if is_incremental() %}
+    WHERE snap.{{ sdts }} NOT IN (
+        SELECT DISTINCT {{ sdts }}
+        FROM {{ this }}
+    )
+{%- endif %}
 
-records_to_insert AS (
-
-    SELECT DISTINCT *
-    FROM pit_records
-    {%- if is_incremental() %}
-    WHERE NOT EXISTS (SELECT 1 FROM existing_dimension_keys 
-                        WHERE existing_dimension_keys.{{ dimension_key }} = pit_records.{{ dimension_key }})
-    {% endif -%}
-
-)
-
-SELECT * FROM records_to_insert
+{%- if datavault4dbt.is_something(dimension_key) -%}
+GROUP BY
+    {{ dimension_key }},
+    te.{{ hashkey }},
+    snap.{{ sdts }}
+{%- else -%}
+GROUP BY
+    te.{{ hashkey }},
+    snap.{{ sdts }}
+{%- endif -%}
 
 {%- endmacro -%}
