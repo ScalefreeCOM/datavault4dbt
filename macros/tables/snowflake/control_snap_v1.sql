@@ -19,7 +19,7 @@
     {%- endfor -%}
 {%- endif %}
 
-{%- set v0_relation = ref('control_snap_v0') -%}
+{%- set v0_relation = ref(control_snap_v0) -%}
 {%- set ns = namespace(forever_status=FALSE) %}
 
 {%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
