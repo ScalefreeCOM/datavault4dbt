@@ -160,16 +160,19 @@ WITH
             {%- if not loop.last -%} OR
             {% endif -%}
         {%- endfor %})
-        AND src.{{ src_ldts }} > max.max_ldts
+            AND src.{{ src_ldts }} > max.max_ldts
+        WHERE 1 = 1
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
-        AND src.{{ src_ldts }} > (
+        WHERE src.{{ src_ldts }} > (
             SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM {{ this }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
+    {%- else %}
+        WHERE 1 = 1
     {%- endif %}
-    
-        WHERE NOT (
+
+        AND NOT (
             {% for ref_key in source_model['ref_keys'] -%}
             {{ ref_key}} IS NULL {%- if not loop.last %} AND {% endif -%}
             {% endfor -%} )
