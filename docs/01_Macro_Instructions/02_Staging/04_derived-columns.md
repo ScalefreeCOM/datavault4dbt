@@ -40,7 +40,7 @@ An expression is defined under the key `value` and can basically do three differ
 
 - **Inserting a static string** that will be the same across all rows. Needs to begin with `!` followed by the string.
 - **Renaming a column.** Expression would just be the name of another column.
-- **Applying SQL.** The Expression needs to hold valid SQL, typically based on one or multiple columns. Note: All used columns should be listed under `src_cols_required`.
+- **Applying SQL.** The Expression needs to hold valid SQL, typically based on one or multiple columns. Note: All used columns should be listed under `src_cols_required`. Since SQL should not be escaped, the background macro needs to identify SQL Code (or numerical values). It does this by checking for the use of paranthesis `()`. So **if you experience quoting issues with your derived column, try wrapping it in paranthesis** and check if this solves it.
 
 ## DATATYPES
 Defining a datatype of the expressions is mandatory to properly generate Ghost Records. Please note, that setting a datatype does not automatically cast the expression to this datatype. You manually have to ensure that your expression matches the datatype defined.
