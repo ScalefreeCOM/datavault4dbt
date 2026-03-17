@@ -1,4 +1,4 @@
-{%- macro sqlserver__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model) -%}
+{%- macro sqlserver__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model, disable_hwm, source_is_single_batch) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -40,13 +40,15 @@ source_data AS (
         {{ datavault4dbt.print_list(source_cols) }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() %}
+    {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
             COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
+
+    {% set source_cte = 'source_data' %}
 
 ),
 
@@ -73,6 +75,7 @@ latest_entries_in_sat AS (
 ),
 {%- endif %}
 
+{%- if not source_is_single_batch -%}
 {# Get a list of all distinct hashdiffs that exist for each parent_hashkey. #}
  lag_source_data AS (
   SELECT 
@@ -108,6 +111,7 @@ deduped_rows AS (
     AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
 
 ),
+{%- endif %}
 
 records_to_insert AS (
 
