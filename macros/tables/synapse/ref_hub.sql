@@ -134,7 +134,7 @@ WITH
     {%- set source_number = source_model.id | string -%}
 
     {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = ns.source_models_rsrc_dict.id -%}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number|string] -%}
     {%- endif -%}
 
 
@@ -152,10 +152,6 @@ WITH
             {{ src_ldts }},
             {{ src_rsrc }}
         FROM {{ ref(source_model.name) }} src
-        WHERE NOT (
-            {% for ref_key in source_model['ref_keys'] -%}
-            {{ ref_key}} IS NULL {%- if not loop.last %} AND {% endif -%}
-            {% endfor -%} )
 
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
@@ -172,6 +168,11 @@ WITH
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
     {%- endif %}
+    
+        WHERE NOT (
+            {% for ref_key in source_model['ref_keys'] -%}
+            {{ ref_key}} IS NULL {%- if not loop.last %} AND {% endif -%}
+            {% endfor -%} )
 
          {%- set ns.last_cte = "src_new_{}".format(source_number) %}
          
