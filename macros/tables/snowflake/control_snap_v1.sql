@@ -108,10 +108,7 @@ active_logic_combined AS (
     SELECT 
         {{ sdts_alias }},
         replacement_sdts,
-        CASE
-            WHEN force_active THEN TRUE
-            ELSE {{ snapshot_trigger_column }}
-        END AS {{ snapshot_trigger_column }},
+        force_active AND {{ snapshot_trigger_column }} AS {{ snapshot_trigger_column }},
         is_latest, 
         caption,
         is_hourly,
