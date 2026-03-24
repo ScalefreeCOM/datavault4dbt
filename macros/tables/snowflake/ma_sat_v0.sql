@@ -15,6 +15,15 @@
 
 {%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_ma_key, src_payload]) -%}
 
+{# Get max(ldts) #}
+{% if execute %}
+    {%- if is_incremental() and not disable_hwm %}
+        {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
+        {% set max_ldts_results = run_query(max_ldts_query) %}
+        {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+    {%- endif %}
+{% endif %}
+
 {%- set source_relation = ref(source_model) -%}
 
 
@@ -29,12 +38,8 @@ source_data AS (
         {{ datavault4dbt.print_list(source_cols) }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() %}
-    WHERE {{ src_ldts }} > (
-        SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-    )
+    {%- if is_incremental() and not disable_hwm %}
+    WHERE {{ src_ldts }} > '{{ max_ldts }}'
     {%- endif %}
 
 ),
