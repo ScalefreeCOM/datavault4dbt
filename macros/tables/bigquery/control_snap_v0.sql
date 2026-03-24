@@ -16,12 +16,6 @@
 
 {%- set bigquery_day_of_week_target = first_day_of_week_var -%}
 
-{%- if first_day_of_week_var == 7 -%}
-    {%- set bigquery_day_of_week_arg = 'WEEK(SUNDAY)' -%}
-{%- else -%}
-    {%- set bigquery_day_of_week_arg = 'WEEK(MONDAY)' -%}
-{%- endif -%}
-
 WITH
 
 initial_timestamps AS (
