@@ -52,19 +52,11 @@ enriched_timestamps AS (
             ELSE 0 
         END AS is_daily,
         CASE 
-            {%- if first_day_of_week_var == 7 %}
-            WHEN CAST({{ sdts_alias }} AS DATE) = CAST(DATEADD(day, -1, DATETRUNC(iso_week, DATEADD(day, 1, {{ sdts_alias }}))) AS DATE) THEN 1
-            {%- else %}
-            WHEN CAST({{ sdts_alias }} AS DATE) = CAST(DATETRUNC(iso_week, {{ sdts_alias }}) AS DATE) THEN 1
-            {%- endif %}
+            WHEN ((DATEPART(WEEKDAY, {{ sdts_alias }}) + @@DATEFIRST - 1) % 7) + 1 = {{ first_day_of_week_var }} THEN 1
             ELSE 0 
         END AS is_beginning_of_week,
         CASE 
-            {%- if first_day_of_week_var == 7 %}
-            WHEN CAST({{ sdts_alias }} AS DATE) = CAST(DATEADD(day, 5, DATETRUNC(iso_week, DATEADD(day, 1, {{ sdts_alias }}))) AS DATE) THEN 1
-            {%- else %}
-            WHEN CAST({{ sdts_alias }} AS DATE) = CAST(DATEADD(day, 6, DATETRUNC(iso_week, {{ sdts_alias }})) AS DATE) THEN 1
-            {%- endif %}
+            WHEN ((DATEPART(WEEKDAY, {{ sdts_alias }}) + @@DATEFIRST - 1) % 7) + 1 = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN 1
             ELSE 0 
         END AS is_end_of_week,
         CASE 

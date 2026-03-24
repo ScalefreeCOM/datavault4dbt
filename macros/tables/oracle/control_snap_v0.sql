@@ -51,21 +51,13 @@ enriched_timestamps AS (
             WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 AND EXTRACT(HOUR FROM sdts) = 0 THEN 1
             ELSE 0
         END as is_daily,
-        CASE
-            {%- if first_day_of_week_var == 7 %}
-            WHEN TRUNC(sdts) = TRUNC(sdts + 1, 'IW') - 1 THEN 1
-            {%- else %}
-            WHEN TRUNC(sdts) = TRUNC(sdts, 'IW') THEN 1
-            {%- endif %}
-            ELSE 0
+        CASE 
+            WHEN TO_NUMBER(TO_CHAR(sdts, 'D', 'NLS_DATE_LANGUAGE = American NLS_TERRITORY = America')) = {{ first_day_of_week_var }} THEN 1
+            ELSE 0 
         END AS is_beginning_of_week,
-        CASE
-            {%- if first_day_of_week_var == 7 %}
-            WHEN TRUNC(sdts) = TRUNC(sdts + 1, 'IW') + 5 THEN 1
-            {%- else %}
-            WHEN TRUNC(sdts) = TRUNC(sdts, 'IW') + 6 THEN 1
-            {%- endif %}
-            ELSE 0
+        CASE 
+            WHEN TO_NUMBER(TO_CHAR(sdts, 'D', 'NLS_DATE_LANGUAGE = American NLS_TERRITORY = America')) = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN 1
+            ELSE 0 
         END AS is_end_of_week,
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 THEN 1

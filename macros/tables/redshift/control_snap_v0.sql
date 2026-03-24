@@ -49,20 +49,12 @@ enriched_timestamps AS (
             WHEN EXTRACT(m FROM sdts) = 0 AND EXTRACT(s FROM sdts) = 0 AND EXTRACT(h FROM sdts) = 0 THEN TRUE
             ELSE FALSE
         END as is_daily,
-        CASE
-            {%- if first_day_of_week_var == 7 %}
-            WHEN CAST(sdts AS DATE) = CAST(DATE_TRUNC('week', sdts + INTERVAL '1 day') - INTERVAL '1 day' AS DATE) THEN TRUE
-            {%- else %}
-            WHEN CAST(sdts AS DATE) = CAST(DATE_TRUNC('week', sdts) AS DATE) THEN TRUE
-            {%- endif %}
+        CASE    
+            WHEN EXTRACT(ISODOW FROM sdts) = {{ first_day_of_week_var }} THEN TRUE
             ELSE FALSE
         END as is_beginning_of_week,
         CASE
-            {%- if first_day_of_week_var == 7 %}
-            WHEN CAST(sdts AS DATE) = CAST(DATE_TRUNC('week', sdts + INTERVAL '1 day') + INTERVAL '5 days' AS DATE) THEN TRUE
-            {%- else %}
-            WHEN CAST(sdts AS DATE) = CAST(DATE_TRUNC('week', sdts) + INTERVAL '6 days' AS DATE) THEN TRUE
-            {%- endif %}
+            WHEN EXTRACT(ISODOW FROM sdts) = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN TRUE
             ELSE FALSE
         END as is_end_of_week,
         CASE

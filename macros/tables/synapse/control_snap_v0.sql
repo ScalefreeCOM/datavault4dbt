@@ -50,21 +50,13 @@ enriched_timestamps AS (
             WHEN DATEPART(HOUR, {{ sdts_alias }}) = 0 AND DATEPART(MINUTE, {{ sdts_alias }}) = 0 AND DATEPART(SECOND, {{ sdts_alias }}) = 0 THEN 1 
             ELSE 0 
         END AS is_daily,
-        CASE
-            {%- if first_day_of_week_var == 7 %}
-            WHEN CAST({{ sdts_alias }} AS DATE) = CAST(DATEADD(day, -1, DATEADD(week, DATEDIFF(week, 0, DATEADD(day, 1, {{ sdts_alias }})), 0)) AS DATE) THEN 1
-            {%- else %}
-            WHEN CAST({{ sdts_alias }} AS DATE) = CAST(DATEADD(week, DATEDIFF(week, 0, {{ sdts_alias }}), 0) AS DATE) THEN 1
-            {%- endif %}
-            ELSE 0
+        CASE 
+            WHEN ((DATEPART(WEEKDAY, {{ sdts_alias }}) + @@DATEFIRST - 1) % 7) + 1 = {{ first_day_of_week_var }} THEN 1
+            ELSE 0 
         END AS is_beginning_of_week,
-        CASE
-            {%- if first_day_of_week_var == 7 %}
-            WHEN CAST({{ sdts_alias }} AS DATE) = CAST(DATEADD(day, 5, DATEADD(week, DATEDIFF(week, 0, DATEADD(day, 1, {{ sdts_alias }})), 0)) AS DATE) THEN 1
-            {%- else %}
-            WHEN CAST({{ sdts_alias }} AS DATE) = CAST(DATEADD(day, 6, DATEADD(week, DATEDIFF(week, 0, {{ sdts_alias }}), 0)) AS DATE) THEN 1
-            {%- endif %}
-            ELSE 0
+        CASE 
+            WHEN ((DATEPART(WEEKDAY, {{ sdts_alias }}) + @@DATEFIRST - 1) % 7) + 1 = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN 1
+            ELSE 0 
         END AS is_end_of_week,
         CASE 
             WHEN DAY({{ sdts_alias }}) = 1 THEN 1 

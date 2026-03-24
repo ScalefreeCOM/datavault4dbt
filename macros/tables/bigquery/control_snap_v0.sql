@@ -14,7 +14,7 @@
 
 {%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
 
-{%- set bigquery_day_of_week_target = (first_day_of_week_var % 7) + 1 -%}
+{%- set bigquery_day_of_week_target = first_day_of_week_var -%}
 
 {%- if first_day_of_week_var == 7 -%}
     {%- set bigquery_day_of_week_arg = 'WEEK(SUNDAY)' -%}
@@ -63,11 +63,11 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_daily,
         CASE
-            WHEN EXTRACT(DAYOFWEEK FROM sdts) = {{ bigquery_day_of_week_target }} THEN TRUE
+            WHEN EXTRACT(ISODAYOFWEEK FROM sdts) = {{ bigquery_day_of_week_target }} THEN TRUE
             ELSE FALSE
         END as is_beginning_of_week,
         CASE
-            WHEN EXTRACT(DAYOFWEEK FROM sdts) = {{ ((bigquery_day_of_week_target + 5) % 7) + 1}} THEN TRUE
+            WHEN EXTRACT(ISODAYOFWEEK FROM sdts) = {{ ((bigquery_day_of_week_target + 5) % 7) + 1}} THEN TRUE
             ELSE FALSE
         END as is_end_of_week,
         CASE
