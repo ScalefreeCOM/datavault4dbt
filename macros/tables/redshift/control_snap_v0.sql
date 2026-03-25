@@ -42,11 +42,11 @@ enriched_timestamps AS (
         sdts as replacement_sdts,
         CONCAT('Snapshot ', DATE(sdts)) as caption,
         CASE
-            WHEN EXTRACT(m FROM sdts) = 0 AND EXTRACT(s FROM sdts) = 0 THEN TRUE
+            WHEN EXTRACT(minute FROM sdts) = 0 AND EXTRACT(second FROM sdts) = 0 THEN TRUE
             ELSE FALSE
         END as is_hourly,
         CASE
-            WHEN EXTRACT(m FROM sdts) = 0 AND EXTRACT(s FROM sdts) = 0 AND EXTRACT(h FROM sdts) = 0 THEN TRUE
+            WHEN EXTRACT(minute FROM sdts) = 0 AND EXTRACT(second FROM sdts) = 0 AND EXTRACT(hour FROM sdts) = 0 THEN TRUE
             ELSE FALSE
         END as is_daily,
         CASE    
@@ -58,7 +58,7 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_end_of_week,
         CASE
-            WHEN EXTRACT(d FROM sdts) = 1 THEN TRUE
+            WHEN EXTRACT(day FROM sdts) = 1 THEN TRUE
             ELSE FALSE
         END as is_beginning_of_month,
         CASE
@@ -66,7 +66,7 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_end_of_month,
         CASE
-            WHEN EXTRACT(mon FROM sdts) IN (1, 4, 7, 10) AND EXTRACT(d FROM sdts) = 1 THEN TRUE
+            WHEN EXTRACT(month FROM sdts) IN (1, 4, 7, 10) AND EXTRACT(day FROM sdts) = 1 THEN TRUE
             ELSE FALSE
         END as is_beginning_of_quarter,
         CASE 
@@ -74,11 +74,11 @@ enriched_timestamps AS (
             ELSE FALSE
         END AS is_end_of_quarter,
         CASE
-            WHEN EXTRACT(d FROM sdts) = 1 AND EXTRACT(mon FROM sdts) = 1 THEN TRUE
+            WHEN EXTRACT(day FROM sdts) = 1 AND EXTRACT(month FROM sdts) = 1 THEN TRUE
             ELSE FALSE
         END as is_beginning_of_year,
         CASE
-            WHEN EXTRACT(mon FROM sdts) = 12 AND EXTRACT(d FROM sdts) = 31 THEN TRUE
+            WHEN EXTRACT(month FROM sdts) = 12 AND EXTRACT(day FROM sdts) = 31 THEN TRUE
             ELSE FALSE
         END as is_end_of_year,
         NULL as comment

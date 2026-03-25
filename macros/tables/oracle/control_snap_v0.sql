@@ -52,11 +52,11 @@ enriched_timestamps AS (
             ELSE 0
         END as is_daily,
         CASE 
-            WHEN TO_NUMBER(TO_CHAR(sdts, 'D', 'NLS_DATE_LANGUAGE = American NLS_TERRITORY = America')) = {{ first_day_of_week_var }} THEN 1
+            WHEN MOD(TRUNC(sdts) - TRUNC(sdts, 'IW') + 1, 7) + 1 = {{ first_day_of_week_var }} THEN 1
             ELSE 0 
         END AS is_beginning_of_week,
         CASE 
-            WHEN TO_NUMBER(TO_CHAR(sdts, 'D', 'NLS_DATE_LANGUAGE = American NLS_TERRITORY = America')) = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN 1
+            WHEN MOD(TRUNC(sdts) - TRUNC(sdts, 'IW') + 1, 7) + 1 = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN 1
             ELSE 0 
         END AS is_end_of_week,
         CASE

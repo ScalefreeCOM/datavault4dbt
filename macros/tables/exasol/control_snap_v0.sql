@@ -72,7 +72,7 @@ initial_timestamps AS
             ELSE FALSE
         END AS is_beginning_of_month,
         CASE 
-            WHEN LAST_DAY(sdts) = CAST(sdts AS DATE) THEN TRUE
+            WHEN EXTRACT(DAY FROM ADD_DAYS(sdts, 1)) = 1 THEN TRUE
             ELSE FALSE
         END as is_end_of_month,
         CASE
@@ -80,15 +80,15 @@ initial_timestamps AS
             ELSE FALSE
         END AS is_beginning_of_quarter,
         CASE 
-            WHEN EXTRACT(MONTH FROM sdts) IN (3, 6, 9, 12) AND CAST(sdts AS DATE) = LAST_DAY(sdts) THEN TRUE 
+            WHEN EXTRACT(MONTH FROM sdts) IN (3, 6, 9, 12) AND EXTRACT(DAY FROM ADD_DAYS(sdts, 1)) = 1 THEN TRUE 
             ELSE FALSE 
-        END AS is_end_of_quarter, 
+        END AS is_end_of_quarter,
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN TRUE
             ELSE FALSE
         END AS is_beginning_of_year,
         CASE
-            WHEN LAST_DAY(sdts) = CAST(sdts AS DATE) AND EXTRACT (MONTH FROM sdts) = 12 THEN TRUE
+            WHEN EXTRACT(MONTH FROM sdts) = 12 AND EXTRACT(DAY FROM sdts) = 31 THEN TRUE
             ELSE FALSE
         END AS is_end_of_year,
         NULL AS comment
