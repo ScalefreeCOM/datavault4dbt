@@ -22,9 +22,9 @@
 {% set hashkey = datavault4dbt.escape_column_names(hashkey) %}
 {% set hashdiff = datavault4dbt.escape_column_names(hashdiff) %}
 
-WITH
-
 {{ datavault4dbt.prepend_generated_by() }}
+
+WITH
 
 {# Getting everything from the underlying v0 satellite. #}
 source_satellite AS (
@@ -47,14 +47,11 @@ distinct_hk_ldts AS (
 {# End-dating each ldts for each hashkey, based on earlier ldts per hashkey. #}
 end_dated_loads AS (
 
-  SELECT
-    {{ hashkey }},
-    {{ src_ldts }},
-    COALESCE(
-        DATEADD(MILLISECOND, -1, LEAD({{ src_ldts }}) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }})),
-        CAST('{{ end_of_all_times }}' AS DATETIME2(6))
-    ) AS {{ ledts_alias }}
-FROM distinct_hk_ldts
+    SELECT
+        {{ hashkey }},
+        {{ src_ldts }},
+        COALESCE(LEAD(DATEADD(MICROSECOND, -1, {{ src_ldts }})) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts_alias }}
+    FROM distinct_hk_ldts
 
 ),
 

@@ -22,9 +22,9 @@
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 {%- set ledts_alias = datavault4dbt.escape_column_names(ledts_alias) -%}
 
-WITH
-
 {{ datavault4dbt.prepend_generated_by() }}
+
+WITH
 
 {# Calculate ledts based on the ldts of the earlier record. #}
 end_dated_source AS (
@@ -36,7 +36,7 @@ end_dated_source AS (
         {{ hashdiff }},
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD(DATEADD(ns, -100, {{ src_ldts }})) OVER (PARTITION BY {%- for ref_key in ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts_alias }},
+        COALESCE(LEAD(DATEADD(MICROSECOND, -1, {{ src_ldts }})) OVER (PARTITION BY {%- for ref_key in ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts_alias }},
         {{ datavault4dbt.print_list(source_columns_to_select) }}
     FROM {{ source_relation }}
 
