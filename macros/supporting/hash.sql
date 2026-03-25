@@ -602,7 +602,7 @@
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
 
 {#- Select hashing algorithm -#}
-{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARBINARY(16)') -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
 {{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
@@ -641,7 +641,7 @@
     {%- set concat_function = 'CONCAT_WS(\'' ~ concat_string ~ '\', ' -%}
 {%- endif -%}
 
-{{ standardise_prefix | replace('[CONCAT_FUNCTION]', concat_function) }}
+{{ standardise_prefix | replace('[CONCAT_FUNCTION]', concat_function) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string) }}
 
 {%- for column in columns -%}
 
@@ -659,7 +659,7 @@
 
     {%- if loop.last -%}
 
-        {{ standardise_suffix | replace('[ALL_NULL]', all_null | join("")) | indent(4) }}
+        {{ standardise_suffix | replace('[ALL_NULL]', all_null | join("")) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string) | indent(4) }}
 
     {%- else -%}
 
