@@ -1,0 +1,159 @@
+version: 2
+
+macros:
+  - name: rehash_hubs
+    description: >
+      This macro is used to rehash multiple hub tables based on a provided YAML configuration.
+    arguments:
+      - name: hub_yaml
+        type: string
+        description: >
+          A YAML string that describes the hubs to be rehashed.
+          The YAML should include a `config` section for global settings and a `hubs` section
+          containing a list of hub definitions.
+          Example:
+            ```yaml
+            config:
+              overwrite_hash_values: true
+            hubs:
+              - name: customer_h
+                hashkey: hk_customer_h
+                business_keys:
+                  - c_custkey
+            ```
+      - name: drop_old_values
+        type: boolean
+        description: >
+          Whether to drop the old hashkey columns after rehashing.
+          If true, the old hashkeys are dropped. If false, they are renamed with a "_deprecated" suffix.
+
+  - name: rehash_links
+    description: >
+      This macro is used to rehash multiple link tables based on a provided YAML configuration.
+    arguments:
+      - name: link_yaml
+        type: string
+        description: >
+          A YAML string that describes the links to be rehashed.
+          The YAML should include a `config` section for global settings and a `links` section
+          containing a list of link definitions.
+          Example:
+            ```yaml
+            config:
+              overwrite_hash_values: true
+            links:
+              - name: customer_nation_l
+                link_hashkey: hk_customer_nation_l
+                additional_hash_input_cols: []
+                hub_config:
+                  - hub_hashkey: hk_customer_h
+                    hub_name: customer_h
+                    business_keys:
+                      - c_custkey
+                  - hub_hashkey: hk_nation_h
+                    hub_name: nation_h
+                    business_keys:
+                      - n_nationkey      
+              - name: order_customer_nl
+                link_hashkey: hk_order_customer_nl
+                additional_hash_input_cols: []
+                hub_config:
+                  - hub_hashkey: hk_order_h
+                    hub_name: order_h
+                    business_keys: 
+                      - o_orderkey
+                  - hub_hashkey: hk_customer_h
+                    hub_name: customer_h
+                    business_keys:
+                      - c_custkey
+      - name: drop_old_values
+        type: boolean
+        description: >
+          Whether to drop the old hashkey columns after rehashing.
+          If true, the old hashkeys are dropped. If false, they are renamed with a "_deprecated" suffix.
+
+  - name: rehash_ma_satellites
+    description: >
+      This macro is used to rehash multiple multi-active satellite tables based on a provided YAML configuration.
+    arguments:
+      - name: ma_satellite_yaml
+        type: string
+        description: >
+          A YAML string that describes the multi-active satellites to be rehashed.
+          The YAML should include a `config` section for global settings and a `ma_satellites` section
+          containing a list of multi-active satellite definitions.
+          Example:
+            ```yaml
+            config:
+              overwrite_hash_values: true
+            ma_satellites:
+              - name: customer_n0_ms
+                hashkey: HK_CUSTOMER_H
+                hashdiff: HD_CUSTOMER_N_MS
+                ma_keys: [O_ORDERKEY]
+                payload: [O_ORDERSTATUS, O_ORDERPRIORITY, O_CLERK, O_SHIPPRIORITY, O_COMMENT, LEGACY_ORDERKEY]
+                parent_entity: customer_h
+                business_keys: C_CUSTKEY
+            ```
+      - name: drop_old_values
+        type: boolean
+        description: >
+          Whether to drop the old hashkey and hashdiff columns after rehashing.
+          If true, the old columns are dropped. If false, they are renamed with a "_deprecated" suffix.
+
+  - name: rehash_nh_satellites
+    description: >
+      This macro is used to rehash multiple non-historized satellite tables based on a provided YAML configuration.
+    arguments:
+      - name: nh_satellite_yaml
+        type: string
+        description: >
+          A YAML string that describes the non-historized satellites to be rehashed.
+          The YAML should include a `config` section for global settings and a `nh_satellites` section
+          containing a list of non-historized satellite definitions.
+          Example:
+            ```yaml
+            config:
+              overwrite_hash_values: true
+            nh_satellites:
+              - name: order_customer_n_ns
+                hashkey: HK_ORDER_CUSTOMER_NL
+                parent_entity: order_customer_nl
+            ```
+      - name: drop_old_values
+        type: boolean
+        description: >
+          Whether to drop the old hashkey column after rehashing.
+          If true, the old column is dropped. If false, it is renamed with a "_deprecated" suffix.
+
+  - name: rehash_satellites
+    description: >
+      This macro is used to rehash multiple standard satellite tables based on a provided YAML configuration.
+    arguments:
+      - name: satellite_yaml
+        type: string
+        description: >
+          A YAML string that describes the standard satellites to be rehashed.
+          The YAML should include a `config` section for global settings and a `satellites` section
+          containing a list of satellite definitions.
+          Example:
+            ```yaml
+            config:
+              overwrite_hash_values: true
+            satellites:
+              - name: customer_n0_s
+                hashkey: HK_CUSTOMER_H
+                hashdiff: HD_CUSTOMER_N_S
+                payload:
+                  - C_ACCTBAL
+                  - C_MKTSEGMENT
+                  - C_COMMENT
+                parent_entity: customer_h
+                business_keys:
+                  - C_CUSTKEY
+            ```
+      - name: drop_old_values
+        type: boolean
+        description: >
+          Whether to drop the old hashkey and hashdiff columns after rehashing.
+          If true, the old columns are dropped. If false, they are renamed with a "_deprecated" suffix.

@@ -134,7 +134,8 @@
                                                             source_models=source_models,
                                                             disable_hwm=disable_hwm,
                                                             source_is_single_batch=source_is_single_batch,
-                                                            union_strategy=union_strategy) -}}
+                                                            union_strategy=union_strategy,
+                                                            additional_columns=additional_columns) -}}
     {%- endif %}
 
     {{- adapter.dispatch('nh_link', 'datavault4dbt')(link_hashkey=link_hashkey,
