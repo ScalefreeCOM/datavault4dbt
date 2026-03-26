@@ -356,7 +356,7 @@ prejoined_columns AS (
 {# Adding derived columns to the selection #}
 derived_columns AS (
 
-  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select | map('lower'), derived_column_names | map('lower')) -%}
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) -%}
 
   SELECT
 
