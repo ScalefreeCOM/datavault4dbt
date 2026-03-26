@@ -23,26 +23,28 @@
     {% set ns = namespace(columns_to_drop=[]) %}
 
     {% set hub_dict = fromyaml(hub_yaml) %}
+    {% if hub_dict.get('hubs') is not none %}
 
-    {% set overwrite_hash_values = hub_dict.config.get('overwrite_hash_values', false) %}
+        {% set overwrite_hash_values = hub_dict.config.get('overwrite_hash_values', false) %}
 
-    {% for hub in hub_dict.get('hubs') %}
-        {% set specific_hub_overwrite_hash = hub.get('overwrite_hash_values', overwrite_hash_values) %}
-         
-        {% set columns_to_drop_list =  datavault4dbt.rehash_single_hub(hub=hub.name, 
-                                                                    hashkey=hub.hashkey,
-                                                                    business_keys=hub.business_keys,
-                                                                    overwrite_hash_values=specific_hub_overwrite_hash,
-                                                                    output_logs=false,
-                                                                    drop_old_values=drop_old_values) %}
-                        
-        {{ log(hub.name ~ ' rehashed successfully.', true) }}     
+        {% for hub in hub_dict.get('hubs') %}
+            {% set specific_hub_overwrite_hash = hub.get('overwrite_hash_values', overwrite_hash_values) %}
 
-        {% set columns_to_drop_dict = {'model_name': hub.name, 'columns_to_drop': (columns_to_drop_list | trim)} %}
+            {% set columns_to_drop_list =  datavault4dbt.rehash_single_hub(hub=hub.name, 
+                                                                        hashkey=hub.hashkey,
+                                                                        business_keys=hub.business_keys,
+                                                                        overwrite_hash_values=specific_hub_overwrite_hash,
+                                                                        output_logs=false,
+                                                                        drop_old_values=drop_old_values) %}
+                            
+            {{ log(hub.name ~ ' rehashed successfully.', true) }}     
 
-        {% do ns.columns_to_drop.append(columns_to_drop_dict) %}
+            {% set columns_to_drop_dict = {'model_name': hub.name, 'columns_to_drop': (columns_to_drop_list | trim)} %}
 
-    {% endfor %}
+            {% do ns.columns_to_drop.append(columns_to_drop_dict) %}
+
+        {% endfor %}
+    {% endif %}
 
     {{ return(ns.columns_to_drop) }}
 
