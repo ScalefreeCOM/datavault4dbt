@@ -30,7 +30,7 @@ In addition to that, a few other dynamic columns are generated:
 
 | Parameters | Data Type  | Required | Default Value            | Explanation |
 |------------|-----------|----------|--------------------------|-------------|
-| log_logic  | dictionary | optional | None                     | Defining the desired durations of each granularity. Available granularities are 'daily', 'weekly', 'monthly', 'end_of_month', 'quarterly', 'yearly' and 'end_of_year'. For each granularity the duration can be defined as an integer and the time unit for that duration. The units include (in BigQuery): DAY, WEEK, MONTH, QUARTER, YEAR. Besides defining a duration and a unit for each granularity, there is also the option to set a granularity to 'forever'. E.g. reporting requires daily snapshots for 3 months, and after that the monthly snapshots should be kept forever. If log_logic is not set, no logic will be applied, and all snapshots will stay active. The other dynamic columns are calculated anyway. The duration is always counted from the current date. |
+| log_logic  | dictionary or list | optional | None                     | Defining the desired durations of each granularity. Available granularities are 'daily', 'weekly', 'monthly', 'end_of_month', 'quarterly', 'yearly' and 'end_of_year'. For each granularity the duration can be defined as an integer and the time unit for that duration. The units include (in BigQuery): DAY, WEEK, MONTH, QUARTER, YEAR. Besides defining a duration and a unit for each granularity, there is also the option to set a granularity to 'forever'. E.g. reporting requires daily snapshots for 3 months, and after that the monthly snapshots should be kept forever. If log_logic is not set, no logic will be applied, and all snapshots will stay active. The other dynamic columns are calculated anyway. The duration is always counted from the current date. For Snowflake, it is also possible to provide a list of dictionaries to support multiple snapshot trigger columns. |
 | sdts_alias | string     | optional | datavault4dbt.sdts_alias | Defines the name of the snapshot date timestamp column inside the snapshot_table. |
 
 ## EXAMPLE 1
@@ -52,7 +52,7 @@ log_logic:
         unit: 'YEAR'
     yearly:
         forever: true
-{%- endset -%}    
+{%- endset -%}
 
 {{ datavault4dbt.control_snap_v1(yaml_metadata=yaml_metadata) }}
 ```
@@ -66,3 +66,30 @@ log_logic:
   - **weekly**: Weekly snapshots are kept 1 years.
   - **monthly**: Monthly snapshots are kept 5 years.
   - **yearly**: Yearly snapshots are kept forever.
+
+## EXAMPLE 2 (Multiple Logics - Snowflake only)
+
+```jinja
+{{ config(materialized='view') }}
+
+{%- set yaml_metadata -%}
+control_snap_v0: 'control_snap_v0'
+log_logic: 
+    - is_active_monthly:
+        monthly:
+            duration: forever
+    - is_active_yearly:
+        yearly:
+            duration: forever
+{%- endset -%}
+
+{{ datavault4dbt.control_snap_v1(yaml_metadata=yaml_metadata) }}
+```
+
+### DESCRIPTION
+
+- **control_snap_v0**:
+  - __control_snap_v0__: The name of the underlying version 0 control snapshot table.
+- **log_logic**: Here we define two different active logics for the snapshots, which will create two separate columns:
+  - **is_active_1**: Monthly snapshots are kept 1 year.
+  - **is_active_2**: Weekly snapshots are kept 2 months.
