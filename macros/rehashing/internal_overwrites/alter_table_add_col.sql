@@ -12,7 +12,7 @@
 
     {% set sql -%}
         ALTER TABLE {{ relation.render() }} 
-            {% for column in remove_columns %}
+            {% for column in add_columns %}
             ADD COLUMN IF NOT EXISTS {{ column.name }} {{ column.data_type }} {{ ',' if not loop.last }}
             {% endfor %}
     {%- endset -%}
