@@ -6,8 +6,7 @@
 
     {%- set global_var = var('datavault4dbt.first_day_of_week', none) -%}
 
-    {%- set first_day = 1 -%} 
-
+    
     {%- if global_var is mapping and target.type in global_var.keys()|map('lower') -%}
 
         {%- set first_day = global_var[target.type] -%}
@@ -16,6 +15,7 @@
         {%- if execute -%}
             {%- do exceptions.warn("Warning: Adapter '"~ target.type ~"' not found in 'first_day_of_week' variable. Defaulting to 1.") -%}
         {%- endif -%}
+        {%- set first_day = 1 -%} 
     {%- endif -%}
 
     {{ return(first_day | int) }}

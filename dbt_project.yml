@@ -40,29 +40,6 @@ vars:
   datavault4dbt.enable_static_analysis_overwrite: true
   datavault4dbt.multi_source_models__execution_aware_loading: true
 
-
-  # ===========================================================================================
-  # DAY OF WEEK ADAPTER REFERENCE MATRIX
-  # -------------------------------------------------------------------------------------------
-  # Use the table below to determine the correct integer to input for your target database
-  # based on whether you want your weeks to start on Sunday or Monday.
-  # ===========================================================================================
-  # Dialect       | Function                   | Sunday | Monday | Behavior
-  # --------------|----------------------------|--------|--------|-----------------------------
-  # BigQuery      | EXTRACT(DAYOFWEEK)         |   1    |   2    | US Standard 
-  # Synapse       | DATEPART(WEEKDAY)          |   1    |   2    | US Standard 
-  # Fabric        | DATEPART(WEEKDAY)          |   1    |   2    | US Standard 
-  # Oracle        | TO_CHAR('D')               |   1    |   2    | US Standard 
-  # SQLServer     | DATEPART(WEEKDAY)          |   1    |   2    | US Standard 
-  # --------------|----------------------------|--------|--------|-----------------------------
-  # Redshift      | EXTRACT(DOW)               |   0    |   1    | 
-  # --------------|----------------------------|--------|--------|-----------------------------
-  # Postgres      | EXTRACT(ISODOW)            |   7    |   1    | ISO Standard 
-  # Snowflake     | EXTRACT(DAYOFWEEK_ISO)     |   7    |   1    | ISO Standard 
-  # Databricks    | dayofweek_iso()            |   7    |   1    | ISO Standard 
-  # Exasol        | TO_CHAR('ID')              |   7    |   1    | ISO Standard 
-  # ===========================================================================================
-
   # Default start of the week is Monday
   datavault4dbt.first_day_of_week: {"snowflake": "1", "exasol": "1", "postgres": "1", "databricks": "1", "bigquery": "2", "synapse": "2", "fabric": "2", "oracle": "2", "redshift": "1", "sqlserver": "2"}
 
