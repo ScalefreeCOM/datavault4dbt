@@ -40,24 +40,31 @@ vars:
   datavault4dbt.enable_static_analysis_overwrite: true
   datavault4dbt.multi_source_models__execution_aware_loading: true
 
-  ### DEFAULTS 
-  ## ISO Standards
-  # BigQuery Sunday Value(Sunday) = 7 , Value(Monday) = 1
-  # Databricks Sunday Value(Sunday) = 7 , Value(Monday) = 1
-  # Snowflake Monday Value(Sunday) = 7, Value(Monday) = 1 
-  # Exasol Monday Value(Sunday) = 7, Value(Monday) = 1 
-  # Postgres Sunday Value(Sunday) = 7, Value(Monday) = 1 
-  # Redshift Sunday Value(Sunday) = 7, Value(Monday) = 1 
-  
-  ## US Standards
-  # Synapse Sunday Value(Sunday) = 1 , Value(Monday) = 2
-  # Fabric Sunday Value(Sunday) = 1 , Value(Monday) = 2
-  # Oracle Sunday Value(Sunday) = 1 , Value(Monday) = 2
 
-  # User can decide here if the week starts on a monday or on a sunday by setting the values for the adapters. 
-  # For ISO standard its 1 = Monday and 7 = Sunday and for the US standard it is 1 = Sunday and 2 = Monday
-  datavault4dbt.first_day_of_week_iso: {"bigquery": "1","snowflake": "1", "exasol": "1", "postgres": "1", "redshift": "1", "databricks": "1"} # 1 for Monday and 7 for Sunday as ISO 8610 standard
-  datavault4dbt.first_day_of_week_us: {"synapse": "1", "fabric": "1", "oracle": "1"} # 1 for Sunday and 2 for Monday as US standard
+  # ===========================================================================================
+  # DAY OF WEEK ADAPTER REFERENCE MATRIX
+  # -------------------------------------------------------------------------------------------
+  # Use the table below to determine the correct integer to input for your target database
+  # based on whether you want your weeks to start on Sunday or Monday.
+  # ===========================================================================================
+  # Dialect       | Function                   | Sunday | Monday | Behavior
+  # --------------|----------------------------|--------|--------|-----------------------------
+  # BigQuery      | EXTRACT(DAYOFWEEK)         |   1    |   2    | US Standard 
+  # Synapse       | DATEPART(WEEKDAY)          |   1    |   2    | US Standard 
+  # Fabric        | DATEPART(WEEKDAY)          |   1    |   2    | US Standard 
+  # Oracle        | TO_CHAR('D')               |   1    |   2    | US Standard 
+  # SQLServer     | DATEPART(WEEKDAY)          |   1    |   2    | US Standard 
+  # --------------|----------------------------|--------|--------|-----------------------------
+  # Redshift      | EXTRACT(DOW)               |   0    |   1    | 
+  # --------------|----------------------------|--------|--------|-----------------------------
+  # Postgres      | EXTRACT(ISODOW)            |   7    |   1    | ISO Standard 
+  # Snowflake     | EXTRACT(DAYOFWEEK_ISO)     |   7    |   1    | ISO Standard 
+  # Databricks    | dayofweek_iso()            |   7    |   1    | ISO Standard 
+  # Exasol        | TO_CHAR('ID')              |   7    |   1    | ISO Standard 
+  # ===========================================================================================
+
+  # Default start of the week is Monday
+  datavault4dbt.first_day_of_week: {"snowflake": "1", "exasol": "1", "postgres": "1", "databricks": "1", "bigquery": "2", "synapse": "2", "fabric": "2", "oracle": "2", "redshift": "1", "sqlserver": "2"}
 
   #Ghost Record Configuration  
   datavault4dbt.beginning_of_all_times: {"bigquery":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01", "postgres": "0001-01-01 00:00:01", "redshift": "0001-01-01 00:00:01", "synapse": "1901-01-01T00:00:01", "fabric": "0001-01-01T00:00:01", "oracle":"0001-01-01 00:00:01", databricks: "0001-01-01 00:00:01"}

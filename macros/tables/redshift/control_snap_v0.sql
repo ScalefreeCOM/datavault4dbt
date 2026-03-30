@@ -50,11 +50,11 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_daily,
         CASE    
-            WHEN EXTRACT(ISODOW FROM sdts) = {{ first_day_of_week_var }} THEN TRUE
+            WHEN (CASE WHEN EXTRACT(DOW FROM sdts) = 0 THEN 7 ELSE EXTRACT(DOW FROM sdts) END) = {{ first_day_of_week_var }} THEN TRUE
             ELSE FALSE
         END as is_beginning_of_week,
         CASE
-            WHEN EXTRACT(ISODOW FROM sdts) = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN TRUE
+            WHEN (CASE WHEN EXTRACT(DOW FROM sdts) = 0 THEN 7 ELSE EXTRACT(DOW FROM sdts) END) = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN TRUE
             ELSE FALSE
         END as is_end_of_week,
         CASE
