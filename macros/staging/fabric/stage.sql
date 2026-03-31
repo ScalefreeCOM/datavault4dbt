@@ -177,6 +177,9 @@
 {#- Setting the rsrc default datatype -#}
 {%- set rsrc_default_dtype = datavault4dbt.string_default_dtype(type=rsrc) -%}
 
+{# Setting the ldts default datatype #}
+{% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
+
 WITH
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -208,7 +211,7 @@ source_data AS (
 ldts_rsrc_data AS (
 
   SELECT
-    CONVERT(datetime2(6), {{ ldts }}, {{datavault4dbt.timestamp_format()}}) AS {{ load_datetime_col_name}},
+    CONVERT({{ ldts_default_dtype }}, {{ ldts }}, {{datavault4dbt.timestamp_format()}}) AS {{ load_datetime_col_name}},
     CAST( {{ rsrc }} as {{ rsrc_default_dtype }} ) AS {{ record_source_col_name }}
     {%- if datavault4dbt.is_something(sequence) %},
       {{ sequence }} AS edwSequence

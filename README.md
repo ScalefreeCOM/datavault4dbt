@@ -4,6 +4,9 @@
 
 
 ---
+### ⚠️ Fusion Compatibility ⚠️
+
+✅ datavault4dbt works flawlessly with dbt-fusion! For more details and considerations check our [documentation](https://www.datavault4dbt.com/documentation/general-usage-notes/fusion-compatibility/)!
 
 ### Included Macros
 - [Staging Area (For Hashing, prejoins and ghost records)](https://www.datavault4dbt.com/documentation/macro-instructions/staging/)

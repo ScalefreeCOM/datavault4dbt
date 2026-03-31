@@ -104,18 +104,18 @@ ref_table AS (
     {%- set sat_columns_pre = [] -%}
         
         {%- if ref_satellites_dict[satellite] is mapping and 'include' in ref_satellites_dict[satellite].keys() -%}
-            {%- set sat_columns_pre = ref_satellites_dict[satellite]['include'] -%}
+            {%- set sat_columns_pre = ref_satellites_dict[satellite]['include'] | map('lower') -%}
         {%- elif ref_satellites_dict[satellite] is mapping and 'exclude' in ref_satellites_dict[satellite].keys() -%}
-            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
-            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, ref_satellites_dict[satellite]['exclude']) -%}
+            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) | map('lower') -%}
+            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, ref_satellites_dict[satellite]['exclude'] | map('lower')) -%}
         {%- elif datavault4dbt.is_list(ref_satellites_dict[satellite]) -%}
-            {%- set sat_columns_pre = ref_satellites_dict[satellite] -%}
+            {%- set sat_columns_pre = ref_satellites_dict[satellite] | map('lower') -%}
         {%- else -%}
-            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) -%}
-            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, sat_columns_to_exclude) -%}
+            {%- set all_sat_columns = datavault4dbt.source_columns(ref(satellite)) | map('lower') -%}
+            {%- set sat_columns_pre = datavault4dbt.process_columns_to_select(all_sat_columns, sat_columns_to_exclude | map('lower')) -%}
         {%- endif -%}
 
-    {%- set sat_columns = datavault4dbt.process_columns_to_select(sat_columns_pre, sat_columns_to_exclude) -%}
+    {%- set sat_columns = datavault4dbt.process_columns_to_select(sat_columns_pre, sat_columns_to_exclude | map('lower')) -%}
     {%- set sat_columns = datavault4dbt.escape_column_names(sat_columns) -%}
 
     {{- log('sat_columns: '~ sat_columns, false) -}}
