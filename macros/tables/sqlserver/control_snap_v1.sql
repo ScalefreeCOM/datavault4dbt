@@ -67,7 +67,6 @@ WHERE CONVERT(DATE, {{ sdts_alias }}) <= CONVERT(DATE, GETDATE() )
 
 dynamic as (SELECT 
 	src.{{ sdts_alias }},
-	src.{{ sdts_alias }}_date,
 	src.force_active,
 	{# CASE WHEN itp.{{ sdts_alias }} is not null THEN 1 ELSE 0 END AS is_in_the_past, #}
 	CASE WHEN itp.rn = 1 THEN 1 ELSE 0 END AS is_latest, 
@@ -83,16 +82,18 @@ dynamic as (SELECT
 	{# src.weekday, #}
 	{# src.week, #}
 	{# src.iso_week, #}
-	src.is_hourly,
-	src.is_daily,
-	src.is_weekly,
-	src.is_monthly,
-	{# src.is_end_of_week, #}
-	src.is_end_of_month,
-	src.is_quarterly,
-	{# src.is_end_of_quarter, #}
-	src.is_yearly,
-	src.is_end_of_year
+    src.caption,
+    src.is_hourly,
+    src.is_daily,
+    src.is_beginning_of_week,
+    src.is_end_of_week,
+    src.is_beginning_of_month,
+    src.is_end_of_month,
+    src.is_beginning_of_quarter,
+    src.is_end_of_quarter,
+    src.is_beginning_of_year,
+    src.is_end_of_year,
+    src.comment
 
 
 
