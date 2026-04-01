@@ -64,6 +64,7 @@ latest_entries_in_sat AS (
     QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(parent_ref_keys)) }} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 {%- endif %}
+
 {%- if not source_is_single_batch %}
 {#
     Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each parent ref key combination.
@@ -97,7 +98,7 @@ records_to_insert AS (
         {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(parent_ref_keys)) }},
         {{ ns.hdiff_alias }},
         {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
-    FROM deduplicated_numbered_source
+    FROM {{ source_cte }}
     {%- if is_incremental() %}
     WHERE NOT EXISTS (
         SELECT 1

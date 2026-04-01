@@ -528,6 +528,7 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUOTE]', '\
             {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{})), {}) AS {}".format(hdiff_suffix, hash_bits, zero_key, alias)-%}
         {%- else -%}
             {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{})), {})".format(hdiff_suffix, hash_bits, zero_key)-%}
+        {%- endif -%}
     {%- endif -%}
 
 {%- else -%}
@@ -588,6 +589,7 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUOTE]', '\
     {%- endif -%}
 
 {%- endif -%}
+
 {%- do dict_result.update({"standardise_suffix": standardise_suffix, "standardise_prefix": standardise_prefix }) -%}
 {{ return(dict_result | tojson ) }}
 {%- endmacro -%}

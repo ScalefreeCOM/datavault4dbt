@@ -63,6 +63,7 @@ latest_entries_in_sat AS (
     QUALIFY ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 {%- endif %}
+
 {%- if not source_is_single_batch %}
 {#
     Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each parent ref key combination.

@@ -33,7 +33,7 @@ source_data AS (
 
     SELECT
         {% for ref_key in parent_ref_keys %}
-        {{ref_key}},
+        {{ ref_key }},
         {%- endfor %}
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
         {{ datavault4dbt.print_list(source_cols) }}
@@ -59,10 +59,10 @@ target_data AS (
 
     SELECT
         {% for ref_key in parent_ref_keys %}
-        {{ref_key}},
+        {{ ref_key }},
         {% endfor %}
         {{ ns.hdiff_alias }}
-        , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) AS rn
+        , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ ref_key }} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) AS rn
     FROM 
         {{ this }}
 ),
@@ -74,7 +74,7 @@ latest_entries_in_sat AS (
 
     SELECT
         {% for ref_key in parent_ref_keys %}
-        {{ref_key}},
+        {{ ref_key }},
         {% endfor %}
         {{ ns.hdiff_alias }}
     FROM 
@@ -92,11 +92,11 @@ numbered_source AS (
 
     SELECT
     {% for ref_key in parent_ref_keys %}
-    {{ref_key}},
+    {{ ref_key }},
     {% endfor %}
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}
-    , LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) prev_hashdiff
+    , LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ ref_key }} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) prev_hashdiff
     FROM source_data
 ),
 
@@ -108,12 +108,12 @@ deduplicated_numbered_source AS (
 
     SELECT
     {% for ref_key in parent_ref_keys %}
-    {{ref_key}},
+    {{ ref_key }},
     {% endfor %}
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}
     {% if is_incremental() -%}
-    , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) as rn
+    , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ ref_key }} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
     FROM numbered_source
     WHERE {{ ns.hdiff_alias }} <> prev_hashdiff OR prev_hashdiff IS NULL
@@ -132,7 +132,7 @@ records_to_insert AS (
 
     SELECT
     {% for ref_key in parent_ref_keys %}
-    {{ref_key}},
+    {{ ref_key }},
     {% endfor %}
     {{ ns.hdiff_alias }},
     {{ datavault4dbt.print_list(source_cols) }}

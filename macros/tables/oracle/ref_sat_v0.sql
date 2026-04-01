@@ -72,9 +72,10 @@ latest_entries_in_sat AS (
         {{ ns.hdiff_alias }}
     FROM 
         latest_entries_in_sat_prep
-    WHERE rn = 1  
+    WHERE rn = 1
 ),
 {%- endif %}
+
 {%- if not source_is_single_batch %}
 {#
     Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each parent ref key combination.

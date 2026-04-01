@@ -123,7 +123,7 @@
                                          src_ldts=src_ldts,
                                          src_rsrc=src_rsrc,
                                          source_model=source_model,
-                                         additional_columns=additional_columns
+                                         additional_columns=additional_columns,
                                          disable_hwm=disable_hwm,
                                          source_is_single_batch=source_is_single_batch
                                          ) }}
