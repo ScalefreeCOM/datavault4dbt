@@ -99,5 +99,5 @@ log_logic:
 - **control_snap_v0**:
   - __control_snap_v0__: The name of the underlying version 0 control snapshot table.
 - **log_logic**: Here we define two different active logics for the snapshots, which will create two separate columns:
-  - **is_active_1**: Monthly snapshots are kept 1 year.
-  - **is_active_2**: Weekly snapshots are kept 2 months.
+  - **is_active_monthly**: Monthly snapshots are kept forever.
+  - **is_active_yearly**: Yearly snapshots are kept forever.
