@@ -11,6 +11,8 @@
     {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
 {%- endif -%}
 
+{%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
+
 WITH
 
 initial_timestamps AS (
@@ -42,17 +44,37 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_daily,
         CASE
-            WHEN EXTRACT(isodow FROM  sdts) = 1 THEN TRUE
+            WHEN EXTRACT(ISODOW FROM sdts) = {{ first_day_of_week_var }} THEN TRUE
             ELSE FALSE
-        END as is_weekly,
+        END AS is_beginning_of_week,
+        CASE
+            WHEN EXTRACT(ISODOW FROM sdts) = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_week,
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 THEN TRUE
             ELSE FALSE
-        END as is_monthly,
+        END as is_beginning_of_month,
+        CASE 
+            WHEN EXTRACT(DAY FROM (sdts + INTERVAL '1 day')) = 1 THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_month,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) IN (1, 4, 7, 10) AND EXTRACT(DAY FROM sdts) = 1 THEN TRUE
+            ELSE FALSE
+        END AS is_beginning_of_quarter,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) IN (3, 6, 9, 12) AND EXTRACT(DAY FROM (sdts + INTERVAL '1 day')) = 1 THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_quarter, 
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN TRUE
             ELSE FALSE
-        END as is_yearly,
+        END as is_beginning_of_year,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) = 12 AND EXTRACT(DAY FROM sdts) = 31 THEN TRUE
+            ELSE FALSE
+        END AS is_end_of_year,
         NULL as comment
     FROM initial_timestamps
 
