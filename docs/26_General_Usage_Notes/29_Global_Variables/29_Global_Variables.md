@@ -29,8 +29,7 @@ All the following variables are **prefixed with `datavault4dbt`**.
 | include_business_objects_before_appearance      | Ref Table             | If a Ref_Hub entry should appear in the ref_table (snapshot based), even if the snapshot date is before the first appearance of that business object. |
 | enable_static_analysis_overwrite                | All macros            | Relevant for Fusion compatibility. For more info, see here. |
 | multi_source_models_execution_aware_loading     | Multi source entities | Whether multi source entities should respect the dbt command to reduce runtimes. |
-| first_day_of_week                               | Snapshot Table        | A mapping dictionary that defines the integer representation of the first day of the week (Sunday vs. Monday) for each specific database adapter. For the full configuration matrix, see [Snapshot Control v0](../24_Snapshot_Control/24_snapshot_control_v0.md). |
-
+| first_day_of_week                               | Snapshot Table        | A mapping dictionary that defines the integer representation of the first day of the week (Sunday vs. Monday) for each specific database adapter. For the full configuration matrix, see [Snapshot Control v0](../../01_Macro_Instructions/22_Business_Vault/24_Snapshot_Control/24_snapshot_control_v0.md). |
 ### COLUMN ALIASES
 
 | Name                   | Usage                         | Explanation |

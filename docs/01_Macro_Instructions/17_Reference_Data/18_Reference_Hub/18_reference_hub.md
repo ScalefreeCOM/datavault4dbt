@@ -8,9 +8,9 @@ title: Reference Hub
 
 ---
 
-Compared to a Standard Hub, a Reference Hub is created to store [reference Data](/docs/Macro_Instructions/Reference_Data/). The source model of a reference Hub would be a [stage model](/docs/Macro_Instructions/Staging/), but compared to a standard Hub, there is no Hub Hashkey required. Instead, a reference Hub only contains the unhashed one or multiple reference keys.
+Compared to a Standard Hub, a Reference Hub is created to store [reference Data](../../17_Reference_Data/17_reference_data.md). The source model of a reference Hub would be a [stage model](../../02_Staging/02_staging.md), but compared to a standard Hub, there is no Hub Hashkey required. Instead, a reference Hub only contains the unhashed one or multiple reference keys.
 
-If a reference Hub is loaded from multiple sources, each source is required to have the same number of reference keys. Additionally each source needs to have a [rsrc_static Attribute](/docs/General_Usage_Notes/The_rsrc_static_Attribute) defined.
+If a reference Hub is loaded from multiple sources, each source is required to have the same number of reference keys. Additionally each source needs to have a [rsrc_static Attribute](../../../26_General_Usage_Notes/32_The_rsrc_static_Attribute/32_the_rsrc_static_attribute.md) defined.
 
 In general, a reference Hub shares the same features as a general standard Hub, which are:
 
@@ -24,7 +24,7 @@ In general, a reference Hub shares the same features as a general standard Hub, 
 | Parameter     | Data type                                   | Required  | Default Value | Explanation |
 |---------------|---------------------------------------------|-----------|---------------|-------------|
 | ref_keys      | string \| list of strings                   | mandatory | –             | Name of the reference key(s) inside the source system. If multiple keys are used, then the ref_keys need to be given as a list of strings. |
-| source_models | string \| list of dictionaries \| dictionary | mandatory | –             | If single source, just a string holding the name of the stage model is required. For multi source reference Hubs, a list of dictionaries with information of each source is required. Please see [this](/docs/General_Usage_Notes/Multi-Source_Entities/) page for more details. The inner dictionaries must have `name` as a key, and optionally the keys `rsrc_static` & `ref_keys`. For further information about the rsrc_static attribute, please visit the following page: [rsrc_static Attribute](/docs/General_Usage_Notes/The_rsrc_static_Attribute) |
+| source_models | string \| list of dictionaries \| dictionary | mandatory | –             | If single source, just a string holding the name of the stage model is required. For multi source reference Hubs, a list of dictionaries with information of each source is required. Please see [this](../../../26_General_Usage_Notes/30_Multi-Source_Entities/30_multi-source_entities.md) page for more details. The inner dictionaries must have `name` as a key, and optionally the keys `rsrc_static` & `ref_keys`. For further information about the rsrc_static attribute, please visit the following page: [rsrc_static Attribute](../../../26_General_Usage_Notes/32_The_rsrc_static_Attribute/32_the_rsrc_static_attribute.md) |
 
 ### OPTIONAL PARAMETERS
 
