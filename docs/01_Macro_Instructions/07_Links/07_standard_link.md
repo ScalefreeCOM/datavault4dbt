@@ -8,7 +8,7 @@ title: Standard Link
 
 ---
 
-This macro creates a link entity, connecting two or more entities, or an entity with itself. It can be loaded by one or more source staging tables, if multiple sources share the same business definitions. Typically a link would only be loaded by multiple sources, if those multiple sources also share the business definitions of the hubs, and therefore load the connected hubs together as well. If multiple sources are used, it is required that they all have the same number of foreign keys inside, otherwise they would not share the same business definition of that link. Additionally, a multi-source link needs a [rsrc_static Attribute](/docs/General_Usage_Notes/The_rsrc_static_Attribute) defined for each source.
+This macro creates a link entity, connecting two or more entities, or an entity with itself. It can be loaded by one or more source staging tables, if multiple sources share the same business definitions. Typically a link would only be loaded by multiple sources, if those multiple sources also share the business definitions of the hubs, and therefore load the connected hubs together as well. If multiple sources are used, it is required that they all have the same number of foreign keys inside, otherwise they would not share the same business definition of that link. Additionally, a multi-source link needs a [rsrc_static Attribute](../../26_General_Usage_Notes/32_The_rsrc_static_Attribute/32_the_rsrc_static_attribute.md) defined for each source.
 
 Features:
 
@@ -23,7 +23,7 @@ Features:
 |-------------------|----------------------------------------------|-----------|---------------|-------------|
 | link_hashkey      | string                                       | mandatory | –             | Name of the link hashkey column inside the stage. Should get calculated out of all business keys inside the link. |
 | foreign_hashkeys  | list of strings                              | mandatory | –             | List of all hashkey columns inside the link, that refer to other hub entities. All hashkey columns must be available inside the stage area. |
-| source_models     | string \| list of dictionaries \| dictionary | mandatory | –             | For a single source entity, a string with the name of the source staging model is required. For multi source entities, a list of dictionaries with information about the source models is required. For more information see [this](/docs/General_Usage_Notes/Multi-Source_Entities/) page! The dictionaries need to have the keys `name` and optionally the keys `rsrc_static`, `hk_column` and `fk_columns`. For further information about the `rsrc_static` attribute, please visit the following page: [rsrc_static Attribute](/docs/General_Usage_Notes/The_rsrc_static_Attribute) |
+| source_models     | string \| list of dictionaries \| dictionary | mandatory | –             | For a single source entity, a string with the name of the source staging model is required. For multi source entities, a list of dictionaries with information about the source models is required. For more information see [this](../../26_General_Usage_Notes/30_Multi-Source_Entities/30_multi-source_entities.md) page! The dictionaries need to have the keys `name` and optionally the keys `rsrc_static`, `hk_column` and `fk_columns`. For further information about the `rsrc_static` attribute, please visit the following page: [rsrc_static Attribute](../../26_General_Usage_Notes/32_The_rsrc_static_Attribute/32_the_rsrc_static_attribute.md) |
 
 ### OPTIONAL PARAMETERS
 
