@@ -8,7 +8,7 @@ title: Standard Hub
 
 ---
 
-This macro creates a standard Hub entity based on one or more stage models. The macro requires an input source model similar to the output of the stage macro. So by default the stage models would be used as source models for hubs. If a Hub is loaded by multiple sources, each source needs to have the same number of Business Key columns. Additionally, a multi-source hub needs a [rsrc_static Attribute](/docs/General_Usage_Notes/The_rsrc_static_Attribute) defined for each source.
+This macro creates a standard Hub entity based on one or more stage models. The macro requires an input source model similar to the output of the stage macro. So by default the stage models would be used as source models for hubs. If a Hub is loaded by multiple sources, each source needs to have the same number of Business Key columns. Additionally, a multi-source hub needs a [rsrc_static Attribute](../../26_General_Usage_Notes/32_The_rsrc_static_Attribute/32_the_rsrc_static_attribute.md) defined for each source.
 
 Features:
 
@@ -23,7 +23,7 @@ Features:
 |----------------|----------------------------------------------|-----------|---------------|-------------|
 | hashkey        | string                                       | mandatory | –             | Name of the hashkey column inside the stage, that should be used as PK of the Hub. |
 | business_keys  | string \| list of strings                    | mandatory | –             | Name(s) of the business key columns that should be loaded into the hub and are the input of the hashkey column. Needs to be available inside the stage model. If the names differ between multiple sources, you should define here how the business keys should be called inside the final hub model. The actual input column names need to be defined inside the `source_model` parameter then. |
-| source_models  | string \| list of dictionaries \| dictionary | mandatory | –             | If single source, just a string holding the name of the stage model is required. For multi source Hubs, a list of dictionaries with information about each source is required. For more information see [this](/docs/General_Usage_Notes/Multi-Source_Entities/) page! The inner dictionaries need to have `name` as a key, and optionally the keys `rsrc_static`, `hk_column` and `bk_columns`. For further information about the `rsrc_static` attribute, please visit the following page: [rsrc_static Attribute](/docs/General_Usage_Notes/The_rsrc_static_Attribute) |
+| source_models  | string \| list of dictionaries \| dictionary | mandatory | –             | If single source, just a string holding the name of the stage model is required. For multi source Hubs, a list of dictionaries with information about each source is required. For more information see [this](../../26_General_Usage_Notes/30_Multi-Source_Entities/30_multi-source_entities.md) page! The inner dictionaries need to have `name` as a key, and optionally the keys `rsrc_static`, `hk_column` and `bk_columns`. For further information about the `rsrc_static` attribute, please visit the following page: [rsrc_static Attribute](../../26_General_Usage_Notes/32_The_rsrc_static_Attribute/32_the_rsrc_static_attribute.md) |
 
 ### OPTIONAL PARAMETERS
 

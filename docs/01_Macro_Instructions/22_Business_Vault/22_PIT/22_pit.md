@@ -65,7 +65,7 @@ custom_rsrc: 'PIT table for SAP/Accounts. For more information see our Website!'
 
 ### DESCRIPTION
 
-With this example, a PIT Table is created. In line three of this example, the post hook “clean_up_pit” is used. For further information about the hook, click on the following link: [Hook Clean Up PITs](/docs/Macro_Instructions/Business_Vault/PIT/hook_cleanup_pits/)
+With this example, a PIT Table is created. In line three of this example, the post hook “clean_up_pit” is used. For further information about the hook, click on the following link: [Hook Clean Up PITs](./23_hook_cleanup_pits.md)
 
 - **pit_type**:
   - __!Regular PIT__: PIT type is set to Regular PIT. Optional.
