@@ -1,4 +1,4 @@
-{%- macro eff_sat_v0(yaml_metadata=none, source_model=none, tracked_hashkey=none,  src_ldts=none, src_rsrc=none, is_active_alias=none, source_is_single_batch=true, disable_hwm=false, additional_columns=none) -%}
+{%- macro eff_sat_v0(yaml_metadata=none, source_model=none, tracked_hashkey=none,  src_ldts=none, src_rsrc=none, is_active_alias=none, source_is_single_batch=none, disable_hwm=false, additional_columns=none) -%}
 
     {% set additional_columns_description = "
     additional_columns::list | string       Additional columns from source system or derived columns which should be part of the eff_sat.
@@ -21,7 +21,7 @@
             ~ "Example: source_is_single_batch: true"
         ) %}
     {% endif %}
-    
+
     {% set disable_hwm              = datavault4dbt.yaml_metadata_parser(name='disable_hwm', yaml_metadata=yaml_metadata, parameter=disable_hwm, required=False, documentation='Whether the High Water Mark should be disabled or not. Optional.') %}
     {%- set additional_columns      = datavault4dbt.yaml_metadata_parser(name='additional_columns', yaml_metadata=yaml_metadata, parameter=additional_columns, required=False, documentation=additional_columns_description) -%}
     
