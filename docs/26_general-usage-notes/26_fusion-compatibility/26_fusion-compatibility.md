@@ -41,14 +41,9 @@ The following table shows which macros are causing issues on each database right
 
 In the following, we listed all kinds of known limitations of the Fusion engine that we encountered while working with it. If you have any kind of errors, this might help!
 
-### SNOWFLAKE
-
-- Seeds with TIMESTAMP_TZ are not working. [Github Issue](https://github.com/dbt-labs/dbt-fusion/issues/895)
-
 ### BIGQUERY
 
 - Stage models must not select from seeds. [Github Issue](https://github.com/dbt-labs/dbt-fusion/issues/1102)
-- Seeds can’t have TIMESTAMP columns. [Github Issue](https://github.com/dbt-labs/dbt-fusion/issues/999)
 
 ### DATABRICKS
 
