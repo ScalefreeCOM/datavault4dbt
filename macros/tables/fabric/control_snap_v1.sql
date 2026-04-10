@@ -2,7 +2,7 @@
 
 {%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
 
-{%- set ns = namespace(forever_status_dict={}, log_logic_list=[], col_name='', log_logic={}) %}
+{%- set ns = namespace(forever_status_dict={}, log_logic_list=[], col_name='', log_logic={}, or_required=False) %}
 
 {%- if log_logic is not none %}
 
@@ -24,20 +24,20 @@
         {%- for logic in log_logic -%}
 
             {{ log('logic: ' ~ logic, false) }}
-            {% for col_name, logic_definition in logic.items() -%}
-                {{ log('logic_definition: ' ~ logic_definition, false) }}
+            {% for col_name, log_logic in logic.items() -%}
+                {{ log('log_logic: ' ~ log_logic, false) }}
                 {{ log('col_name: ' ~ col_name, false) }}
                 {%- set ns.col_name = col_name -%}
-                {%- set ns.logic_definition = logic_definition %}
+                {%- set ns.log_logic = log_logic %}
             {%- endfor -%}
 
-            {%- for interval in ns.logic_definition.keys() %}
-                {%- if 'forever' not in ns.logic_definition[interval].keys() -%}
-                    {% do ns.logic_definition[interval].update({'forever': 'FALSE'}) %}
+            {%- for interval in ns.log_logic.keys() %}
+                {%- if 'forever' not in ns.log_logic[interval].keys() -%}
+                    {% do ns.log_logic[interval].update({'forever': 'FALSE'}) %}
                 {%- endif -%}
             {%- endfor -%}
 
-            {%- do ns.log_logic_list.append({ns.col_name: ns.logic_definition}) -%}
+            {%- do ns.log_logic_list.append({ns.col_name: ns.log_logic}) -%}
             {%- do ns.forever_status_dict.update({ns.col_name: 'FALSE'}) -%}
 
         {%- endfor -%}
@@ -110,58 +110,63 @@ log_logic AS (
     {% else %}
         {% for logic in ns.log_logic_list -%}
 
-            {% for col_name, logic_definition in logic.items() -%}
-                {{ log('logic_definition: ' ~ logic_definition, false) }}
+            {% set ns.or_required = False %}
+            {% for col_name, log_logic in logic.items() -%}
+                {{ log('log_logic: ' ~ log_logic, false) }}
                 {{ log('col_name: ' ~ col_name, false) }}
                 {%- set ns.col_name = col_name -%}
-                {%- set ns.logic_definition = logic_definition %}
+                {%- set ns.log_logic = log_logic %}
             {%- endfor -%}
             {%- set col_name = ns.col_name -%}
             {{ log('col_name: ' ~ col_name, false) }}
-            {%- set logic_definition = ns.logic_definition -%}
+            {%- set log_logic = ns.log_logic -%}
 
             CASE 
                 WHEN
-                {% if 'daily' in logic_definition.keys() %}
-                    {%- if logic_definition['daily']['forever'] is true -%}
+                {% if 'daily' in log_logic.keys() %}
+                    {% set ns.or_required = True %}
+                    {%- if log_logic['daily']['forever'] is true -%}
                         {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
                     (1=1)
-                    {%- else %}                             
-                        {%- set daily_duration = logic_definition['daily']['duration'] -%}
-                        {%- set daily_unit = logic_definition['daily']['unit'] -%}
+                    {%- else %}
+                        {%- set daily_duration = log_logic['daily']['duration'] -%}
+                        {%- set daily_unit = log_logic['daily']['unit'] -%}
                     (c.{{ sdts_alias }} BETWEEN DATEADD({{ daily_unit }}, -{{ daily_duration }}, GETDATE()) AND GETDATE())
-                    {%- endif -%}   
+                    {%- endif -%}
                 {%- endif %}
 
-                {%- if 'weekly' in logic_definition.keys() %} OR 
-                    {%- if logic_definition['weekly']['forever'] is true -%}
+                {%- if 'weekly' in log_logic.keys() %} {{ 'OR' if ns.or_required is true }}
+                    {% set ns.or_required = True %}
+                    {%- if log_logic['weekly']['forever'] is true -%}
                         {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
                 (c.is_beginning_of_week = 1)
                     {%- else %} 
-                        {%- set weekly_duration = logic_definition['weekly']['duration'] -%}
-                        {%- set weekly_unit = logic_definition['weekly']['unit'] %}            
+                        {%- set weekly_duration = log_logic['weekly']['duration'] -%}
+                        {%- set weekly_unit = log_logic['weekly']['unit'] %}
                 ((c.{{ sdts_alias }} BETWEEN DATEADD({{ weekly_unit }}, -{{ weekly_duration }}, GETDATE()) AND GETDATE()) AND (c.is_beginning_of_week = 1))
                     {%- endif -%}
                 {% endif -%}
 
-                {%- if 'monthly' in logic_definition.keys() %} OR
-                    {%- if logic_definition['monthly']['forever'] is true -%}
+                {%- if 'monthly' in log_logic.keys() %} {{ 'OR' if ns.or_required is true }}
+                    {% set ns.or_required = True %}
+                    {%- if log_logic['monthly']['forever'] is true -%}
                         {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) %}
                 (c.is_beginning_of_month = 1)
                     {%- else %}
-                        {%- set monthly_duration = logic_definition['monthly']['duration'] -%}
-                        {%- set monthly_unit = logic_definition['monthly']['unit'] %}            
+                        {%- set monthly_duration = log_logic['monthly']['duration'] -%}
+                        {%- set monthly_unit = log_logic['monthly']['unit'] %}
                 ((c.{{ sdts_alias }} BETWEEN DATEADD({{ monthly_unit }}, -{{ monthly_duration }}, GETDATE()) AND GETDATE()) AND (c.is_beginning_of_month = 1))
                     {%- endif -%}
                 {% endif -%}
 
-                {%- if 'yearly' in logic_definition.keys() %} OR 
-                    {%- if logic_definition['yearly']['forever'] is true -%}
+                {%- if 'yearly' in log_logic.keys() %} {{ 'OR' if ns.or_required is true }}
+                    {% set ns.or_required = True %}
+                    {%- if log_logic['yearly']['forever'] is true -%}
                         {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) %}
                 (c.is_beginning_of_year = 1)
                     {%- else %}
-                        {%- set yearly_duration = logic_definition['yearly']['duration'] -%}
-                        {%- set yearly_unit = logic_definition['yearly']['unit'] %}                     
+                        {%- set yearly_duration = log_logic['yearly']['duration'] -%}
+                        {%- set yearly_unit = log_logic['yearly']['unit'] %}
                 ((c.{{ sdts_alias }} BETWEEN DATEADD({{ yearly_unit }}, -{{ yearly_duration }}, GETDATE()) AND GETDATE()) AND (c.is_beginning_of_year = 1))
                     {%- endif -%}
                 {% endif %}
