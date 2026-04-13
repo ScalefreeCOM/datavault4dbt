@@ -77,7 +77,7 @@ deduped_rows AS (
   SELECT 
     source_data.{{ parent_hashkey }},
     source_data.{{ ns.hdiff_alias }},
-    source_data.rn,
+    deduped_row_hashdiff.rn,
     {{ datavault4dbt.alias_all(columns=source_cols, prefix='source_data') }}
   FROM source_data
   INNER JOIN deduped_row_hashdiff
