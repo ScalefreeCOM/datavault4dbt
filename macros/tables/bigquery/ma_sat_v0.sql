@@ -52,7 +52,7 @@ latest_entries_in_sat AS (
         {{ ns.hdiff_alias }}
     FROM 
         {{ this }}
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }} DESC) = 1  
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1  
 ),
 {%- endif %}
 
@@ -62,7 +62,8 @@ deduped_row_hashdiff AS (
   SELECT 
     {{ parent_hashkey }},
     {{ src_ldts }},
-    {{ ns.hdiff_alias }}
+    {{ ns.hdiff_alias }},
+    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
   FROM source_data
   QUALIFY CASE
             WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
@@ -76,6 +77,7 @@ deduped_rows AS (
   SELECT 
     source_data.{{ parent_hashkey }},
     source_data.{{ ns.hdiff_alias }},
+    source_data.rn,
     {{ datavault4dbt.alias_all(columns=source_cols, prefix='source_data') }}
   FROM source_data
   INNER JOIN deduped_row_hashdiff
@@ -98,6 +100,7 @@ records_to_insert AS (
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduped_rows'], condition='=') }}
             AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', 'deduped_rows'], condition='=') }} 
+            AND deduped_rows.rn = 1
             )
     {%- endif %}
 
