@@ -95,12 +95,12 @@ records_to_insert AS (
         {{ datavault4dbt.alias_all(columns=source_cols, prefix='deduped_rows') }}
     FROM deduped_rows
     {%- if is_incremental() %}
-    WHERE NOT EXISTS (
+    WHERE deduped_rows.rn > 1
+    OR NOT EXISTS (
         SELECT 1
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'deduped_rows'], condition='=') }}
             AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', 'deduped_rows'], condition='=') }} 
-            AND deduped_rows.rn = 1
             )
     {%- endif %}
 
