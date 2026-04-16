@@ -38,3 +38,7 @@
 {%- macro oracle__string_to_timestamp(format, timestamp) -%}
     TO_TIMESTAMP('{{ timestamp }}', '{{ format }}')
 {%- endmacro -%}
+
+{%- macro trino__string_to_timestamp(format, timestamp) -%}
+    date_parse('{{ timestamp }}', '{{ format }}')
+{%- endmacro -%}
