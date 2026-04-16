@@ -34,7 +34,13 @@
     {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
     {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
 
-    {{ standardise_prefix }}
+{%- if columns | length == 1 -%}
+    {%- set concat_function = 'CONCAT(' -%}
+{%- elif columns | length > 1 -%}
+    {%- set concat_function = 'CONCAT_WS(\'' ~ concat_string ~ '\', ' -%}
+{%- endif -%}
+
+    {{ standardise_prefix | replace('CONCAT(', concat_function) }}
 
     {%- for column in columns -%}
         {%- do all_null.append(null_placeholder_string) -%}
@@ -45,6 +51,7 @@
         {%- endif -%}
         {{- "\nCOALESCE({}, '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
         {{- ",'{}',".format(concat_string) if not loop.last -}}
+        {{- ", ''" if columns|length == 1 -}}
 
         {%- if loop.last -%}
             {{ standardise_suffix | replace('[ALL_NULL]', all_null | join("")) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string) | indent(4) }}
