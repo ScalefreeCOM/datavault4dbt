@@ -116,7 +116,7 @@ virtual_logic AS (
                         {%- else %}
                             {%- set daily_duration = log_logic['daily']['duration'] -%}
                             {%- set daily_unit = log_logic['daily']['unit'] -%}
-                        (EXTRACT(DATE FROM c.{{ sdts_alias }}) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL {{ daily_duration }} {{ daily_unit }}) AND CURRENT_DATE())
+                        (EXTRACT(DATE FROM c.{{ sdts_alias }}) BETWEEN DATE_ADD(DATE_SUB(CURRENT_DATE(), INTERVAL {{ daily_duration }} {{ daily_unit }}), INTERVAL 1 DAY) AND CURRENT_DATE())
                         {%- endif -%}
                     {%- endif %}
 

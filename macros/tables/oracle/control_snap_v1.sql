@@ -113,7 +113,7 @@ virtual_logic AS (
                                 {%- set daily_duration = daily_duration * 7 -%}
                                 {%- set daily_unit = 'DAY' -%}
                             {%- endif %}
-                        TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ daily_duration }}' {{ daily_unit }} AND CURRENT_DATE
+                        TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ daily_duration }}' {{ daily_unit }} + INTERVAL '1' DAY AND CURRENT_DATE
                         {%- endif -%}
                     {%- endif %}
 
