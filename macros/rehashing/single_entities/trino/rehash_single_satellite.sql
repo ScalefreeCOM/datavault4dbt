@@ -26,7 +26,7 @@ dbt run-operation rehash_single_satellite --args '{satellite: customer_n0_s, has
     ]%}
 
     {# ALTER existing satellite to add new hashkey and new hashdiff. #}
-    {{ log('Executing ALTER TABLE statement...', output_logs) %}
+    {{ log('Executing ALTER TABLE statement...', output_logs) }}
     {{ datavault4dbt.custom_alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) }}
     {{ log('ALTER TABLE statement completed!', output_logs) }}
 
