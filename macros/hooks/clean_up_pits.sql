@@ -148,3 +148,16 @@ WHERE NOT EXISTS (SELECT 1 FROM {{ ref(snapshot_relation) }} WHERE {{ this }}.{{
 {%- endif -%}
 
 {%- endmacro -%}
+
+
+{%- macro trino__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+{#- Trino memory connector does not support DELETE. The PIT model already filters
+    for active snapshots via is_active, so no cleanup is needed on full-refresh. -#}
+SELECT 1
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}

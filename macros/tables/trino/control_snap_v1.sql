@@ -44,6 +44,10 @@ virtual_logic AS (
 
                     {%- set daily_duration = log_logic['daily']['duration'] -%}
                     {%- set daily_unit = log_logic['daily']['unit'] -%}
+                    {%- if daily_unit | upper == 'WEEK' -%}
+                        {%- set daily_duration = daily_duration | int * 7 -%}
+                        {%- set daily_unit = 'DAY' -%}
+                    {%- endif -%}
 
                     c.{{ sdts_alias }} BETWEEN CURRENT_TIMESTAMP - INTERVAL '{{ daily_duration }}' {{ daily_unit }} AND CURRENT_TIMESTAMP + INTERVAL '1' DAY
                 {%- endif -%}
@@ -53,16 +57,20 @@ virtual_logic AS (
             OR
                 {%- if log_logic['weekly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-                    (c.is_weekly = TRUE)
+                    (c.is_beginning_of_week = TRUE)
                 {%- else %}
 
                     {%- set weekly_duration = log_logic['weekly']['duration'] -%}
                     {%- set weekly_unit = log_logic['weekly']['unit'] -%}
+                    {%- if weekly_unit | upper == 'WEEK' -%}
+                        {%- set weekly_duration = weekly_duration | int * 7 -%}
+                        {%- set weekly_unit = 'DAY' -%}
+                    {%- endif -%}
 
                     (
                 c.{{ sdts_alias }} BETWEEN CURRENT_TIMESTAMP - INTERVAL '{{ weekly_duration }}' {{ weekly_unit }} AND CURRENT_TIMESTAMP
                 AND
-                (c.is_weekly = TRUE)
+                (c.is_beginning_of_week = TRUE)
             )
                 {%- endif -%}
             {% endif -%}
@@ -71,16 +79,20 @@ virtual_logic AS (
             OR
                 {%- if log_logic['monthly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-                    (c.is_monthly = TRUE)
+                    (c.is_beginning_of_month = TRUE)
                 {%- else %}
 
                     {%- set monthly_duration = log_logic['monthly']['duration'] -%}
                     {%- set monthly_unit = log_logic['monthly']['unit'] -%}
+                    {%- if monthly_unit | upper == 'WEEK' -%}
+                        {%- set monthly_duration = monthly_duration | int * 7 -%}
+                        {%- set monthly_unit = 'DAY' -%}
+                    {%- endif -%}
 
                     (
                 c.{{ sdts_alias }} BETWEEN CURRENT_TIMESTAMP - INTERVAL '{{ monthly_duration }}' {{ monthly_unit }} AND CURRENT_TIMESTAMP
                 AND
-                (c.is_monthly = TRUE)
+                (c.is_beginning_of_month = TRUE)
             )
                 {%- endif -%}
             {% endif -%}
@@ -89,16 +101,20 @@ virtual_logic AS (
             OR
                 {%- if log_logic['yearly']['forever'] is true -%}
                     {%- set ns.forever_status = 'TRUE' -%}
-                    (c.is_yearly = TRUE)
+                    (c.is_beginning_of_year = TRUE)
                 {%- else %}
 
                     {%- set yearly_duration = log_logic['yearly']['duration'] -%}
                     {%- set yearly_unit = log_logic['yearly']['unit'] -%}
+                    {%- if yearly_unit | upper == 'WEEK' -%}
+                        {%- set yearly_duration = yearly_duration | int * 7 -%}
+                        {%- set yearly_unit = 'DAY' -%}
+                    {%- endif -%}
 
                     (
-                c.{{ sdts_alias }} BETWEEN CURRENT_TIMESTAMP - INTERVAL '{{ yearly_duration }}' {{ yearly_unit }} AND CURRENT_TIMESTAMP 
+                c.{{ sdts_alias }} BETWEEN CURRENT_TIMESTAMP - INTERVAL '{{ yearly_duration }}' {{ yearly_unit }} AND CURRENT_TIMESTAMP
                 AND
-                (c.is_yearly = TRUE)
+                (c.is_beginning_of_year = TRUE)
             )
                 {%- endif -%}
             {% endif %}
@@ -116,9 +132,14 @@ virtual_logic AS (
         c.caption,
         c.is_hourly,
         c.is_daily,
-        c.is_weekly,
-        c.is_monthly,
-        c.is_yearly,
+        c.is_beginning_of_week,
+        c.is_end_of_week,
+        c.is_beginning_of_month,
+        c.is_end_of_month,
+        c.is_beginning_of_quarter,
+        c.is_end_of_quarter,
+        c.is_beginning_of_year,
+        c.is_end_of_year,
         CASE
             WHEN EXTRACT(YEAR FROM c.{{ sdts_alias }}) = EXTRACT(YEAR FROM CURRENT_DATE) THEN TRUE
             ELSE FALSE
@@ -148,20 +169,25 @@ virtual_logic AS (
 
 active_logic_combined AS (
 
-    SELECT 
+    SELECT
         {{ sdts_alias }},
         replacement_sdts,
         CASE
             WHEN force_active AND {{ snapshot_trigger_column }} THEN TRUE
             WHEN NOT force_active OR NOT {{ snapshot_trigger_column }} THEN FALSE
         END AS {{ snapshot_trigger_column }},
-        is_latest, 
+        is_latest,
         caption,
         is_hourly,
         is_daily,
-        is_weekly,
-        is_monthly,
-        is_yearly,
+        is_beginning_of_week,
+        is_end_of_week,
+        is_beginning_of_month,
+        is_end_of_month,
+        is_beginning_of_quarter,
+        is_end_of_quarter,
+        is_beginning_of_year,
+        is_end_of_year,
         is_current_year,
         is_last_year,
         is_rolling_year,

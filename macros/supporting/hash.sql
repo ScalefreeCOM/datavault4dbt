@@ -282,22 +282,29 @@
     {%- set standardise_prefix = std_dict['standardise_prefix'] -%}
     {%- set standardise_suffix = std_dict['standardise_suffix'] -%}
 
-{{ standardise_prefix }}
+{%- if columns | length == 1 -%}
+    {%- set concat_function = 'CONCAT(' -%}
+{%- elif columns | length > 1 -%}
+    {%- set concat_function = 'CONCAT_WS(\'' ~ concat_string ~ '\', ' -%}
+{%- endif -%}
 
-{%- for column in columns -%}
+    {{ standardise_prefix | replace('CONCAT(', concat_function) }}
 
-    {%- do all_null.append(null_placeholder_string) -%}
+    {%- for column in columns -%}
 
-    {%- if '.' in column %}
-        {% set column_str = column -%}
-    {%- else -%}
-        {%- set column_str = datavault4dbt.as_constant(column) -%}
-    {%- endif -%}
+        {%- do all_null.append(null_placeholder_string) -%}
 
-    {{- "\nCOALESCE(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
-    {{- ",'{}',".format(concat_string) if not loop.last -}}
+        {%- if '.' in column %}
+            {% set column_str = column -%}
+        {%- else -%}
+            {%- set column_str = datavault4dbt.as_constant(column) -%}
+        {%- endif -%}
 
-    {%- if loop.last -%}
+        {{- "\nCOALESCE(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+        {{- ",'{}',".format(concat_string) if not loop.last -}}
+        {{- ", ''" if columns|length == 1 -}}
+
+        {%- if loop.last -%}
 
         {{ standardise_suffix | replace('[ALL_NULL]', all_null | join("")) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string) | indent(4) }}
 
@@ -651,7 +658,7 @@
             {%- set column_str = datavault4dbt.as_constant(column) -%}
         {%- endif -%}
         {{- "\nCOALESCE({}, '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
-        {{- ",'{}',".format(concat_string) if not loop.last -}}
+        {{- ", " if not loop.last -}}
         {{- ", ''" if columns|length == 1 -}}
 
         {%- if loop.last -%}

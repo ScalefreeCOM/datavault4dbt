@@ -134,7 +134,7 @@ WITH
             {{ hk_column }} AS {{ tracked_hashkey }},
             {{ src_ldts }},
             {{ src_rsrc }},
-            {{ src_stg }}
+            CAST(UPPER('{{ source_model.name }}') AS {{ stg_default_dtype }}) AS {{ src_stg }}
             {% for col in additional_columns -%}
             ,{{ col }}
             {% endfor -%}

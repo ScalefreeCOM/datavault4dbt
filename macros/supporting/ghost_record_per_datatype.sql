@@ -65,6 +65,51 @@
 {%- endmacro -%}
 
 
+{%- macro trino__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
+
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
+{%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{%- set beginning_of_all_times_date = datavault4dbt.beginning_of_all_times_date() -%}
+{%- set end_of_all_times_date = datavault4dbt.end_of_all_times_date() -%}
+
+{%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', '-1') -%}
+{%- set error_value__numeric = var('datavault4dbt.error_value__numeric', '-2') -%}
+
+{%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
+{%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
+
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=datavault4dbt.hash_method())) -%}
+{%- set unknown_key = hash_default_values['unknown_key'] -%}
+{%- set error_key = hash_default_values['error_key'] -%}
+
+{%- set datatype = datatype | string | upper | trim -%}
+
+{%- if ghost_record_type == 'unknown' -%}
+        {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} as {{ alias }}
+        {%- elif datatype == 'DATE' %} CAST('{{ beginning_of_all_times_date }}' AS DATE) as {{ alias }}
+        {%- elif datatype in ['VARCHAR', 'STRING', 'TEXT'] %} '{{ unknown_value__STRING }}' as {{ alias }}
+        {%- elif datatype in ['INTEGER', 'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'DOUBLE', 'FLOAT', 'REAL', 'DECIMAL'] %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
+        {%- elif datatype == 'BOOLEAN' %} CAST(FALSE as BOOLEAN) as {{ alias }}
+        {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
+        {% endif %}
+{%- elif ghost_record_type == 'error' -%}
+        {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} as {{ alias }}
+        {%- elif datatype == 'DATE' %} CAST('{{ end_of_all_times_date }}' AS DATE) as {{ alias }}
+        {%- elif datatype in ['VARCHAR', 'STRING', 'TEXT'] %} '{{ error_value__STRING }}' as {{ alias }}
+        {%- elif datatype in ['INTEGER', 'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'DOUBLE', 'FLOAT', 'REAL', 'DECIMAL'] %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}
+        {%- elif datatype == 'BOOLEAN' %} CAST(FALSE as BOOLEAN) as {{ alias }}
+        {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
+        {% endif %}
+{%- else -%}
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("Invalid Ghost Record Type. Accepted are 'unknown' and 'error'.") }}
+    {%- endif %}
+{%- endif -%}
+{%- endmacro -%}
+
+
 {%- macro exasol__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}

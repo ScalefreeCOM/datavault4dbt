@@ -32,34 +32,12 @@ source_data_prep AS (
     {%- endif %}
 ),
 
-source_data AS (
-
-    SELECT
-        *
-    FROM source_data_prep
-    {% if not source_is_single_batch -%}
-    {# Using a subquery-like approach for maximum compatibility across Trino versions #}
-    WHERE 1=1
-    {%- set row_number_expression -%}
-        ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }})
-    {%- endset -%}
-    AND (
-        SELECT row_num FROM (
-            SELECT {{ parent_hashkey }} as hk, {{ src_ldts }} as ldts, ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as row_num 
-            FROM source_data_prep
-        ) WHERE hk = source_data_prep.{{ parent_hashkey }} AND ldts = source_data_prep.{{ src_ldts }}
-    ) = 1
-    {%- endif %}
-    {# Wait, the above is too complex. I'll just use QUALIFY if I can or a simple CTE deduplication #}
-),
-
-{# Actually, let's use a cleaner CTE deduplication #}
 {% if not source_is_single_batch -%}
 deduplicated_source AS (
-    SELECT 
+    SELECT
         {{ datavault4dbt.print_list(source_cols) }}
     FROM (
-        SELECT 
+        SELECT
             {{ datavault4dbt.print_list(source_cols) }},
             ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
         FROM source_data_prep
