@@ -20,7 +20,7 @@
 
 {%- set is_active_datatype = var('datavault4dbt.is_active_datatype', 'Boolean') -%}
 
-{{ log('columns to select: '~final_columns_to_select, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('columns to select: '~final_columns_to_select, false) }}{% endif %}
 
 {{ datavault4dbt.prepend_generated_by() }}
 

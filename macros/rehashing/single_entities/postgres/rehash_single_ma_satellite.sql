@@ -126,7 +126,7 @@
     {% for column in all_parent_columns %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('Parent already hashed, using rehashed value for ' ~ ma_satellite_relation.name, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Parent already hashed, using rehashed value for ' ~ ma_satellite_relation.name, false) }}{% endif %}
         {% endif %}
     {% endfor %}
 

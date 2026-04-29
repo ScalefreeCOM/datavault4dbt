@@ -28,7 +28,7 @@
     {{- exceptions.raise_compiler_error(error_message) -}}
 {%- endif -%}
 
-{{ log('source_model: ' ~ source_model, false )}}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_model: ' ~ source_model, false )}}{% endif %}
 
 {#- Check for source format or ref format and create relation object from source_model -#}
 {% if source_model is mapping and source_model is not none -%}
@@ -41,7 +41,7 @@
 
 {%- elif source_model is not mapping and source_model is not none -%}
 
-    {{ log('source_model is not mapping and not none: ' ~ source_model, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_model is not mapping and not none: ' ~ source_model, false) }}{% endif %}
 
     {%- set source_relation = ref(source_model) -%}
     {%- set all_source_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
@@ -49,7 +49,7 @@
     {%- set all_source_columns = [] -%}
 {%- endif -%}
 
-{{ log('source_relation: ' ~ source_relation, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_relation: ' ~ source_relation, false) }}{% endif %}
 
 {# Setting the column name for load date timestamp and record source to the alias coming from the attributes #}
 {%- set ldts_alias = var('datavault4dbt.ldts_alias', 'ldts') -%}
@@ -117,7 +117,7 @@
     {%- endif -%}
 
   {%- endfor -%}
-  {{ log('columns_without_excluded_columns: '~ columns_without_excluded_columns, false) }}
+  {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('columns_without_excluded_columns: '~ columns_without_excluded_columns, false) }}{% endif %}
 {%- else -%}
   
   {# Include from the source only the input columns needed #}
@@ -146,17 +146,17 @@
   {%- else -%}
 
   {%- set only_include_from_source = (derived_input_columns + hashed_input_columns + prejoined_input_columns) | unique | list -%}
-  {{ log('only_include_from_source : '~ only_include_from_source, false) }}
+  {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('only_include_from_source : '~ only_include_from_source, false) }}{% endif %}
   {%- endif -%}
 
   {%- set source_columns_to_select = only_include_from_source -%}
-  {{ log('source_columns_to_select when include_source_columns=false: '~ source_columns_to_select, false) }}
+  {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_columns_to_select when include_source_columns=false: '~ source_columns_to_select, false) }}{% endif %}
 
 {%- endif -%}
 
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
-  {{ log('derived_columns_to select : '~ derived_columns_to_select, false) }}
+  {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('derived_columns_to select : '~ derived_columns_to_select, false) }}{% endif %}
 
 {%- if datavault4dbt.is_something(derived_columns) %}
   {#- Getting Data types for derived columns with detection from source relation -#}
@@ -167,7 +167,7 @@
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
 {%- set hash = datavault4dbt.hash_method() -%}
-{{ log('hash_function: ' ~ hash, false)}}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash_function: ' ~ hash, false)}}{% endif %}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR2(40)') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
@@ -232,7 +232,7 @@ ldts_rsrc_data AS (
 
   {%- set last_cte = "ldts_rsrc_data" -%}
   {%- set final_columns_to_select = alias_columns + final_columns_to_select  %}
-  {{ log('derived_column_names: '~ derived_column_names, false) }}
+  {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('derived_column_names: '~ derived_column_names, false) }}{% endif %}
   {%- set columns_without_excluded_columns_tmp = [] -%}
   {%- for column in columns_without_excluded_columns -%}
     {%- if column.name | lower not in derived_column_names | map('lower') -%}
@@ -240,7 +240,7 @@ ldts_rsrc_data AS (
     {%- endif -%}
   {%- endfor -%}
   {%- set columns_without_excluded_columns = columns_without_excluded_columns_tmp |list -%}
-  {{ log('columns_without_excluded_columns without derived_col_names: '~ columns_without_excluded_columns, false)}}
+  {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('columns_without_excluded_columns without derived_col_names: '~ columns_without_excluded_columns, false)}}{% endif %}
 
 ),
 
@@ -510,13 +510,13 @@ unknown_values AS (
         {%- endif -%}
 
         {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
-        {{ log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) }}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) }}{% endif %}
 
           {%- for column in pj_relation_columns -%}
             {%- if column.name|lower in prejoin['extract_columns']|map('lower') -%}
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
-              {{ log('column found? yes, for column: ' ~ column.name , false) }}
+              {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('column found? yes, for column: ' ~ column.name , false) }}{% endif %}
               ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='unknown', alias=prejoin['aliases'][prejoin_col_index]) }}
             {%- endif -%}
 
@@ -577,13 +577,13 @@ error_values AS (
         {%- endif -%}
 
         {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
-        {{- log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) -}}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{- log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) -}}{% endif %}
 
         {% for column in pj_relation_columns -%}
             {%- if column.name|lower in prejoin['extract_columns']|map('lower') -%}
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
-              {{ log('column found? yes, for column: ' ~ column.name , false) }}
+              {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('column found? yes, for column: ' ~ column.name , false) }}{% endif %}
              ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, ghost_record_type='error', alias=prejoin['aliases'][prejoin_col_index]) }}
           {%- endif -%}
 

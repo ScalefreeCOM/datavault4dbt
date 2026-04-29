@@ -5,11 +5,11 @@
         {% if name in metadata_dict.keys() %}
             {% set return_value = metadata_dict.get(name) %}
             {% if datavault4dbt.is_something_or_false(parameter)%}
-                {{ log("[" ~ this ~ "] Parameter '" ~ name ~ "' defined both in yaml-metadata and separately. Value from yaml-metadata will be used, and separate parameter is ignored.", info=False) }}
+                {% if var('datavault4dbt.show_debug_logs', false) %}{{ log("[" ~ this ~ "] Parameter '" ~ name ~ "' defined both in yaml-metadata and separately. Value from yaml-metadata will be used, and separate parameter is ignored.", info=False) }}{% endif %}
             {% endif %}
         {% elif datavault4dbt.is_something_or_false(parameter) %}
             {% set return_value = parameter %}
-            {{ log("[" ~ this ~ "] yaml-metadata given, but parameter '" ~ name ~ "' not defined in there. Applying '" ~ parameter ~ "' which is either a parameter passed separately or the default value.", info=False) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log("[" ~ this ~ "] yaml-metadata given, but parameter '" ~ name ~ "' not defined in there. Applying '" ~ parameter ~ "' which is either a parameter passed separately or the default value.", info=False) }}{% endif %}
         {% elif required %}
             {{ exceptions.raise_compiler_error("[" ~ this ~ "] Error: yaml-metadata given, but required parameter '" ~ name ~ "' not defined in there or outside in the parameter. \n Description of parameter '" ~ name ~ "': \n" ~ documentation ) }}
         {% else %}

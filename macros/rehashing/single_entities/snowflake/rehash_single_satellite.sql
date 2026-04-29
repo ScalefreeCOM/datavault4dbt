@@ -123,10 +123,10 @@
     #}
     {% set all_parent_columns = adapter.get_columns_in_relation(parent_relation) %}
     {% for column in all_parent_columns %}
-        {{ log('parent column names: ' ~ all_parent_columns, false) }}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('parent column names: ' ~ all_parent_columns, false) }}{% endif %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ satellite_relation.name, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('parent_already hashed set to true for ' ~ satellite_relation.name, false) }}{% endif %}
         {% endif %}
     {% endfor %}
 

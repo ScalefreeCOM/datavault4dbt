@@ -40,7 +40,7 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -175,7 +175,7 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'BINARY(16)') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -216,7 +216,7 @@
     {%- else -%}
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
-    {{ log('attribute_standardise: '~attribute_standardise, false)}}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('attribute_standardise: '~attribute_standardise, false)}}{% endif %}
 
     {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
     {{- ",'{}',".format(concat_string) if not loop.last -}}
@@ -252,7 +252,7 @@
 
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR') -%}
 
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -325,7 +325,7 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -394,7 +394,7 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARBINARY(16)') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -406,7 +406,7 @@
     {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey',use_trim=use_trim) %}
 {%- endif -%}
 
-{{ log('attribute_standardise: '~attribute_standardise, false)}}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('attribute_standardise: '~attribute_standardise, false)}}{% endif %}
 
 {#- If single column to hash -#}
 {%- if columns is string -%}
@@ -475,7 +475,7 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -544,7 +544,7 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR2(40)') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}

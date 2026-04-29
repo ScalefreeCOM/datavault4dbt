@@ -108,7 +108,7 @@
         {{ log('parent column names: ' ~ all_parent_columns, output_logs) }}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ satellite_relation.name, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('parent_already hashed set to true for ' ~ satellite_relation.name, false) }}{% endif %}
         {% endif %}
     {% endfor %}
 
@@ -154,13 +154,13 @@
     {% endfor %}
 
     {% set select_clause = filtered_columns | join(', ') %}
-    {{ log('SELECT clause: ' ~ select_clause, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('SELECT clause: ' ~ select_clause, false) }}{% endif %}
 
     {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
-    {{ log('hash_config_dict' ~ hash_config_dict, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash_config_dict' ~ hash_config_dict, false) }}{% endif %}
 
     {% set create_sql %}
     CREATE OR REPLACE TABLE {{ satellite_relation }} AS

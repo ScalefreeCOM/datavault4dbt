@@ -39,6 +39,7 @@ vars:
   datavault4dbt.include_business_objects_before_appearance: false
   datavault4dbt.enable_static_analysis_overwrite: true
   datavault4dbt.multi_source_models__execution_aware_loading: true
+  datavault4dbt.show_debug_logs: false
 
   # Default start of the week is Monday
   datavault4dbt.first_day_of_week: {"snowflake": "1", "exasol": "1", "postgres": "1", "databricks": "1", "bigquery": "2", "synapse": "2", "fabric": "2", "oracle": "2", "redshift": "1", "sqlserver": "2"}

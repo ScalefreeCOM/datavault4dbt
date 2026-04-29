@@ -149,7 +149,7 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUOTE]', '\
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
-{{ log('datatype: ' ~ datatype, false)}}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('datatype: ' ~ datatype, false)}}{% endif %}
 
 {%- if is_hashdiff and rtrim_hashdiff -%}
     {%- set hdiff_prefix = "RTRIM("-%}

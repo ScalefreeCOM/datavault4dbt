@@ -78,7 +78,7 @@
         ALTER TABLE {{ relation.render() }} RENAME COLUMN {{ old_col_name }} TO {{ new_col_name }};
     {% endset %}
 
-    {{ log(query, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log(query, false) }}{% endif %}
 
     {{ return(query) }}
 

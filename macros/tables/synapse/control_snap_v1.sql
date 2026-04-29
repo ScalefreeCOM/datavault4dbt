@@ -5,7 +5,7 @@
 
 {%- if log_logic is not none %}
 
-{{ log('log_logic: ' ~ log_logic, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('log_logic: ' ~ log_logic, false) }}{% endif %}
 
     {%- if log_logic is mapping -%}
 
@@ -22,10 +22,10 @@
 
         {%- for logic in log_logic -%}
 
-            {{ log('logic: ' ~ logic, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('logic: ' ~ logic, false) }}{% endif %}
             {% for col_name, logic_definition in logic.items() -%}
-                {{ log('logic_definition: ' ~ logic_definition, false) }}
-                {{ log('col_name: ' ~ col_name, false) }}
+                {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('logic_definition: ' ~ logic_definition, false) }}{% endif %}
+                {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('col_name: ' ~ col_name, false) }}{% endif %}
                 {%- set ns.col_name = col_name -%}
                 {%- set ns.logic_definition = logic_definition %}
             {%- endfor -%}
@@ -100,13 +100,13 @@ log_logic AS (
         {% for logic in ns.log_logic_list -%}
 
             {% for col_name, logic_definition in logic.items() -%}
-                {{ log('logic_definition: ' ~ logic_definition, false) }}
-                {{ log('col_name: ' ~ col_name, false) }}
+                {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('logic_definition: ' ~ logic_definition, false) }}{% endif %}
+                {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('col_name: ' ~ col_name, false) }}{% endif %}
                 {%- set ns.col_name = col_name -%}
                 {%- set ns.logic_definition = logic_definition %}
             {%- endfor -%}
             {%- set col_name = ns.col_name -%}
-            {{ log('col_name: ' ~ col_name, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('col_name: ' ~ col_name, false) }}{% endif %}
             {%- set logic_definition = ns.logic_definition -%}
 
             CASE 
