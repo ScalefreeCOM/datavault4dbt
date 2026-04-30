@@ -1,0 +1,62 @@
+name: Sync Docs to Docs Repo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Token from GitHub App
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.DOCS_APP_ID }}
+          private-key: ${{ secrets.DOCS_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: "datavault4dbt-docs" # Adjustable
+
+      - name: Checkout Source Repo
+        uses: actions/checkout@v4
+        with:
+          path: source-repo
+
+      - name: Checkout Target Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ScalefreeCOM/datavault4dbt-docs # Adjustable
+          token: ${{ steps.generate-token.outputs.token }}
+          path: target-repo
+
+      - name: Copy docs folder
+        run: |
+          rm -rf target-repo/docs/*
+          cp -R source-repo/docs/* target-repo/docs/
+
+      - name: Commit and Push to Target Repo
+        run: |
+          cd target-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            COMMIT_MSG="Release tag: ${{ github.ref_name }}"
+            # Force a commit even if files are identical to send the signal
+            git commit --allow-empty -m "$COMMIT_MSG"
+          else
+            if git diff --staged --quiet; then
+              echo "No changes to commit."
+              exit 0
+            fi
+            COMMIT_MSG="Sync latest docs from main"
+            git commit -m "$COMMIT_MSG"
+          fi
+          
+          git push origin main

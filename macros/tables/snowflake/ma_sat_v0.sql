@@ -1,8 +1,12 @@
-{%- macro snowflake__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model) -%}
+{%- macro snowflake__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model, additional_columns) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{# Select the additional_columns and put them in an array. If additional_colums is none, then empty array #}
+{%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
 {%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
 {%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
@@ -13,7 +17,16 @@
     {% set ns.hdiff_alias = src_hashdiff  %}
 {%- endif -%}
 
-{%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_ma_key, src_payload]) -%}
+{%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_ma_key, src_payload, additional_columns]) -%}
+
+{# Get max(ldts) #}
+{% if execute %}
+    {%- if is_incremental() and not disable_hwm %}
+        {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
+        {% set max_ldts_results = run_query(max_ldts_query) %}
+        {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+    {%- endif %}
+{% endif %}
 
 {%- set source_relation = ref(source_model) -%}
 
@@ -29,12 +42,8 @@ source_data AS (
         {{ datavault4dbt.print_list(source_cols) }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() %}
-    WHERE {{ src_ldts }} > (
-        SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
-        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-    )
+    {%- if is_incremental() and not disable_hwm %}
+    WHERE {{ src_ldts }} > '{{ max_ldts }}'
     {%- endif %}
 
 ),

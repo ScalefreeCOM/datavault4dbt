@@ -20,7 +20,8 @@
                                 alias=col, 
                                 is_hashdiff=columns[col]['is_hashdiff'],
                                 multi_active_key=multi_active_key,
-                                main_hashkey_column=main_hashkey_column) -}}
+                                main_hashkey_column=main_hashkey_column,
+                                use_trim=columns[col]['use_trim']) -}}
             
             {#- Apply standard hashing for hash key attributes. -#}
             {%- elif columns[col] is not mapping -%}
@@ -38,13 +39,14 @@
 
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
-                                is_hashdiff=columns[col]['is_hashdiff']) -}}
+                                is_hashdiff=columns[col]['is_hashdiff'],
+                                use_trim=columns[col]['use_trim']) -}}
 
             {%- elif columns[col] is not mapping -%}
 
                 {{- datavault4dbt.hash(columns=columns[col],
                                 alias=col,
-                                is_hashdiff=false) -}}
+                                is_hashdiff=false)-}}
             
             {%- elif columns[col] is mapping and not columns[col].is_hashdiff -%}
 
@@ -78,7 +80,8 @@
                                 alias=col, 
                                 is_hashdiff=columns[col]['is_hashdiff'],
                                 multi_active_key=multi_active_key,
-                                main_hashkey_column=main_hashkey_column) -}}
+                                main_hashkey_column=main_hashkey_column,
+                                use_trim=columns[col]['use_trim']) -}}
 
             {{- ", \n" if not loop.last -}}
 
@@ -95,7 +98,8 @@
 
                 {{- datavault4dbt.hash(columns=columns[col]['columns'], 
                                 alias=col, 
-                                is_hashdiff=columns[col]['is_hashdiff']) -}}
+                                is_hashdiff=columns[col]['is_hashdiff'],
+                                use_trim=columns[col]['use_trim']) -}}
 
             {%- elif columns[col] is not mapping -%}
 

@@ -116,7 +116,8 @@
                                                     src_ldts=src_ldts,
                                                     src_rsrc=src_rsrc,
                                                     source_models=source_models,
-                                                    disable_hwm=disable_hwm) }}
+                                                    disable_hwm=disable_hwm,
+                                                    additional_columns=additional_columns) }}
     {%- endif %}
 
     {{ return(adapter.dispatch('hub', 'datavault4dbt')(hashkey=hashkey,
