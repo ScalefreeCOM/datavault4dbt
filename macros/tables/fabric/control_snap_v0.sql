@@ -28,7 +28,7 @@ initial_timestamps_prep AS (
 
 initial_timestamps AS (
     SELECT TOP (DATEDIFF(DAY, '{{ start_date }}', {{ end_date}}) + 1)
-    DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, '{{ start_date }}' ) AS {{ sdts_alias }}
+    DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, CONVERT(datetime2(6), '{{ start_date }} {{ daily_snapshot_time }}')) AS {{ sdts_alias }}
     FROM initial_timestamps_prep s1
     CROSS JOIN initial_timestamps_prep s2
 		CROSS JOIN initial_timestamps_prep s3
@@ -43,9 +43,9 @@ enriched_timestamps AS (
         1 as force_active,
         CONVERT(datetime2(6), {{ sdts_alias }}) AS replacement_{{ sdts_alias }},
         CONCAT('Snapshot ', CONVERT(date, {{ sdts_alias }}, 23)) AS caption,
-        CASE 
-            WHEN DATEPART(HOUR, {{ sdts_alias }}) = 0 AND DATEPART(MINUTE, {{ sdts_alias }}) = 0 AND DATEPART(SECOND, {{ sdts_alias }}) = 0 THEN 1 
-            ELSE 0 
+        CASE
+            WHEN DATEPART(MINUTE, {{ sdts_alias }}) = 0 AND DATEPART(SECOND, {{ sdts_alias }}) = 0 THEN 1
+            ELSE 0
         END AS is_hourly,
         CASE 
             WHEN DATEPART(HOUR, {{ sdts_alias }}) = 0 AND DATEPART(MINUTE, {{ sdts_alias }}) = 0 AND DATEPART(SECOND, {{ sdts_alias }}) = 0 THEN 1 
