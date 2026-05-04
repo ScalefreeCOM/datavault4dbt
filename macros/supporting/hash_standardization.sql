@@ -1270,14 +1270,14 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUOTE]', '\
         {%- set multi_active_key = multi_active_key|join(", ") -%}
     {%- endif -%}
 
-    {%- set standardise_prefix = "COALESCE(LOWER(TO_HEX(" ~ hash_alg ~ "(TO_UTF8(ARRAY_JOIN(ARRAY_AGG(" ~ hdiff_prefix ~ "NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(" -%}
+    {%- set standardise_prefix = "COALESCE(LOWER(TO_HEX(" ~ hash_alg ~ "(TO_UTF8(LISTAGG(" ~ hdiff_prefix ~ "NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(" -%}
 
     {%- if not case_sensitive -%}
         {%- set standardise_prefix = standardise_prefix ~ "UPPER(CONCAT(" -%}
-        {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]') " ~ hdiff_suffix ~ " ORDER BY " ~ multi_active_key ~ "), ',')))))" ~ ", CAST(" ~ zero_key ~ " AS VARCHAR))" -%}
+        {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]') " ~ hdiff_suffix ~ ", ',') WITHIN GROUP (ORDER BY " ~ multi_active_key ~ ")))))" ~ ", CAST(" ~ zero_key ~ " AS VARCHAR))" -%}
     {%- else -%}
         {%- set standardise_prefix = standardise_prefix ~ "CONCAT(" -%}
-        {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]') " ~ hdiff_suffix ~ " ORDER BY " ~ multi_active_key ~ "), ',')))))" ~ ", CAST(" ~ zero_key ~ " AS VARCHAR))" -%}
+        {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]') " ~ hdiff_suffix ~ ", ',') WITHIN GROUP (ORDER BY " ~ multi_active_key ~ ")))))" ~ ", CAST(" ~ zero_key ~ " AS VARCHAR))" -%}
     {%- endif -%}
 
     {%- if alias is not none -%}
