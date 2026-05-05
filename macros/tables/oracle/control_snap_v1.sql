@@ -22,7 +22,7 @@ Note: Oracle does not support INTERVAL 'WEEK'. Use 'DAY' with duration * 7 inste
 #}
 
 {%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
-{%- set ns = namespace(forever_status_dict={}, log_logic_list=[], col_name='', log_logic={}, or_required=False) %}
+{%- set ns = namespace(log_logic_list=[], col_name='', log_logic={}, or_required=False) %}
 
 {%- if log_logic is not none %}
 
@@ -35,13 +35,11 @@ Note: Oracle does not support INTERVAL 'WEEK'. Use 'DAY' with duration * 7 inste
         {%- endfor -%}
 
         {%- do ns.log_logic_list.append({snapshot_trigger_column: log_logic}) -%}
-        {%- do ns.forever_status_dict.update({snapshot_trigger_column: 'FALSE'}) -%}
 
     {%- elif datavault4dbt.is_list(log_logic) -%}
 
         {%- for logic in log_logic -%}
 
-            {{ log('logic: ' ~ logic, false) }}
             {% for col_name, log_logic in logic.items() -%}
                 {%- set ns.col_name = col_name -%}
                 {%- set ns.log_logic = log_logic %}
@@ -54,7 +52,6 @@ Note: Oracle does not support INTERVAL 'WEEK'. Use 'DAY' with duration * 7 inste
             {%- endfor -%}
 
             {%- do ns.log_logic_list.append({ns.col_name: ns.log_logic}) -%}
-            {%- do ns.forever_status_dict.update({ns.col_name: 'FALSE'}) -%}
 
         {%- endfor -%}
 
@@ -104,7 +101,6 @@ virtual_logic AS (
                     {% if 'daily' in log_logic.keys() %}
                         {% set ns.or_required = True %}
                         {%- if log_logic['daily']['forever'] is true -%}
-                            {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
                         (1=1)
                         {%- else %}
                             {%- set daily_duration = log_logic['daily']['duration'] -%}
@@ -113,14 +109,13 @@ virtual_logic AS (
                                 {%- set daily_duration = daily_duration * 7 -%}
                                 {%- set daily_unit = 'DAY' -%}
                             {%- endif %}
-                        TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ daily_duration }}' {{ daily_unit }} + INTERVAL '1' DAY AND CURRENT_DATE
+                        TRUNC(c.{{ sdts_alias }},'DD') BETWEEN CURRENT_DATE - INTERVAL '{{ daily_duration }}' {{ daily_unit }} AND CURRENT_DATE
                         {%- endif -%}
                     {%- endif %}
 
                     {%- if 'weekly' in log_logic.keys() %} {{ 'OR' if ns.or_required is true }}
                         {% set ns.or_required = True %}
                         {%- if log_logic['weekly']['forever'] is true -%}
-                            {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
                     (c.is_beginning_of_week = 1)
                         {%- else %}
                             {%- set weekly_duration = log_logic['weekly']['duration'] -%}
@@ -129,14 +124,13 @@ virtual_logic AS (
                                 {%- set weekly_duration = weekly_duration * 7 -%}
                                 {%- set weekly_unit = 'DAY' -%}
                             {%- endif %}
-                    ((TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ weekly_duration }}' {{ weekly_unit }} AND CURRENT_DATE) AND (c.is_beginning_of_week = 1))
+                    ((TRUNC(c.{{ sdts_alias }},'DD') BETWEEN CURRENT_DATE - INTERVAL '{{ weekly_duration }}' {{ weekly_unit }} AND CURRENT_DATE) AND (c.is_beginning_of_week = 1))
                         {%- endif -%}
                     {% endif -%}
 
                     {%- if 'monthly' in log_logic.keys() %} {{ 'OR' if ns.or_required is true }}
                         {% set ns.or_required = True %}
                         {%- if log_logic['monthly']['forever'] is true -%}
-                            {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
                     (c.is_beginning_of_month = 1)
                         {%- else %}
                             {%- set monthly_duration = log_logic['monthly']['duration'] -%}
@@ -145,14 +139,13 @@ virtual_logic AS (
                                 {%- set monthly_duration = monthly_duration * 7 -%}
                                 {%- set monthly_unit = 'DAY' -%}
                             {%- endif %}
-                    ((TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ monthly_duration }}' {{ monthly_unit }} AND CURRENT_DATE) AND (c.is_beginning_of_month = 1))
+                    ((TRUNC(c.{{ sdts_alias }},'DD') BETWEEN CURRENT_DATE - INTERVAL '{{ monthly_duration }}' {{ monthly_unit }} AND CURRENT_DATE) AND (c.is_beginning_of_month = 1))
                         {%- endif -%}
                     {% endif -%}
 
                     {%- if 'yearly' in log_logic.keys() %} {{ 'OR' if ns.or_required is true }}
                         {% set ns.or_required = True %}
                         {%- if log_logic['yearly']['forever'] is true -%}
-                            {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
                     (c.is_beginning_of_year = 1)
                         {%- else %}
                             {%- set yearly_duration = log_logic['yearly']['duration'] -%}
@@ -161,7 +154,7 @@ virtual_logic AS (
                                 {%- set yearly_duration = yearly_duration * 7 -%}
                                 {%- set yearly_unit = 'DAY' -%}
                             {%- endif %}
-                    ((TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN CURRENT_DATE - INTERVAL '{{ yearly_duration }}' {{ yearly_unit }} AND CURRENT_DATE) AND (c.is_beginning_of_year = 1))
+                    ((TRUNC(c.{{ sdts_alias }},'DD') BETWEEN CURRENT_DATE - INTERVAL '{{ yearly_duration }}' {{ yearly_unit }} AND CURRENT_DATE) AND (c.is_beginning_of_year = 1))
                         {%- endif -%}
                     {% endif %}
                     THEN 1
@@ -195,11 +188,11 @@ virtual_logic AS (
             ELSE 0
         END AS is_last_year,
         CASE
-            WHEN TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN (CURRENT_DATE - INTERVAL '1' YEAR) AND CURRENT_DATE THEN 1
+            WHEN TRUNC(c.{{ sdts_alias }},'DD') BETWEEN (CURRENT_DATE - INTERVAL '1' YEAR) AND CURRENT_DATE THEN 1
             ELSE 0
         END AS is_rolling_year,
         CASE
-            WHEN TRUNC(c.{{ sdts_alias }},'DAY') BETWEEN (CURRENT_DATE - INTERVAL '2' YEAR) AND (CURRENT_DATE - INTERVAL '1' YEAR) THEN 1
+            WHEN TRUNC(c.{{ sdts_alias }},'DD') BETWEEN (CURRENT_DATE - INTERVAL '2' YEAR) AND (CURRENT_DATE - INTERVAL '1' YEAR) THEN 1
             ELSE 0
         END AS is_last_rolling_year,
         c.comment_text
@@ -217,12 +210,15 @@ active_logic_combined AS (
         {%- if log_logic is none %}
             CASE
                 WHEN force_active = 1 AND {{ snapshot_trigger_column }} = 1 THEN 1
-                WHEN force_active = 1  OR {{ snapshot_trigger_column }} = 0 THEN 0
+                ELSE 0
             END AS {{ snapshot_trigger_column }},
         {%- else %}
             {%- for logic in ns.log_logic_list %}
                 {% for col_name, log_logic in logic.items() -%}
-                    {{ col_name }},
+            CASE
+                WHEN force_active = 1 AND {{ col_name }} = 1 THEN 1
+                ELSE 0
+            END AS {{ col_name }},
                 {%- endfor -%}
             {% endfor %}
         {%- endif %}
