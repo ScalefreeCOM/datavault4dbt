@@ -7,10 +7,13 @@
 
 {%- set source_relation = ref(ref_sat_v0) -%}
 
+{%- set has_hashdiff = hashdiff is not none and hashdiff != '' -%}
+
 {%- set ref_keys = datavault4dbt.expand_column_list(columns=[ref_keys]) -%}
 
 {%- set all_columns = datavault4dbt.source_columns(source_relation=source_relation) -%}
-{%- set exclude = ref_keys + [hashdiff, src_ldts, src_rsrc] -%}
+{%- set exclude = ref_keys + [src_ldts, src_rsrc] -%}
+{%- if has_hashdiff %}{%- do exclude.append(hashdiff) -%}{%- endif %}
 
 {%- set source_columns_to_select = datavault4dbt.process_columns_to_select(all_columns, exclude) -%}
 
@@ -23,7 +26,9 @@ end_dated_source AS (
 
     SELECT
         {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(ref_keys)) }},
+        {%- if has_hashdiff %}
         {{ hashdiff }},
+        {%- endif %}
         {{ src_rsrc }},
         {{ src_ldts }},
         COALESCE(LEAD({{ src_ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(ref_keys)) }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }},
@@ -34,7 +39,9 @@ end_dated_source AS (
 
 SELECT
     {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(ref_keys)) }},
+    {%- if has_hashdiff %}
     {{ hashdiff }},
+    {%- endif %}
     {{ src_rsrc }},
     {{ src_ldts }},
     {{ ledts_alias }},
