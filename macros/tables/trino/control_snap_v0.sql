@@ -1,9 +1,9 @@
 {%- macro trino__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
 {% if datavault4dbt.is_nothing(end_date) %}
-  {% set end_date = 'CAST(CURRENT_TIMESTAMP AS TIMESTAMP(6))' %}
+  {% set end_date = 'CAST(CURRENT_TIMESTAMP AS ' ~ datavault4dbt.timestamp_default_dtype() ~ ')' %}
 {% else %}
-    {% set end_date = "CAST('" ~ end_date ~ "' AS TIMESTAMP(6)) + INTERVAL '1' DAY" %}
+    {% set end_date = "CAST('" ~ end_date ~ "' AS " ~ datavault4dbt.timestamp_default_dtype() ~ ") + INTERVAL '1' DAY" %}
 {% endif %}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
@@ -21,7 +21,7 @@ initial_timestamps AS (
     SELECT
         sdts
     FROM
-        UNNEST(SEQUENCE(CAST('{{ start_date }} {{ daily_snapshot_time }}' AS TIMESTAMP(6)), {{ end_date }}, INTERVAL '1' DAY)) AS t(sdts)
+        UNNEST(SEQUENCE(CAST('{{ start_date }} {{ daily_snapshot_time }}' AS {{ datavault4dbt.timestamp_default_dtype() }}), {{ end_date }}, INTERVAL '1' DAY)) AS t(sdts)
     {%- if is_incremental() %}
     WHERE
         sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})

@@ -40,5 +40,5 @@
 {%- endmacro -%}
 
 {%- macro trino__string_to_timestamp(format, timestamp) -%}
-    CAST(date_parse('{{ timestamp }}', '{{ format }}') AS TIMESTAMP(6))
+    CAST(date_parse('{{ timestamp }}', '{{ format }}') AS {{ datavault4dbt.timestamp_default_dtype() }})
 {%- endmacro -%}
