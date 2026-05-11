@@ -87,7 +87,7 @@
 {%- set datatype = datatype | string | upper | trim -%}
 
 {%- if ghost_record_type == 'unknown' -%}
-        {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} as {{ alias }}
+        {%- if 'TIMESTAMP' in datatype %} {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE' %} CAST('{{ beginning_of_all_times_date }}' AS DATE) as {{ alias }}
         {%- elif datatype in ['VARCHAR', 'STRING', 'TEXT'] %} '{{ unknown_value__STRING }}' as {{ alias }}
         {%- elif datatype in ['INTEGER', 'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'DOUBLE', 'FLOAT', 'REAL', 'DECIMAL'] %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
@@ -95,7 +95,7 @@
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
-        {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} as {{ alias }}
+        {%- if 'TIMESTAMP' in datatype %} {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE' %} CAST('{{ end_of_all_times_date }}' AS DATE) as {{ alias }}
         {%- elif datatype in ['VARCHAR', 'STRING', 'TEXT'] %} '{{ error_value__STRING }}' as {{ alias }}
         {%- elif datatype in ['INTEGER', 'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'DOUBLE', 'FLOAT', 'REAL', 'DECIMAL'] %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}

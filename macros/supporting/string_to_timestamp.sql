@@ -40,5 +40,5 @@
 {%- endmacro -%}
 
 {%- macro trino__string_to_timestamp(format, timestamp) -%}
-    date_parse('{{ timestamp }}', '{{ format }}')
+    CAST(date_parse('{{ timestamp }}', '{{ format }}') AS TIMESTAMP(6))
 {%- endmacro -%}

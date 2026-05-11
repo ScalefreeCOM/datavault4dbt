@@ -242,13 +242,13 @@
         {%- if execute -%}
             {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.timestamp_default_dtype' to a dictionary, but have not included the adapter you use (trino) as a key. Applying the default value.") -%}
         {% endif %}
-        {%- set timestamp_default_dtype = "TIMESTAMP" -%}
+        {%- set timestamp_default_dtype = "TIMESTAMP(6)" -%}
     {%- endif -%}
 {%- else -%}
     {%- if global_var is not none -%}
         {%- set timestamp_default_dtype = global_var -%}
     {%- else -%}
-        {%- set timestamp_default_dtype = "TIMESTAMP" -%}
+        {%- set timestamp_default_dtype = "TIMESTAMP(6)" -%}
     {%- endif -%}
 {%- endif -%}
 

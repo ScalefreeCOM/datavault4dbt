@@ -53,7 +53,7 @@ vars:
   datavault4dbt.default_error_rsrc: 'ERROR'
   
   datavault4dbt.rsrc_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING", trino: "VARCHAR"}
-  datavault4dbt.timestamp_default_dtype: {"bigquery":"TIMESTAMP","snowflake":"TIMESTAMP_TZ", "exasol": "TIMESTAMP(3) WITH LOCAL TIME ZONE", "postgres": "TIMESTAMPTZ", "redshift": "TIMESTAMPTZ", "synapse": "datetimeoffset", "fabric": "datetime2(6)", "oracle":"TIMESTAMP WITH TIME ZONE", databricks: "TIMESTAMP", trino: "TIMESTAMP"}
+  datavault4dbt.timestamp_default_dtype: {"bigquery":"TIMESTAMP","snowflake":"TIMESTAMP_TZ", "exasol": "TIMESTAMP(3) WITH LOCAL TIME ZONE", "postgres": "TIMESTAMPTZ", "redshift": "TIMESTAMPTZ", "synapse": "datetimeoffset", "fabric": "datetime2(6)", "oracle":"TIMESTAMP WITH TIME ZONE", databricks: "TIMESTAMP", trino: "TIMESTAMP(6)"}
   datavault4dbt.stg_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING", trino: "VARCHAR"}
   datavault4dbt.derived_columns_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING", trino: "VARCHAR"}
 
