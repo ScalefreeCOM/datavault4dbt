@@ -24,17 +24,23 @@
                                         This depends on your desired daily_snapshot_time, but is not used by the downstream macros, and
                                         just generates additional metadata for potential future use.
 
-        is_weekly::boolean              Captures if the day of the week of a sdts is Monday.
+        is_beginning_of_week::boolean   Captures if a sdts is the first day of the week, configurable via the `datavault4dbt.first_day_of_week` variable.
 
-        is_monthly::boolean             Captures if a sdts is the first day of a month.
+        is_end_of_week::boolean         Captures if a sdts is the last day of the week, derived from `datavault4dbt.first_day_of_week`.
 
-        is_yearly::boolean              Captures if a sdts is the first day of a year.
+        is_beginning_of_month::boolean  Captures if a sdts is the first day of a month.
+
+        is_end_of_month::boolean        Captures if a sdts is the last day of a month.
+
+        is_beginning_of_quarter::boolean Captures if a sdts is the first day of a quarter.
+
+        is_end_of_quarter::boolean      Captures if a sdts is the last day of a quarter.
+
+        is_beginning_of_year::boolean   Captures if a sdts is the first day of a year.
+
+        is_end_of_year::boolean         Captures if a sdts is the last day of a year.
 
         comment::string                 Allows users to write custom comments for each sdts. By default this column is set to NULL.
-        
-        force_active::boolean           Allows users to deactivate single snapshots. Deactivating a snapshot here overwrites any logarithmic
-                                        logic that is applied in the version 1 snapshot table on top of this one. This column is automatically
-                                        set to TRUE.
 
         force_active::boolean           Allows users to deactivate single snapshots. Deactivating a snapshot here overwrites any logarithmic
                                         logic that is applied in the version 1 snapshot table on top of this one. This column is automatically

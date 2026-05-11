@@ -1,7 +1,7 @@
 {%- macro oracle__control_snap_v0(start_date, daily_snapshot_time, sdts_alias, end_date=none) -%}
 
 {% if datavault4dbt.is_nothing(end_date) %}
-    {% set end_date = 'current_date' %}
+    {% set end_date = 'TRUNC(current_date)' %}
 {% else %}
     {% set end_date = "TO_DATE('"~end_date~"', '"~datavault4dbt.date_format()~"')" %}
 {% endif %}
@@ -11,6 +11,8 @@
 {%- if not datavault4dbt.is_something(sdts_alias) -%}
     {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
 {%- endif -%}
+
+{%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
 
 with generate_dates({{ sdts_alias }}) as (
 	Select {{ datavault4dbt.string_to_timestamp(timestamp_format, timestamp_value) }} as {{ sdts_alias }}
@@ -49,18 +51,38 @@ enriched_timestamps AS (
             WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 AND EXTRACT(HOUR FROM sdts) = 0 THEN 1
             ELSE 0
         END as is_daily,
-        CASE
-            WHEN TRUNC(sdts) - TRUNC(sdts, 'IW') + 1 = 1 THEN 1
-            ELSE 0
-        END AS is_weekly,
+        CASE 
+            WHEN MOD(TRUNC(sdts) - TRUNC(sdts, 'IW') + 1, 7) + 1 = {{ first_day_of_week_var }} THEN 1
+            ELSE 0 
+        END AS is_beginning_of_week,
+        CASE 
+            WHEN MOD(TRUNC(sdts) - TRUNC(sdts, 'IW') + 1, 7) + 1 = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN 1
+            ELSE 0 
+        END AS is_end_of_week,
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 THEN 1
             ELSE 0
-        END AS is_monthly,
+        END AS is_beginning_of_month,
+        CASE 
+            WHEN sdts = LAST_DAY(sdts) THEN 1 
+            ELSE 0 
+        END AS is_end_of_month,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) IN (1, 4, 7, 10) AND EXTRACT(DAY FROM sdts) = 1 THEN 1 
+            ELSE 0 
+        END AS is_beginning_of_quarter,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) IN (3, 6, 9, 12) AND sdts = LAST_DAY(sdts) THEN 1 
+            ELSE 0 
+        END AS is_end_of_quarter, 
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN 1
             ELSE 0
-        END AS is_yearly,
+        END AS is_beginning_of_year,
+        CASE 
+            WHEN EXTRACT(MONTH FROM sdts) = 12 AND EXTRACT(DAY FROM sdts) = 31 THEN 1 
+            ELSE 0 
+        END AS is_end_of_year,
         CAST(NULL as VARCHAR2(40)) comment_text
     FROM initial_timestamps
 

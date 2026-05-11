@@ -12,10 +12,12 @@
     {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
 {%- endif -%}
 
+{%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
+
 WITH 
 
 date_array as(
-    select sequence(to_timestamp('{{ start_date }} {{ daily_snapshot_time }}'), to_timestamp(to_date({{ end_date }})+1), interval 1 day) AS sdts
+    select sequence(to_timestamp('{{ start_date }} {{ daily_snapshot_time }}'), to_timestamp(to_date({{ end_date }})+1) - interval 1 microsecond, interval 1 day) AS sdts
 ),
 
 cte as(
@@ -24,12 +26,12 @@ cte as(
 ),
 
 initial_timestamps AS (
-    
+
     SELECT *
-    FROM 
+    FROM
         cte
-    WHERE 
-        sdts <= to_date({{ end_date }})+1
+    WHERE
+        sdts < to_date({{ end_date }})+1
     {%- if is_incremental() %}
     AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}
@@ -52,13 +54,17 @@ enriched_timestamps AS (
             ELSE FALSE
         END as is_daily,
         CASE
-            WHEN EXTRACT(DAYOFWEEK FROM  sdts) = 2 THEN TRUE
+            WHEN EXTRACT(DAYOFWEEK_ISO FROM sdts) = {{ first_day_of_week_var }} THEN TRUE
             ELSE FALSE
-        END as is_weekly,
+        END as is_beginning_of_week,
+        CASE
+            WHEN EXTRACT(DAYOFWEEK_ISO FROM sdts) = {{ ((first_day_of_week_var + 5) % 7) + 1 }} THEN TRUE
+            ELSE FALSE
+        END as is_end_of_week,
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 THEN TRUE
             ELSE FALSE
-        END as is_monthly,
+        END as is_beginning_of_month,
         CASE 
             WHEN LAST_DAY(DATE(sdts)) = DATE(sdts) THEN TRUE
             ELSE FALSE
@@ -66,16 +72,20 @@ enriched_timestamps AS (
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH from sdts) IN (1,4,7,10) THEN TRUE
             ELSE FALSE
-        END AS is_quarterly,
+        END AS is_beginning_of_quarter,
+        CASE 
+            WHEN MONTH(sdts) IN (3, 6, 9, 12) AND DAY(sdts) = DAY(LAST_DAY(sdts)) THEN TRUE 
+            ELSE FALSE 
+        END AS is_end_of_quarter, 
         CASE
             WHEN EXTRACT(DAY FROM sdts) = 1 AND EXTRACT(MONTH FROM sdts) = 1 THEN TRUE
             ELSE FALSE
-        END as is_yearly,
+        END as is_beginning_of_year,
         CASE
             WHEN LAST_DAY(DATE(sdts)) = DATE(sdts) AND EXTRACT (MONTH FROM sdts) = 12 THEN TRUE
             ELSE FALSE
         END AS is_end_of_year,
-        '' as comment 
+        CAST(NULL AS STRING) as comment
     FROM initial_timestamps
 
 )
