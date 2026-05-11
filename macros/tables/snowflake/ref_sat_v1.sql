@@ -31,8 +31,10 @@ end_dated_source AS (
         {%- endif %}
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD({{ src_ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(ref_keys)) }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }},
-        {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_columns_to_select)) if source_columns_to_select else " *" }}
+        COALESCE(LEAD({{ src_ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(ref_keys)) }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }}
+        {%- if source_columns_to_select -%},
+        {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_columns_to_select)) }}
+        {%- endif %}
     FROM {{ source_relation }}
 
 )
@@ -44,14 +46,16 @@ SELECT
     {%- endif %}
     {{ src_rsrc }},
     {{ src_ldts }},
-    {{ ledts_alias }},
-    {%- if add_is_current_flag %}
+    {{ ledts_alias }}
+    {%- if add_is_current_flag %},
         CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
         THEN TRUE
         ELSE FALSE
-        END AS {{ is_current_col_alias }},
-    {% endif -%}
-    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_columns_to_select)) if source_columns_to_select else " *" }}
+        END AS {{ is_current_col_alias }}
+    {%- endif %}
+    {%- if source_columns_to_select -%},
+    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_columns_to_select)) }}
+    {%- endif %}
 FROM end_dated_source
 
 {%- endmacro -%}

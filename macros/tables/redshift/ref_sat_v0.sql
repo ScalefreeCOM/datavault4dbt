@@ -127,7 +127,7 @@ records_to_insert AS (
             {%- if dedup_column is not none %}
             AND {{ datavault4dbt.multikey(dedup_column, prefix=['latest_entries_in_sat', last_cte], condition='=') }}
             {%- endif %}
-            {%- if payload_count > 0 %}
+            {%- if has_hashdiff and payload_count > 0 %}
             AND {{ last_cte }}.rn = 1
             {%- endif %})
     {%- endif %}

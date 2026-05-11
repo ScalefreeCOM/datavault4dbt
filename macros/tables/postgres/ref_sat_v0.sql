@@ -67,6 +67,8 @@ latest_entries_in_sat_prep AS (
         {% endfor %}
         {%- if has_hashdiff %}
         {{ ns.hdiff_alias }},
+        {%- elif dedup_column is not none %}
+        {{ dedup_column }},
         {%- endif %}
         ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key|lower}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) as rn
     FROM
