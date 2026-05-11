@@ -28,12 +28,12 @@ In all those cases, we teach to treat those attributes just as regular descripti
 
 What we also recommend, is to split all those effectivity attributes into a separate satellite for auditing purposes. Therefore your satellite version 0 model would only have all the effectivity attributes as a payload.
 
-Any business logic that uses those effectivity ranges would be applied on top of these satellites and is out of datavault4dbt’s scope.
+Any business logic that uses those effectivity ranges would be applied on top of these satellites and is out of datavault4dbt's scope.
 
 For further information regarding this topic, also called multi-temporality, see these Scalefree Blog Articles:
 
-- Multi-Temporality in Data Vault 2.0 – Part 1
-- Multi-Temporality in Data Vault 2.0 – Part 2
+- [Multi-Temporality in Data Vault 2.0 – Part 1](https://www.scalefree.com/blog/data-vault/multi-temporality-in-data-vault-2-0-part-1/)
+- [Multi-Temporality in Data Vault 2.0 – Part 2](https://www.scalefree.com/blog/data-vault/multi-temporality-in-data-vault-2-0-part-2-a-practical-example/)
 
 ## USING EFFECTIVITY SATELLITES
 
@@ -41,7 +41,7 @@ If you receive full loads, effectivity satellites can be used to track appearanc
 
 ## USING RECORD TRACKING SATELLITES
 
-In case there is no effectivity data coming from the source and you don’t receive full loads, or even when you do not trust your source system and want to track the appearance of business keys or relations, record tracking satellites are here to help! The purpose of a record tracking satellite is, to track the appearance of a hashkey. That can either be a Hub hashkey, or a Link hashkey, and therefore a record tracking satellite can be attached both to Hubs and Links.
+In case there is no effectivity data coming from the source and you don't receive full loads, or even when you do not trust your source system and want to track the appearance of business keys or relations, record tracking satellites are here to help! The purpose of a record tracking satellite is, to track the appearance of a hashkey. That can either be a Hub hashkey, or a Link hashkey, and therefore a record tracking satellite can be attached both to Hubs and Links.
 
 The record tracking satellite macro requires the name of a stage model, and the name of a hashkey column as an input. So if you want to track the appearance of a relationship, that relationship is most likely modeled as a Link and would therefore have a Link hashkey calculated in a stage model. That means, your record tracking satellite for that link should be based on the same staging model as the link, and the name of the Link hashkey should be tracked.
 
