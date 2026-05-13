@@ -159,11 +159,12 @@ WITH
         {%- endfor %})
         WHERE src.{{ src_ldts }} > max.max_ldts
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined %}
-        WHERE src.{{ src_ldts }} > (
-            SELECT MAX({{ src_ldts }})
-            FROM {{ this }}
-            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-            )
+        WHERE src.{{ src_ldts }} > COALESCE(
+            (SELECT MAX({{ src_ldts }})
+             FROM {{ this }}
+             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}),
+            {{ datavault4dbt.string_to_timestamp(timestamp_format, datavault4dbt.beginning_of_all_times()) }}
+        )
     {%- endif %}
 
          {%- set ns.last_cte = "src_new_{}".format(source_number) %}
