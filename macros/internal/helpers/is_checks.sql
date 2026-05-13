@@ -40,8 +40,12 @@
 
 {%- macro is_expression(obj) -%}
 
+    {%- set sql_keywords = ['current_timestamp', 'current_date', 'current_time', 'localtime', 'localtimestamp'] -%}
+
     {%- if obj is string -%}
         {%- if (obj | first == "'" and obj | last == "'") or ("(" in obj and ")" in obj) or "::" in obj or "||" in obj -%}
+            {%- do return(true) -%}
+        {%- elif (target.type == 'trino' and obj | lower in sql_keywords) -%}
             {%- do return(true) -%}
         {%- else -%}
             {%- do return(false) -%}
