@@ -55,9 +55,11 @@ source_data AS (
         {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() and not disable_hwm %}
-    WHERE {{ src_ldts }} > '{{ max_ldts }}'
-    AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    {%- if is_incremental() %}
+    WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+        {%- if not disable_hwm %}
+        AND {{ src_ldts }} > '{{ max_ldts }}'
+        {%- endif %}
     {%- endif %}
 ),
 
