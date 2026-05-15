@@ -8,10 +8,10 @@ title: Documentation
 
 ---
 
-The following documentation sheds some light on the dbt-macros that have been developed by Scalefree to make your DataVault-Experience more comfortable! The documentation can be found by clicking the links in the sidebar on the right side. In the documentation, the macros and their parameters are explained and further exemplified.
+The following documentation sheds some light on the dbt-macros that have been developed by Scalefree to make your DataVault-experience more comfortable! In the documentation, the macros and their parameters are explained and further exemplified.
 
 ## FUSION COMPATIBILITY 
-Datavault4dbt is fully compatible with the new dbt Fusion engine! For more details, check here.
+Datavault4dbt is fully compatible with the new dbt Fusion engine! For more details, check [here](../../26_general-usage-notes/26_fusion-compatibility/26_fusion-compatibility.md).
 
 ## INCLUDED MACROS 
 - Staging Area (For Hashing, prejoins and ghost records)
