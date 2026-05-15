@@ -434,3 +434,66 @@
     {% endif %}
 
 {% endmacro %}
+
+{% macro trino__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {% if add_columns %}
+
+    {# ADD COLUMN is supported by Trino. #}
+    {% set sql -%}
+        ALTER TABLE {{ relation.render() }} ADD COLUMN
+            {% for column in add_columns %}
+                {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+            {% endfor %}
+    {%- endset -%}
+
+    {{ log('alter sql: ' ~ sql, false)}}
+
+    {% do run_query(sql) %}
+    {% endif %}
+
+    {% if remove_columns %}
+
+    {# Trino memory connector does not support DROP COLUMN.
+       Use CTAS + DROP + RENAME to achieve the equivalent result. #}
+    {% set cols_to_drop = [] %}
+    {% for col in remove_columns %}
+        {% do cols_to_drop.append(col.name.lower()) %}
+    {% endfor %}
+
+    {% set existing_columns = adapter.get_columns_in_relation(relation) %}
+    {% set keep_cols = [] %}
+    {% for col in existing_columns %}
+        {% if col.name.lower() not in cols_to_drop %}
+            {% do keep_cols.append(col.name) %}
+        {% endif %}
+    {% endfor %}
+
+    {% set temp_identifier = relation.identifier ~ '_drop_col_tmp' %}
+    {% set temp_relation = api.Relation.create(
+        database=relation.database,
+        schema=relation.schema,
+        identifier=temp_identifier
+    ) %}
+
+    {# Clean up any orphaned temp table from a previous failed run. #}
+    {% set drop_tmp_sql %}DROP TABLE IF EXISTS {{ temp_relation }}{% endset %}
+    {% do run_query(drop_tmp_sql) %}
+
+    {% set ctas_sql %}
+    CREATE TABLE {{ temp_relation }} AS
+    SELECT {{ keep_cols | join(', ') }}
+    FROM {{ relation }}
+    {% endset %}
+    {{ log('CTAS drop-column sql: ' ~ ctas_sql, false) }}
+    {% do run_query(ctas_sql) %}
+
+    {% set drop_sql %}DROP TABLE {{ relation }}{% endset %}
+    {% do run_query(drop_sql) %}
+
+    {% set rename_sql %}ALTER TABLE {{ temp_relation }} RENAME TO {{ relation.identifier }}{% endset %}
+    {% do run_query(rename_sql) %}
+
+    {% endif %}
+
+{% endmacro %}
