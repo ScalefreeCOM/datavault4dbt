@@ -1,35 +1,40 @@
-{% macro current_timestamp() -%}
+{%- macro current_timestamp() -%}
   {{ return(adapter.dispatch('current_timestamp', 'datavault4dbt')()) }}
-{%- endmacro %}
+{%- endmacro -%}
 
-{% macro default__current_timestamp() %}
+{%- macro default__current_timestamp() -%}
     {{ dbt.current_timestamp() }}
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro synapse__current_timestamp() %}
+{%- macro synapse__current_timestamp() -%}
     sysdatetime()
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro current_timestamp_in_utc() -%}
+{%- macro current_timestamp_in_utc() -%}
   {{ return(adapter.dispatch('current_timestamp_in_utc', 'datavault4dbt')()) }}
-{%- endmacro %}
+{%- endmacro -%}
 
-{% macro default__current_timestamp_in_utc() %}
+{%- macro default__current_timestamp_in_utc() -%}
     {{ dbt.current_timestamp() }}
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro synapse__current_timestamp_in_utc() %}
+{%- macro synapse__current_timestamp_in_utc() -%}
     sysutcdatetime()
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro fabric__current_timestamp() %}
+{%- macro fabric__current_timestamp() -%}
     {{ return('CAST(SYSDATETIME() AS DATETIME2(6))')}}
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro fabric__current_timestamp_in_utc() %}
+{%- macro fabric__current_timestamp_in_utc() -%}
     {{return('sysutcdatetime()')}}
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro databricks__current_timestamp() %}
+{%- macro databricks__current_timestamp() -%}
     {{ return('current_timestamp()') }}
-{% endmacro %}
+{%- endmacro -%}
+
+{%- macro trino__current_timestamp() -%}
+    {#- default is current_timestamp(3), which is incompatible with trino iceberg backend -#}
+    current_timestamp(6)
+{%- endmacro -%}
