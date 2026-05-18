@@ -14,7 +14,7 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "dbt_packages"
 
 
-  
+
 vars:
   #Column Aliases
   datavault4dbt.ldts_alias: 'ldts'

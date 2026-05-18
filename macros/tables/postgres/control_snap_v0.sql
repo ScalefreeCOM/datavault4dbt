@@ -3,7 +3,7 @@
 {% if datavault4dbt.is_nothing(end_date) %}
   {% set end_date = 'CURRENT_TIMESTAMP' %}
 {% else %}
-    {% set end_date = "'"~end_date~"'::timestamp + Interval '1 day'" %}
+    {% set end_date = "'"~end_date~"'::timestamp + Interval '1 day' - Interval '1 microsecond'" %}
 {% endif %}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
