@@ -1,29 +1,71 @@
 {%- macro exasol__control_snap_v1(control_snap_v0, log_logic, sdts_alias) -%}
 
-{# sample log_logic 
-   {%-set log_logic = {'daily': {'duration': 3,
-                                'unit': 'MONTH',
-                                'forever': 'FALSE'},
-                      'weekly': {'duration': 5,
-                                  'unit': 'YEAR'},
-                      'monthly': {'duration': 5,
-                                  'unit': 'YEAR'},
-                      'yearly': {'duration': 10,
-                                'unit': 'YEAR'} } %} 
+{# sample log_logic
+   {%-set log_logic = {'daily': {'duration': 3, 'unit': 'MONTH', 'forever': 'FALSE'},
+                       'weekly': {'duration': 5, 'unit': 'YEAR'},
+                       'monthly': {'duration': 5, 'unit': 'YEAR'},
+                       'yearly': {'duration': 10, 'unit': 'YEAR'} } %}
+
+OR for multiple logics:
+log_logic:
+    - is_active_1:
+        monthly:
+            duration: 1
+            unit: 'YEAR'
+    - is_active_2:
+        weekly:
+            duration: 2
+            unit: 'MONTH'
+
+Note: Due to a missing 'DAY OF WEEK' function in Exasol, 'weekly' granularity
+      is not supported and should be left out of the log_logic definition.
 #}
 
+{%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
+{%- set ns = namespace(forever_status_dict={}, log_logic_list=[], col_name='', log_logic={}, or_required=False) %}
+
 {%- if log_logic is not none %}
-    {%- for interval in log_logic.keys() %}
-        {%- if 'forever' not in log_logic[interval].keys() -%}
-            {% do log_logic[interval].update({'forever': 'FALSE'}) %}
-        {%- endif -%}
-    {%- endfor -%}
+
+    {%- if log_logic is mapping -%}
+
+        {%- for interval in log_logic.keys() %}
+            {%- if 'forever' not in log_logic[interval].keys() -%}
+                {% do log_logic[interval].update({'forever': 'FALSE'}) %}
+            {%- endif -%}
+        {%- endfor -%}
+
+        {%- do ns.log_logic_list.append({snapshot_trigger_column: log_logic}) -%}
+        {%- do ns.forever_status_dict.update({snapshot_trigger_column: 'FALSE'}) -%}
+
+    {%- elif datavault4dbt.is_list(log_logic) -%}
+
+        {%- for logic in log_logic -%}
+
+            {{ log('logic: ' ~ logic, false) }}
+            {% for col_name, log_logic in logic.items() -%}
+                {%- set ns.col_name = col_name -%}
+                {%- set ns.log_logic = log_logic %}
+            {%- endfor -%}
+
+            {%- for interval in ns.log_logic.keys() %}
+                {%- if 'forever' not in ns.log_logic[interval].keys() -%}
+                    {% do ns.log_logic[interval].update({'forever': 'FALSE'}) %}
+                {%- endif -%}
+            {%- endfor -%}
+
+            {%- do ns.log_logic_list.append({ns.col_name: ns.log_logic}) -%}
+            {%- do ns.forever_status_dict.update({ns.col_name: 'FALSE'}) -%}
+
+        {%- endfor -%}
+
+    {%- else -%}
+
+        {{ exceptions.raise_compiler_error("Invalid format of log_logic definition in Snapshot Control v1. Either one Dictionary with the config, or a list of dictionaries with the name of the output col as a key, and the log config as each value.")}}
+
+    {%- endif -%}
 {%- endif %}
 
 {%- set v0_relation = ref(control_snap_v0) -%}
-{%- set ns = namespace(forever_status=FALSE) %}
-
-{%- set snapshot_trigger_column = var('datavault4dbt.snapshot_trigger_column', 'is_active') -%}
 
 WITH
 
@@ -46,67 +88,72 @@ virtual_logic AS (
         {%- if log_logic is none %}
         TRUE as {{ snapshot_trigger_column }},
         {%- else %}
-        CASE 
-            WHEN
-            {% if 'daily' in log_logic.keys() %}
-                {%- if log_logic['daily']['forever'] is true -%}
-                    {%- set ns.forever_status = 'TRUE' -%}
-                    (1=1)
-                {%- else %}
-                    {%- set daily_duration = log_logic['daily']['duration'] -%}
-                    {%- set daily_unit = log_logic['daily']['unit'] -%}
-                  (DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ daily_unit}}S(CURRENT_DATE, -{{ daily_duration }}) AND CURRENT_DATE)
-                {%- endif -%}   
-            {%- endif %}
+            {% for logic in ns.log_logic_list -%}
 
-            {%- if 'weekly' in log_logic.keys() %}
-            OR
-                {%- if log_logic['weekly']['forever'] is true -%}
-                    {%- set ns.forever_status = 'TRUE' -%}
+                {% set ns.or_required = False %}
+
+                {% for col_name, log_logic in logic.items() -%}
+                    {%- set ns.col_name = col_name -%}
+                    {%- set ns.log_logic = log_logic %}
+                {%- endfor -%}
+                {%- set col_name = ns.col_name -%}
+                {%- set log_logic = ns.log_logic -%}
+
+                CASE
+                    WHEN
+                    {% if 'daily' in log_logic.keys() %}
+                        {% set ns.or_required = True %}
+                        {%- if log_logic['daily']['forever'] is true -%}
+                            {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
+                        (1=1)
+                        {%- else %}
+                            {%- set daily_duration = log_logic['daily']['duration'] -%}
+                            {%- set daily_unit = log_logic['daily']['unit'] -%}
+                        (DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_DAYS(ADD_{{ daily_unit }}S(CURRENT_DATE, -{{ daily_duration }}), 1) AND CURRENT_DATE)
+                        {%- endif -%}
+                    {%- endif %}
+
+                    {%- if 'weekly' in log_logic.keys() %} {{ 'OR' if ns.or_required is true }}
+                        {% set ns.or_required = True %}
+                        {%- if log_logic['weekly']['forever'] is true -%}
+                            {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
                     (c.is_beginning_of_week = TRUE)
-                {%- else %}
-                    {%- set weekly_duration = log_logic['weekly']['duration'] -%}
-                    {%- set weekly_unit = log_logic['weekly']['unit'] -%}
-                    ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ weekly_unit}}S(CURRENT_DATE, -{{ weekly_duration }}) AND CURRENT_DATE)
-                    AND
-                    (c.is_beginning_of_week = TRUE))
-                {%- endif -%}
-            {% endif -%}
+                        {%- else %}
+                            {%- set weekly_duration = log_logic['weekly']['duration'] -%}
+                            {%- set weekly_unit = log_logic['weekly']['unit'] %}
+                    ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ weekly_unit }}S(CURRENT_DATE, -{{ weekly_duration }}) AND CURRENT_DATE) AND (c.is_beginning_of_week = TRUE))
+                        {%- endif -%}
+                    {% endif -%}
 
-            {%- if 'monthly' in log_logic.keys() %}
-            OR
-                {%- if log_logic['monthly']['forever'] is true -%}
-                    {%- set ns.forever_status = 'TRUE' %}
-              (c.is_beginning_of_month = TRUE)
-                {%- else %}
-                    {%- set monthly_duration = log_logic['monthly']['duration'] -%}
-                    {%- set monthly_unit = log_logic['monthly']['unit'] %}
+                    {%- if 'monthly' in log_logic.keys() %} {{ 'OR' if ns.or_required is true }}
+                        {% set ns.or_required = True %}
+                        {%- if log_logic['monthly']['forever'] is true -%}
+                            {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
+                    (c.is_beginning_of_month = TRUE)
+                        {%- else %}
+                            {%- set monthly_duration = log_logic['monthly']['duration'] -%}
+                            {%- set monthly_unit = log_logic['monthly']['unit'] %}
+                    ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ monthly_unit }}S(CURRENT_DATE, -{{ monthly_duration }}) AND CURRENT_DATE) AND (c.is_beginning_of_month = TRUE))
+                        {%- endif -%}
+                    {% endif -%}
 
-                    ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ monthly_unit }}S(CURRENT_DATE, -{{ monthly_duration }}) AND CURRENT_DATE) 
-                    AND 
-                    (c.is_beginning_of_month = TRUE))
-                {%- endif -%}
-            {% endif -%}
-
-            {%- if 'yearly' in log_logic.keys() %}
-            OR
-                {%- if log_logic['yearly']['forever'] is true -%}
-                    {%- set ns.forever_status = 'TRUE' -%}
+                    {%- if 'yearly' in log_logic.keys() %} {{ 'OR' if ns.or_required is true }}
+                        {% set ns.or_required = True %}
+                        {%- if log_logic['yearly']['forever'] is true -%}
+                            {%- do ns.forever_status_dict.update({col_name: 'TRUE'}) -%}
                     (c.is_beginning_of_year = TRUE)
-                {%- else %}
-                    {%- set yearly_duration = log_logic['yearly']['duration'] -%}
-                    {%- set yearly_unit = log_logic['yearly']['unit'] %}
-
-                    ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ yearly_unit }}S(CURRENT_DATE, - {{ yearly_duration }}) AND CURRENT_DATE) 
-                    AND 
-                    (c.is_beginning_of_year = TRUE))
-                {%- endif -%}
-            {% endif %}
-            THEN TRUE
-            ELSE FALSE
-
-        END AS {{ snapshot_trigger_column }},
+                        {%- else %}
+                            {%- set yearly_duration = log_logic['yearly']['duration'] -%}
+                            {%- set yearly_unit = log_logic['yearly']['unit'] %}
+                    ((DATE_TRUNC('DAY', TO_DATE(c.{{ sdts_alias }})) BETWEEN ADD_{{ yearly_unit }}S(CURRENT_DATE, -{{ yearly_duration }}) AND CURRENT_DATE) AND (c.is_beginning_of_year = TRUE))
+                        {%- endif -%}
+                    {% endif %}
+                    THEN TRUE
+                    ELSE FALSE
+                END AS {{ col_name }},
+            {% endfor %}
         {%- endif %}
+
         CASE
             WHEN l.{{ sdts_alias }} IS NULL THEN FALSE
             ELSE TRUE
@@ -148,14 +195,22 @@ virtual_logic AS (
 
 active_logic_combined AS (
 
-    SELECT 
+    SELECT
         {{ sdts_alias }},
         replacement_sdts,
-        CASE
-            WHEN force_active AND {{ snapshot_trigger_column }} THEN TRUE
-            WHEN NOT force_active OR NOT {{ snapshot_trigger_column }} THEN FALSE
-        END AS {{ snapshot_trigger_column }},
-        is_latest, 
+        {%- if log_logic is none %}
+            CASE
+                WHEN force_active AND {{ snapshot_trigger_column }} THEN TRUE
+                WHEN NOT force_active OR NOT {{ snapshot_trigger_column }} THEN FALSE
+            END AS {{ snapshot_trigger_column }},
+        {%- else %}
+            {%- for logic in ns.log_logic_list %}
+                {% for col_name, log_logic in logic.items() -%}
+                    {{ col_name }},
+                {%- endfor -%}
+            {% endfor %}
+        {%- endif %}
+        is_latest,
         caption,
         is_hourly,
         is_daily,

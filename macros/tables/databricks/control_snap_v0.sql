@@ -17,7 +17,7 @@
 WITH 
 
 date_array as(
-    select sequence(to_timestamp('{{ start_date }} {{ daily_snapshot_time }}'), to_timestamp(to_date({{ end_date }})+1), interval 1 day) AS sdts
+    select sequence(to_timestamp('{{ start_date }} {{ daily_snapshot_time }}'), to_timestamp(to_date({{ end_date }})+1) - interval 1 microsecond, interval 1 day) AS sdts
 ),
 
 cte as(
@@ -26,12 +26,12 @@ cte as(
 ),
 
 initial_timestamps AS (
-    
+
     SELECT *
-    FROM 
+    FROM
         cte
-    WHERE 
-        sdts <= to_date({{ end_date }})+1
+    WHERE
+        sdts < to_date({{ end_date }})+1
     {%- if is_incremental() %}
     AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}
@@ -85,7 +85,7 @@ enriched_timestamps AS (
             WHEN LAST_DAY(DATE(sdts)) = DATE(sdts) AND EXTRACT (MONTH FROM sdts) = 12 THEN TRUE
             ELSE FALSE
         END AS is_end_of_year,
-        '' as comment 
+        CAST(NULL AS STRING) as comment
     FROM initial_timestamps
 
 )
