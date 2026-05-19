@@ -40,7 +40,7 @@ WITH
     SELECT 
       snap.{{ sdts }} 
     {%- for satellite in sat_names %}
-      , MAX(pit.{{ ldts }}_{{ satellite }}) max_{{ ldts }}_{{ satellite }}
+      , MAX(pit.{{ ldts }}_{{ satellite.name }}) max_{{ ldts }}_{{ satellite.name }}
     {%- endfor %}
     FROM snapshot_dates snap
     LEFT JOIN
@@ -53,7 +53,7 @@ WITH
     SELECT 
       {{ sdts }}
       {%- for satellite in sat_names %}
-        , COALESCE(max_{{ ldts }}_{{ satellite }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) as max_{{ ldts }}_{{ satellite }}
+        , COALESCE(max_{{ ldts }}_{{ satellite.name }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) as max_{{ ldts }}_{{ satellite.name }}
       {%- endfor %}
       {% if datavault4dbt.is_something(snapshot_trigger_column) %}
         , true as {{ snapshot_trigger_column }},
@@ -62,9 +62,9 @@ WITH
     WHERE
     {%- for satellite in sat_names %}
       --new snapshot
-      max_{{ ldts }}_{{ satellite }} IS NULL OR
+      max_{{ ldts }}_{{ satellite.name }} IS NULL OR
       --existing snapshot with max ldts of one sat -> might need to be updated
-      max_{{ ldts }}_{{ satellite }} = (SELECT MAX(max_{{ ldts }}_{{ satellite }}) FROM sdts_max_ldts)
+      max_{{ ldts }}_{{ satellite.name }} = (SELECT MAX(max_{{ ldts }}_{{ satellite.name }}) FROM sdts_max_ldts)
       {{ 'OR' if not loop.last }}
     {%- endfor %}
   ),
@@ -98,11 +98,11 @@ pit_records AS (
         snap.{{ sdts }},
         {%- for satellite in sat_names %}
           {% if refer_to_ghost_records %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite }},
-            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
+            COALESCE({{ satellite.name }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite.name }},
+            COALESCE({{ satellite.name }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite.name }}
           {% else %}
-            {{ satellite }}.{{ hashkey }} AS hk_{{ satellite }},
-            {{ satellite }}.{{ ldts }} AS {{ ldts }}_{{ satellite }}
+            {{ satellite.name }}.{{ hashkey }} AS hk_{{ satellite.name }},
+            {{ satellite.name }}.{{ ldts }} AS {{ ldts }}_{{ satellite.name }}
           {% endif %}
         {{- "," if not loop.last }}
         {%- endfor %}
@@ -121,21 +121,21 @@ pit_records AS (
                 ON 1=1
             {%- endif %}
         {% for satellite in sat_names %}
-        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
+        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite.name)) %}
         {%- if ledts|string|lower in sat_columns|map('lower') %}
-        LEFT JOIN {{ ref(satellite) }}
+        LEFT JOIN {{ ref(satellite.name) }}
         {%- else %}
         LEFT JOIN (
             SELECT
                 {{ hashkey }},
                 {{ ldts }},
                 COALESCE(LEAD({{ ldts }} - INTERVAL '1 MICROSECOND') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
-            FROM {{ ref(satellite) }}
-        ) {{ satellite }}
+            FROM {{ ref(satellite.name) }}
+        ) {{ satellite.name }}
         {% endif %}
             ON
-                {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
-                AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
+                {{ satellite.name }}.{{ hashkey}} = te.{{ hashkey }}
+                AND snap.{{ sdts }} BETWEEN {{ satellite.name }}.{{ ldts }} AND {{ satellite.name }}.{{ ledts }}
         {% endfor %}
         WHERE 1 = 1
     {% if datavault4dbt.is_something(snapshot_trigger_column) %}
@@ -144,13 +144,22 @@ pit_records AS (
     {% if snapshot_optimization and is_incremental() %}
             AND (  
         {% for satellite in sat_names %} 
-            snap.max_{{ ldts }}_{{ satellite }} <= {{ satellite }}.{{ ldts }}
+            snap.max_{{ ldts }}_{{ satellite.name }} <= {{ satellite.name }}.{{ ldts }}
           {% if not loop.last %}
             OR
           {% endif %}
         {% endfor %}
             )
     {% endif %}
+    {%- set mandatory_conditions = [] -%}
+    {%- for sat in sat_names -%}
+        {%- if sat.mandatory -%}
+            {%- do mandatory_conditions.append(sat.name ~ '.' ~ hashkey ~ ' IS NOT NULL') -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {%- for cond in mandatory_conditions %}
+        AND {{ cond }}
+    {%- endfor %}
 
 ),
 
