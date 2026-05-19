@@ -1,4 +1,4 @@
-{%- macro oracle__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none) -%}
+{%- macro oracle__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, mandatory_strategy=none) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR2(40)') -%}
@@ -90,22 +90,26 @@ pit_records AS (
                 AND snap.{{ sdts }} BETWEEN {{ satellite.name }}.{{ ldts }} AND {{ satellite.name }}.{{ ledts }}
         {% endfor %}
     {%- set mandatory_conditions = [] -%}
-    {%- for sat in sat_names -%}
-        {%- if sat.mandatory -%}
+    {%- if datavault4dbt.is_something(mandatory_strategy) -%}
+        {%- for sat in sat_names -%}
             {%- do mandatory_conditions.append(sat.name ~ '.' ~ hashkey ~ ' IS NOT NULL') -%}
-        {%- endif -%}
-    {%- endfor -%}
+        {%- endfor -%}
+    {%- else -%}
+        {%- for sat in sat_names -%}
+            {%- if sat.mandatory -%}
+                {%- do mandatory_conditions.append(sat.name ~ '.' ~ hashkey ~ ' IS NOT NULL') -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endif -%}
     {%- if datavault4dbt.is_something(snapshot_trigger_column) or mandatory_conditions | length > 0 %}
         WHERE
         {%- if datavault4dbt.is_something(snapshot_trigger_column) %}
             snap.{{ snapshot_trigger_column }} = 1
-            {%- for cond in mandatory_conditions %}
-            AND {{ cond }}
-            {%- endfor %}
+            {%- if mandatory_conditions | length > 0 %}
+            AND {{ '(' ~ mandatory_conditions | join(' OR ') ~ ')' if (datavault4dbt.is_something(mandatory_strategy) and mandatory_strategy | lower == 'any') else mandatory_conditions | join(' AND ') }}
+            {%- endif %}
         {%- else %}
-            {%- for cond in mandatory_conditions %}
-            {{ 'AND ' if not loop.first }}{{ cond }}
-            {%- endfor %}
+            {{ '(' ~ mandatory_conditions | join(' OR ') ~ ')' if (datavault4dbt.is_something(mandatory_strategy) and mandatory_strategy | lower == 'any') else mandatory_conditions | join(' AND ') }}
         {%- endif %}
     {%- endif %}
 
