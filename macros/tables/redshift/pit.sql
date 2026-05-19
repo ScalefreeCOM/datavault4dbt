@@ -1,4 +1,4 @@
-{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key=none, refer_to_ghost_records=true, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key=none, refer_to_ghost_records=true, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false, mandatory_strategy=none) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
@@ -105,16 +105,20 @@ GROUP BY
 {%- endif -%}
 
 {%- set mandatory_conditions = [] -%}
-{%- for sat in sat_names -%}
-    {%- if sat.mandatory -%}
+{%- if datavault4dbt.is_something(mandatory_strategy) -%}
+    {%- for sat in sat_names -%}
         {%- do mandatory_conditions.append('MAX(' ~ sat.name ~ '.' ~ hashkey ~ ') IS NOT NULL') -%}
-    {%- endif -%}
-{%- endfor -%}
+    {%- endfor -%}
+{%- else -%}
+    {%- for sat in sat_names -%}
+        {%- if sat.mandatory -%}
+            {%- do mandatory_conditions.append('MAX(' ~ sat.name ~ '.' ~ hashkey ~ ') IS NOT NULL') -%}
+        {%- endif -%}
+    {%- endfor -%}
+{%- endif -%}
 {%- if mandatory_conditions | length > 0 %}
 HAVING
-    {%- for cond in mandatory_conditions %}
-    {{ 'AND ' if not loop.first }}{{ cond }}
-    {%- endfor %}
+    {{ '(' ~ mandatory_conditions | join(' OR ') ~ ')' if (datavault4dbt.is_something(mandatory_strategy) and mandatory_strategy | lower == 'any') else mandatory_conditions | join(' AND ') }}
 {%- endif %}
 
 {%- endmacro -%}

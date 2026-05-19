@@ -11,7 +11,7 @@
         - Allows to insert a static string as record source column, matching business vault definition of a record source
 #}
 
-{%- macro pit(yaml_metadata=none, tracked_entity=none, hashkey=none, sat_names=none, snapshot_relation=none, dimension_key=none, snapshot_trigger_column=none, ldts=none, custom_rsrc=none, ledts=none, sdts=none, pit_type=none, refer_to_ghost_records=True, snapshot_optimization=False) -%}
+{%- macro pit(yaml_metadata=none, tracked_entity=none, hashkey=none, sat_names=none, snapshot_relation=none, dimension_key=none, snapshot_trigger_column=none, ldts=none, custom_rsrc=none, ledts=none, sdts=none, pit_type=none, refer_to_ghost_records=True, snapshot_optimization=False, mandatory_strategy=none) -%}
 
     {% set tracked_entity_description = "
     tracked_entity::string              Name of the tracked Hub entity. Must be available as a model inside the dbt project.
@@ -85,6 +85,16 @@
                                         Affected Adapters: Snowflake only! Optional parameter, default is False.
     " -%}
 
+    {% set mandatory_strategy_description = "
+    mandatory_strategy::string          Optional. When set, applies a satellite coverage filter to ALL satellites in sat_names.
+                                        Accepted values: 'any' or 'all'.
+                                        'any' — include a row only if at least one satellite has a record at that snapshot time (OR logic).
+                                        'all' — include a row only if every satellite has a record at that snapshot time (AND logic).
+                                        Mutually exclusive with per-satellite 'mandatory' flags in sat_names: when mandatory_strategy
+                                        is set, per-satellite mandatory flags are ignored and all satellites participate.
+                                        Default: not set (no filtering applied).
+    " %}
+
     {%- set tracked_entity          = datavault4dbt.yaml_metadata_parser(name='tracked_entity', yaml_metadata=yaml_metadata, parameter=tracked_entity, required=True, documentation=tracked_entity_description) -%}
     {%- set hashkey                 = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
     {%- set sat_names               = datavault4dbt.yaml_metadata_parser(name='sat_names', yaml_metadata=yaml_metadata, parameter=sat_names, required=True, documentation=sat_names_description) -%}
@@ -108,8 +118,9 @@
     {%- set ledts                   = datavault4dbt.yaml_metadata_parser(name='ledts', yaml_metadata=yaml_metadata, parameter=ledts, required=False, documentation=ledts_description) -%}
     {%- set sdts                    = datavault4dbt.yaml_metadata_parser(name='sdts', yaml_metadata=yaml_metadata, parameter=sdts, required=False, documentation=sdts_description) -%}
     {%- set pit_type                = datavault4dbt.yaml_metadata_parser(name='pit_type', yaml_metadata=yaml_metadata, parameter=pit_type, required=False, documentation=pit_type_description) -%}
-    {%- set refer_to_ghost_records  = datavault4dbt.yaml_metadata_parser(name='refer_to_ghost_records', yaml_metadata=yaml_metadata, parameter=refer_to_ghost_records, required=False, documentation=pit_type_description) -%}
+    {%- set refer_to_ghost_records  = datavault4dbt.yaml_metadata_parser(name='refer_to_ghost_records', yaml_metadata=yaml_metadata, parameter=refer_to_ghost_records, required=False, documentation=refer_to_ghost_records_description) -%}
     {%- set snapshot_optimization  = datavault4dbt.yaml_metadata_parser(name='snapshot_optimization', yaml_metadata=yaml_metadata, parameter=snapshot_optimization, required=False, documentation=snapshot_optimization_description) -%}
+    {%- set mandatory_strategy      = datavault4dbt.yaml_metadata_parser(name='mandatory_strategy', yaml_metadata=yaml_metadata, parameter=mandatory_strategy, required=False, documentation=mandatory_strategy_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if ldts, sdts and ledts are not set. #}
 
@@ -151,6 +162,7 @@
                                                         snapshot_trigger_column=snapshot_trigger_column,
                                                         dimension_key=dimension_key,
                                                         refer_to_ghost_records=refer_to_ghost_records,
-                                                        snapshot_optimization=snapshot_optimization)) }}
+                                                        snapshot_optimization=snapshot_optimization,
+                                                        mandatory_strategy=mandatory_strategy)) }}
 
 {%- endmacro -%}

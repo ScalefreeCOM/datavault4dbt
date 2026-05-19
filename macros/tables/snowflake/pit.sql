@@ -1,4 +1,4 @@
-{%- macro snowflake__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro snowflake__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false, mandatory_strategy=none) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
@@ -152,14 +152,20 @@ pit_records AS (
             )
     {% endif %}
     {%- set mandatory_conditions = [] -%}
-    {%- for sat in sat_names -%}
-        {%- if sat.mandatory -%}
+    {%- if datavault4dbt.is_something(mandatory_strategy) -%}
+        {%- for sat in sat_names -%}
             {%- do mandatory_conditions.append(sat.name ~ '.' ~ hashkey ~ ' IS NOT NULL') -%}
-        {%- endif -%}
-    {%- endfor -%}
-    {%- for cond in mandatory_conditions %}
-        AND {{ cond }}
-    {%- endfor %}
+        {%- endfor -%}
+    {%- else -%}
+        {%- for sat in sat_names -%}
+            {%- if sat.mandatory -%}
+                {%- do mandatory_conditions.append(sat.name ~ '.' ~ hashkey ~ ' IS NOT NULL') -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endif -%}
+    {%- if mandatory_conditions | length > 0 %}
+        AND {{ '(' ~ mandatory_conditions | join(' OR ') ~ ')' if (datavault4dbt.is_something(mandatory_strategy) and mandatory_strategy | lower == 'any') else mandatory_conditions | join(' AND ') }}
+    {%- endif %}
 
 ),
 
