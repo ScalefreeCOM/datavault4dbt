@@ -64,11 +64,11 @@ pit_records AS (
         snap.{{ sdts }},
         {% for satellite in sat_names %}
           {% if refer_to_ghost_records %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS {{datavault4dbt.escape_column_names('hk_'~ satellite)}},
-            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ datavault4dbt.escape_column_names(ldts~'_'~satellite)}}
+            COALESCE({{ satellite.name }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS {{datavault4dbt.escape_column_names('hk_'~ satellite.name)}},
+            COALESCE({{ satellite.name }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ datavault4dbt.escape_column_names(ldts~'_'~satellite.name)}}
           {% else %}
-            {{ satellite }}.{{ hashkey }} AS {{datavault4dbt.escape_column_names('hk_'~ satellite)}},
-            {{ satellite }}.{{ ldts }} AS {{ datavault4dbt.escape_column_names(ldts~'_'~satellite)}}
+            {{ satellite.name }}.{{ hashkey }} AS {{datavault4dbt.escape_column_names('hk_'~ satellite.name)}},
+            {{ satellite.name }}.{{ ldts }} AS {{ datavault4dbt.escape_column_names(ldts~'_'~satellite.name)}}
           {% endif %}
         {{- "," if not loop.last }}
         {%- endfor %}
@@ -83,24 +83,40 @@ pit_records AS (
                 ON 1=1
             {%- endif %}
         {% for satellite in sat_names %}
-        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
+        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite.name)) %}
         {%- if ledts|string|lower in sat_columns|map('lower') %}
-        LEFT JOIN {{ ref(satellite) }}
+        LEFT JOIN {{ ref(satellite.name) }}
         {%- else %}
         LEFT JOIN (
             SELECT
                 {{ hashkey }},
                 {{ ldts }},
                 COALESCE(LEAD(({{ldts}} - INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
-            FROM {{ ref(satellite) }}
-        ) {{ satellite }}
+            FROM {{ ref(satellite.name) }}
+        ) {{ satellite.name }}
         {% endif %}
             ON
-                {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
-                AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
+                {{ satellite.name }}.{{ hashkey}} = te.{{ hashkey }}
+                AND snap.{{ sdts }} BETWEEN {{ satellite.name }}.{{ ldts }} AND {{ satellite.name }}.{{ ledts }}
         {% endfor %}
-    {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
-        WHERE snap.{{ snapshot_trigger_column }}
+    {%- set mandatory_conditions = [] -%}
+    {%- for sat in sat_names -%}
+        {%- if sat.mandatory -%}
+            {%- do mandatory_conditions.append(sat.name ~ '.' ~ hashkey ~ ' IS NOT NULL') -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {%- if datavault4dbt.is_something(snapshot_trigger_column) or mandatory_conditions | length > 0 %}
+        WHERE
+        {%- if datavault4dbt.is_something(snapshot_trigger_column) %}
+            snap.{{ snapshot_trigger_column }}
+            {%- for cond in mandatory_conditions %}
+            AND {{ cond }}
+            {%- endfor %}
+        {%- else %}
+            {%- for cond in mandatory_conditions %}
+            {{ 'AND ' if not loop.first }}{{ cond }}
+            {%- endfor %}
+        {%- endif %}
     {%- endif %}
 
 ),

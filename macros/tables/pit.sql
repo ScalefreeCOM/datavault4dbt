@@ -22,10 +22,12 @@
     " %}
 
     {% set sat_names_description = "
-    sat_names::list of strings          A list of all the satellites that should be included in this PIT table. Can only be satellites
+    sat_names::list of strings or dicts A list of all the satellites that should be included in this PIT table. Can only be satellites
                                         that are attached to the tracked Hub, and should typically include all those satellites.
                                         You should always refer here to the version 1 satellites, since those hold the load-end-date.
                                         The macro currently supports regular satellites and nh-satellites.
+                                        Each entry can be a plain string (satellite name) or a dict with 'name' and optional 'mandatory' (bool, default false).
+                                        When mandatory is true, PIT rows are only included where this satellite found a match.
     " %}
 
     {% set snapshot_relation_description = "
@@ -78,6 +80,18 @@
     {%- set tracked_entity          = datavault4dbt.yaml_metadata_parser(name='tracked_entity', yaml_metadata=yaml_metadata, parameter=tracked_entity, required=True, documentation=tracked_entity_description) -%}
     {%- set hashkey                 = datavault4dbt.yaml_metadata_parser(name='hashkey', yaml_metadata=yaml_metadata, parameter=hashkey, required=True, documentation=hashkey_description) -%}
     {%- set sat_names               = datavault4dbt.yaml_metadata_parser(name='sat_names', yaml_metadata=yaml_metadata, parameter=sat_names, required=True, documentation=sat_names_description) -%}
+
+    {# Normalize sat_names: plain strings become {'name': ..., 'mandatory': false} for backward compatibility. #}
+    {%- set sat_names_normalized = [] -%}
+    {%- for sat in sat_names -%}
+        {%- if sat is string -%}
+            {%- do sat_names_normalized.append({'name': sat, 'mandatory': false}) -%}
+        {%- else -%}
+            {%- do sat_names_normalized.append({'name': sat['name'], 'mandatory': sat.get('mandatory', false)}) -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {%- set sat_names = sat_names_normalized -%}
+
     {%- set snapshot_relation       = datavault4dbt.yaml_metadata_parser(name='snapshot_relation', yaml_metadata=yaml_metadata, parameter=snapshot_relation, required=True, documentation=snapshot_relation_description) -%}
     {%- set dimension_key           = datavault4dbt.yaml_metadata_parser(name='dimension_key', yaml_metadata=yaml_metadata, parameter=dimension_key, required=True, documentation=dimension_key_description) -%}
     {%- set snapshot_trigger_column = datavault4dbt.yaml_metadata_parser(name='snapshot_trigger_column', yaml_metadata=yaml_metadata, parameter=snapshot_trigger_column, required=False, documentation=snapshot_trigger_column_description) -%}
