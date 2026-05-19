@@ -110,6 +110,7 @@ pit_records AS (
     {%- if mandatory_conditions | length > 0 %}
         WHERE
             {{ '(' ~ mandatory_conditions | join(' OR ') ~ ')' if (datavault4dbt.is_something(mandatory_strategy) and mandatory_strategy | lower == 'any') else mandatory_conditions | join(' AND ') }}
+            AND te.{{ hashkey }} != {{ datavault4dbt.as_constant(column_str=unknown_key) }}
     {%- endif %}
 ),
 
