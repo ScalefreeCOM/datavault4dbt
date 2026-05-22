@@ -40,7 +40,7 @@
     {%- set error_key = '' -%}
 
 
-    {{ log('hash datatype: ' ~ hash_datatype, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash datatype: ' ~ hash_datatype, false) }}{% endif %}
 
     {%- if hash_function == 'MD5' and hash_datatype == 'STRING' -%}
         {%- set hash_alg = 'MD5' -%}
@@ -134,7 +134,7 @@
     {%- set error_key = '' -%}
 
 
-    {{ log('hash datatype: ' ~ hash_datatype, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash datatype: ' ~ hash_datatype, false) }}{% endif %}
 
     {%- if hash_function == 'MD5' -%}
         {%- if 'VARCHAR' in hash_datatype|upper or 'CHAR' in hash_datatype|upper or 'STRING' in hash_datatype|upper or 'TEXT' in hash_datatype|upper %}
@@ -183,7 +183,7 @@
     {%- set error_key = '' -%}
 
 
-    {{ log('hash datatype: ' ~ hash_datatype, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash datatype: ' ~ hash_datatype, false) }}{% endif %}
 
     {%- if hash_function == 'MD5' -%}
         {%- set hash_alg = 'MD5' -%}

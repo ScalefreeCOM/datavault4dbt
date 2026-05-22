@@ -1,4 +1,4 @@
-{%- macro oracle__ref_hub(ref_keys, src_ldts, src_rsrc, source_models) -%}
+{%- macro oracle__ref_hub(ref_keys, src_ldts, src_rsrc, source_models, additional_columns) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
@@ -7,6 +7,10 @@
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {%- set ref_keys = datavault4dbt.expand_column_list(columns=[ref_keys]) -%}
+
+{# Select the additional_columns and put them in an array. If additional_colums none, then empty array #}
+{%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
 {# If no specific ref_keys is defined for each source, we apply the values set in the ref_keys variable. #}
 {# If no rsrc_static parameter is defined in ANY of the source models then the whole code block of record_source performance lookup is not executed  #}
@@ -19,9 +23,9 @@
 {%- set source_models = source_model_values['source_model_list'] -%}
 {%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
-{{ log('source_models: '~source_models, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_models: '~source_models, false) }}{% endif %}
 
-{%- set final_columns_to_select = ref_keys + [src_ldts] + [src_rsrc] -%}
+{%- set final_columns_to_select = ref_keys + [src_ldts] + [src_rsrc] + additional_columns -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -42,7 +46,7 @@ WITH
             {%- set source_number = source_model.id | string -%}
             {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number] -%}
 
-            {{log('rsrc_statics: '~ rsrc_statics, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{log('rsrc_statics: '~ rsrc_statics, false) }}{% endif %}
 
             {%- set rsrc_static_query_source -%}
                 SELECT count(*) FROM (
@@ -79,7 +83,7 @@ WITH
 
                 {%- set row_count = rsrc_static_result.columns[0].values()[0] -%}
 
-                {{ log('row_count for '~source_model~' is '~row_count, false) }}
+                {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('row_count for '~source_model~' is '~row_count, false) }}{% endif %}
 
                 {%- if row_count == 0 -%}
                 {%- set source_in_target = false -%}
@@ -128,7 +132,7 @@ WITH
     {%- set source_number = source_model.id | string -%}
 
     {%- if ns.has_rsrc_static_defined -%}
-        {%- set rsrc_statics = ns.source_models_rsrc_dict.id -%}
+        {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number|string] -%}
     {%- endif -%}
 
 
@@ -139,13 +143,17 @@ WITH
             {{ ref_key}},
             {% endfor -%}
 
+            {% for col in additional_columns -%}
+            {{ col }},
+            {% endfor -%}
+
             {{ src_ldts }},
             {{ src_rsrc }}
         FROM {{ ref(source_model.name) }} src
 
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number] %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
-        ({%- for rsrc_static in rsrc_statics -%}
+        ({% for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'
             {%- if not loop.last -%} OR
             {% endif -%}
@@ -169,6 +177,10 @@ source_new_union AS (
     SELECT
         {% for ref_key in source_model['ref_keys'] -%}
             {{ ref_key }} AS {{ ref_keys[loop.index - 1] }},
+        {% endfor -%}
+
+        {% for col in additional_columns -%}
+        {{ col }},
         {% endfor -%}
 
         {{ src_ldts }},

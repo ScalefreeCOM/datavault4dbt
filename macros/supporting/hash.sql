@@ -1,4 +1,4 @@
-{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none, main_hashkey_column=none, rtrim_hashdiff=none) -%}
+{%- macro hash(columns=none, alias=none, is_hashdiff=false, multi_active_key=none, main_hashkey_column=none, use_trim=none, rtrim_hashdiff=none) -%}
 
     {%- if is_hashdiff is none -%}
         {%- set is_hashdiff = false -%}
@@ -7,17 +7,28 @@
         {%- set rtrim_hashdiff = false -%}
     {%- endif -%}
 
+    {%- set global_use_trim = var('datavault4dbt.hashdiff_use_trim', true) -%}
+
+    {%- if use_trim is none -%}
+            {%- if is_hashdiff -%}
+                {%- set use_trim = global_hashdiff_trim -%}
+            {%- else -%}
+                {%- set use_trim = true -%}
+            {%- endif -%}
+    {%- endif -%}
+
     {{- adapter.dispatch('hash', 'datavault4dbt')(columns=columns,
                                              alias=alias,
                                              is_hashdiff=is_hashdiff,
                                              multi_active_key=multi_active_key,
                                              main_hashkey_column=main_hashkey_column,
-                                             rtrim_hashdiff=rtrim_hashdiff) -}}
+                                             rtrim_hashdiff=rtrim_hashdiff,
+                                             use_trim=use_trim) -}}
 
 {%- endmacro %}
 
 
-{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -29,14 +40,13 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
-
+{%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
 {#- If single column to hash -#}
 {%- if columns is string -%}
@@ -85,7 +95,7 @@
 
 {%- endmacro -%}
 
-{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
     {%- set hash = datavault4dbt.hash_method() -%}
     {%- set concat_string = var('concat_string', '||') -%}
@@ -102,7 +112,7 @@
     {%- set unknown_key = hash_default_values['unknown_key'] -%}
     {%- set error_key = hash_default_values['error_key'] -%}
 
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
     {#- If single column to hash -#}
     {%- if columns is string -%}
@@ -153,7 +163,7 @@
 {%- endmacro -%}
 
 
-{%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -165,16 +175,16 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'BINARY(16)') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
 {%- if is_hashdiff -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff', use_trim=use_trim) %}
 {%- else -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey', use_trim=use_trim) %}
 {%- endif -%}
 
 {#- If single column to hash -#}
@@ -206,7 +216,7 @@
     {%- else -%}
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
-    {{ log('attribute_standardise: '~attribute_standardise, false)}}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('attribute_standardise: '~attribute_standardise, false)}}{% endif %}
 
     {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
     {{- ",'{}',".format(concat_string) if not loop.last -}}
@@ -227,7 +237,7 @@
 {%- endmacro -%}    
 
 
-{%- macro postgres__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro postgres__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
@@ -242,16 +252,16 @@
 
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR') -%}
 
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
 {%- if is_hashdiff -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff', use_trim=use_trim) %}
 {%- else -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey', use_trim=use_trim) %}
 {%- endif -%}
 
 
@@ -303,7 +313,7 @@
 {%- endmacro -%}
 
 
-{%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -315,13 +325,13 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+{%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
 {#- If single column to hash -#}
 {%- if columns is string -%}
@@ -372,7 +382,7 @@
 {%- endmacro -%}
 
 
-{%- macro fabric__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro fabric__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
@@ -384,19 +394,19 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARBINARY(16)') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
 {%- if is_hashdiff -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashdiff',use_trim=use_trim) %}
 {%- else -%}
-    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey') %}
+    {%- set attribute_standardise = datavault4dbt.attribute_standardise(hash_type='hashkey',use_trim=use_trim) %}
 {%- endif -%}
 
-{{ log('attribute_standardise: '~attribute_standardise, false)}}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('attribute_standardise: '~attribute_standardise, false)}}{% endif %}
 
 {#- If single column to hash -#}
 {%- if columns is string -%}
@@ -453,7 +463,7 @@
 {%- endmacro -%}
 
 
-{%- macro databricks__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro databricks__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -465,13 +475,13 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+{%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
 
 {#- If single column to hash -#}
@@ -522,7 +532,7 @@
 {%- endmacro -%}
 
 
-{%- macro oracle__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, rtrim_hashdiff) -%}
+{%- macro oracle__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('concat_string', '||') -%}
@@ -534,13 +544,13 @@
 
 {#- Select hashing algorithm -#}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR2(40)') -%}
-{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash type in hash macro: ' ~ hash_dtype, false) }}{% endif %}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- set attribute_standardise = datavault4dbt.attribute_standardise() %}
+{%- set attribute_standardise = datavault4dbt.attribute_standardise(use_trim=use_trim) %}
 
 {#- If single column to hash -#}
 {%- if columns is string -%}

@@ -1,4 +1,4 @@
-{%- macro snowflake__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none) -%}
+{%- macro snowflake__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'STRING') -%}
@@ -26,15 +26,59 @@
 WITH
 
 {%- if is_incremental() %}
+  {%- if snapshot_optimization %}
+  snapshot_dates as (
+    SELECT
+      * 
+    FROM {{ ref(snapshot_relation) }} 
+    {%- if datavault4dbt.is_something(snapshot_trigger_column) %}
+      WHERE {{ snapshot_trigger_column }}
+    {%- endif %}
+  ),
 
-existing_dimension_keys AS (
+  sdts_max_ldts as ( --get the dts from all relevant snapshots and the max. ldts per satelite from the pit
+    SELECT 
+      snap.{{ sdts }} 
+    {%- for satellite in sat_names %}
+      , MAX(pit.{{ ldts }}_{{ satellite }}) max_{{ ldts }}_{{ satellite }}
+    {%- endfor %}
+    FROM snapshot_dates snap
+    LEFT JOIN
+    {{ this }} pit
+    ON snap.{{ sdts }} = pit.{{ sdts }}
+    GROUP BY snap.{{ sdts }}
+  ),
+
+  relevant_snapshots as ( --filter to snapshots which have to be handled
+    SELECT 
+      {{ sdts }}
+      {%- for satellite in sat_names %}
+        , COALESCE(max_{{ ldts }}_{{ satellite }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) as max_{{ ldts }}_{{ satellite }}
+      {%- endfor %}
+      {% if datavault4dbt.is_something(snapshot_trigger_column) %}
+        , true as {{ snapshot_trigger_column }},
+      {% endif %}
+    FROM sdts_max_ldts 
+    WHERE
+    {%- for satellite in sat_names %}
+      --new snapshot
+      max_{{ ldts }}_{{ satellite }} IS NULL OR
+      --existing snapshot with max ldts of one sat -> might need to be updated
+      max_{{ ldts }}_{{ satellite }} = (SELECT MAX(max_{{ ldts }}_{{ satellite }}) FROM sdts_max_ldts)
+      {{ 'OR' if not loop.last }}
+    {%- endfor %}
+  ),
+
+  {%- else %}
+  existing_dimension_keys AS (
 
     SELECT
-        {{ dimension_key }}
+      {{ dimension_key }}
     FROM {{ this }}
 
-),
-
+  ),
+  {%- endif %}
+  
 {%- endif %}
 
 pit_records AS (
@@ -66,10 +110,14 @@ pit_records AS (
     FROM
             {{ ref(tracked_entity) }} te
         FULL OUTER JOIN
+      {% if snapshot_optimization and is_incremental() %}
+      relevant_snapshots snap 
+      {%- else %}
             {{ ref(snapshot_relation) }} snap
-            {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
+      {% endif -%}
+            {% if datavault4dbt.is_something(snapshot_trigger_column) %}
                 ON snap.{{ snapshot_trigger_column }} = true
-            {% else -%}
+            {% else %}
                 ON 1=1
             {%- endif %}
         {% for satellite in sat_names %}
@@ -89,9 +137,20 @@ pit_records AS (
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
                 AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
+        WHERE 1 = 1
     {% if datavault4dbt.is_something(snapshot_trigger_column) %}
-        WHERE snap.{{ snapshot_trigger_column }}
+         AND snap.{{ snapshot_trigger_column }}
     {%- endif %}
+    {% if snapshot_optimization and is_incremental() %}
+            AND (  
+        {% for satellite in sat_names %} 
+            snap.max_{{ ldts }}_{{ satellite }} <= {{ satellite }}.{{ ldts }}
+          {% if not loop.last %}
+            OR
+          {% endif %}
+        {% endfor %}
+            )
+    {% endif %}
 
 ),
 
@@ -99,10 +158,10 @@ records_to_insert AS (
 
     SELECT DISTINCT *
     FROM pit_records
-    {%- if is_incremental() %}
+    {%- if is_incremental() and not snapshot_optimization %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
-    {% endif -%}
-
+    {% endif %}
+    ORDER BY {{ sdts }}
 )
 
 SELECT * FROM records_to_insert
