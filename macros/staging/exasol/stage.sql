@@ -498,13 +498,13 @@ unknown_values AS (
         {%- endif -%}
 
         {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
-        {{ log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) }}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) }}{% endif %}
 
           {%- for column in pj_relation_columns -%}
             {%- if column.name|lower in prejoin['extract_columns']|map('lower') -%}
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
-              {{ log('column found? yes, for column: ' ~ column.name , false) }}
+              {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('column found? yes, for column: ' ~ column.name , false) }}{% endif %}
               ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name|upper, datatype=column.dtype, col_size=column.char_size, ghost_record_type='unknown', alias=prejoin['aliases'][prejoin_col_index]) }}
             {%- endif -%}
 
@@ -564,13 +564,13 @@ error_values AS (
         {%- endif -%}
 
         {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
-        {{- log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) -}}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{- log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) -}}{% endif %}
 
         {% for column in pj_relation_columns -%}
             {%- if column.name|lower in prejoin['extract_columns']|map('lower') -%}
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
-              {{ log('column found? yes, for column: ' ~ column.name , false) }}
+              {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('column found? yes, for column: ' ~ column.name , false) }}{% endif %}
              ,{{ datavault4dbt.ghost_record_per_datatype(column_name=column.name, datatype=column.dtype, col_size=column.char_size, ghost_record_type='error', alias=prejoin['aliases'][prejoin_col_index]) }}
           {%- endif -%}
 

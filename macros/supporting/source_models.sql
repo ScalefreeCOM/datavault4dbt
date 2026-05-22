@@ -4,7 +4,9 @@
 
     {%- set dict_result = {} -%}
 
-    {{ log('ref_keys: '~reference_keys, false)}}
+    {%- set use_execution_aware_loading = var('datavault4dbt.multi_source_models__execution_aware_loading', 'true') -%}
+
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('ref_keys: '~reference_keys, false)}}{% endif %}
 
     {%- if source_models is mapping -%}
 
@@ -34,6 +36,30 @@
         {%- set ns_source_models.source_model_list = source_models -%}
 
     {%- endif -%}
+
+    {% if execute and use_execution_aware_loading %}
+        {% set source_model_backup = ns_source_models.source_model_list %}
+        {% set ns_source_models.source_model_list = [] %}
+
+        {% for source_model in source_model_backup %}
+            {% if datavault4dbt.source_model_should_be_selected(source_model.name) %}
+                {% do ns_source_models.source_model_list.append(source_model) %}
+            {% else %}
+                {% if var('datavault4dbt.show_debug_logs', false) %}{{ log( this.name ~ ': Skipping source model: ' ~ source_model.name ~ ' as it is not selected for execution', info=False) }}{% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if ns_source_models.source_model_list|length == 0 %}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('no source in selection, reverting to all source models', false) }}{% endif %}
+            {% set ns_source_models.source_model_list = source_model_backup %}
+        {% endif %}
+
+        {% if load_relation(this) is none or should_full_refresh() %}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Relation does not exist or should be full refreshed', false) }}{% endif %}
+            {% set ns_source_models.source_model_list = source_model_backup %}
+        {% endif %}
+
+    {% endif %}
 
     {%- for source_model in ns_source_models.source_model_list -%}
 
@@ -157,7 +183,7 @@
 
     {%- do dict_result.update({"source_model_list": ns_source_models.source_model_list_tmp ,"has_rsrc_static_defined": ns_source_models.has_rsrc_static_defined, "source_models_rsrc_dict": ns_source_models.source_models_rsrc_dict}) -%}
      
-     {{log('dict_result: '~ dict_result, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{log('dict_result: '~ dict_result, false)}}{% endif %}
 
     {{ return(dict_result | tojson) }}
 

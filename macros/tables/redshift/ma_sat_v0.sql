@@ -1,8 +1,12 @@
-{%- macro redshift__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model, disable_hwm, source_is_single_batch) -%}
+{%- macro redshift__ma_sat_v0(parent_hashkey, src_hashdiff, src_ma_key, src_payload, src_ldts, src_rsrc, source_model, additional_columns, disable_hwm, source_is_single_batch) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+
+{# Select the additional_columns and put them in an array. If additional_colums is none, then empty array #}
+{%- set additional_columns = additional_columns | default([],true) -%}
+{%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
 {%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
 {%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
@@ -13,7 +17,7 @@
     {% set ns.hdiff_alias = src_hashdiff  %}
 {%- endif -%}
 
-{%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_ma_key, src_payload]) -%}
+{%- set source_cols = datavault4dbt.expand_column_list(columns=[src_rsrc, src_ldts, src_ma_key, src_payload, additional_columns]) -%}
 
 {%- set source_relation = ref(source_model) -%}
 
@@ -47,11 +51,11 @@ source_data AS (
 latest_entries_in_sat AS (
 
     SELECT
-        {{ parent_hashkey }},
-        {{ ns.hdiff_alias }}
-    FROM 
-        {{ this }} redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1  
+        sat.{{ parent_hashkey }},
+        sat.{{ ns.hdiff_alias }}
+    FROM {{ this }} sat
+    WHERE sat.{{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY sat.{{ parent_hashkey }} ORDER BY sat.{{ src_ldts }} DESC) = 1
 ),
 {%- endif %}
 

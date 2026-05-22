@@ -158,7 +158,7 @@
 
 {#- Setting unknown and error keys with default values for the selected hash algorithm -#}
 {%- set hash = datavault4dbt.hash_method() -%}
-{{ log('hash_function: ' ~ hash, false)}}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash_function: ' ~ hash, false)}}{% endif %}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARBINARY(16)') -%}
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash,hash_datatype=hash_dtype)) -%}
 {%- set hash_alg = hash_default_values['hash_alg'] -%}
@@ -176,6 +176,9 @@
 
 {#- Setting the rsrc default datatype -#}
 {%- set rsrc_default_dtype = datavault4dbt.string_default_dtype(type=rsrc) -%}
+
+{# Setting the ldts default datatype #}
+{% set ldts_default_dtype = datavault4dbt.timestamp_default_dtype() %}
 
 WITH
 
@@ -208,7 +211,7 @@ source_data AS (
 ldts_rsrc_data AS (
 
   SELECT
-    CONVERT(datetime2(6), {{ ldts }}, {{datavault4dbt.timestamp_format()}}) AS {{ load_datetime_col_name}},
+    CONVERT({{ ldts_default_dtype }}, {{ ldts }}, {{datavault4dbt.timestamp_format()}}) AS {{ load_datetime_col_name}},
     CAST( {{ rsrc }} as {{ rsrc_default_dtype }} ) AS {{ record_source_col_name }}
     {%- if datavault4dbt.is_something(sequence) %},
       {{ sequence }} AS edwSequence
@@ -502,13 +505,13 @@ unknown_values AS (
         {%- endif -%}
 
         {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
-        {{ log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) }}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) }}{% endif %}
 
           {%- for column in pj_relation_columns -%}
             {%- if column.name|lower in prejoin['extract_columns']|map('lower') -%}
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
-              {{ log('column found? yes, for column: ' ~ column.name , false) }}
+              {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('column found? yes, for column: ' ~ column.name , false) }}{% endif %}
               ,{{ datavault4dbt.ghost_record_per_datatype(column_name=datavault4dbt.escape_column_names(column.name), datatype=column.dtype, ghost_record_type='unknown', alias=datavault4dbt.escape_column_names(prejoin['aliases'][prejoin_col_index])) }}
             {%- endif -%}
 
@@ -568,13 +571,13 @@ error_values AS (
         {%- endif -%}
 
         {%- set pj_relation_columns = adapter.get_columns_in_relation( relation ) -%}
-        {{- log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) -}}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{- log('pj_relation_columns for '~relation~': ' ~ pj_relation_columns, false ) -}}{% endif %}
 
         {% for column in pj_relation_columns -%}
             {%- if column.name|lower in prejoin['extract_columns']|map('lower') -%}
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
-              {{ log('column found? yes, for column: ' ~ column.name , false) }}
+              {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('column found? yes, for column: ' ~ column.name , false) }}{% endif %}
              ,{{ datavault4dbt.ghost_record_per_datatype(column_name=datavault4dbt.escape_column_names(column.name), datatype=column.dtype, ghost_record_type='error', alias=datavault4dbt.escape_column_names(prejoin['aliases'][prejoin_col_index])) }}
           {%- endif -%}
 
