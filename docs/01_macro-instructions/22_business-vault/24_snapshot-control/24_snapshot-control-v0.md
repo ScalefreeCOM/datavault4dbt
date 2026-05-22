@@ -36,6 +36,7 @@ In addition to the actual snapshot-datetimestamp (sdts), the macro generates the
 | start_date | date | mandatory | – | Defines the earliest date that should be available inside the snapshot_table. The format of this date must be 'YYYY-MM-DD'. |
 | daily_snapshot_time | time | mandatory | – | Defines the time that your daily snapshots should have. Usually this is either something right before daily business starts, or after daily business is over. Needs to be in the format 'hh:mm:ss'. |
 | sdts_alias | string | optional | datavault4dbt.sdts_alias | Defines the name of the snapshot date timestamp column inside the snapshot_table. |
+| end_date | date | optional | current date/timestamp of the target database | Defines the latest date that should be available inside the snapshot_table. The format of this date must be 'YYYY-MM-DD'. When omitted, snapshots are generated up to the database's current date/timestamp. The end_date itself is included. |
 
 
 ---
@@ -72,6 +73,8 @@ daily_snapshot_time: '07:30:00'
 {%- endset -%}    
 
 {{ datavault4dbt.control_snap_v0(yaml_metadata=yaml_metadata) }}
+```
+
 ### DESCRIPTION
 
 - **start_date**: The parameter start_date has to be in the format ‘YYYY-MM-DD’. With the start_date set to ‘2015-01-01’, the snapshot table would hold daily snapshots beginning at 2015.
