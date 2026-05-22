@@ -33,8 +33,8 @@
 
 {%- set ref_key = datavault4dbt.escape_column_names(ref_key) -%}
 {%- if has_hashdiff -%}
-{%- set ns.src_hashdiff = datavault4dbt.escape_column_names(ns.src_hashdiff) -%}
-{%- set ns.hdiff_alias = datavault4dbt.escape_column_names(ns.hdiff_alias) -%}
+    {%- set ns.src_hashdiff = datavault4dbt.escape_column_names(ns.src_hashdiff) -%}
+    {%- set ns.hdiff_alias = datavault4dbt.escape_column_names(ns.hdiff_alias) -%}
 {%- endif -%}
 {%- set source_cols = datavault4dbt.escape_column_names(source_cols) -%}
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
@@ -58,15 +58,12 @@ source_data AS (
         {{ datavault4dbt.print_list(source_cols) }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() %}
-    WHERE {{ src_ldts }} <> {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-        {%- if not disable_hwm %}
-        AND {{ src_ldts }} > (
-            SELECT
-                COALESCE (MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
-            WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
-        )
-        {%- endif %}
+    {%- if is_incremental() and not disable_hwm %}
+    WHERE {{ src_ldts }} > (
+        SELECT
+            COALESCE (MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
+        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    )
     {%- endif %}
 
     {%- set source_cte = 'source_data' -%}

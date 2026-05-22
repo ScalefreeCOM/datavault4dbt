@@ -35,7 +35,7 @@
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 {%- set parent_hashkey = datavault4dbt.escape_column_names(parent_hashkey) -%}
 {%- if has_hashdiff -%}
-{%- set src_hashdiff = datavault4dbt.escape_column_names(src_hashdiff) -%}
+    {%- set src_hashdiff = datavault4dbt.escape_column_names(src_hashdiff) -%}
 {%- endif -%}
 
 {{ datavault4dbt.prepend_generated_by() }}
@@ -59,7 +59,6 @@ source_data AS (
             MAX({{ src_ldts }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
-    AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     {%- endif %}
 ),
 
