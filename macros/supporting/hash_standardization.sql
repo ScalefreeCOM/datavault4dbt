@@ -407,7 +407,7 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, r'\\', r'\\\\'), 
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
-{%- if not ('VARCHAR' in datatype or 'CHAR' in datatype or 'NVARCHAR' in datatype or 'NCHAR' in datatype) %}
+{%- if 'VARCHAR' in datatype or 'CHAR' in datatype or 'NVARCHAR' in datatype or 'NCHAR' in datatype %}
 
     {%- if case_sensitive -%}
     
