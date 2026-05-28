@@ -58,7 +58,7 @@ WITH
             {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number] -%}
 
             {%- set rsrc_static_query_source_count -%}
-                SELECT count(*) FROM (
+                SELECT count(*) AS cnt FROM (
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT 
                     {{ tracked_hashkey }},
