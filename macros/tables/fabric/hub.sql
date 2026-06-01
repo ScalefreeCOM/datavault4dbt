@@ -51,7 +51,7 @@ WITH
             {% if var('datavault4dbt.show_debug_logs', false) %}{{log('rsrc_statics: '~ rsrc_statics, false) }}{% endif %}
 
             {%- set rsrc_static_query_source -%}
-                SELECT count(*) FROM (
+                SELECT count(*) AS cnt FROM (
                 {%- for rsrc_static in rsrc_statics -%}
                     SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
