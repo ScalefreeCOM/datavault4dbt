@@ -4,7 +4,7 @@
 
 {%- endmacro -%}
 
-
+{# #TODO check if necessary to have more than the default #}
 {%- macro default__process_columns_to_select(columns_list, exclude_columns_list) -%}
     {% set exclude_columns_list = exclude_columns_list | map('upper') | list %}
     {% set columns_list = columns_list | map('upper') | list %}
@@ -111,6 +111,12 @@
 
 {%- endmacro -%}
 
+
+{%- macro sqlserver__process_columns_to_select(columns_list, exclude_columns_list) -%}
+
+    {{ return (datavault4dbt.default__process_columns_to_select(columns_list=columns_list,exclude_columns_list=exclude_columns_list)) }}
+
+{%- endmacro -%}
 
 {%- macro extract_column_names(columns_dict=none) -%}
 

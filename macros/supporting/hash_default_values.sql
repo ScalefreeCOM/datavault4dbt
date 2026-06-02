@@ -306,3 +306,62 @@
     {{ return(dict_result | tojson ) }}
 
 {%- endmacro -%}
+
+{%- macro sqlserver__hash_default_values(hash_function, hash_datatype) -%}
+
+    {%- set dict_result = {} -%}
+    {%- set hash_alg = '' -%}
+    {%- set unknown_key = '' -%}
+    {%- set error_key = '' -%}
+
+    {%- if hash_datatype is none -%}
+        {%- set hash_datatype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
+    {%- endif -%}
+
+    {%- set datatype_upper = hash_datatype | string | upper -%}
+
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash datatype: ' ~ hash_datatype, false) }}{% endif %}
+
+    {%- if hash_function == 'MD5' -%}
+    {%- set hash_alg = 'MD5' -%}
+        {%- if 'VARCHAR' in datatype_upper or 'CHAR' in datatype_upper or 'NVARCHAR' in datatype_upper or 'NCHAR' in datatype_upper or 'STRING' in datatype_upper or 'TEXT' in datatype_upper -%}
+            {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ", '00000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(" ~ hash_datatype ~ ", 'ffffffffffffffffffffffffffffffff')" -%}
+        {%- elif 'BINARY' in datatype_upper -%}
+            {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ", '00000000000000000000000000000000', 2)" -%}
+            {%- set error_key = "CONVERT(" ~ hash_datatype ~ ", 'ffffffffffffffffffffffffffffffff', 2)" -%}
+        {%- endif -%}
+    {%- elif hash_function in ['SHA1', 'SHA'] -%} 
+        {%- set hash_alg = 'SHA1' -%}
+        {%- if 'VARCHAR' in datatype_upper or 'CHAR' in datatype_upper or 'NVARCHAR' in datatype_upper or 'NCHAR' in datatype_upper or 'STRING' in datatype_upper or 'TEXT' in datatype_upper -%}
+            {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ", '0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(" ~ hash_datatype ~ ", 'ffffffffffffffffffffffffffffffffffffffff')" -%}
+        {%- elif 'BINARY' in datatype_upper -%}
+            {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ", '0000000000000000000000000000000000000000', 2)" -%}
+            {%- set error_key = "CONVERT(" ~ hash_datatype ~ ", 'ffffffffffffffffffffffffffffffffffffffff', 2)" -%}
+        {%- endif -%}
+    {%- elif hash_function in ['SHA2', 'SHA2_256'] -%}
+        {%- set hash_alg = 'SHA2_256' -%}
+        {%- if 'VARCHAR' in datatype_upper or 'CHAR' in datatype_upper or 'NVARCHAR' in datatype_upper or 'NCHAR' in datatype_upper or 'STRING' in datatype_upper or 'TEXT' in datatype_upper -%}
+            {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ", '0000000000000000000000000000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(" ~ hash_datatype ~ ", 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}
+        {%- elif 'BINARY' in datatype_upper -%}
+            {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ", '0000000000000000000000000000000000000000000000000000000000000000', 2)" -%}
+            {%- set error_key = "CONVERT(" ~ hash_datatype ~ ", 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', 2)" -%}
+        {%- endif -%}
+    {%- elif hash_function == 'SHA2_512' -%}
+        {%- set hash_alg = 'SHA2_512' -%}
+        {%- if 'VARCHAR' in datatype_upper or 'CHAR' in datatype_upper or 'NVARCHAR' in datatype_upper or 'NCHAR' in datatype_upper or 'STRING' in datatype_upper or 'TEXT' in datatype_upper -%}
+            {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ", '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(" ~ hash_datatype ~ ", 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}
+        {%- elif 'BINARY' in datatype_upper -%}
+            {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ", '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 2)" -%}
+            {%- set error_key = "CONVERT(" ~ hash_datatype ~ ", 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', 2)" -%}
+        {%- endif -%}
+    {%- endif -%}
+
+    {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}
+
+    {{ return(dict_result | tojson ) }}
+
+{%- endmacro -%}
