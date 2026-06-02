@@ -131,23 +131,33 @@
     {%- elif hash_function == 'SHA1' or hash_function == 'SHA1_HEX' or hash_function == 'SHA' -%} 
         {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
             {%- set hash_alg = 'SHA1' -%}
-            {%- set unknown_key = '!0000000000000000000000000000000000000000' -%}
-            {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
+            {%- set unknown_key = "CONVERT(varchar(40), '0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(varchar(40), 'ffffffffffffffffffffffffffffffffffffffff')" -%}
         {%- elif 'BINARY' in hash_datatype -%}
             {%- set hash_alg = 'SHA1_BINARY' -%}
-            {%- set unknown_key = "TO_BINARY('0000000000000000000000000000000000000000')" -%}
-            {%- set error_key = "TO_BINARY('ffffffffffffffffffffffffffffffffffffffff')" -%}        
+            {%- set unknown_key = "CONVERT(binary(20), '0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(binary(20), 'ffffffffffffffffffffffffffffffffffffffff')" -%}        
         {%- endif -%}
-    {%- elif hash_function == 'SHA2' or hash_function == 'SHA2_HEX' -%}
+    {%- elif hash_function == 'SHA2' or hash_function == 'SHA2_HEX' or hash_function == 'SHA2_256' -%}
         {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
             {%- set hash_alg = 'SHA2' -%}
-            {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
-            {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+            {%- set unknown_key = "CONVERT(varchar(40), '0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(varchar(40), 'ffffffffffffffffffffffffffffffffffffffff')" -%}
         {%- elif 'BINARY' in hash_datatype -%}
             {%- set hash_alg = 'SHA2_BINARY' -%}
-            {%- set unknown_key = "TO_BINARY('0000000000000000000000000000000000000000000000000000000000000000')" -%}
-            {%- set error_key = "TO_BINARY('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}        
+            {%- set unknown_key = "CONVERT(binary(32), '0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(binary(32), 'ffffffffffffffffffffffffffffffffffffffff')" -%}        
         {%- endif -%}   
+    {%- elif hash_function == 'SHA2_512' -%}
+        {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
+            {%- set hash_alg = 'SHA2' -%}
+            {%- set unknown_key = "CONVERT(varchar(70), '0000000000000000000000000000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(varchar(70), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}
+        {%- elif 'BINARY' in hash_datatype -%}
+            {%- set hash_alg = 'SHA2_BINARY' -%}
+            {%- set unknown_key = "CONVERT(binary(64), '0000000000000000000000000000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(binary(64), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}        
+        {%- endif -%} 
     {%- endif -%}
 
     {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}
@@ -180,23 +190,33 @@
     {%- elif hash_function == 'SHA1' or hash_function == 'SHA1_HEX' or hash_function == 'SHA' -%} 
         {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
             {%- set hash_alg = 'SHA1' -%}
-            {%- set unknown_key = '!0000000000000000000000000000000000000000' -%}
-            {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
+            {%- set unknown_key = "CONVERT(varchar(40), '0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(varchar(40), 'ffffffffffffffffffffffffffffffffffffffff')" -%}
         {%- elif 'BINARY' in hash_datatype -%}
             {%- set hash_alg = 'SHA1_BINARY' -%}
-            {%- set unknown_key = "TO_BINARY('0000000000000000000000000000000000000000')" -%}
-            {%- set error_key = "TO_BINARY('ffffffffffffffffffffffffffffffffffffffff')" -%}        
+            {%- set unknown_key = "CONVERT(varbinary(20), '0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(varbinary(20), 'ffffffffffffffffffffffffffffffffffffffff')" -%}        
         {%- endif -%}
-    {%- elif hash_function == 'SHA2' or hash_function == 'SHA2_HEX' -%}
+    {%- elif hash_function == 'SHA2' or hash_function == 'SHA2_HEX' or hash_function == 'SHA2_256' -%}
         {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
             {%- set hash_alg = 'SHA2' -%}
-            {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
-            {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+            {%- set unknown_key = "CONVERT(varchar(40), '0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(varchar(40), 'ffffffffffffffffffffffffffffffffffffffff')" -%}
         {%- elif 'BINARY' in hash_datatype -%}
             {%- set hash_alg = 'SHA2_BINARY' -%}
-            {%- set unknown_key = "TO_BINARY('0000000000000000000000000000000000000000000000000000000000000000')" -%}
-            {%- set error_key = "TO_BINARY('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}        
+            {%- set unknown_key = "CONVERT(varbinary(32), '0000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(varbinary(32), 'ffffffffffffffffffffffffffffffffffffffff')" -%}        
         {%- endif -%}   
+    {%- elif hash_function == 'SHA2_512' -%}
+        {%- if 'VARCHAR' in hash_datatype or 'CHAR' in hash_datatype or 'STRING' in hash_datatype or 'TEXT' in hash_datatype %}
+            {%- set hash_alg = 'SHA2' -%}
+            {%- set unknown_key = "CONVERT(varchar(70), '0000000000000000000000000000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(varchar(70), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}
+        {%- elif 'BINARY' in hash_datatype -%}
+            {%- set hash_alg = 'SHA2_BINARY' -%}
+            {%- set unknown_key = "CONVERT(varbinary(64), '0000000000000000000000000000000000000000000000000000000000000000')" -%}
+            {%- set error_key = "CONVERT(varbinary(64), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}        
+        {%- endif -%} 
     {%- endif -%}
 
     {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key }) -%}
