@@ -8,7 +8,7 @@ macros:
       When multiple columns are to be extracted from the same prejoin-target and with the same conditions(columns and operator) they will be combined into one item.
     arguments:
       - name: prejoined_columns
-        type: list
+        type: list|dict
         description: The value of the prejoined_columns as defined in the yaml_metadata of the stage-model.
 
   - name: extract_prejoin_column_names
