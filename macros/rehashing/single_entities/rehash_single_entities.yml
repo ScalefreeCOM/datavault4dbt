@@ -195,7 +195,7 @@ macros:
         type: string
         description: The name of the parent entity (hub or link).
       - name: business_keys
-        type: string or list
+        type: string|list
         description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
       - name: overwrite_hash_values
         type: boolean
@@ -255,7 +255,7 @@ macros:
         type: string
         description: The name of the parent entity (hub or link).
       - name: business_keys
-        type: string or list
+        type: string|list
         description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
       - name: overwrite_hash_values
         type: boolean
