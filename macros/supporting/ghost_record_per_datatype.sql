@@ -598,6 +598,8 @@
 
 {%- set datatype = datatype | string | upper | trim -%}
 
+{%- set alias = datavault4dbt.escape_column_names(alias) -%}
+
 {%- if ghost_record_type == 'unknown' -%}
         {%- if datatype == 'TIMESTAMP' %} {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} as {{ alias }}
         {%- elif datatype == 'DATE'%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}

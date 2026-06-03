@@ -11,7 +11,7 @@ macros:
         type: string
         description: The yaml-string that holds the definition of other parameters. Needs to be in yaml format. 
       - name: parameter
-        type: variable
+        type: string
         description: The forwarded parameter of the top-level macro. This is used, if the yaml-metadata is none. 
       - name: required
         type: boolean
