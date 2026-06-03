@@ -283,6 +283,10 @@
                     {%- endif -%}
 
                     {%- do run_query(alter_sql) -%}
+                    {# Commit so Redshift completes the async reorg/VACUUM triggered by ALTER DISTSTYLE
+                       and releases its table lock before the later DROP COLUMN. Required under the Fusion
+                       engine, where statements are otherwise not committed between the ALTER and the DROP. #}
+                    {%- do run_query('COMMIT;') -%}
 
                 {%- endif -%}
 
@@ -316,6 +320,8 @@
                 {%- endif -%}
                 {{ log(alter_sortkey_sql, false)}}
                 {%- do run_query(alter_sortkey_sql) -%}
+                {# Commit so the ALTER SORTKEY reorg/VACUUM completes before the DROP COLUMN below. #}
+                {%- do run_query('COMMIT;') -%}
 
             {%- endif -%}
             
