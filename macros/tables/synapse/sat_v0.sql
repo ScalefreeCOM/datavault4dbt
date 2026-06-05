@@ -4,15 +4,24 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{%- set src_payload = src_payload | default([], true) -%}
+{%- set src_payload = [src_payload] if src_payload is string else src_payload -%}
+{%- set payload_count = src_payload | length -%}
+{%- set has_hashdiff = src_hashdiff is not none and src_hashdiff != '' -%}
+
 {%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
 
-{%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
-    {% set ns.src_hashdiff = src_hashdiff["source_column"] %}
-    {% set ns.hdiff_alias = src_hashdiff["alias"] %}
-{% else %}
-    {% set ns.src_hashdiff = src_hashdiff %}
-    {% set ns.hdiff_alias = src_hashdiff  %}
+{%- if has_hashdiff -%}
+    {%- if src_hashdiff is mapping -%}
+        {%- set ns.src_hashdiff = src_hashdiff["source_column"] -%}
+        {%- set ns.hdiff_alias = src_hashdiff["alias"] -%}
+    {%- else -%}
+        {%- set ns.src_hashdiff = src_hashdiff -%}
+        {%- set ns.hdiff_alias = src_hashdiff -%}
+    {%- endif -%}
 {%- endif -%}
+
+{%- set dedup_column = ns.hdiff_alias if has_hashdiff else (src_payload[0] if payload_count == 1 else none) -%}
 
 {# Select the additional_columns and put them in an array. If additional_colums none, then empty array #}
 {%- set additional_columns = additional_columns | default([],true) -%}
@@ -31,7 +40,9 @@ source_data AS (
 
     SELECT
         {{ parent_hashkey }},
+        {%- if has_hashdiff %}
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
+        {%- endif %}
         {{ datavault4dbt.print_list(source_cols) }}
     FROM {{ source_relation }}
 
@@ -61,13 +72,15 @@ latest_entries_in_sat_prep AS (
 
     SELECT
         tgt.{{ parent_hashkey }},
-        tgt.{{ ns.hdiff_alias }},
+        {%- if dedup_column is not none %}
+        tgt.{{ dedup_column }},
+        {%- endif %}
         ROW_NUMBER() OVER(PARTITION BY tgt.{{ parent_hashkey|lower }} ORDER BY tgt.{{ src_ldts }} DESC) as rn
     FROM {{ this }} tgt
     INNER JOIN distinct_incoming_hashkeys src
         ON tgt.{{ parent_hashkey }} = src.{{ parent_hashkey }}
      WHERE 1=1
-        
+
     {{ datavault4dbt.filter_latest_entries_in_sat() }}
 
 ),
@@ -75,26 +88,31 @@ latest_entries_in_sat_prep AS (
 latest_entries_in_sat AS (
 
     SELECT
-        {{ parent_hashkey }},
-        {{ ns.hdiff_alias }}
-    FROM 
+        {{ parent_hashkey }}
+        {%- if dedup_column is not none -%},
+        {{ dedup_column }}
+        {%- endif %}
+    FROM
         latest_entries_in_sat_prep
-    WHERE rn = 1  
+    WHERE rn = 1
 ),
 {%- endif %}
 
-{%- if not source_is_single_batch %}
+{%- if not source_is_single_batch and payload_count > 0 %}
 {#
-    Deduplicate source by comparing each hashdiff to the hashdiff of the previous record, for each hashkey.
+    Deduplicate source by comparing each hashdiff/payload value to the value of the previous record, for each hashkey.
     Additionally adding a row number based on that order, if incremental.
+    Skipped entirely when no payload is provided (Modus C).
 #}
 deduplicated_numbered_source_prep AS (
 
     SELECT
     {{ parent_hashkey }},
-    {{ ns.hdiff_alias }},
+    {%- if has_hashdiff %}
+    {{ dedup_column }},
+    {%- endif %}
     {{ datavault4dbt.print_list(source_cols) }}
-    , LAG({{ ns.hdiff_alias }}) OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) as prev_hashdiff
+    , LAG({{ dedup_column }}) OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) as prev_dedup_col
     FROM source_data
 
 ),
@@ -103,14 +121,16 @@ deduplicated_numbered_source AS (
 
     SELECT
     {{ parent_hashkey }},
-    {{ ns.hdiff_alias }},
+    {%- if has_hashdiff %}
+    {{ dedup_column }},
+    {%- endif %}
     {{ datavault4dbt.print_list(source_cols) }}
     {% if is_incremental() -%}
     , ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
     FROM deduplicated_numbered_source_prep
     WHERE 1=1
-        AND {{ ns.hdiff_alias }} <> prev_hashdiff OR prev_hashdiff IS NULL
+        AND {{ dedup_column }} <> prev_dedup_col OR prev_dedup_col IS NULL
 
     {%- set source_cte = 'deduplicated_numbered_source' -%}
 
@@ -126,7 +146,9 @@ records_to_insert AS (
 
     SELECT
     {{ parent_hashkey }},
-    {{ ns.hdiff_alias }},
+    {%- if has_hashdiff %}
+    {{ dedup_column }},
+    {%- endif %}
     {{ datavault4dbt.print_list(source_cols) }}
     FROM {{ source_cte }} sc
     {%- if is_incremental() %}
@@ -134,8 +156,10 @@ records_to_insert AS (
         SELECT 1
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', 'sc'], condition='=') }}
-            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', 'sc'], condition='=') }}
-            {%- if not source_is_single_batch %}
+        {%- if dedup_column is not none %}
+            AND {{ datavault4dbt.multikey(dedup_column, prefix=['latest_entries_in_sat', 'sc'], condition='=') }}
+        {%- endif %}
+            {%- if not source_is_single_batch and payload_count > 0 %}
             AND sc.rn = 1
             {%- endif %}
     )

@@ -21,12 +21,12 @@ Compared to a regular version 1 Satellite, a version 1 reference Satellite inclu
 |-------------|-------------|-----------|---------------|-------------|
 | ref_sat_v0  | string      | mandatory | –             | Name of the underlying version 0 reference_satellite. |
 | ref_keys    | string/list | mandatory | –             | Name of the reference key(s) inside the parent reference Hub. Should be the same as defined in the underlying version 0 reference Satellite. |
-| hashdiff    | string      | mandatory | –             | Name of the hashdiff column inside the underlying version 0 reference satellite. Needs to be similar to the `src_hashdiff` parameter inside the sat_v0 model. |
 
 ### OPTIONAL PARAMETERS
 
 | Parameters          | Data Type | Required | Default Value              | Explanation |
 |---------------------|-----------|----------|----------------------------|-------------|
+| hashdiff            | string    | optional | none                       | Name of the hashdiff column inside the underlying version 0 reference satellite. Needs to be similar to the `src_hashdiff` parameter inside the ref_sat_v0 model. Set this only if the underlying v0 reference satellite has a hashdiff column; omit it for a single-attribute or no-payload v0 reference satellite. |
 | src_ldts            | string    | optional | datavault4dbt.ldts_alias   | Name of the ldts column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
 | src_rsrc            | string    | optional | datavault4dbt.rsrc_alias   | Name of the rsrc column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
 | ledts_alias         | string    | optional | datavault4dbt.ledts_alias  | Desired alias for the load end date column. |

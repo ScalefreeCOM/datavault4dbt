@@ -20,14 +20,14 @@ Features:
 | Parameters      | Data Type       | Required  | Default Value | Explanation |
 |-----------------|----------------|-----------|---------------|-------------|
 | parent_hashkey | string         | mandatory | –             | Name of the hashkey column inside the stage of the object that this satellite is attached to. |
-| src_hashdiff   | string         | mandatory | –             | Name of the hashdiff column of this satellite, that was created inside the staging area and is calculated out of the entire payload of this satellite. The stage must hold one hashdiff per satellite entity. |
-| src_payload    | list of strings| mandatory | –             | A list of all the descriptive attributes that should be included in this satellite. Needs to be the columns that are fed into the hashdiff calculation of this satellite. |
 | source_model   | string         | mandatory | –             | Name of the underlying staging model, must be available inside dbt as a model. |
 
 ### OPTIONAL PARAMETERS
 
 | Parameters             | Data Type | Required | Default Value             | Explanation |
 |------------------------|----------|----------|---------------------------|-------------|
+| src_payload            | list of strings | optional | none               | The descriptive attributes that should be included in this satellite. With a single column, `src_hashdiff` may be omitted and change detection runs directly on that column. With two or more columns, `src_hashdiff` is required. Omit entirely for a satellite without payload. See [Payload and hashdiff options](#payload-and-hashdiff-options). |
+| src_hashdiff           | string   | optional | none                      | Name of the hashdiff column of this satellite, that was created inside the staging area and is calculated out of the entire payload of this satellite. The stage must hold one hashdiff per satellite entity. Required when `src_payload` has two or more columns; omit it for a single-attribute or no-payload satellite. |
 | src_ldts               | string   | optional | datavault4dbt.ldts_alias  | Name of the ldts column inside the source model. Is optional, will use the global variable `datavault4dbt.ldts_alias`. Needs to use the same column name as defined as alias inside the staging model. |
 | src_rsrc               | string   | optional | datavault4dbt.rsrc_alias  | Name of the rsrc column inside the source model. Is optional, will use the global variable `datavault4dbt.rsrc_alias`. Needs to use the same column name as defined as alias inside the staging model. |
 | disable_hwm            | boolean  | optional | False                     | Whether the automatic application of a High-Water Mark (HWM) should be disabled or not. |
@@ -64,3 +64,45 @@ With this example, a regular standard Satellite in version 0 is created. Importa
 - **src_payload**: This satellite would hold the columns `name`, `address`, `phone` and `email`, coming out of the underlying staging area.
 - **source_models**:
   - __stage_account__: This satellite is loaded out of the stage for account.
+
+## PAYLOAD AND HASHDIFF OPTIONS
+
+Both `src_payload` and `src_hashdiff` are optional. Depending on what you provide, a standard satellite supports three configurations:
+
+1. **Multiple attributes with a hashdiff** — provide `src_payload` (one or more columns) together with `src_hashdiff`. Change detection runs on the hashdiff. *Use this when the satellite carries several descriptive attributes — the classic case shown in Example 1 above.*
+2. **A single attribute without a hashdiff** — provide exactly one `src_payload` column and omit `src_hashdiff`. Change detection runs directly on that column. *Use this when the satellite tracks exactly one descriptive attribute (for example a status or a flag); it avoids computing and storing a hashdiff.*
+3. **No payload** — omit both `src_payload` and `src_hashdiff`. The satellite only records when a hashkey appears, together with the load date, record source and any `additional_columns`. *Use this when you only need to record that (and when) a business key appeared, or for a satellite that carries only `additional_columns`.*
+
+If `src_payload` contains two or more columns but `src_hashdiff` is missing, compilation fails with a clear error, since a hashdiff is required to detect changes across multiple columns.
+
+### EXAMPLE 2 – single attribute without a hashdiff
+
+```jinja
+{{ config(materialized='incremental') }}
+
+{%- set yaml_metadata -%}
+parent_hashkey: 'hk_account_h'
+src_payload:
+    - account_status
+source_model: 'stage_account'
+{%- endset -%}    
+
+{{ datavault4dbt.sat_v0(yaml_metadata=yaml_metadata) }}
+```
+
+Change detection runs directly on `account_status`; a new record is inserted whenever its value changes for a hashkey.
+
+### EXAMPLE 3 – no payload
+
+```jinja
+{{ config(materialized='incremental') }}
+
+{%- set yaml_metadata -%}
+parent_hashkey: 'hk_account_h'
+source_model: 'stage_account'
+{%- endset -%}    
+
+{{ datavault4dbt.sat_v0(yaml_metadata=yaml_metadata) }}
+```
+
+The satellite records each hashkey together with its load date and record source. A new record is only inserted when a hashkey appears that is not yet present. If your goal is purely to track the appearance of a key across one or more source systems, also consider the dedicated [Record-Tracking Satellite](../15_record-tracking-satellites/15_record-tracking-satellites.md).
