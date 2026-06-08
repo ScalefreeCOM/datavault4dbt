@@ -455,7 +455,7 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUOTE]', '\
     {%- set hdiff_suffix = "" -%}
 {%- endif -%}
 
-{%- if 'VARBINARY' in datatype %}
+{%- if 'VARCHAR' in datatype or 'CHAR' in datatype or 'NVARCHAR' in datatype or 'NCHAR' in datatype %}
 
     {%- if case_sensitive -%}
     

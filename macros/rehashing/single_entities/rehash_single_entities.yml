@@ -16,7 +16,7 @@ macros:
         type: string
         description: The name of the existing hashkey column.
       - name: business_keys
-        type: string or list
+        type: string|list
         description: The business key(s) used to calculate the new hash.
       - name: overwrite_hash_values
         type: boolean
@@ -43,7 +43,7 @@ macros:
         type: string
         description: The name of the existing hashkey column.
       - name: hash_config_dict
-        type: dictionary
+        type: dict
         description: A dictionary containing the hash configuration.
 
   - name: rehash_single_link
@@ -116,7 +116,7 @@ macros:
         type: string
         description: The name of the existing hashdiff column.
       - name: ma_keys
-        type: string or list
+        type: list
         description: The multi-active key(s) of the satellite.
       - name: payload
         type: list
@@ -125,7 +125,7 @@ macros:
         type: string
         description: The name of the parent entity (hub or link).
       - name: business_keys
-        type: string or list
+        type: string|list
         description: The business key(s) of the parent entity.
       - name: overwrite_hash_values
         type: boolean
@@ -164,7 +164,7 @@ macros:
         type: string
         description: The load date timestamp column name.
       - name: hash_config_dict
-        type: dictionary
+        type: dict
         description: A dictionary containing the hash configuration.
       - name: parent_relation
         type: relation
@@ -195,7 +195,7 @@ macros:
         type: string
         description: The name of the parent entity (hub or link).
       - name: business_keys
-        type: string or list
+        type: string|list
         description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
       - name: overwrite_hash_values
         type: boolean
@@ -228,7 +228,7 @@ macros:
         type: relation
         description: The parent entity relation.
       - name: hash_config_dict
-        type: dictionary
+        type: dict
         description: A dictionary containing the hash configuration.
 
   - name: rehash_single_satellite
@@ -255,7 +255,7 @@ macros:
         type: string
         description: The name of the parent entity (hub or link).
       - name: business_keys
-        type: string or list
+        type: string|list
         description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
       - name: overwrite_hash_values
         type: boolean
@@ -288,7 +288,7 @@ macros:
         type: string
         description: The load date timestamp column name.
       - name: hash_config_dict
-        type: dictionary
+        type: dict
         description: A dictionary containing the hash configuration.
       - name: parent_relation
         type: relation
