@@ -20,7 +20,7 @@ LISTAGG(column_name, ',') WITHIN GROUP (ORDER BY multi_active_key)
 
 ### MINIMUM RUNTIME REQUIREMENT
 
-`LISTAGG ... WITHIN GROUP (ORDER BY ...)` requires **Databricks Runtime 10.4 LTS or later** (or an equivalent Databricks SQL warehouse version). If you are on an older runtime, upgrade before using v2.0.0 multi-active satellites, or the model will fail to compile with a function-not-found error.
+`LISTAGG ... WITHIN GROUP (ORDER BY ...)` requires **Databricks Runtime 16.4 LTS or later** (or an equivalent Databricks SQL warehouse version). If you are on an older runtime, upgrade before using v2.0.0 multi-active satellites, or the model will fail to compile with a function-not-found error.
 
 
 ## ADAPTER SPECIFIC VARIABLE
