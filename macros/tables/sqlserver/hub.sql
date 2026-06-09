@@ -1,6 +1,7 @@
 {%- macro sqlserver__hub(hashkey, business_keys, src_ldts, src_rsrc, source_models, disable_hwm, additional_columns) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_models: '~source_models, false) }}{% endif %}

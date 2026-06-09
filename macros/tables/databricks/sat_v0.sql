@@ -114,7 +114,6 @@ deduplicated_numbered_source AS (
 ),
 {%- endif %}
 
-{% endif -%}
 
 {#
     Select all records from the previous CTE. If incremental, compare the oldest incoming entry to
