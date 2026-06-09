@@ -124,7 +124,7 @@ deduplicated_numbered_source AS (
     {{ datavault4dbt.print_list(source_cols) }}
     FROM deduplicated_numbered_source_prep
     WHERE 1=1
-        AND {{ dedup_column }} <> prev_dedup_col OR prev_dedup_col IS NULL
+        AND ({{ dedup_column }} <> prev_dedup_col OR prev_dedup_col IS NULL)
         {% if is_incremental() -%}
         AND rn = 1
         {%- endif %}

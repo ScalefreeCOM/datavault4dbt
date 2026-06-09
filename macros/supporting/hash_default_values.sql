@@ -180,11 +180,11 @@
         {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ",'0000000000000000000000000000000000000000')" -%}
         {%- set error_key = "CONVERT(" ~ hash_datatype ~ ",'ffffffffffffffffffffffffffffffffffffffff')" -%}
     {%- elif hash_function in ['SHA2', 'SHA2_256'] -%}
-        {%- set hash_alg = 'SHA2_256 ' -%}
+        {%- set hash_alg = 'SHA2_256' -%}
         {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ",'0000000000000000000000000000000000000000000000000000000000000000')" -%}
         {%- set error_key = "CONVERT(" ~ hash_datatype ~ ",'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}
     {%- elif hash_function == 'SHA2_512' -%}
-        {%- set hash_alg = 'SHA2_512 ' -%}
+        {%- set hash_alg = 'SHA2_512' -%}
         {%- set unknown_key = "CONVERT(" ~ hash_datatype ~ ",'00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')" -%}
         {%- set error_key = "CONVERT(" ~ hash_datatype ~ ",'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')" -%}
     {%- endif -%}

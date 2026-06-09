@@ -159,7 +159,7 @@ WITH
             {{ (src_rsrc) }}
         FROM {{ ref(source_model.name) }} src
 
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
         ({%- for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'
@@ -167,7 +167,7 @@ WITH
             {% endif -%}
         {%- endfor %})
         WHERE src.{{ src_ldts }} > max.max_ldts
-    {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
+    {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined %}
         WHERE src.{{ src_ldts }} > (
             SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM {{ this }}

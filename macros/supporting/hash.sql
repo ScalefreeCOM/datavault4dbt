@@ -7,11 +7,11 @@
         {%- set rtrim_hashdiff = false -%}
     {%- endif -%}
 
-    {%- set global_use_trim = var('datavault4dbt.hashdiff_use_trim', true) -%}
+    {%- set global_hdiff_trim = var('datavault4dbt.hashdiff_use_trim', true) -%}
 
     {%- if use_trim is none -%}
             {%- if is_hashdiff -%}
-                {%- set use_trim = global_use_trim -%}
+                {%- set use_trim = global_hdiff_trim -%}
             {%- else -%}
                 {%- set use_trim = true -%}
             {%- endif -%}

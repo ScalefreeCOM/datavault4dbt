@@ -2,8 +2,6 @@
 
 {%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
 
-{%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
-
 {% if datavault4dbt.is_nothing(end_date) %}
   {% set end_date = datavault4dbt.current_timestamp() %}
 {% else %}

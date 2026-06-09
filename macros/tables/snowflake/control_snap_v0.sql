@@ -10,8 +10,6 @@
 
 {%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
 
-{%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
-
 WITH 
 
 initial_timestamps AS (
