@@ -16,14 +16,14 @@
         {%- if datavault4dbt.is_something(multi_active_key) -%}
             {#- Apply block-based hashing pattern for hash diff attribute in multi-active satellite. -#}
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
-                {{- datavault4dbt.hash(columns=columns[col]['columns'], 
-                                alias=col, 
+                {{- datavault4dbt.hash(columns=columns[col]['columns'],
+                                alias=col,
                                 is_hashdiff=columns[col]['is_hashdiff'],
-                                rtrim_hashdiff=columns[col]['use_rtrim'],
+                                rtrim_hashdiff=columns[col].get('use_rtrim', false),
                                 multi_active_key=multi_active_key,
                                 main_hashkey_column=main_hashkey_column,
-                                use_trim=columns[col]['use_trim']) -}}
-            
+                                use_trim=columns[col].get('use_trim', none)) -}}
+
             {#- Apply standard hashing for hash key attributes. -#}
             {%- elif columns[col] is not mapping -%}
 
@@ -38,18 +38,18 @@
         {%- else -%}
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
 
-                {{- datavault4dbt.hash(columns=columns[col]['columns'], 
-                                alias=col, 
+                {{- datavault4dbt.hash(columns=columns[col]['columns'],
+                                alias=col,
                                 is_hashdiff=columns[col]['is_hashdiff'],
-                                rtrim_hashdiff=columns[col]['use_rtrim'],
-                                use_trim=columns[col]['use_trim']) -}}
+                                rtrim_hashdiff=columns[col].get('use_rtrim', false),
+                                use_trim=columns[col].get('use_trim', none)) -}}
 
             {%- elif columns[col] is not mapping -%}
 
                 {{- datavault4dbt.hash(columns=columns[col],
                                 alias=col,
                                 is_hashdiff=false)-}}
-            
+
             {%- elif columns[col] is mapping and not columns[col].is_hashdiff -%}
 
                 {%- if execute -%}
@@ -63,7 +63,7 @@
         {{- ",\n" if not loop.last -}}
 
         {%- endif -%}
-        
+
     {%- endfor -%}
 
 {%- endif %}
@@ -78,13 +78,13 @@
 
         {%- if datavault4dbt.is_something(multi_active_key) -%}
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
-                {{- datavault4dbt.hash(columns=columns[col]['columns'], 
-                                alias=col, 
+                {{- datavault4dbt.hash(columns=columns[col]['columns'],
+                                alias=col,
                                 is_hashdiff=columns[col]['is_hashdiff'],
-                                rtrim_hashdiff=columns[col]['use_rtrim'],
+                                rtrim_hashdiff=columns[col].get('use_rtrim', false),
                                 multi_active_key=multi_active_key,
                                 main_hashkey_column=main_hashkey_column,
-                                use_trim=columns[col]['use_trim']) -}}
+                                use_trim=columns[col].get('use_trim', none)) -}}
 
             {{- ", \n" if not loop.last -}}
 
@@ -99,18 +99,18 @@
         {%- else -%}
             {% if columns[col] is mapping and columns[col].is_hashdiff -%}
 
-                {{- datavault4dbt.hash(columns=columns[col]['columns'], 
-                                alias=col, 
+                {{- datavault4dbt.hash(columns=columns[col]['columns'],
+                                alias=col,
                                 is_hashdiff=columns[col]['is_hashdiff'],
-                                rtrim_hashdiff=columns[col]['use_rtrim'],
-                                use_trim=columns[col]['use_trim']) -}}
+                                rtrim_hashdiff=columns[col].get('use_rtrim', false),
+                                use_trim=columns[col].get('use_trim', none)) -}}
 
             {%- elif columns[col] is not mapping -%}
 
                 {{- datavault4dbt.hash(columns=columns[col],
                                 alias=col,
                                 is_hashdiff=false) -}}
-            
+
             {%- elif columns[col] is mapping and not columns[col].is_hashdiff -%}
 
                 {%- if execute -%}
