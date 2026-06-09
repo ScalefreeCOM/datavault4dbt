@@ -738,7 +738,8 @@
 {%- set error_value__numeric = var('datavault4dbt.error_value__numeric', -2) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash)) -%}
+{%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARBINARY(16)') -%}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=hash, hash_datatype=hash_dtype)) -%}
 {%- set hash_alg= hash_default_values['hash_alg'] -%}
 {%- set unknown_value__HASHTYPE = hash_default_values['unknown_key'] -%}
 {%- set error_value__HASHTYPE = hash_default_values['error_key'] -%}
@@ -771,7 +772,7 @@
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ beginning_of_all_times_date }}') as {{ alias }}
     {%- elif 'BINARY' in datatype -%}
-       CAST('{{ unknown_value__HASHTYPE }}' as {{ datatype }}) as {{ alias }}
+       CAST({{ unknown_value__HASHTYPE }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'FLOAT' -%} CAST({{ unknown_value__numeric }} as {{datatype}}) as {{ alias }}
     {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
     {% endif %}
@@ -803,7 +804,7 @@
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ end_of_all_times_date }}') as {{ alias }}
     {%- elif 'BINARY' in datatype -%}
-       CAST('{{ error_value__HASHTYPE }}' as {{ datatype }}) as {{ alias }}
+       CAST({{ error_value__HASHTYPE }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'FLOAT' -%} CAST({{ error_value__numeric }} as {{datatype}}) as {{ alias }}
     {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
     {% endif %}
