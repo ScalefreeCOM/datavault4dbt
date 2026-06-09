@@ -20,7 +20,6 @@
 
 {%- set source_columns_to_select = datavault4dbt.escape_column_names(source_columns_to_select) -%}
 {%- set ref_keys = datavault4dbt.escape_column_names(ref_keys) -%}
-{%- set hashdiff = datavault4dbt.escape_column_names(hashdiff) -%}
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
 {%- set ledts_alias = datavault4dbt.escape_column_names(ledts_alias) -%}
@@ -42,8 +41,10 @@ end_dated_source AS (
         {%- endif %}
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD(DATEADD(ns, -100, {{ src_ldts }})) OVER (PARTITION BY {%- for ref_key in ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts_alias }},
+        COALESCE(LEAD(DATEADD(ns, -100, {{ src_ldts }})) OVER (PARTITION BY {%- for ref_key in ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts_alias }}
+        {%- if source_columns_to_select -%},
         {{ datavault4dbt.print_list(source_columns_to_select) }}
+        {%- endif %}
     FROM {{ source_relation }}
 
 )
@@ -57,14 +58,16 @@ SELECT
     {%- endif %}
     {{ src_rsrc }},
     {{ src_ldts }},
-    {{ ledts_alias }},
+    {{ ledts_alias }}
     {%- if add_is_current_flag %}
-        CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    ,CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
         THEN 1
         ELSE 0
-        END AS {{ is_current_col_alias }},
+    END AS {{ is_current_col_alias }}
     {% endif -%}
+    {%- if source_columns_to_select -%},
     {{ datavault4dbt.print_list(source_columns_to_select) }}
+    {%- endif %}
 FROM end_dated_source
 
 {%- endmacro -%}
