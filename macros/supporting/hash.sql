@@ -11,7 +11,7 @@
 
     {%- if use_trim is none -%}
             {%- if is_hashdiff -%}
-                {%- set use_trim = global_hashdiff_trim -%}
+                {%- set use_trim = global_use_trim -%}
             {%- else -%}
                 {%- set use_trim = true -%}
             {%- endif -%}
