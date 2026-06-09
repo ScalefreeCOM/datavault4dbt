@@ -52,7 +52,7 @@ end_dated_loads AS (
     {{ src_ldts }},
     COALESCE(
         DATEADD(ns, -100, LEAD({{ src_ldts }}) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }})),
-        CAST('{{ end_of_all_times }}' AS DATETIME2(6))
+        CAST('{{ end_of_all_times }}' AS {{ datavault4dbt.timestamp_default_dtype() }})
     ) AS {{ ledts_alias }}
 FROM distinct_hk_ldts
 
@@ -68,7 +68,7 @@ SELECT
     src.{{ src_ldts }},
     edl.{{ ledts_alias }},
     {%- if add_is_current_flag %}
-        CASE WHEN edl.{{ ledts_alias }} = CAST('{{ end_of_all_times }}' AS DATETIME2(6))
+        CASE WHEN edl.{{ ledts_alias }} = CAST('{{ end_of_all_times }}' AS {{ datavault4dbt.timestamp_default_dtype() }})
         THEN 1
         ELSE 0
         END AS {{ is_current_col_alias }},

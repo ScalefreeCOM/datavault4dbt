@@ -40,7 +40,7 @@
 {%- endmacro -%}
 
 {% macro sqlserver__current_timestamp() %}
-    {{ return('CAST(SYSDATETIME() AS DATETIME2(6))')}}
+    {{ return('CAST(SYSDATETIME() AS DATETIME2(7))')}}
 {% endmacro %}
 
 {% macro sqlserver__current_timestamp_in_utc() %}

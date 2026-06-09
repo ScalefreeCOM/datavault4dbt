@@ -44,5 +44,5 @@
 {%- endmacro -%}
 
 {%- macro sqlserver__string_to_timestamp(format, timestamp) -%}
-    CONVERT(datetime2(6), '{{ timestamp }}', {{ format }})
+    CONVERT(datetime2(7), '{{ timestamp }}', {{ format }})
 {%- endmacro -%}
