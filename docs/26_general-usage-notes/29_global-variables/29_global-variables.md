@@ -30,6 +30,7 @@ All the following variables are **prefixed with `datavault4dbt`**.
 | enable_static_analysis_overwrite                | All macros            | Relevant for Fusion compatibility. For more info, see here. |
 | multi_source_models_execution_aware_loading     | Multi source entities | Whether multi source entities should respect the dbt command to reduce runtimes. |
 | first_day_of_week                               | Snapshot Table        | A mapping dictionary that defines the integer representation of the first day of the week (Sunday vs. Monday) for each specific database adapter. For the full configuration matrix, see [Snapshot Control v0](../../01_macro-instructions/22_business-vault/24_snapshot-control/24_snapshot-control-v0.md). |
+| show_debug_logs                                 | All macros            | Whether verbose debug `log()` output should be written to the dbt `.log` file. Defaults to `false` to keep the log file clean. Set to `true` when troubleshooting macro behavior.  |
 ### COLUMN ALIASES
 
 | Name                   | Usage                         | Explanation |

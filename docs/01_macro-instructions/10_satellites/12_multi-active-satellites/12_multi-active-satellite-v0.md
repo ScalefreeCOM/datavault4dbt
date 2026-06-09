@@ -33,6 +33,8 @@ Features:
 |------------|-----------|----------|---------------------------|-------------|
 | src_ldts   | string    | optional | datavault4dbt.ldts_alias  | Name of the ldts column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
 | src_rsrc   | string    | optional | datavault4dbt.rsrc_alias  | Name of the rsrc column inside the source models. Needs to use the same column name as defined as alias inside the staging model. |
+| disable_hwm | boolean  | optional | False                     | Whether the automatic application of a High-Water Mark (HWM) should be disabled or not. Available from v2.0.0. |
+| source_is_single_batch | boolean | optional | False           | Boosts performance by disabling the deduplication (QUALIFY) statement. Only activate this if you make sure that the underlying staging model only holds one row per entry. See the non-historized link for more details. Available from v2.0.0. |
 | additional_columns | string \| list of strings | optional | none                      | Column or list of columns that will additionally be added to the multi-active satellite. |
 
 ## EXAMPLE 1

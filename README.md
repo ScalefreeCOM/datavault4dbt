@@ -37,7 +37,6 @@ To use the macros efficiently, there are a few prerequisites you need to provide
 - Load Date column that represents the arriving time in the source data storage
 - Record Source column that gives information about where the source data is coming from (e.g. the file location inside a Data Lake)
 
-<img src="https://www.getdbt.com/ui/img/logos/dbt-logo.svg" width=33% align=right>
 
 ### Resources:
 - Find technical information about the macros, examples, and more, on [the official datavault4dbt Website](https://www.datavault4dbt.com/)!
@@ -64,8 +63,9 @@ Currently supported platforms are:
 * Microsoft Fabric
 * Databricks
 * Oracle
+* Microsoft SQL Server
 
-We are working continuously at high pressure to adapt the package for large variety of different platforms. In the future, the package will hopefully be available for SQL Server, Oracle and many more.
+We are working continuously at high pressure to adapt the package for a large variety of different platforms. In the future, the package will hopefully be available for many more.
 
 ---
 ## Looking for dedicated Support?
