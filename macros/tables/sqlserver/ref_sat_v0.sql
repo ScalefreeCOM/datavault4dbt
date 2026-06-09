@@ -96,10 +96,10 @@ latest_entries_in_sat AS (
 
     SELECT
         {% for ref_key in parent_ref_keys %}
-        {{ ref_key }},
+        {{ ref_key }}{{ ',' if not loop.last }}
         {% endfor %}
         {%- if dedup_column is not none %}
-        {{ dedup_column }}
+        ,{{ dedup_column }}
         {%- endif %}
     FROM
         target_data
