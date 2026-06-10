@@ -33,7 +33,7 @@
 
 {# Get max(ldts) #}
 {% if execute %}
-    {%- if is_incremental() %}
+    {%- if is_incremental() and not disable_hwm %}
         {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
         {% set max_ldts_results = run_query(max_ldts_query) %}
         {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
@@ -55,9 +55,12 @@ source_data AS (
         {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(source_cols)) if source_cols else " *" }}
     FROM {{ source_relation }}
 
-    {%- if is_incremental() %}
+    {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > '{{ max_ldts }}'
     {%- endif %}
+
+    {%- set last_cte = 'source_data' -%}
+
 ),
 
 {# Get the latest record for each parent hashkey in existing sat, if incremental. #}
@@ -80,14 +83,13 @@ latest_entries_in_sat AS (
 ),
 {%- endif %}
 
-{%- set last_cte = 'deduplicated_numbered_source' if payload_count > 0 else 'source_data' -%}
 
 {#
     Deduplicate source by comparing each hashdiff/payload value to the value of the previous record, for each hashkey.
     Additionally adding a row number based on that order, if incremental.
     Skipped entirely when no payload is provided (Modus C).
 #}
-{%- if payload_count > 0 %}
+{%- if payload_count > 0 and not source_is_single_batch %}
 deduplicated_numbered_source AS (
 
     SELECT
@@ -105,8 +107,12 @@ deduplicated_numbered_source AS (
             WHEN {{ dedup_column }} = LAG({{ dedup_column }}) OVER(PARTITION BY {{ parent_hashkey|lower }} ORDER BY {{ src_ldts }}) THEN FALSE
             ELSE TRUE
         END
+
+    {%- set last_cte = 'deduplicated_numbered_source' -%}
+
 ),
 {%- endif %}
+
 
 {#
     Select all records from the previous CTE. If incremental, compare the oldest incoming entry to
@@ -129,7 +135,7 @@ records_to_insert AS (
         {%- if dedup_column is not none %}
             AND {{ datavault4dbt.multikey(dedup_column, prefix=['latest_entries_in_sat', last_cte], condition='=') }}
         {%- endif %}
-        {%- if payload_count > 0 %}
+        {%- if payload_count > 0 and not source_is_single_batch %}
             AND {{ last_cte }}.rn = 1
         {%- endif %})
     {%- endif %}

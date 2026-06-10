@@ -38,3 +38,11 @@
     {#- default is current_timestamp(3), which is incompatible with trino iceberg backend -#}
     current_timestamp(6)
 {%- endmacro -%}
+
+{% macro sqlserver__current_timestamp() %}
+    {{ return('CAST(SYSDATETIME() AS DATETIME2(7))')}}
+{% endmacro %}
+
+{% macro sqlserver__current_timestamp_in_utc() %}
+    {{return('sysutcdatetime()')}}
+{% endmacro %}

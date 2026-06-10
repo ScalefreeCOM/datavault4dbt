@@ -1,6 +1,7 @@
 {%- macro databricks__eff_sat_v0(source_model, tracked_hashkey, src_ldts, src_rsrc, is_active_alias, source_is_single_batch, disable_hwm, additional_columns) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {%- set ns = namespace(last_cte= "") -%}
@@ -20,7 +21,7 @@
 
 {%- set is_active_datatype = var('datavault4dbt.is_active_datatype', 'Boolean') -%}
 
-{{ log('columns to select: '~final_columns_to_select, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('columns to select: '~final_columns_to_select, false) }}{% endif %}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -43,7 +44,7 @@ source_data AS (
     {%- if is_incremental() and not disable_hwm %}
     AND src.{{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }})
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
         FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
@@ -294,7 +295,7 @@ records_to_insert AS (
                     AND cast(di.{{ is_active_alias }} as {{ is_active_datatype }}) = current_status.{{ is_active_alias }}
                     AND di.{{ src_ldts }} = (SELECT MIN({{ src_ldts }}) FROM deduplicated_incoming)
                 )
-            AND di.{{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM {{ this }})
+            AND di.{{ src_ldts }} > (SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }} WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
         {% endif %}
 
     {#

@@ -110,7 +110,7 @@
     {% for column in all_parent_columns %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ ma_satellite_relation.name, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('parent_already hashed set to true for ' ~ ma_satellite_relation.name, false) }}{% endif %}
         {% endif %}
     {% endfor %}
 
@@ -147,7 +147,7 @@
     {% endfor %}
     {# Extract only the column names #}
     {% set select_clause = filtered_columns | join(', ') %}
-    {{ log('SELECT clause: ' ~ select_clause, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('SELECT clause: ' ~ select_clause, false) }}{% endif %}
 
     
     {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}

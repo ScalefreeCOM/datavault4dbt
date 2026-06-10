@@ -98,10 +98,10 @@
     #}
     {% set all_parent_columns = adapter.get_columns_in_relation(parent_relation) %}
     {% for column in all_parent_columns %}
-        {{ log('parent column names: ' ~ all_parent_columns, false) }}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('parent column names: ' ~ all_parent_columns, false) }}{% endif %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ nh_satellite_relation.name, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('parent_already hashed set to true for ' ~ nh_satellite_relation.name, false) }}{% endif %}
         {% endif %}
     {% endfor %}
 
@@ -126,13 +126,13 @@
     {# Extract only the column names #}
     {% set selected_column_names = filtered_columns | map(attribute='name') | list %}
     {% set select_clause = selected_column_names | join(', ') %}
-    {{ log('SELECT clause: ' ~ select_clause, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('SELECT clause: ' ~ select_clause, false) }}{% endif %}
 
     {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
-    {{ log('hash_config_dict' ~ hash_config_dict, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash_config_dict' ~ hash_config_dict, false) }}{% endif %}
 
     {% set create_sql %}
     CREATE OR REPLACE TABLE {{ nh_satellite_relation }} AS

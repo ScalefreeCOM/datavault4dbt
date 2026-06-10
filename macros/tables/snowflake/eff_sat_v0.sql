@@ -2,6 +2,7 @@
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 
 {%- set ns = namespace(last_cte= "") -%}
 
@@ -20,12 +21,12 @@
 
 {%- set is_active_datatype = var('datavault4dbt.is_active_datatype', 'Boolean') -%}
 
-{{ log('columns to select: '~final_columns_to_select, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('columns to select: '~final_columns_to_select, false) }}{% endif %}
 
 {# Get max(ldts) #}
 {% if execute %}
     {%- if is_incremental() and not disable_hwm %}
-        {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
+        {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
         {% set max_ldts_results = run_query(max_ldts_query) %}
         {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
     {%- endif %}
@@ -298,7 +299,7 @@ records_to_insert AS (
                     AND cast(di.{{ is_active_alias }} as {{ is_active_datatype }}) = current_status.{{ is_active_alias }}
                     AND di.{{ src_ldts }} = (SELECT MIN({{ src_ldts }}) FROM deduplicated_incoming)
                 )
-            AND di.{{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM {{ this }})
+            AND di.{{ src_ldts }} > (SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }} WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
         {% endif %}
 
     {#

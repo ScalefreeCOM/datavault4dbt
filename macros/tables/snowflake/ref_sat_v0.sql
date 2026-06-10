@@ -58,6 +58,7 @@ source_data AS (
     {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > '{{ max_ldts }}'
     {%- endif %}
+    {%- set last_cte = 'source_data' -%}
 ),
 
 {# Get the latest record for each parent ref key combination in existing sat, if incremental. #}
@@ -75,8 +76,7 @@ latest_entries_in_sat AS (
 ),
 {%- endif %}
 
-{%- set last_cte = 'deduplicated_numbered_source' if payload_count > 0 else 'source_data' -%}
-{%- if payload_count > 0 %}
+{%- if payload_count > 0 and not source_is_single_batch %}
 {#
     Deduplicate source by comparing each hashdiff/payload value to the value of the previous record, for each parent ref key combination.
     Additionally adding a row number based on that order, if incremental.
@@ -98,6 +98,7 @@ deduplicated_numbered_source AS (
             WHEN {{ dedup_column }} = LAG({{ dedup_column }}) OVER(PARTITION BY {{ datavault4dbt.print_list(datavault4dbt.escape_column_names(parent_ref_keys)) }} ORDER BY {{ src_ldts }}) THEN FALSE
             ELSE TRUE
         END
+    {%- set last_cte = 'deduplicated_numbered_source' -%}
 ),
 {%- endif %}
 
@@ -125,7 +126,7 @@ records_to_insert AS (
             {%- if dedup_column is not none %}
             AND {{ datavault4dbt.multikey(dedup_column, prefix=['latest_entries_in_sat', last_cte], condition='=') }}
             {%- endif %}
-            {%- if payload_count > 0 %}
+            {%- if payload_count > 0 and not source_is_single_batch %}
             AND {{ last_cte }}.rn = 1
             {%- endif %})
     {%- endif %}

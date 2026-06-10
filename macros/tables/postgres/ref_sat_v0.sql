@@ -51,10 +51,11 @@ source_data AS (
     {%- if is_incremental() and not disable_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
-            MAX({{ src_ldts }}) FROM {{ this }}
+            COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- endif %}
+    {%- set last_cte = 'source_data' -%}
 ),
 
 {# Get the latest record for each parent ref key combination in existing sat, if incremental. #}
@@ -88,8 +89,7 @@ latest_entries_in_sat AS (
 ),
 {%- endif %}
 
-{%- set last_cte = 'deduplicated_numbered_source' if payload_count > 0 else 'source_data' -%}
-{%- if payload_count > 0 %}
+{%- if payload_count > 0 and not source_is_single_batch %}
 {#
     Deduplicate source by comparing each hashdiff/payload value to the value of the previous record, for each parent ref key combination.
     Additionally adding a row number based on that order, if incremental.
@@ -127,6 +127,7 @@ deduplicated_numbered_source AS (
         {% if is_incremental() -%}
         AND rn = 1
         {%- endif %}
+    {%- set last_cte = 'deduplicated_numbered_source' -%}
 ),
 {%- endif %}
 

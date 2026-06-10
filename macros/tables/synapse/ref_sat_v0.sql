@@ -40,7 +40,7 @@ source_data AS (
 
     SELECT
         {% for ref_key in parent_ref_keys %}
-        {{ref_key}},
+        {{ ref_key }},
         {%- endfor %}
         {%- if has_hashdiff %}
         {{ ns.src_hashdiff }} as {{ ns.hdiff_alias }},
@@ -56,9 +56,7 @@ source_data AS (
     )
     {%- endif %}
 
-    {%- set source_cte = 'source_data' -%}
-
-    -- UNION ALL ghost record 000000
+    {%- set last_cte = 'source_data' -%}
 ),
 
 {# Adding window functions row_number and lag to target #}
@@ -70,7 +68,7 @@ target_data AS (
         {%- if dedup_column is not none -%},
         {{ dedup_column }}
         {%- endif %}
-        , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) AS rn
+        , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ ref_key }} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }} DESC) AS rn
     FROM
         {{ this }}
 ),
@@ -100,13 +98,13 @@ numbered_source AS (
 
     SELECT
     {% for ref_key in parent_ref_keys %}
-    {{ref_key}},
+    {{ ref_key }},
     {% endfor %}
     {%- if has_hashdiff %}
     {{ dedup_column }},
     {%- endif %}
     {{ datavault4dbt.print_list(source_cols) }}
-    , LAG({{ dedup_column }}) OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) prev_dedup_col
+    , LAG({{ dedup_column }}) OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ ref_key }} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) prev_dedup_col
     FROM source_data
 ),
 
@@ -118,19 +116,19 @@ deduplicated_numbered_source AS (
 
     SELECT
     {% for ref_key in parent_ref_keys %}
-    {{ref_key}},
+    {{ ref_key }},
     {% endfor %}
     {%- if has_hashdiff %}
     {{ dedup_column }},
     {%- endif %}
     {{ datavault4dbt.print_list(source_cols) }}
     {% if is_incremental() -%}
-    , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) as rn
+    , ROW_NUMBER() OVER(PARTITION BY {%- for ref_key in parent_ref_keys %} {{ ref_key }} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}) as rn
     {%- endif %}
     FROM numbered_source
     WHERE {{ dedup_column }} <> prev_dedup_col OR prev_dedup_col IS NULL
 
-    {%- set source_cte = 'deduplicated_numbered_source' -%}
+    {%- set last_cte = 'deduplicated_numbered_source' -%}
 
 ),
 
@@ -144,13 +142,13 @@ records_to_insert AS (
 
     SELECT
     {% for ref_key in parent_ref_keys %}
-    {{ref_key}},
+    {{ ref_key }},
     {% endfor %}
     {%- if has_hashdiff %}
     {{ dedup_column }},
     {%- endif %}
     {{ datavault4dbt.print_list(source_cols) }}
-    FROM {{ source_cte }} sc
+    FROM {{ last_cte }} sc
     {%- if is_incremental() %}
     WHERE NOT EXISTS (
         SELECT 1

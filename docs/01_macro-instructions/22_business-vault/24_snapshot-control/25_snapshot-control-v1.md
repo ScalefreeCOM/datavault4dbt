@@ -38,9 +38,10 @@ In addition to inheriting the core columns (`sdts`, `replacement_sdts`, `caption
 | Parameters | Data Type | Required | Default Value | Explanation |
 |---|---|---|---|---|
 | control_snap_v0 | string | mandatory | - | The name of the underlying version 0 control snapshot table. Needs to be available as a dbt model. |
-| log_logic  | dictionary or list | optional | None                     | Defining the desired durations of each granularity. Available granularities are `daily`, `weekly`, `monthly`, `yearly`. For each granularity the duration can be defined as an integer and the time unit for that duration. The units include (in BigQuery): DAY, WEEK, MONTH, QUARTER, YEAR. Besides defining a duration and a unit for each granularity, there is also the option to set a granularity to 'forever'. E.g. reporting requires daily snapshots for 3 months, and after that the monthly snapshots should be kept forever. If log_logic is not set, no logic will be applied, and all snapshots will stay active. The other dynamic columns are calculated anyway. The duration is always counted from the current date. It is also possible to provide a list of dictionaries to support multiple snapshot trigger columns. |
+| log_logic  | dictionary or list | optional | None | Defining the desired durations of each granularity. Available granularities are `daily`, `weekly`, `monthly`, `yearly`. For each granularity the duration can be defined as an integer and the time unit for that duration. The units include: DAY, WEEK, MONTH, QUARTER, YEAR. Besides defining a duration and a unit for each granularity, there is also the option to set a granularity to 'forever' (`forever: TRUE`). E.g. reporting requires daily snapshots for 3 months, and after that the monthly snapshots should be kept forever. If log_logic is not set, no logic will be applied, and all snapshots will stay active. The other dynamic columns are calculated anyway. The duration is always counted from the current date. It is also possible to provide a list of dictionaries to support multiple snapshot trigger columns. |
 | sdts_alias | string | optional | datavault4dbt.sdts_alias | Defines the name of the snapshot date timestamp column inside the snapshot_table. |
 
+---
 
 ## EXAMPLE 1 - Single Logic
 
@@ -76,7 +77,7 @@ log_logic:
   - **monthly**: Monthly snapshots are kept 5 years.
   - **yearly**: Yearly snapshots are kept forever.
 
-## EXAMPLE 2 - Multiple Logic
+## EXAMPLE 2 - Multiple Logics
 
 ```jinja
 {{ config(materialized='view') }}

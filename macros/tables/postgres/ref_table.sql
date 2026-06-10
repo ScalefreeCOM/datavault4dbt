@@ -11,14 +11,14 @@
 
 {%- set include_business_objects_before_appearance = var('datavault4dbt.include_business_objects_before_appearance', 'false') -%}
 
-{{ log('ref_hub_relation: ' ~ ref_hub_relation, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('ref_hub_relation: ' ~ ref_hub_relation, false) }}{% endif %}
 {%- set hub_columns = datavault4dbt.source_columns(ref_hub_relation) -%}
-{{ log('hub_columns: ' ~ hub_columns, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hub_columns: ' ~ hub_columns, false) }}{% endif %}
 {%- set hub_columns_to_exclude = [src_ldts, src_rsrc] -%}
 {%- set ref_key_cols = datavault4dbt.process_columns_to_select(columns_list=hub_columns, exclude_columns_list=hub_columns_to_exclude )%}
-{{ log('ref_key_cols: ' ~ ref_key_cols, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('ref_key_cols: ' ~ ref_key_cols, false) }}{% endif %}
 {%- set sat_columns_to_exclude = [src_ldts, src_rsrc, ledts_alias, is_current_col_alias] + ref_key_cols -%}
-{{ log('sat_columns_to_exclude: '~ sat_columns_to_exclude, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('sat_columns_to_exclude: '~ sat_columns_to_exclude, false) }}{% endif %}
 
 {%- set ref_satellites_dict = {} -%}
 
@@ -44,7 +44,7 @@ dates AS (
     {%- set date_column = src_ldts -%}
 
 
-    {{ log('ref_satellites: '~ ref_satellites, false) -}}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('ref_satellites: '~ ref_satellites, false) -}}{% endif %}
 
     {% if historized == 'full' -%}
     SELECT distinct {{ date_column }} FROM (
@@ -115,7 +115,7 @@ ref_table AS (
 
     {%- set sat_columns = datavault4dbt.process_columns_to_select(sat_columns_pre, sat_columns_to_exclude) -%}
     
-    {{- log('sat_columns: '~ sat_columns, false) -}}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{- log('sat_columns: '~ sat_columns, false) -}}{% endif %}
 
     {{ datavault4dbt.print_list(list_to_print=sat_columns, indent=2, src_alias=sat_alias) }}
     {%- if not loop.last -%} ,

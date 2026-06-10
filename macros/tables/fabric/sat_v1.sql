@@ -40,9 +40,9 @@ end_dated_source AS (
         {%- endif %}
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD(DATEADD(ns, -100, {{ src_ldts }})) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts_alias }}
-       {%- if source_columns_to_select | length >= 1 -%} , {% endif -%}
-        {{ datavault4dbt.print_list(source_columns_to_select) }}
+        COALESCE(LEAD(DATEADD(MICROSECOND, -1, {{ src_ldts }})) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts_alias }}
+       {%- if include_payload and source_columns_to_select | length >= 1 -%} , {% endif -%}
+        {%- if include_payload -%}{{ datavault4dbt.print_list(source_columns_to_select) }}{%- endif -%}
     FROM {{ source_relation }}
 
 )
@@ -55,15 +55,15 @@ SELECT
     {{ src_rsrc }},
     {{ src_ldts }},
     {{ ledts_alias }}
-    {%- if source_columns_to_select | length >= 1 or add_is_current_flag -%} , {% endif -%}
+    {%- if (include_payload and source_columns_to_select | length >= 1) or add_is_current_flag -%} , {% endif -%}
     {%- if add_is_current_flag %}
         CASE WHEN {{ ledts_alias }} = {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
           THEN 1
           ELSE 0
         END AS {{ is_current_col_alias }}
-        {%- if source_columns_to_select | length >= 1 -%} , {% endif -%}
+        {%- if include_payload and source_columns_to_select | length >= 1 -%} , {% endif -%}
     {% endif -%}
-    {{ datavault4dbt.print_list(source_columns_to_select) }}
+    {%- if include_payload -%}{{ datavault4dbt.print_list(source_columns_to_select) }}{%- endif -%}
 FROM end_dated_source
 
 {%- endmacro -%}

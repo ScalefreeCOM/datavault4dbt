@@ -33,7 +33,7 @@ WITH
 max_ldts_prep AS (
 
     SELECT
-        MAX({{ src_ldts }}) AS max_ldts
+        COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS max_ldts
     FROM {{ this }}
     WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
 ),
@@ -329,7 +329,7 @@ records_to_insert AS (
                     AND cast(di.{{ is_active_alias }} as {{ is_active_datatype }}) = current_status.{{ is_active_alias }}
                     AND di.{{ src_ldts }} = (SELECT MIN({{ src_ldts }}) FROM deduplicated_incoming)
                 )
-            AND di.{{ src_ldts }} > (SELECT MAX({{ src_ldts }}) FROM {{ this }})
+            AND di.{{ src_ldts }} > (SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }} WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
         {% endif %}
 
     {#
