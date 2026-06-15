@@ -22,7 +22,7 @@
 
 ### Features
 With datavault4dbt you will get a lot of awesome features, including:
-- A Data Vault 2.0 implementation congruent to the original Data Vault 2.0 definition by Dan Linstedt
+- A Data Vault 2 implementation congruent to the original Data Vault 2 definition by Dan Linstedt
 - Ready for both Persistent Staging Areas and Transient Staging Areas, due to the allowance of multiple deltas in all macros, without losing any intermediate changes - Enforcing standards in naming conventions by implementing [global variables](https://www.datavault4dbt.com/documentation/general-usage-notes/global-variables/) for technical columns    
 - A fully auditable solution for a Data Warehouse
 - Creating a centralized, snapshot-based Business interface by using a centralized snapshot table supporting logarithmic logic
@@ -42,8 +42,8 @@ To use the macros efficiently, there are a few prerequisites you need to provide
 - Find technical information about the macros, examples, and more, on [the official datavault4dbt Website](https://www.datavault4dbt.com/)!
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
 - Check out the [Scalefree-Blog](https://www.scalefree.com/blog/)
-   - [Data-Vault 2.0 with dbt #1](https://www.scalefree.com/scalefree-newsletter/data-vault-2-0-with-dbt-part-1/)
-   - [Data-Vault 2.0 with dbt #2](https://www.scalefree.com/scalefree-newsletter/data-vault-2-0-with-dbt-part-2/)
+   - [Data-Vault 2 with dbt #1](https://www.scalefree.com/scalefree-newsletter/data-vault-2-0-with-dbt-part-1/)
+   - [Data-Vault 2 with dbt #2](https://www.scalefree.com/scalefree-newsletter/data-vault-2-0-with-dbt-part-2/)
    - [Using Multi-Active-Satellites #1](https://www.scalefree.com/scalefree-newsletter/using-multi-active-satellites-the-correct-way-1-2/)
    - [Using Multi-Active-Satellites #2](https://www.scalefree.com/scalefree-newsletter/using-multi-active-satellites-the-correct-way-2-2/)
    - [Non-Historized Links](https://www.scalefree.com/modeling/the-value-of-non-historized-links/)
@@ -64,6 +64,7 @@ Currently supported platforms are:
 * Databricks
 * Oracle
 * Microsoft SQL Server
+* Trino
 
 We are working continuously at high pressure to adapt the package for a large variety of different platforms. In the future, the package will hopefully be available for many more.
 
@@ -87,7 +88,7 @@ datavault4dbt is highly customizable by using many global variables. Since they 
 
 ---
 ## Usage
-The datavault4dbt package provides macros for Staging and Creation of all DataVault-Entities you need, to build your own DataVault2.0 solution. The usage of the macros is well-explained in the [documentation]([url](https://www.datavault4dbt.com/documentation/)).
+The datavault4dbt package provides macros for Staging and Creation of all DataVault-Entities you need, to build your own DataVault 2 solution. The usage of the macros is well-explained in the [documentation]([url](https://www.datavault4dbt.com/documentation/)).
 
 ---
 ## Contributing
