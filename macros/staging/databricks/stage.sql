@@ -360,7 +360,7 @@ prejoined_columns AS (
 derived_columns AS (
 
   {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select | map('lower'), derived_column_names | map('lower')) -%}
-  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, overwrite_src_columns) -%}
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, overwrite_src_columns | map('lower')) -%}
 
   SELECT
 
