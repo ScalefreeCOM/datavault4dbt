@@ -609,7 +609,7 @@
         {%- elif datatype == 'DATE'%} TO_DATE('{{ beginning_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{unknown_value__STRING}}' as {{ alias }}
         {%- elif datatype in ['INT', 'SMALLINT', 'TINYINT', 'BIGINT', 'DOUBLE', 'FLOAT'] %} CAST('{{unknown_value__numeric}}' as {{ datatype}}) as {{ alias }}
-        {%- elif datatype.upper().startswith('DECIMAL') %} CAST('{{unknown_value__numeric}}' as DECIMAL) as {{ alias }}
+        {%- elif datatype.upper().startswith('DECIMAL') %} CAST('{{unknown_value__numeric}}' as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- elif datatype == 'BINARY' %} CAST('{{ unknown_value__HASHTYPE }}' as BINARY) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
@@ -619,7 +619,7 @@
         {%- elif datatype == 'DATE'-%} TO_DATE('{{ end_of_all_times_date }}', '{{ date_format }}' ) as {{ alias }}
         {%- elif datatype == 'STRING' %} '{{error_value__STRING}}' as {{ alias }}
         {%- elif datatype in ['INT', 'SMALLINT', 'TINYINT', 'BIGINT', 'DOUBLE', 'FLOAT'] %} CAST('{{error_value__numeric}}' as {{ datatype}}) as {{ alias }}
-        {%- elif datatype.upper().startswith('DECIMAL') %} CAST('{{error_value__numeric}}' as DECIMAL) as {{ alias }}
+        {%- elif datatype.upper().startswith('DECIMAL') %} CAST('{{error_value__numeric}}' as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
         {%- elif datatype == 'BINARY' %} CAST('{{ error_value__HASHTYPE }}' as BINARY) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
