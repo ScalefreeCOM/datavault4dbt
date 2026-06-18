@@ -5,7 +5,7 @@ sidebar_label: MS Fabric
 title: MS Fabric
 ---
 
-# MS FABRICS
+# MS FABRIC
 
 ---
 
