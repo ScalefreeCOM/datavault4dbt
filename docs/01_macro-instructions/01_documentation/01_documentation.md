@@ -29,7 +29,8 @@ Datavault4dbt is fully compatible with the new dbt Fusion engine! For more detai
 With datavault4dbt you will get a lot of awesome features, including:
 
 - A Data Vault 2.0 implementation congruent to the original Data Vault 2.0 definition by Dan Linstedt
-- Ready for both Persistent Staging Areas and Transient Staging Areas, due to the allowance of multiple deltas in all macros, without loosing any intermediate changes- Enforcing standards in naming conventions by implementing global variables for technical columns
+- Ready for both Persistent Staging Areas and Transient Staging Areas, due to the allowance of multiple deltas in all macros, without losing any intermediate changes
+- Enforcing standards in naming conventions by implementing global variables for technical columns
 - A fully auditable solution for a Data Warehouse
 - Creating a centralized, snapshot-based Business interface by using a centralized snapshot table supporting logarithmic logic
 - A modern insert-only approach that avoids updating data
