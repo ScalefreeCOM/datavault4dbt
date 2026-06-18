@@ -8,7 +8,7 @@ title: Effectivity Satellite
 
 ---
 
-This macro creates an Effectivity Satellite version 0. It should be materialized as an **incremental table**. It should be applied `on top` of the staging layer, and is either connected to a Hub or a Link.
+This macro creates an Effectivity Satellite version 0. It should be materialized as an **incremental table**. It should be applied on top of the staging layer, and is either connected to a Hub or a Link.
 
 The purpose of an effectivity satellite is to capture whether an object or relationship disappears in the source system. Technically, one effectivity satellite always tracks the appearances of one hashkey, either a hub hashkey for business objects, or a link hashkey for relationships. If the hub or link is loaded by multiple sources, create **one effectivity satellite for each source.**
 

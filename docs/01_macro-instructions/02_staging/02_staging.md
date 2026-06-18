@@ -14,7 +14,7 @@ This macro creates the staging layer for the Data Vault model. This layer is mai
 
 | Parameter      | Data Type             | Required  | Default Value     | Explanation |
 | -------------- | --------------------- | --------- | ----------------- | ----------- |
-| `ldts`         | string                | mandatory | current timestamp | Name of the column inside the source data, that holds information about the Load Date Timestamp. Can also be a SQL expression. If no ldts is passed, the current_timestamp-makro of datavault4dbt will be used to pass a value in the resulting staging table.
+| `ldts`         | string                | mandatory | –                 | Name of the column inside the source data, that holds information about the Load Date Timestamp. Can also be a SQL expression.
 | `rsrc`         | string                | mandatory | –                 | Name of the column inside the source data, that holds information about the Record Source. Can also be a SQL expression or a static string. A static string must begin with a `!`.
 | `source_model` | string \| dictionary  | mandatory | –                 | Can be just a string holding the name of the refered dbt model to use as a source. But if the `source` functionality inside the .yml file is used, it must be a dictionary with `source_name`: `source_table`.
 
