@@ -10,7 +10,7 @@ title: Add new columns To Hashdiff
   
 > This feature was available for Snowflake in the versions from v1.1.4 up to v1.2.2. It will become available for all adapters from v2.0.0 again.
 
-Did your source add new columns and you want to add them to the same satellite you held the other columns of this source? Don't worry! By using `append_new_column` as value for the `on_schema_change` config variable in dbt it is possible to append new columns to a Satellite. For that you would also have to add these new columns to the `src_payload` key in the Satellite v0 model and to the list in the `columns` key inside the definition of your satellite's hashdiff in the stage model.
+Did your source add new columns and you want to add them to the same satellite you held the other columns of this source? Don't worry! By using `append_new_columns` as value for the `on_schema_change` config variable in dbt it is possible to append new columns to a Satellite. For that you would also have to add these new columns to the `src_payload` key in the Satellite v0 model and to the list in the `columns` key inside the definition of your satellite's hashdiff in the stage model.
 
 When a new column(s) is(are) added in a Satellite and also added to the Hashdiff list of columns, the calculated Hashdiff in the Stage normally would be different to those already present in the Satellite even if the new column(s) is(are) NULL. This could result in many unnecessary new rows being added into the satellite. We have developed a solution for the Snowflake datavault4dbt adapter, where you can set in the Stage model inside the Satellite Hashdiff definition the key value pair: `use_rtrim:true`.
 
