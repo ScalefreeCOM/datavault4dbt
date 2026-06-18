@@ -6,7 +6,11 @@
 
 {%- set expr = 'TRIM(CAST([EXPRESSION] AS STRING))' if use_trim else 'CAST([EXPRESSION] AS STRING)' -%}
 
-CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, r'\\', r'\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
+{%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+{%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+{%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+CONCAT('\"', REPLACE(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, r'\\', r'\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}'), '\"')
 
 {%- endmacro -%}
 
@@ -14,14 +18,22 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, r'\\', r'\\\\'), 
 
 {%- set expr = 'TRIM(CAST([EXPRESSION] AS VARCHAR(20000) UTF8 ))' if use_trim else 'CAST([EXPRESSION] AS VARCHAR(20000) UTF8 )' -%}
 
-NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE({{expr}}, '\\\', '\\\\\'), '[QUOTE]', '"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"'), '""')
+{%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+{%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+{%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE(REPLACE({{expr}}, '\\\', '\\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}'), '"'), '""')
 
 {%- endmacro -%}
 
 {%- macro snowflake__attribute_standardise(hash_type, use_trim) -%}
 {%- set expr = 'TRIM(CAST([EXPRESSION] AS STRING))' if use_trim else 'CAST([EXPRESSION] AS STRING)' -%}
 
-CONCAT('\"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
+{%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+{%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+{%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+CONCAT('\"', REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}'), '\"')
 
 {%- endmacro -%}
 
@@ -30,7 +42,11 @@ CONCAT('\"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"')
 
 {%- set expr = 'LTRIM(RTRIM(CAST([EXPRESSION] AS VARCHAR(4000))))' if use_trim else 'CAST([EXPRESSION] AS VARCHAR(4000))' -%}
 
-NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"'), '""')
+{%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+{%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+{%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}'), '"'), '""')
 
 {%- endmacro -%}
 
@@ -39,7 +55,11 @@ NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]',
 
 {%- set expr = "TRIM(BOTH ' ' FROM CAST([EXPRESSION] AS VARCHAR))" if use_trim else 'CAST([EXPRESSION] AS VARCHAR)' -%}
 
-'"' || REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
+{%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+{%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+{%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+'"' || REPLACE(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}') || '"'
 
 {%- endmacro -%}
 
@@ -48,7 +68,11 @@ NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]',
 
 {%- set expr = "TRIM(BOTH ' ' FROM [EXPRESSION])" if use_trim else "[EXPRESSION]" -%}
 
-'"' ||  REPLACE(REPLACE(REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '\\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"'
+{%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+{%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+{%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+'"' || REPLACE(REPLACE(REPLACE(REPLACE({{expr}}, '\\', '\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}') || '"'
 
 {%- endmacro -%}
 
@@ -57,7 +81,11 @@ NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]',
 
 {%- set expr = 'LTRIM(RTRIM(CONVERT(VARCHAR(4000), [EXPRESSION], 1)))' if use_trim else 'CONVERT(VARCHAR(4000), [EXPRESSION], 1)' -%}
 
-'"' + REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') + '"'
+{%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+{%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+{%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+'"' + REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}') + '"'
 
 {%- endmacro -%} 
 
@@ -66,7 +94,11 @@ NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]',
 
 {%- set expr = 'TRIM(CAST([EXPRESSION] AS STRING))' if use_trim else 'CAST([EXPRESSION] AS STRING)' -%}
 
-CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, r'\\', r'\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '\"')
+{%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+{%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+{%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+CONCAT('\"', REPLACE(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, r'\\', r'\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}'), '\"')
 
 {%- endmacro -%}
 
@@ -75,21 +107,35 @@ CONCAT('\"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, r'\\', r'\\\\'), 
 
 {%- set expr = 'TRIM(CAST([EXPRESSION] AS VARCHAR2(2000) ))' if use_trim else 'CAST([EXPRESSION] AS VARCHAR2(2000) )' -%}
 
-NULLIF('"' || REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--') || '"', '""')
+{%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+{%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+{%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}') || '"', '""')
 
 {%- endmacro -%}
 
 
 {%- macro trino__attribute_standardise(hash_type, use_trim) -%}
     {%- set expr = "TRIM(CAST([EXPRESSION] AS VARCHAR))" if use_trim else "CAST([EXPRESSION] AS VARCHAR)" -%}
-    CONCAT('"', REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"')
+
+    {%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+    {%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+    {%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+    CONCAT('"', REPLACE(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE({{ expr }}, '\\', '\\\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}'), '"')
 {%- endmacro -%}
 
 
 {%- macro sqlserver__attribute_standardise(hash_type, use_trim) -%}
 
     {%- set expr = 'LTRIM(RTRIM(CAST([EXPRESSION] AS VARCHAR(MAX))))' if use_trim else 'CAST([EXPRESSION] AS VARCHAR(MAX))' -%}
-    NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE({{ expr }}, '\', '\\'), '[QUOTE]', '\"'), '[NULL_PLACEHOLDER_STRING]', '--'), '"'), '""')
+
+    {%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
+    {%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
+    {%- set null_repl = var('datavault4dbt.null_placeholder_string_replacement', 'dv4dbt-null-replacement') -%}
+
+    NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\', '\\'), '[QUOTE]', '{{ quote_repl }}'), '[NULL_PLACEHOLDER_STRING]', '{{ null_repl }}'), '[CONCAT_STRING]', '{{ concat_repl }}'), '"'), '""')
 
 {%- endmacro -%}
 
