@@ -14,7 +14,7 @@ To model a dependent child key with datavault4dbt, you have to consider both the
 
 ## STAGING MODEL
 
-To extend the link hashkey with the dependent child key, the staging model for invoices must have a section for “hashed_columns” where the link hashkey is defined properly. Let`s have a look at an example staging model:
+To extend the link hashkey with the dependent child key, the staging model for invoices must have a section for `hashed_columns` where the link hashkey is defined properly. Let's have a look at an example staging model:
 
 ### STG_INVOICES.SQL
 
