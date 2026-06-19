@@ -119,6 +119,9 @@ deduplicated_numbered_source AS (
     {{ dedup_column }},
     {%- endif %}
     {{ datavault4dbt.print_list(source_cols) }}
+    {% if is_incremental() -%}
+    , ROW_NUMBER() OVER(PARTITION BY {{ datavault4dbt.print_list(parent_ref_keys) }} ORDER BY {{ src_ldts }}) as rn
+    {%- endif %}
     FROM deduplicated_numbered_source_prep
     WHERE {{ dedup_column }} <> prev_dedup_col OR prev_dedup_col IS NULL
 
@@ -151,7 +154,9 @@ records_to_insert AS (
             {%- if dedup_column is not none %}
             AND {{ datavault4dbt.multikey(dedup_column, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             {%- endif %}
-            )
+        {%- if payload_count > 0 and not source_is_single_batch %}
+            AND {{ source_cte }}.rn = 1
+        {%- endif %})
     {%- endif %}
 
     )
