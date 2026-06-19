@@ -152,9 +152,7 @@ records_to_insert AS (
         {%- if payload_count > 0 and not source_is_single_batch %}
             AND {{ source_cte }}.rn = 1
         {%- endif %})
-    )
     {%- endif %}
-
     )
 
 SELECT * FROM records_to_insert
