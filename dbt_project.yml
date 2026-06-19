@@ -29,8 +29,19 @@ vars:
   datavault4dbt.hash_datatype: 'STRING'
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
-  datavault4dbt.hashdiff_use_trim: TRUE 
-  
+  datavault4dbt.hashdiff_use_trim: TRUE
+
+  # Delimiters used when concatenating columns before hashing
+  datavault4dbt.concat_string: '||'
+  datavault4dbt.quote_character: '"'
+  datavault4dbt.null_placeholder_string: '^^'
+
+  # Replacement tokens substituted for the delimiters above when they occur inside the input data,
+  # preventing hash collisions between real values and the structural delimiters
+  datavault4dbt.concat_string_replacement: 'dv4dbt-concat-replacement'
+  datavault4dbt.quote_character_replacement: 'dv4dbt-quote-replacement'
+  datavault4dbt.null_placeholder_string_replacement: 'dv4dbt-null-replacement'
+
   #Stage Configuration
   datavault4dbt.copy_rsrc_ldts_input_columns: false
 
