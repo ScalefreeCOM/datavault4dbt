@@ -53,8 +53,8 @@
 
     {% endif %}
 
-    {% set rename_sql = get_rename_table_sql(satellite_relation, satellite_relation.identifier ~ '_deprecated') %}
-    {% do run_query(rename_sql) %}
+    {# Rename to _deprecated, recovering safely if a previous run was interrupted. #}
+    {% set old_table_relation = datavault4dbt.rehash_prepare_rename(satellite_relation, output_logs=output_logs) %}
 
     {# generating the CREATE statement that populates the new columns. #}
     {% set create_sql = datavault4dbt.satellite_update_statement(satellite_relation=satellite_relation,
@@ -75,9 +75,8 @@
         {"name": hashkey + '_deprecated'},
         {"name": hashdiff + '_deprecated'}
     ]%}
-        
-    {% set old_table_relation = make_temp_relation(satellite_relation,suffix='_deprecated') %}
 
+    {# old_table_relation set above by rehash_prepare_rename. #}
     {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
     {% do run_query(drop_table(old_table_relation)) %}
 
@@ -96,7 +95,7 @@
     {% set ns = namespace(parent_already_rehashed=false) %}
     
     {% set old_hashkey_name = hashkey + '_deprecated' %}
-    {% set old_table_relation = make_temp_relation(satellite_relation,suffix='_deprecated') %}
+    {% set old_table_relation = datavault4dbt.rehash_deprecated_relation(satellite_relation) %}
     {#
         If parent entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
         hashkey column needs to be used for joining, and the regular hashkey should be selected. 
