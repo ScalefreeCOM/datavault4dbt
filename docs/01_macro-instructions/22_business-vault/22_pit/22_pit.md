@@ -23,7 +23,7 @@ Features:
 |------------------|----------------|-----------|---------------|-------------|
 | tracked_entity   | string         | mandatory | –             | Name of the tracked Hub entity. Must be available as a model inside the dbt project. |
 | hashkey          | string         | mandatory | –             | The name of the hashkey column inside the previously referred Hub entity. |
-| sat_names        | list of strings| mandatory | –             | A list of all the satellites that should be included in this PIT table. Can only be satellites that are attached to the tracked Hub, and should typically include all those satellites. You should always refer here to the version 1 satellites, since those hold the load-end-date. The macro currently supports regular satellites and nh-satellites. |
+| sat_names        | list of strings or dicts| mandatory | –             | A list of all the satellites that should be included in this PIT table. Can only be satellites that are attached to the tracked Hub, and should typically include all those satellites. You should always refer here to the version 1 satellites, since those hold the load-end-date. The macro currently supports regular satellites and nh-satellites. Each entry can be a plain satellite name, or a dict with `name` and an optional `mandatory` (boolean, default `false`). When `mandatory` is `true`, PIT rows are only included where that satellite found a match at the snapshot time. |
 | snapshot_relation| string         | mandatory | –             | The name of the snapshot relation. It needs to be available as a model inside this dbt project. |
 | dimension_key    | string         | mandatory | –             | The desired name of the dimension key inside the PIT table. Should follow naming conventions. Recommended is the name of the hashkey with a `_d` suffix. |
 
@@ -38,6 +38,11 @@ Features:
 | ledts                   | string    | optional  | datavault4dbt.ledts_alias     | Name of the load-end-date column inside the satellites. |
 | sdts                    | string    | optional  | datavault4dbt.sdts_alias      | Name of the snapshot date timestamp column inside the snapshot table. Set here. |
 | snapshot_optimization   | boolean   | optional  | false                         | Available from v1.15.0. If set to `True`, and if the model is run in incremental mode, only the relevant snapshots (i.e. those that are newer or equal because of late arriving data) than the max sdts in the existing PIT table will be considered. This can significantly improve performance of incremental loads on large snapshot tables. If set to `True`, the model needs to be configured with a unique_key constraint as there may be updates due to late arriving data. Affected Adapters: Snowflake only! |
+| mandatory_strategy      | string    | optional  | None                          | When set, applies a satellite coverage filter to **all** satellites in `sat_names`. `'any'` includes a row only if at least one satellite has a record at that snapshot time (OR logic); `'all'` includes a row only if every satellite has a record at that snapshot time (AND logic). Mutually exclusive with the per-satellite `mandatory` flags: when `mandatory_strategy` is set, those flags are ignored and all satellites participate. Default: not set (no filtering). |
+
+:::warning
+The optional satellite filters (`mandatory` and `mandatory_strategy`) reduce the size of the PIT but work by excluding rows — with unclear satellite source coverage they can leave out records you expected to keep. Use them deliberately.
+:::
 
 ## EXAMPLE 1
 

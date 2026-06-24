@@ -1,4 +1,4 @@
-{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key=none, refer_to_ghost_records=true, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key=none, refer_to_ghost_records=true, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false, mandatory_strategy=none) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
@@ -43,16 +43,16 @@ SELECT
     {% for satellite in sat_names %}
         {%- if refer_to_ghost_records -%}
             COALESCE(
-                MAX({{ satellite }}.{{ hashkey }}),
+                MAX({{ satellite.name }}.{{ hashkey }}),
                 CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})
-            ) AS hk_{{ satellite }},
+            ) AS hk_{{ satellite.name }},
             COALESCE(
-                MAX({{ satellite }}.{{ ldts }}),
+                MAX({{ satellite.name }}.{{ ldts }}),
                 {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}
-            ) AS {{ ldts }}_{{ satellite }}
+            ) AS {{ ldts }}_{{ satellite.name }}
         {%- else -%}
-            MAX({{ satellite }}.{{ hashkey }}) AS hk_{{ satellite }},
-            MAX({{ satellite }}.{{ ldts }}) AS {{ ldts }}_{{ satellite }}
+            MAX({{ satellite.name }}.{{ hashkey }}) AS hk_{{ satellite.name }},
+            MAX({{ satellite.name }}.{{ ldts }}) AS {{ ldts }}_{{ satellite.name }}
         {%- endif -%}
         {{- "," if not loop.last }}
     {% endfor %}
@@ -67,9 +67,9 @@ FROM {{ ref(tracked_entity) }} te
 {%- endif %}
 
 {% for satellite in sat_names %}
-    {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
+    {%- set sat_columns = datavault4dbt.source_columns(ref(satellite.name)) %}
     {%- if ledts|string|lower in sat_columns|map('lower') %}
-    LEFT JOIN {{ ref(satellite) }} AS {{ satellite }}
+    LEFT JOIN {{ ref(satellite.name) }} AS {{ satellite.name }}
     {%- else %}
     LEFT JOIN (
         SELECT
@@ -79,11 +79,11 @@ FROM {{ ref(tracked_entity) }} te
                 LEAD({{ ldts }} - interval '00:00:00.000001') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),
                 {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             ) AS {{ ledts }}
-        FROM {{ ref(satellite) }}
-    ) AS {{ satellite }}
+        FROM {{ ref(satellite.name) }}
+    ) AS {{ satellite.name }}
     {%- endif %}
-        ON {{ satellite }}.{{ hashkey }} = te.{{ hashkey }}
-        AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
+        ON {{ satellite.name }}.{{ hashkey }} = te.{{ hashkey }}
+        AND snap.{{ sdts }} BETWEEN {{ satellite.name }}.{{ ldts }} AND {{ satellite.name }}.{{ ledts }}
 {% endfor %}
 
 {%- if is_incremental() %}
@@ -103,5 +103,23 @@ GROUP BY
     te.{{ hashkey }},
     snap.{{ sdts }}
 {%- endif -%}
+
+{%- set mandatory_conditions = [] -%}
+{%- if datavault4dbt.is_something(mandatory_strategy) -%}
+    {%- for sat in sat_names -%}
+        {%- do mandatory_conditions.append('MAX(' ~ sat.name ~ '.' ~ hashkey ~ ') IS NOT NULL') -%}
+    {%- endfor -%}
+{%- else -%}
+    {%- for sat in sat_names -%}
+        {%- if sat.mandatory -%}
+            {%- do mandatory_conditions.append('MAX(' ~ sat.name ~ '.' ~ hashkey ~ ') IS NOT NULL') -%}
+        {%- endif -%}
+    {%- endfor -%}
+{%- endif -%}
+{%- if mandatory_conditions | length > 0 %}
+HAVING
+    {{ '(' ~ mandatory_conditions | join(' OR ') ~ ')' if (datavault4dbt.is_something(mandatory_strategy) and mandatory_strategy | lower == 'any') else mandatory_conditions | join(' AND ') }}
+    AND te.{{ hashkey }} != {{ datavault4dbt.as_constant(column_str=unknown_key) }}
+{%- endif %}
 
 {%- endmacro -%}

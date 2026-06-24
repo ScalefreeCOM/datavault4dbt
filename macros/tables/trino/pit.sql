@@ -1,4 +1,4 @@
-{%- macro trino__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro trino__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false, mandatory_strategy=none) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
@@ -58,11 +58,11 @@ pit_records AS (
         snap.{{ sdts }},
         {% for satellite in sat_names %}
           {% if refer_to_ghost_records %}
-            COALESCE({{ satellite }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite }},
-            COALESCE({{ satellite }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite }}
+            COALESCE({{ satellite.name }}.{{ hashkey }}, CAST({{ datavault4dbt.as_constant(column_str=unknown_key) }} as {{ hash_dtype }})) AS hk_{{ satellite.name }},
+            COALESCE({{ satellite.name }}.{{ ldts }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ ldts }}_{{ satellite.name }}
           {% else %}
-            {{ satellite }}.{{ hashkey }} AS hk_{{ satellite }},
-            {{ satellite }}.{{ ldts }} AS {{ ldts }}_{{ satellite }}
+            {{ satellite.name }}.{{ hashkey }} AS hk_{{ satellite.name }},
+            {{ satellite.name }}.{{ ldts }} AS {{ ldts }}_{{ satellite.name }}
           {% endif %}
         {{- "," if not loop.last }}
         {%- endfor %}
@@ -72,25 +72,41 @@ pit_records AS (
         CROSS JOIN
             {{ ref(snapshot_relation) }} snap
         {% for satellite in sat_names %}
-        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite)) %}
+        {%- set sat_columns = datavault4dbt.source_columns(ref(satellite.name)) %}
         {%- if ledts|string|lower in sat_columns|map('lower') %}
-        LEFT JOIN {{ ref(satellite) }}
+        LEFT JOIN {{ ref(satellite.name) }}
         {%- else %}
         LEFT JOIN (
             SELECT
                 {{ hashkey }},
                 {{ ldts }},
                 COALESCE(LEAD({{ ldts }} - INTERVAL '0.001' SECOND) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
-            FROM {{ ref(satellite) }}
-        ) {{ satellite }}
+            FROM {{ ref(satellite.name) }}
+        ) {{ satellite.name }}
         {% endif %}
             ON
-                {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
-                AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
+                {{ satellite.name }}.{{ hashkey}} = te.{{ hashkey }}
+                AND snap.{{ sdts }} BETWEEN {{ satellite.name }}.{{ ldts }} AND {{ satellite.name }}.{{ ledts }}
         {% endfor %}
     WHERE 1=1
     {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
         AND snap.{{ snapshot_trigger_column }}
+    {%- endif %}
+    {%- set mandatory_conditions = [] -%}
+    {%- if datavault4dbt.is_something(mandatory_strategy) -%}
+        {%- for sat in sat_names -%}
+            {%- do mandatory_conditions.append(sat.name ~ '.' ~ hashkey ~ ' IS NOT NULL') -%}
+        {%- endfor -%}
+    {%- else -%}
+        {%- for sat in sat_names -%}
+            {%- if sat.mandatory -%}
+                {%- do mandatory_conditions.append(sat.name ~ '.' ~ hashkey ~ ' IS NOT NULL') -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endif -%}
+    {%- if mandatory_conditions | length > 0 %}
+        AND {{ '(' ~ mandatory_conditions | join(' OR ') ~ ')' if (datavault4dbt.is_something(mandatory_strategy) and mandatory_strategy | lower == 'any') else mandatory_conditions | join(' AND ') }}
+        AND te.{{ hashkey }} != {{ datavault4dbt.as_constant(column_str=unknown_key) }}
     {%- endif %}
 
 ),
