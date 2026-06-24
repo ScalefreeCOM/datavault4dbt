@@ -159,13 +159,12 @@
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
   {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('derived_columns_to select : '~ derived_columns_to_select, false) }}{% endif %}
 
+{%- set overwrite_src_columns = [] -%}
 {%- if datavault4dbt.is_something(derived_columns) %}
   {%- set overwrite_src_columns = datavault4dbt.extract_overwrite_columns(derived_columns) -%}
   {#- Getting Data types for derived columns with detection from source relation -#}
   {%- set derived_columns_with_datatypes = datavault4dbt.derived_columns_datatypes(derived_columns, source_relation) -%}
   {%- set derived_columns_with_datatypes_DICT = fromjson(derived_columns_with_datatypes) -%}
-{%- else -%}
-  {%- set overwrite_src_columns = [] -%}
 {%- endif -%}
 {#- Select hashing algorithm -#}
 
