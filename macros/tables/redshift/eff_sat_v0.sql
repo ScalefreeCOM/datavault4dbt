@@ -71,7 +71,8 @@ current_status AS (
         {{ is_active_alias }},
         {{ src_rsrc }}
     FROM {{ this }} redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1  
+    WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} DESC) = 1
 
 ),
 {% endif %}
@@ -318,6 +319,18 @@ records_to_insert AS (
     FROM disappeared_hashkeys
 
     {%- endif %}
+
+    UNION
+    SELECT
+        {{ tracked_hashkey }},
+        {% for col in additional_columns -%}
+        {{ col }},
+        {% endfor -%}
+        {{ src_ldts }},
+        {{ src_rsrc }},
+        1 as {{ is_active_alias }}
+    FROM {{ source_relation }} src
+    WHERE {{ src_ldts }} IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
 
 )
 
