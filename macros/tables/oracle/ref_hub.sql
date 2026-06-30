@@ -23,7 +23,7 @@
 {%- set source_models = source_model_values['source_model_list'] -%}
 {%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
-{{ log('source_models: '~source_models, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_models: '~source_models, false) }}{% endif %}
 
 {%- set final_columns_to_select = ref_keys + [src_ldts] + [src_rsrc] + additional_columns -%}
 
@@ -46,7 +46,7 @@ WITH
             {%- set source_number = source_model.id | string -%}
             {%- set rsrc_statics = ns.source_models_rsrc_dict[source_number] -%}
 
-            {{log('rsrc_statics: '~ rsrc_statics, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{log('rsrc_statics: '~ rsrc_statics, false) }}{% endif %}
 
             {%- set rsrc_static_query_source -%}
                 SELECT count(*) FROM (
@@ -83,7 +83,7 @@ WITH
 
                 {%- set row_count = rsrc_static_result.columns[0].values()[0] -%}
 
-                {{ log('row_count for '~source_model~' is '~row_count, false) }}
+                {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('row_count for '~source_model~' is '~row_count, false) }}{% endif %}
 
                 {%- if row_count == 0 -%}
                 {%- set source_in_target = false -%}

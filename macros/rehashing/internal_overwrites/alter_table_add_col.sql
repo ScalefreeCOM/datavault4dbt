@@ -17,7 +17,7 @@
             {% endfor %}
     {%- endset -%}
 
-    {{ log('alter sql: ' ~ sql, false)}}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
     
     {% do run_query(sql) %}
     {% endif %}
@@ -31,7 +31,7 @@
             {% endfor %}
     {%- endset -%}
 
-    {{ log('alter sql: ' ~ sql, false)}}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
     
     {% do run_query(sql) %}
 
@@ -50,7 +50,7 @@
           {% endfor %}
     {%- endset -%}
 
-     {{ log('alter sql: ' ~ sql, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
 
     {% do run_query(sql) %}
 
@@ -65,7 +65,7 @@
             {% endfor %}
     {%- endset -%}
 
-     {{ log('alter sql: ' ~ sql, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
     
     {% do run_query(sql) %}
 
@@ -84,7 +84,7 @@
           {% endfor %}
     {%- endset -%}
 
-     {{ log('alter sql: ' ~ sql, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
 
     {% do run_query(sql) %}
 
@@ -99,7 +99,7 @@
             {% endfor %}
     {%- endset -%}
 
-     {{ log('alter sql: ' ~ sql, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
     
     {% do run_query(sql) %}
 
@@ -120,7 +120,7 @@
               {% endfor %}
             )
         {%- endset %}
-        {{ log('Executing ADD COLUMNS on Databricks: ' ~ add_sql, false) }}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Executing ADD COLUMNS on Databricks: ' ~ add_sql, false) }}{% endif %}
         {% do run_query(add_sql) %}
     {% endif %}
 
@@ -130,7 +130,7 @@
             {% set remove_sql -%}
                 ALTER TABLE {{ relation.render() }} DROP COLUMN IF EXISTS {{ column.name }}
             {%- endset %}
-            {{ log('Executing DROP COLUMN on Databricks: ' ~ remove_sql, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Executing DROP COLUMN on Databricks: ' ~ remove_sql, false) }}{% endif %}
             {% do run_query(remove_sql) %}
         {% endfor %}
     {% endif %}
@@ -156,7 +156,7 @@
           {% endfor %}
     {%- endset -%}
 
-     {{ log('alter sql: ' ~ sql, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
 
     {% do run_query(sql) %}
 
@@ -189,7 +189,7 @@
         {% endfor %}
     {%- endset -%}
 
-     {{ log('alter sql: ' ~ sql, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
 
     {% do run_query(sql) %}
 
@@ -268,7 +268,7 @@
                     {%- if new_distkey_column -%}
                         
                         {%- set alter_sql = "ALTER TABLE " ~ relation ~ " ALTER DISTSTYLE KEY DISTKEY " ~ new_distkey_column -%}
-                        {{ log("Column " ~ col_to_drop ~ " is the DISTKEY. Changing DISTKEY to: " ~ new_distkey_column, false) }}
+                        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log("Column " ~ col_to_drop ~ " is the DISTKEY. Changing DISTKEY to: " ~ new_distkey_column, false) }}{% endif %}
 
                     {%- else -%}
                         
@@ -291,7 +291,7 @@
             {%- set ns.drop_statements = ns.drop_statements + drop_sql -%}
                 
             {%- endfor -%}
-            {{ log(ns.drop_statements,false)}}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log(ns.drop_statements,false)}}{% endif %}
 
             {%- if ns.sortkey_was_modified -%}
 
@@ -301,7 +301,7 @@
                 {%- if final_sort_keys_list | length > 0 -%}
                     {%- set sortkey_list_str = final_sort_keys_list | join(', ') -%}
                     {%- set alter_sortkey_sql = "ALTER TABLE " ~ relation ~ " ALTER SORTKEY (" ~ sortkey_list_str ~ ")" -%}
-                    {{ log("Finalizing SORTKEY change. New list: (" ~ sortkey_list_str ~ ")", false) }}
+                    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log("Finalizing SORTKEY change. New list: (" ~ sortkey_list_str ~ ")", false) }}{% endif %}
                 {%- else -%}
                     {# {%- do exceptions.raise_compiler_error(
                         "Cannot drop columns on table " ~ relation ~ 
@@ -314,12 +314,12 @@
                         , true) }}
 
                 {%- endif -%}
-                {{ log(alter_sortkey_sql, false)}}
+                {% if var('datavault4dbt.show_debug_logs', false) %}{{ log(alter_sortkey_sql, false)}}{% endif %}
                 {%- do run_query(alter_sortkey_sql) -%}
 
             {%- endif -%}
             
-            {{ log("Executing DROP COLUMN: " ~ ns.drop_statements, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log("Executing DROP COLUMN: " ~ ns.drop_statements, false) }}{% endif %}
             
             {%- do run_query(ns.drop_statements) -%}
 
@@ -342,7 +342,7 @@
         {% endfor %}
     {%- endset -%}
 
-     {{ log('alter sql: ' ~ sql, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
 
     {% do run_query(sql) %}
 
@@ -359,7 +359,7 @@
                 
         {%- endfor -%}
         
-        {{ log('alter sql: ' ~ ns.drop_statements, false)}}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ ns.drop_statements, false)}}{% endif %}
 
     {% do run_query(ns.drop_statements) %}
 
@@ -377,7 +377,7 @@
                 ADD COLUMN {{ column.name }} {{ column.data_type }};
             {%- endset -%}
             
-            {{ log('alter sql (add column): ' ~ sql, false)}}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql (add column): ' ~ sql, false)}}{% endif %}
             
             {% do run_query(sql) %}
         {% endfor %}
@@ -391,7 +391,7 @@
                 DROP COLUMN {{ column.name }}
             {%- endset -%}
             
-            {{ log('alter sql (drop column): ' ~ sql, false)}}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql (drop column): ' ~ sql, false)}}{% endif %}
             
             {% do run_query(sql) %}
         {% endfor %}
@@ -411,7 +411,7 @@
        )
     {%- endset -%}
 
-     {{ log('alter sql: ' ~ sql, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
 
     {% do run_query(sql) %}
 
@@ -427,7 +427,104 @@
         )
     {%- endset -%}
 
-     {{ log('alter sql: ' ~ sql, false)}}
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
+    
+    {% do run_query(sql) %}
+
+    {% endif %}
+
+{% endmacro %}
+
+{% macro trino__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {% if add_columns %}
+
+    {# ADD COLUMN is supported by Trino. #}
+    {% set sql -%}
+        ALTER TABLE {{ relation.render() }} ADD COLUMN
+            {% for column in add_columns %}
+                {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+            {% endfor %}
+    {%- endset -%}
+
+    {{ log('alter sql: ' ~ sql, false)}}
+
+    {% do run_query(sql) %}
+    {% endif %}
+
+    {% if remove_columns %}
+
+    {# Trino memory connector does not support DROP COLUMN.
+       Use CTAS + DROP + RENAME to achieve the equivalent result. #}
+    {% set cols_to_drop = [] %}
+    {% for col in remove_columns %}
+        {% do cols_to_drop.append(col.name.lower()) %}
+    {% endfor %}
+
+    {% set existing_columns = adapter.get_columns_in_relation(relation) %}
+    {% set keep_cols = [] %}
+    {% for col in existing_columns %}
+        {% if col.name.lower() not in cols_to_drop %}
+            {% do keep_cols.append(col.name) %}
+        {% endif %}
+    {% endfor %}
+
+    {% set temp_identifier = relation.identifier ~ '_drop_col_tmp' %}
+    {% set temp_relation = api.Relation.create(
+        database=relation.database,
+        schema=relation.schema,
+        identifier=temp_identifier
+    ) %}
+
+    {# Clean up any orphaned temp table from a previous failed run. #}
+    {% set drop_tmp_sql %}DROP TABLE IF EXISTS {{ temp_relation }}{% endset %}
+    {% do run_query(drop_tmp_sql) %}
+
+    {% set ctas_sql %}
+    CREATE TABLE {{ temp_relation }} AS
+    SELECT {{ keep_cols | join(', ') }}
+    FROM {{ relation }}
+    {% endset %}
+    {{ log('CTAS drop-column sql: ' ~ ctas_sql, false) }}
+    {% do run_query(ctas_sql) %}
+
+    {% set drop_sql %}DROP TABLE {{ relation }}{% endset %}
+    {% do run_query(drop_sql) %}
+
+    {% set rename_sql %}ALTER TABLE {{ temp_relation }} RENAME TO {{ relation.identifier }}{% endset %}
+    {% do run_query(rename_sql) %}
+
+    {% endif %}
+
+{% endmacro %}
+
+{% macro sqlserver__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {% if add_columns %}
+
+    {% set sql -%}
+       ALTER TABLE {{ relation.render() }} ADD
+          {% for column in add_columns %}
+            {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+          {% endfor %}
+    {%- endset -%}
+
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
+
+    {% do run_query(sql) %}
+
+    {% endif %}
+
+    {% if remove_columns %}
+
+    {% set sql -%}
+        ALTER TABLE {{ relation.render() }} DROP COLUMN
+            {% for column in remove_columns %}
+                {{ column.name }}{{ ',' if not loop.last }}
+            {% endfor %}
+    {%- endset -%}
+
+     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('alter sql: ' ~ sql, false)}}{% endif %}
     
     {% do run_query(sql) %}
 

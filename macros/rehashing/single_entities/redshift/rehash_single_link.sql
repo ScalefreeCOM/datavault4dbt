@@ -126,7 +126,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         {% set ns.link_hashkey_input_cols = ns.link_hashkey_input_cols + additional_hash_input_cols %}
         {% do ns.hash_config_dict.update({new_link_hashkey_name: ns.link_hashkey_input_cols}) %}
 
-    {{ log('hash_config: ' ~ ns.hash_config_dict, false)}}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash_config: ' ~ ns.hash_config_dict, false)}}{% endif %}
 
     {% set ns.update_sql_part2 %}
     FROM (
@@ -152,7 +152,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
             {% for column in all_hub_columns %}
                 {% if column.name|lower == hub.current_hashkey_name|lower + '_deprecated' %}
                     {% set hub_ns.hub_already_rehashed = true %}
-                    {{ log('Hub already hashed!', false) }}
+                    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Hub already hashed!', false) }}{% endif %}
                 {% endif %}
             {% endfor %}
 

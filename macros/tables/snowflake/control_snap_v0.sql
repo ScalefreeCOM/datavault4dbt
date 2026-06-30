@@ -7,7 +7,6 @@
 {% endif %}
 
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
-{%- set start_date = start_date | replace('00:00:00', daily_snapshot_time) -%}
 
 {%- set first_day_of_week_var = datavault4dbt.first_day_of_week() -%}
 
@@ -24,7 +23,7 @@ initial_timestamps AS (
     FROM 
         TABLE(GENERATOR(ROWCOUNT => 100000))
     WHERE 
-        sdts <= {{ end_date }}
+        sdts < {{ end_date }}
     {%- if is_incremental() %}
     AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}

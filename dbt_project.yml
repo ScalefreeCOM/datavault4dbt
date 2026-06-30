@@ -1,5 +1,5 @@
 name: datavault4dbt
-version: 1.13.0
+version: 2.0.0
 require-dbt-version: [">=1.0.0", "<3.0.0"]
 config-version: 2
 
@@ -14,7 +14,6 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "dbt_packages"
 
 
-  
 vars:
   #Column Aliases
   datavault4dbt.ldts_alias: 'ldts'
@@ -30,8 +29,19 @@ vars:
   datavault4dbt.hash_datatype: 'STRING'
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
-  datavault4dbt.hashdiff_use_trim: TRUE 
-  
+  datavault4dbt.hashdiff_use_trim: TRUE
+
+  # Delimiters used when concatenating columns before hashing
+  datavault4dbt.concat_string: '||'
+  datavault4dbt.quote_character: '"'
+  datavault4dbt.null_placeholder_string: '^^'
+
+  # Replacement tokens substituted for the delimiters above when they occur inside the input data,
+  # preventing hash collisions between real values and the structural delimiters
+  datavault4dbt.concat_string_replacement: 'dv4dbt-concat-replacement'
+  datavault4dbt.quote_character_replacement: 'dv4dbt-quote-replacement'
+  datavault4dbt.null_placeholder_string_replacement: 'dv4dbt-null-replacement'
+
   #Stage Configuration
   datavault4dbt.copy_rsrc_ldts_input_columns: false
 
@@ -39,26 +49,27 @@ vars:
   datavault4dbt.include_business_objects_before_appearance: false
   datavault4dbt.enable_static_analysis_overwrite: true
   datavault4dbt.multi_source_models__execution_aware_loading: true
+  datavault4dbt.show_debug_logs: false
 
   # Default start of the week is Monday
   datavault4dbt.first_day_of_week: {"snowflake": "1", "exasol": "1", "postgres": "1", "databricks": "1", "bigquery": "2", "synapse": "2", "fabric": "2", "oracle": "2", "redshift": "1", "sqlserver": "2"}
 
   #Ghost Record Configuration  
-  datavault4dbt.beginning_of_all_times: {"bigquery":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01", "postgres": "0001-01-01 00:00:01", "redshift": "0001-01-01 00:00:01", "synapse": "1901-01-01T00:00:01", "fabric": "0001-01-01T00:00:01", "oracle":"0001-01-01 00:00:01", databricks: "0001-01-01 00:00:01"}
-  datavault4dbt.end_of_all_times: {"bigquery":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31 23:59:59", "postgres": "8888-12-31 23:59:59", "redshift": "8888-12-31 23:59:59", "synapse": "8888-12-31T23:59:59", "fabric": "8888-12-31T23:59:59", "oracle":"8888-12-31 23:59:59", databricks: "8888-12-31 23:59:59"}
-  datavault4dbt.timestamp_format: {"bigquery":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-mm-dd HH:MI:SS", "postgres": "YYYY-MM-DD HH24:MI:SS", "redshift": "YYYY-MM-DD HH24:MI:SS", "synapse": 126, "fabric": 126, "oracle":"YYYY-MM-DD HH24:MI:SS", databricks: "yyyy-MM-dd HH:mm:ss"}
-  
-  datavault4dbt.beginning_of_all_times_date: {"bigquery":"0001-01-01","snowflake":"0001-01-01", "exasol": "0001-01-01", "postgres": "0001-01-01", "redshift": "0001-01-01", "synapse": "1901-01-01", "fabric": "0001-01-01", "oracle":"0001-01-01", databricks: "0001-01-01"}
-  datavault4dbt.end_of_all_times_date: {"bigquery":"8888-12-31","snowflake":"8888-12-31", "exasol": "8888-12-31", "postgres": "8888-12-31", "redshift": "8888-12-31", "synapse": "8888-12-31", "fabric": "8888-12-31", "oracle":"8888-12-31", databricks: "8888-12-31"}
-  datavault4dbt.date_format: {"bigquery":"%Y-%m-%d","snowflake":"YYYY-MM-DD", "exasol": "YYYY-mm-dd", "postgres": "YYYY-MM-DD", "redshift": "YYYY-MM-DD", "synapse": "yyyy-MM-dd", "fabric": "yyyy-mm-dd", "oracle":"YYYY-MM-DD", databricks: "yyyy-mm-dd"}
+  datavault4dbt.beginning_of_all_times: {"bigquery":"0001-01-01T00-00-01","snowflake":"0001-01-01T00:00:01", "exasol": "0001-01-01 00:00:01", "postgres": "0001-01-01 00:00:01", "redshift": "0001-01-01 00:00:01", "synapse": "1901-01-01T00:00:01", "fabric": "0001-01-01T00:00:01", "oracle":"0001-01-01 00:00:01", databricks: "0001-01-01 00:00:01", trino: "0001-01-01 00:00:01", "sqlserver": "1901-01-01T00:00:01"}
+  datavault4dbt.end_of_all_times: {"bigquery":"8888-12-31T23-59-59","snowflake":"8888-12-31T23:59:59", "exasol": "8888-12-31 23:59:59", "postgres": "8888-12-31 23:59:59", "redshift": "8888-12-31 23:59:59", "synapse": "8888-12-31T23:59:59", "fabric": "8888-12-31T23:59:59", "oracle":"8888-12-31 23:59:59", databricks: "8888-12-31 23:59:59", trino: "8888-12-31 23:59:59", "sqlserver": "8888-12-31T23:59:59"}
+  datavault4dbt.timestamp_format: {"bigquery":"%Y-%m-%dT%H-%M-%S","snowflake":"YYYY-MM-DDTHH24:MI:SS", "exasol": "YYYY-mm-dd HH:MI:SS", "postgres": "YYYY-MM-DD HH24:MI:SS", "redshift": "YYYY-MM-DD HH24:MI:SS", "synapse": 126, "fabric": 126, "oracle":"YYYY-MM-DD HH24:MI:SS", databricks: "yyyy-MM-dd HH:mm:ss", trino: "%Y-%m-%d %H:%i:%s", "sqlserver": 126}
+
+  datavault4dbt.beginning_of_all_times_date: {"bigquery":"0001-01-01","snowflake":"0001-01-01", "exasol": "0001-01-01", "postgres": "0001-01-01", "redshift": "0001-01-01", "synapse": "1901-01-01", "fabric": "0001-01-01", "oracle":"0001-01-01", databricks: "0001-01-01", trino: "0001-01-01", "sqlserver": "1901-01-01"}
+  datavault4dbt.end_of_all_times_date: {"bigquery":"8888-12-31","snowflake":"8888-12-31", "exasol": "8888-12-31", "postgres": "8888-12-31", "redshift": "8888-12-31", "synapse": "8888-12-31", "fabric": "8888-12-31", "oracle":"8888-12-31", databricks: "8888-12-31", trino: "8888-12-31", "sqlserver": "8888-12-31"}
+  datavault4dbt.date_format: {"bigquery":"%Y-%m-%d","snowflake":"YYYY-MM-DD", "exasol": "YYYY-mm-dd", "postgres": "YYYY-MM-DD", "redshift": "YYYY-MM-DD", "synapse": "yyyy-MM-dd", "fabric": "yyyy-mm-dd", "oracle":"YYYY-MM-DD", databricks: "yyyy-mm-dd", trino: "%Y-%m-%d", "sqlserver": "yyyy-MM-dd"}
 
   datavault4dbt.default_unknown_rsrc: 'SYSTEM'
   datavault4dbt.default_error_rsrc: 'ERROR'
   
-  datavault4dbt.rsrc_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING"}
-  datavault4dbt.timestamp_default_dtype: {"bigquery":"TIMESTAMP","snowflake":"TIMESTAMP_TZ", "exasol": "TIMESTAMP(3) WITH LOCAL TIME ZONE", "postgres": "TIMESTAMPTZ", "redshift": "TIMESTAMPTZ", "synapse": "datetimeoffset", "fabric": "datetime2(6)", "oracle":"TIMESTAMP WITH TIME ZONE", databricks: "TIMESTAMP"}
-  datavault4dbt.stg_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING"}
-  datavault4dbt.derived_columns_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING"}
+  datavault4dbt.rsrc_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING", trino: "VARCHAR", "sqlserver": "VARCHAR(255)"}
+  datavault4dbt.timestamp_default_dtype: {"bigquery":"TIMESTAMP","snowflake":"TIMESTAMP_TZ", "exasol": "TIMESTAMP(3) WITH LOCAL TIME ZONE", "postgres": "TIMESTAMPTZ", "redshift": "TIMESTAMPTZ", "synapse": "datetimeoffset", "fabric": "datetime2(6)", "oracle":"TIMESTAMP WITH TIME ZONE", databricks: "TIMESTAMP", trino: "TIMESTAMP(6)", "sqlserver": "datetime2(7)"}
+  datavault4dbt.stg_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING", trino: "VARCHAR", "sqlserver": "VARCHAR(255)"}
+  datavault4dbt.derived_columns_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING", trino: "VARCHAR", "sqlserver": "VARCHAR(255)"}
 
   #Datatype specific default values
   datavault4dbt.error_value__STRING: '(error)'

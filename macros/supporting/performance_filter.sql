@@ -208,3 +208,23 @@
 {% macro synapse__filter_distinct_target_hashkey_in_hub() %}
 
 {% endmacro %}
+
+{% macro sqlserver__filter_latest_entries_in_sat() %}
+
+{% endmacro %}
+
+{% macro sqlserver__filter_distinct_target_hashkey_in_link() %}
+
+{% endmacro %}
+
+{% macro sqlserver__filter_distinct_target_hashkey_in_nh_link() %}
+
+{% endmacro %}
+
+{% macro sqlserver__filter_distinct_target_hashkey_in_nh_sat() %}
+
+{% endmacro %}
+
+{% macro sqlserver__filter_distinct_target_hashkey_in_hub() %}
+
+{% endmacro %}

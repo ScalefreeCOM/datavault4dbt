@@ -9,7 +9,7 @@
         {% set ns.selected_models = ns.selected_models + [model_name] %}
     {% endfor %}
 
-    {{ log('selected_resources: ' ~ selected_resources, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('selected_resources: ' ~ selected_resources, false) }}{% endif %}
     {% set model_is_selected = (source_model_name in ns.selected_models) %}
     {{ return(model_is_selected) }}
 

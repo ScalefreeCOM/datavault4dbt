@@ -108,7 +108,7 @@
     {% set ns.link_hashkey_input_cols = ns.link_hashkey_input_cols + additional_hash_input_cols %}
     {% do ns.hash_config_dict.update({new_link_hashkey_name: ns.link_hashkey_input_cols}) %}
 
-    {{ log('hash_config: ' ~ ns.hash_config_dict, false)}}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash_config: ' ~ ns.hash_config_dict, false)}}{% endif %}
 
     {# Begin MERGE Statement Construction #}
     {% set merge_sql %}

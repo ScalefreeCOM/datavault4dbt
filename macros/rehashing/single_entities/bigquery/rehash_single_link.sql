@@ -49,8 +49,8 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
 
     {% endfor %}
 
-    {% set rename_sql = get_rename_table_sql(link_relation, link_relation.identifier ~ '_deprecated') %}
-    {% do run_query(rename_sql) %}
+    {# Rename to _deprecated, recovering safely if a previous run was interrupted. #}
+    {% set old_table_relation = datavault4dbt.rehash_prepare_rename(link_relation, output_logs=output_logs) %}
 
     {# generating the CREATE statement that populates the new columns. #}
     {% set create_sql = datavault4dbt.link_update_statement(link_relation=link_relation,
@@ -65,9 +65,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% do run_query(create_sql) %}
     {{ log('UPDATE statement completed!', output_logs) }}
 
-    {# Drop deprecated table #}
-    {% set old_table_relation = make_temp_relation(link_relation,suffix='_deprecated') %}
-
+    {# Drop deprecated table (old_table_relation set above by rehash_prepare_rename). #}
     {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
     {% do run_query(drop_table(old_table_relation)) %}
 
@@ -92,7 +90,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
     {% set old_link_hashkey_name = link_hashkey + '_deprecated'%}
-    {% set old_table_relation = make_temp_relation(link_relation,suffix='_deprecated') %}
+    {% set old_table_relation = datavault4dbt.rehash_deprecated_relation(link_relation) %}
 
 
 
@@ -107,7 +105,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% set ns.link_hashkey_input_cols = ns.link_hashkey_input_cols + additional_hash_input_cols %}
     {% do ns.hash_config_dict.update({new_link_hashkey_name: ns.link_hashkey_input_cols}) %}
 
-    {{ log('hash_config: ' ~ ns.hash_config_dict, false)}}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash_config: ' ~ ns.hash_config_dict, false)}}{% endif %}
 
 
     {% set update_sql %}
@@ -127,7 +125,7 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
                 {%- for column in all_hub_columns -%}
                     {%- if column.name|lower == hub.current_hashkey_name|lower + '_deprecated' -%}
                         {%- set hub_ns.hub_already_rehashed = true -%}
-                        {{ log('Hub already hashed!', false) }}
+                        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Hub already hashed!', false) }}{% endif %}
                     {%- endif -%}
                 {%- endfor -%}
 

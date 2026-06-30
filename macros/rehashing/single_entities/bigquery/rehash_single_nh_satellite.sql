@@ -46,8 +46,8 @@
     {% endif %}
 
 
-    {% set rename_sql = get_rename_table_sql(nh_satellite_relation, nh_satellite_relation.identifier ~ '_deprecated') %}
-    {% do run_query(rename_sql) %}
+    {# Rename to _deprecated, recovering safely if a previous run was interrupted. #}
+    {% set old_table_relation = datavault4dbt.rehash_prepare_rename(nh_satellite_relation, output_logs=output_logs) %}
 
     {# generating the CREATE statement that populates the new columns. #}
     {% set create_sql = datavault4dbt.nh_satellite_update_statement(nh_satellite_relation=nh_satellite_relation,
@@ -67,8 +67,7 @@
         {"name": hashkey + '_deprecated'}
     ]%}
 
-    {% set old_table_relation = make_temp_relation(nh_satellite_relation,suffix='_deprecated') %}
-
+    {# old_table_relation set above by rehash_prepare_rename. #}
     {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
     {% do run_query(drop_table(old_table_relation)) %}
 
@@ -88,7 +87,7 @@
     {% set ns = namespace(parent_already_rehashed=false) %}
     
     {% set old_hashkey_name = hashkey + '_deprecated' %}
-    {% set old_table_relation = make_temp_relation(nh_satellite_relation,suffix='_deprecated') %}
+    {% set old_table_relation = datavault4dbt.rehash_deprecated_relation(nh_satellite_relation) %}
     
     {#
         If parent entity is rehashed already (via rehash_all_rdv_entities macro), the "_deprecated"
@@ -98,10 +97,10 @@
     #}
     {% set all_parent_columns = adapter.get_columns_in_relation(parent_relation) %}
     {% for column in all_parent_columns %}
-        {{ log('parent column names: ' ~ all_parent_columns, false) }}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('parent column names: ' ~ all_parent_columns, false) }}{% endif %}
         {% if column.name|lower == hashkey|lower + '_deprecated' %}
             {% set ns.parent_already_rehashed = true %}
-            {{ log('parent_already hashed set to true for ' ~ nh_satellite_relation.name, false) }}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('parent_already hashed set to true for ' ~ nh_satellite_relation.name, false) }}{% endif %}
         {% endif %}
     {% endfor %}
 
@@ -126,13 +125,13 @@
     {# Extract only the column names #}
     {% set selected_column_names = filtered_columns | map(attribute='name') | list %}
     {% set select_clause = selected_column_names | join(', ') %}
-    {{ log('SELECT clause: ' ~ select_clause, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('SELECT clause: ' ~ select_clause, false) }}{% endif %}
 
     {% set rsrc_alias = var('datavault4dbt.rsrc_alias', 'rsrc') %}
     {% set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') %}
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
-    {{ log('hash_config_dict' ~ hash_config_dict, false) }}
+    {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('hash_config_dict' ~ hash_config_dict, false) }}{% endif %}
 
     {% set create_sql %}
     CREATE OR REPLACE TABLE {{ nh_satellite_relation }} AS

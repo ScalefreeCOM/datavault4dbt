@@ -29,7 +29,7 @@
 {%- set source_models = source_model_values['source_model_list'] -%}
 {%- set ns.has_rsrc_static_defined = source_model_values['has_rsrc_static_defined'] -%}
 {%- set ns.source_models_rsrc_dict = source_model_values['source_models_rsrc_dict'] -%}
-{{ log('source_models: '~source_models, false) }}
+{% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_models: '~source_models, false) }}{% endif %}
 
 {%- set final_columns_to_select = [link_hashkey] + foreign_hashkeys + [src_ldts] + [src_rsrc] + additional_columns  -%}
 
