@@ -1,4 +1,4 @@
-{%- macro trino__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro trino__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false, include_business_objects_before_appearance=true) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
@@ -116,6 +116,9 @@ pit_records AS (
     WHERE 1=1
     {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
         AND snap.{{ snapshot_trigger_column }}
+    {%- endif %}
+    {% if not include_business_objects_before_appearance -%}
+        AND te.{{ ldts }} <= snap.{{ sdts }}
     {%- endif %}
 
 ),

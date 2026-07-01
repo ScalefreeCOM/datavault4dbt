@@ -1,4 +1,4 @@
-{%- macro fabric__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro fabric__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false, include_business_objects_before_appearance=true) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARBINARY(16)') -%}
@@ -120,6 +120,9 @@ pit_records AS (
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
                 AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
+    {% if not include_business_objects_before_appearance -%}
+        WHERE te.{{ ldts }} <= snap.{{ sdts }}
+    {%- endif %}
 ),
 
 records_to_insert AS (

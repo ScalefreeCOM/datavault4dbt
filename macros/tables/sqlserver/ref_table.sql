@@ -1,4 +1,4 @@
-{%- macro sqlserver__ref_table(ref_hub, ref_satellites, src_ldts, src_rsrc, historized, snapshot_trigger_column='is_active', snapshot_relation=none) -%}
+{%- macro sqlserver__ref_table(ref_hub, ref_satellites, src_ldts, src_rsrc, historized, snapshot_trigger_column='is_active', snapshot_relation=none, include_business_objects_before_appearance=false) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
@@ -9,8 +9,6 @@
 {%- set is_current_col_alias = var('datavault4dbt.is_current_col_alias', 'IS_CURRENT') -%}
 {%- set ledts_alias = var('datavault4dbt.ledts_alias', 'ledts') -%}
 {%- set sdts_alias = var('datavault4dbt.sdts_alias', 'sdts') -%}
-
-{%- set include_business_objects_before_appearance = var('datavault4dbt.include_business_objects_before_appearance', 'false') -%}
 
 {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('ref_hub_relation: ' ~ ref_hub_relation, false) }}{% endif %}
 {%- set hub_columns = datavault4dbt.source_columns(ref_hub_relation) -%}
@@ -154,7 +152,7 @@ ref_table AS (
     
     {% endfor %}
     
-    {% if include_business_objects_before_appearance == 'false' -%}
+    {% if not include_business_objects_before_appearance -%}
     WHERE h.{{ src_ldts }} <= ld.{{ date_column }}
     {% endif %}
 

@@ -1,4 +1,4 @@
-{%- macro exasol__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro exasol__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key, refer_to_ghost_records, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false, include_business_objects_before_appearance=true) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'HASHTYPE') -%}
@@ -114,8 +114,12 @@ pit_records AS (
                 {{ satellite }}.{{ hashkey}} = te.{{ hashkey }}
                 AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
         {% endfor %}
+    WHERE 1=1
     {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
-        WHERE snap.{{ snapshot_trigger_column }}
+        AND snap.{{ snapshot_trigger_column }}
+    {%- endif %}
+    {% if not include_business_objects_before_appearance -%}
+        AND te.{{ ldts }} <= snap.{{ sdts }}
     {%- endif %}
 
 ),

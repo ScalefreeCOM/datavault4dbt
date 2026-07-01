@@ -1,4 +1,4 @@
-{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key=none, refer_to_ghost_records=true, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false) -%}
+{%- macro redshift__pit(tracked_entity, hashkey, sat_names, ldts, ledts, sdts, snapshot_relation, dimension_key=none, refer_to_ghost_records=true, snapshot_trigger_column=none, custom_rsrc=none, pit_type=none, snapshot_optimization=false, include_business_objects_before_appearance=true) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set hash_dtype = var('datavault4dbt.hash_datatype', 'VARCHAR(32)') -%}
@@ -99,15 +99,19 @@ FROM {{ ref(tracked_entity) }} te
         AND snap.{{ sdts }} BETWEEN {{ satellite }}.{{ ldts }} AND {{ satellite }}.{{ ledts }}
 {% endfor %}
 
+WHERE 1=1
 {%- if is_incremental() %}
   {%- if opt_mode == 'hwm' %}
-    WHERE snap.{{ sdts }} > (SELECT MAX({{ sdts }}) FROM {{ this }})
+    AND snap.{{ sdts }} > (SELECT MAX({{ sdts }}) FROM {{ this }})
   {%- else %}
-    WHERE snap.{{ sdts }} NOT IN (
+    AND snap.{{ sdts }} NOT IN (
         SELECT DISTINCT {{ sdts }}
         FROM {{ this }}
     )
   {%- endif %}
+{%- endif %}
+{%- if not include_business_objects_before_appearance %}
+    AND te.{{ ldts }} <= snap.{{ sdts }}
 {%- endif %}
 
 {%- if datavault4dbt.is_something(dimension_key) -%}

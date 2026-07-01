@@ -26,7 +26,8 @@ All the following variables are **prefixed with `datavault4dbt`**.
 
 | Name                                            | Usage                 | Explanation |
 |-------------------------------------------------|-----------------------|-------------|
-| include_business_objects_before_appearance      | Ref Table             | If a Ref_Hub entry should appear in the ref_table (snapshot based), even if the snapshot date is before the first appearance of that business object. |
+| ref_table__include_business_objects_before_appearance | Ref Table       | Whether ref_table rows should be emitted for snapshots before the ref_hub row's `ldts`. Defaults to `false` (rows are filtered out for snapshots before the ref_hub's `ldts`). Overridable per model via the `include_business_objects_before_appearance` parameter of the `ref_table` macro. |
+| pit__include_business_objects_before_appearance | PIT                   | Whether PIT rows (ghost sat rows) should be emitted for snapshots before the tracked hub row's `ldts`. Defaults to `true` (rows are emitted for every active snapshot, including those before the hub's `ldts`). Overridable per model via the `include_business_objects_before_appearance` parameter of the `pit` macro. |
 | enable_static_analysis_overwrite                | All macros            | Relevant for Fusion compatibility. For more info, see here. |
 | multi_source_models_execution_aware_loading     | Multi source entities | Whether multi source entities should respect the dbt command to reduce runtimes. |
 | first_day_of_week                               | Snapshot Table        | A mapping dictionary that defines the integer representation of the first day of the week (Sunday vs. Monday) for each specific database adapter. For the full configuration matrix, see [Snapshot Control v0](../../01_macro-instructions/22_business-vault/24_snapshot-control/24_snapshot-control-v0.md). |

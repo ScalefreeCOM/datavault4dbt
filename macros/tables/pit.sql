@@ -11,7 +11,7 @@
         - Allows to insert a static string as record source column, matching business vault definition of a record source
 #}
 
-{%- macro pit(yaml_metadata=none, tracked_entity=none, hashkey=none, sat_names=none, snapshot_relation=none, dimension_key=none, snapshot_trigger_column=none, ldts=none, custom_rsrc=none, ledts=none, sdts=none, pit_type=none, refer_to_ghost_records=True, snapshot_optimization=False) -%}
+{%- macro pit(yaml_metadata=none, tracked_entity=none, hashkey=none, sat_names=none, snapshot_relation=none, dimension_key=none, snapshot_trigger_column=none, ldts=none, custom_rsrc=none, ledts=none, sdts=none, pit_type=none, refer_to_ghost_records=True, snapshot_optimization=False, include_business_objects_before_appearance=none) -%}
 
     {% set tracked_entity_description = "
     tracked_entity::string              Name of the tracked Hub entity. Must be available as a model inside the dbt project.
@@ -75,22 +75,67 @@
                                         Optional parameter, default is True.
     " %}
 
+    {%- set include_business_objects_before_appearance_description = "
+    include_business_objects_before_appearance::boolean  Controls whether ghost PIT rows are emitted for snapshots older than a hub row's
+                                                         ldts.
+                                                           - True  (default for PIT): emit ghost PIT rows for every active snapshot,
+                                                                                      including snapshots before hub.ldts.
+                                                           - False                  : filter out PIT rows where te.ldts > snap.sdts;
+                                                                                      a hub row appears in the PIT only for snapshots
+                                                                                      at or after its own ldts.
+                                                         Overrides the global variable 'datavault4dbt.pit__include_business_objects_before_appearance'
+                                                         for this model. Optional parameter.
+    " -%}
+
     {%- set snapshot_optimization_description = "
     snapshot_optimization::boolean|string   Controls which snapshots are processed in incremental runs. Accepts a boolean or a mode string.
-                                            Modes (from safe to cheap):
-                                              - False / 'off'      (default): process all trigger snapshots; deduplicate new rows against
+                                            Modes:
+                                              - False / 'off'        (default): process all (active) snapshots; deduplicate new rows against
                                                                                 existing dimension keys in the target. Safe, most expensive.
                                               - 'hwm'                         : process only snapshots with sdts > MAX(sdts) in the target
-                                                                                (High Water Mark). Cheapest; requires that satellite loads
-                                                                                are complete before their snapshot is marked as trigger,
-                                                                                otherwise late-arriving satellite data is missed. Supported
-                                                                                on all adapters.
-                                              - True / 'relevant'             : process new snapshots + re-sweep the last processed snapshot
+                                                                                (High Water Mark). Cheapest; Supported on all adapters.
+                                              - True / 'relevant'             : process new snapshots + update the last processed snapshot
                                                                                 per satellite to catch late-arriving satellite data. Requires
                                                                                 the model to be configured with a unique_key constraint since
                                                                                 existing rows may be updated. Snowflake only; using this on
                                                                                 other adapters raises a compile-time error.
-                                            Optional parameter, default is False.
+                                            Logic description:
+                                              - False / 'off': rebuilds PIT records for every (active) snapshot
+                                                from the current source state and only skips rows whose dimension_key is already in the
+                                                target.
+                                              - 'hwm' only processes snapshots with sdts > MAX(sdts) in the target and never revisits
+                                                already-processed snapshots. So anything that would change the PIT content for an old
+                                                snapshot is missed:
+                                                  Example 1: New Hub Row
+                                                     A new business key appears in the Hub. Under the PIT default of
+                                                     'datavault4dbt.pit__include_business_objects_before_appearance' = true, full-refresh
+                                                     emits PIT rows (ghost sat rows) for that hub for every active snapshot, including
+                                                     snapshots older than hub.ldts. 'hwm' only emits rows for snapshots > MAX(sdts) and
+                                                     therefore does not backfill the old snapshots.
+                                                     e.g. MAX(sdts) in PIT = 2025-06-30. A new hub row is loaded today with
+                                                          ldts = 2025-06-30.
+                                                          Incremental 'hwm': no PIT rows for that hub-row for snapshots <= 2025-06-30.
+                                                          Full-refresh:      ghost PIT rows for that hub-row for every active snapshot,
+                                                                             including those before 2025-06-30.
+                                                     Setting 'datavault4dbt.pit__include_business_objects_before_appearance' to False
+                                                     (or passing include_business_objects_before_appearance=False to the model) aligns
+                                                     full-refresh with 'hwm' as long as the hub is loaded strictly after every already
+                                                     processed snapshot.
+                                                  Example 2: Snapshot Trigger
+                                                     A snapshot whose trigger is flipped from false to true after MAX(sdts) has moved
+                                                     past it is skipped by 'hwm' entirely; full-refresh picks it up.
+                                                     e.g. MAX(sdts) in PIT = 2025-06-30. The snapshot at sdts = 2025-05-15 originally had
+                                                          is_active = false, so it was never processed. Someone now flips is_active = true
+                                                          for 2025-05-15.
+                                                          Incremental 'hwm': 2025-05-15 <= MAX(sdts), so it stays skipped.
+                                                          Full-refresh:      2025-05-15 is picked up and materialized in the PIT.
+                                              - True / 'relevant' (Snowflake only) processes new snapshots like 'hwm', and additionally
+                                                updates the boundary snapshot (the last processed sdts per satellite) so that late-arriving
+                                                satellite data whose ldts falls into an already-processed snapshot's range is picked up.
+                                                Existing PIT rows for the re-swept snapshot are updated via the model's unique_key merge,
+                                                so this mode requires the model to be configured with a unique_key constraint on the
+                                                dimension_key. Note that this mode does NOT recover from cases (1) or (2) above.
+                                            Optional parameter, default is 'off' / False.
     " -%}
 
     {%- set tracked_entity          = datavault4dbt.yaml_metadata_parser(name='tracked_entity', yaml_metadata=yaml_metadata, parameter=tracked_entity, required=True, documentation=tracked_entity_description) -%}
@@ -106,12 +151,18 @@
     {%- set pit_type                = datavault4dbt.yaml_metadata_parser(name='pit_type', yaml_metadata=yaml_metadata, parameter=pit_type, required=False, documentation=pit_type_description) -%}
     {%- set refer_to_ghost_records  = datavault4dbt.yaml_metadata_parser(name='refer_to_ghost_records', yaml_metadata=yaml_metadata, parameter=refer_to_ghost_records, required=False, documentation=pit_type_description) -%}
     {%- set snapshot_optimization  = datavault4dbt.yaml_metadata_parser(name='snapshot_optimization', yaml_metadata=yaml_metadata, parameter=snapshot_optimization, required=False, documentation=snapshot_optimization_description) -%}
+    {%- set include_business_objects_before_appearance = datavault4dbt.yaml_metadata_parser(name='include_business_objects_before_appearance', yaml_metadata=yaml_metadata, parameter=include_business_objects_before_appearance, required=False, documentation=include_business_objects_before_appearance_description) -%}
 
     {# Applying the default aliases as stored inside the global variables, if ldts, sdts and ledts are not set. #}
 
     {%- set ldts = datavault4dbt.replace_standard(ldts, 'datavault4dbt.ldts_alias', 'ldts') -%}
     {%- set ledts = datavault4dbt.replace_standard(ledts, 'datavault4dbt.ledts_alias', 'ledts') -%}
     {%- set sdts = datavault4dbt.replace_standard(sdts, 'datavault4dbt.sdts_alias', 'sdts') -%}
+
+    {# Resolve include_business_objects_before_appearance: parameter -> global var -> default True. #}
+    {%- if include_business_objects_before_appearance is none -%}
+        {%- set include_business_objects_before_appearance = var('datavault4dbt.pit__include_business_objects_before_appearance', true) -%}
+    {%- endif -%}
 
         {# For Fusion static_analysis overwrite #}
     {% set static_analysis_config = datavault4dbt.get_static_analysis_config('pit') %}
@@ -132,9 +183,10 @@
                                                         snapshot_trigger_column=snapshot_trigger_column,
                                                         dimension_key=dimension_key,
                                                         refer_to_ghost_records=refer_to_ghost_records,
-                                                        snapshot_optimization=snapshot_optimization) }}
+                                                        snapshot_optimization=snapshot_optimization,
+                                                        include_business_objects_before_appearance=include_business_objects_before_appearance) }}
     {%- endif %}
-    
+
     {{ return(adapter.dispatch('pit','datavault4dbt')(pit_type=pit_type,
                                                         tracked_entity=tracked_entity,
                                                         hashkey=hashkey,
@@ -147,6 +199,7 @@
                                                         snapshot_trigger_column=snapshot_trigger_column,
                                                         dimension_key=dimension_key,
                                                         refer_to_ghost_records=refer_to_ghost_records,
-                                                        snapshot_optimization=snapshot_optimization)) }}
+                                                        snapshot_optimization=snapshot_optimization,
+                                                        include_business_objects_before_appearance=include_business_objects_before_appearance)) }}
 
 {%- endmacro -%}

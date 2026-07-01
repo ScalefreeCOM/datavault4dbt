@@ -46,7 +46,8 @@ vars:
   datavault4dbt.copy_rsrc_ldts_input_columns: false
 
   #General Configuration
-  datavault4dbt.include_business_objects_before_appearance: false
+  datavault4dbt.ref_table__include_business_objects_before_appearance: false
+  datavault4dbt.pit__include_business_objects_before_appearance: true
   datavault4dbt.enable_static_analysis_overwrite: true
   datavault4dbt.multi_source_models__execution_aware_loading: true
   datavault4dbt.show_debug_logs: false
