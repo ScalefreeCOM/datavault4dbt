@@ -21,12 +21,32 @@
     {%- set hashed_cols = [datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- endif -%}
 
+{#- Normalize snapshot_optimization to a mode string: 'off' | 'hwm' -#}
+{%- if snapshot_optimization is boolean -%}
+    {%- set opt_mode = 'relevant' if snapshot_optimization else 'off' -%}
+{%- else -%}
+    {%- set opt_mode = snapshot_optimization | lower -%}
+{%- endif -%}
+{%- if opt_mode == 'relevant' -%}
+    {{ exceptions.raise_compiler_error("snapshot_optimization='relevant' (or True) is only supported on Snowflake. Use 'hwm' or 'off' (or False) instead.") }}
+{%- endif -%}
+{%- if opt_mode not in ['off', 'hwm'] -%}
+    {{ exceptions.raise_compiler_error("snapshot_optimization must be one of: false/'off', 'hwm'. Got: " ~ snapshot_optimization) }}
+{%- endif -%}
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 WITH
 
 {%- if is_incremental() %}
 
+  {%- if opt_mode == 'hwm' %}
+snapshot_dates AS ( --only process snapshots newer than the current PIT high water mark
+    SELECT *
+    FROM {{ ref(snapshot_relation) }}
+    WHERE {{ sdts }} > (SELECT MAX({{ sdts }}) FROM {{ this }})
+),
+  {%- else %}
 existing_dimension_keys AS (
 
     SELECT
@@ -34,6 +54,7 @@ existing_dimension_keys AS (
     FROM {{ this }}
 
 ),
+  {%- endif %}
 
 {%- endif %}
 
@@ -66,7 +87,11 @@ pit_records AS (
     FROM
             {{ ref(tracked_entity) }} te
         INNER JOIN
+            {% if is_incremental() and opt_mode == 'hwm' -%}
+            snapshot_dates snap
+            {%- else -%}
             {{ ref(snapshot_relation) }} snap
+            {%- endif %}
             {% if datavault4dbt.is_something(snapshot_trigger_column) -%}
                 ON snap.{{ snapshot_trigger_column }} = 1
             {% else -%}
@@ -95,8 +120,8 @@ records_to_insert AS (
 
     SELECT DISTINCT *
     FROM pit_records pr
-    {%- if is_incremental() %} 
-        WHERE 
+    {%- if is_incremental() and opt_mode == 'off' %}
+        WHERE
         NOT EXISTS (
             SELECT 1
             FROM existing_dimension_keys edk

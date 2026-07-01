@@ -76,11 +76,21 @@
     " %}
 
     {%- set snapshot_optimization_description = "
-    snapshot_optimization::boolean     If set to True, and if the model is run in incremental mode, only the relevant snapshots
-                                        (i.e. those that are newer (or equal e.g. because of late arriving data) than the max sdts in the existing PIT table) will be considered.
-                                        This can significantly improve performance of incremental loads on large snapshot tables.
-                                        If set to True, the model needs to be configured with a unique_key constraint as there may be updates due to the late arriving data.
-                                        Affected Adapters: Snowflake only! Optional parameter, default is False.
+    snapshot_optimization::boolean|string   Controls which snapshots are processed in incremental runs. Accepts a boolean or a mode string.
+                                            Modes (from safe to cheap):
+                                              - False / 'off'      (default): process all trigger snapshots; deduplicate new rows against
+                                                                                existing dimension keys in the target. Safe, most expensive.
+                                              - 'hwm'                         : process only snapshots with sdts > MAX(sdts) in the target
+                                                                                (High Water Mark). Cheapest; requires that satellite loads
+                                                                                are complete before their snapshot is marked as trigger,
+                                                                                otherwise late-arriving satellite data is missed. Supported
+                                                                                on all adapters.
+                                              - True / 'relevant'             : process new snapshots + re-sweep the last processed snapshot
+                                                                                per satellite to catch late-arriving satellite data. Requires
+                                                                                the model to be configured with a unique_key constraint since
+                                                                                existing rows may be updated. Snowflake only; using this on
+                                                                                other adapters raises a compile-time error.
+                                            Optional parameter, default is False.
     " -%}
 
     {%- set tracked_entity          = datavault4dbt.yaml_metadata_parser(name='tracked_entity', yaml_metadata=yaml_metadata, parameter=tracked_entity, required=True, documentation=tracked_entity_description) -%}

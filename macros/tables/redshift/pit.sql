@@ -26,6 +26,19 @@
     {%- set hashed_cols = [hashkey_string, datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- endif -%}
 
+{#- Normalize snapshot_optimization to a mode string: 'off' | 'hwm' -#}
+{%- if snapshot_optimization is boolean -%}
+    {%- set opt_mode = 'relevant' if snapshot_optimization else 'off' -%}
+{%- else -%}
+    {%- set opt_mode = snapshot_optimization | lower -%}
+{%- endif -%}
+{%- if opt_mode == 'relevant' -%}
+    {{ exceptions.raise_compiler_error("snapshot_optimization='relevant' (or True) is only supported on Snowflake. Use 'hwm' or 'off' (or False) instead.") }}
+{%- endif -%}
+{%- if opt_mode not in ['off', 'hwm'] -%}
+    {{ exceptions.raise_compiler_error("snapshot_optimization must be one of: false/'off', 'hwm'. Got: " ~ snapshot_optimization) }}
+{%- endif -%}
+
 {{ datavault4dbt.prepend_generated_by() }}
 
 SELECT
@@ -87,10 +100,14 @@ FROM {{ ref(tracked_entity) }} te
 {% endfor %}
 
 {%- if is_incremental() %}
+  {%- if opt_mode == 'hwm' %}
+    WHERE snap.{{ sdts }} > (SELECT MAX({{ sdts }}) FROM {{ this }})
+  {%- else %}
     WHERE snap.{{ sdts }} NOT IN (
         SELECT DISTINCT {{ sdts }}
         FROM {{ this }}
     )
+  {%- endif %}
 {%- endif %}
 
 {%- if datavault4dbt.is_something(dimension_key) -%}

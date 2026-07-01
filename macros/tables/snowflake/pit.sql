@@ -13,6 +13,16 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{#- Normalize snapshot_optimization to a mode string: 'off' | 'hwm' | 'relevant' -#}
+{%- if snapshot_optimization is boolean -%}
+    {%- set opt_mode = 'relevant' if snapshot_optimization else 'off' -%}
+{%- else -%}
+    {%- set opt_mode = snapshot_optimization | lower -%}
+{%- endif -%}
+{%- if opt_mode not in ['off', 'hwm', 'relevant'] -%}
+    {{ exceptions.raise_compiler_error("snapshot_optimization must be one of: false/'off', 'hwm', true/'relevant'. Got: " ~ snapshot_optimization) }}
+{%- endif -%}
+
 {%- if datavault4dbt.is_something(pit_type) -%}
     {%- set quote = "'" -%}
     {%- set pit_type_quoted = quote + pit_type + quote -%}
@@ -26,19 +36,19 @@
 WITH
 
 {%- if is_incremental() %}
-  {%- if snapshot_optimization %}
+  {%- if opt_mode == 'relevant' %}
   snapshot_dates as (
     SELECT
-      * 
-    FROM {{ ref(snapshot_relation) }} 
+      *
+    FROM {{ ref(snapshot_relation) }}
     {%- if datavault4dbt.is_something(snapshot_trigger_column) %}
       WHERE {{ snapshot_trigger_column }}
     {%- endif %}
   ),
 
   sdts_max_ldts as ( --get the dts from all relevant snapshots and the max. ldts per satelite from the pit
-    SELECT 
-      snap.{{ sdts }} 
+    SELECT
+      snap.{{ sdts }}
     {%- for satellite in sat_names %}
       , MAX(pit.{{ ldts }}_{{ satellite }}) max_{{ ldts }}_{{ satellite }}
     {%- endfor %}
@@ -50,7 +60,7 @@ WITH
   ),
 
   relevant_snapshots as ( --filter to snapshots which have to be handled
-    SELECT 
+    SELECT
       {{ sdts }}
       {%- for satellite in sat_names %}
         , COALESCE(max_{{ ldts }}_{{ satellite }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) as max_{{ ldts }}_{{ satellite }}
@@ -58,7 +68,7 @@ WITH
       {% if datavault4dbt.is_something(snapshot_trigger_column) %}
         , true as {{ snapshot_trigger_column }},
       {% endif %}
-    FROM sdts_max_ldts 
+    FROM sdts_max_ldts
     WHERE
     {%- for satellite in sat_names %}
       --new snapshot
@@ -67,6 +77,17 @@ WITH
       max_{{ ldts }}_{{ satellite }} = (SELECT MAX(max_{{ ldts }}_{{ satellite }}) FROM sdts_max_ldts)
       {{ 'OR' if not loop.last }}
     {%- endfor %}
+  ),
+
+  {%- elif opt_mode == 'hwm' %}
+  snapshot_dates as ( --only process snapshots newer than the current PIT high water mark
+    SELECT
+      *
+    FROM {{ ref(snapshot_relation) }}
+    WHERE {{ sdts }} > (SELECT MAX({{ sdts }}) FROM {{ this }})
+    {%- if datavault4dbt.is_something(snapshot_trigger_column) %}
+      AND {{ snapshot_trigger_column }}
+    {%- endif %}
   ),
 
   {%- else %}
@@ -78,7 +99,7 @@ WITH
 
   ),
   {%- endif %}
-  
+
 {%- endif %}
 
 pit_records AS (
@@ -110,8 +131,10 @@ pit_records AS (
     FROM
             {{ ref(tracked_entity) }} te
         FULL OUTER JOIN
-      {% if snapshot_optimization and is_incremental() %}
-      relevant_snapshots snap 
+      {% if is_incremental() and opt_mode == 'relevant' %}
+      relevant_snapshots snap
+      {%- elif is_incremental() and opt_mode == 'hwm' %}
+      snapshot_dates snap
       {%- else %}
             {{ ref(snapshot_relation) }} snap
       {% endif -%}
@@ -141,9 +164,9 @@ pit_records AS (
     {% if datavault4dbt.is_something(snapshot_trigger_column) %}
          AND snap.{{ snapshot_trigger_column }}
     {%- endif %}
-    {% if snapshot_optimization and is_incremental() %}
-            AND (  
-        {% for satellite in sat_names %} 
+    {% if is_incremental() and opt_mode == 'relevant' %}
+            AND (
+        {% for satellite in sat_names %}
             snap.max_{{ ldts }}_{{ satellite }} <= {{ satellite }}.{{ ldts }}
           {% if not loop.last %}
             OR
@@ -158,7 +181,7 @@ records_to_insert AS (
 
     SELECT DISTINCT *
     FROM pit_records
-    {%- if is_incremental() and not snapshot_optimization %}
+    {%- if is_incremental() and opt_mode == 'off' %}
     WHERE {{ dimension_key }} NOT IN (SELECT * FROM existing_dimension_keys)
     {% endif %}
     ORDER BY {{ sdts }}
