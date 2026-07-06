@@ -147,7 +147,8 @@
                                                         snapshot_trigger_column=snapshot_trigger_column,
                                                         dimension_key=dimension_key,
                                                         refer_to_ghost_records=refer_to_ghost_records,
-                                                        snapshot_optimization=snapshot_optimization) }}
+                                                        snapshot_optimization=snapshot_optimization,
+                                                        mandatory_strategy=mandatory_strategy) }}
     {%- endif %}
     
     {{ return(adapter.dispatch('pit','datavault4dbt')(pit_type=pit_type,
