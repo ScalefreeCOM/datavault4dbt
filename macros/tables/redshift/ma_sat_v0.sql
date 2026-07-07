@@ -101,12 +101,16 @@ records_to_insert AS (
         {{ datavault4dbt.alias_all(columns=source_cols, prefix=source_cte) }}
     FROM {{ source_cte }}
     {%- if is_incremental() %}
-    WHERE deduped_rows.rn > 1
-    OR NOT EXISTS (
+    WHERE
+        {%- if not source_is_single_batch %}
+        {{ source_cte }}.rn > 1
+        OR
+        {%- endif %}
+        NOT EXISTS (
         SELECT 1
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
-            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }} 
+            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             )
     {%- endif %}
 
