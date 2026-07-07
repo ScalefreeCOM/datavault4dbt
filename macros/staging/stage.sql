@@ -53,9 +53,14 @@
   " %}
 
   {% set derived_columns_description = "
-    derived_columns::dictionary         Defines values and datatypes for derived ('added' or 'calculated') columns. The values of this dictionary are the desired column names,
-                                        the value is another dictionary with the keys 'value' (holding a column name, a SQL expression, or a static string beginning with '!') and
-                                        'datatype' (holding a valid SQL datatype for the target database).
+    derived_columns::dictionary         Defines values and datatypes for derived ('added' or 'calculated') columns. The key of each entry is the desired output column name.
+                                        The value is a dictionary that supports the following keys:
+                                          'value'            (required) A column name, a SQL expression, or a static string beginning with '!'.
+                                          'datatype'         (required) A valid SQL datatype for the target database.
+                                          'src_cols_required' (optional) A column name or list of column names used by the expression. Required when include_source_columns=false.
+                                          'overwrite_src_cols' (optional, default false) When true, the columns listed in 'src_cols_required' are excluded from the staging CTE
+                                                             output, so only the aliased column appears. Useful for renaming columns whose original name cannot be referenced
+                                                             downstream (e.g. columns with special characters such as umlauts on Databricks).
 
                                         Examples:
                                             {'conversion_duration': {'value': 'TIMESTAMP_DIFF(conversion_date, created_date, DAY)',     Creates three derived columns. The column 'conversion_duration' calculates
@@ -64,6 +69,11 @@
                                                                      'datatype': 'STRING'},                                             The column 'account_name' duplicates an already existing column and gives
                                              'account_name':        {'value': 'name',                                                   it another name. More derived columns can be added as additional keys of
                                                                      'datatype': 'String'}}                                             the dictionary.
+
+                                            {'account_name_clean': {'value': 'Kontonäme',                                              Renames a source column whose name contains a special character. Setting
+                                                                    'datatype': 'STRING',                                              'overwrite_src_cols: true' ensures the original column is dropped from the
+                                                                    'src_cols_required': 'Kontonäme',                                  CTE output, so only 'account_name_clean' appears and the special-character
+                                                                    'overwrite_src_cols': true}}                                       column name does not propagate downstream.
   " %}
 
   {% set sequence_description = "
