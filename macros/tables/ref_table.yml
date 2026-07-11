@@ -1,0 +1,44 @@
+version: 2
+
+macros:
+  - name: ref_table
+    description: '{{ doc("ref_table") }}'
+    arguments:
+      - name: yaml_metadata
+        type: dictionary
+        description: >
+          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          of specifying each one directly in the macro call.
+      - name: ref_hub
+        type: string
+        description: >
+          Name of the underlying ref_hub model.
+      - name: ref_satellites
+        type: string | list of strings
+        description: >
+          Name(s) of the reference satellites to be included in this ref_table. Optional: 'include' and 'exclude'
+          as dictionary keys for each satellite.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: historized
+        type: string
+        description: >
+          Possible values are 'full', 'latest', or 'snapshot'. Influences how much history this reference table
+          will hold.
+      - name: snapshot_relation
+        type: string
+        description: >
+          Only required if 'historized' is set to 'snapshot'. Name of the snapshot_v1 model to be used.
+      - name: snapshot_trigger_column
+        type: string
+        description: >
+          Only required if 'historized' is set to 'snapshot'. Defaults to global variable
+          'datavault4dbt.snapshot_trigger_column'. Only needs to be set if alias deviates from global variable.

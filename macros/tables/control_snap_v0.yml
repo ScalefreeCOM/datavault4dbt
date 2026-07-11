@@ -1,0 +1,33 @@
+version: 2
+
+macros:
+  - name: control_snap_v0
+    description: '{{ doc("control_snap_v0") }}'
+    arguments:
+      - name: yaml_metadata
+        type: dictionary
+        description: >
+          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          of specifying each one directly in the macro call.
+      - name: start_date
+        type: timestamp
+        description: >
+          Defines the earliest timestamp that should be available inside the snapshot_table. The time part of this
+          timestamp needs to be set to '00:00:00'. The format of this timestamp must equal to the timestamp format
+          defined in the global variable 'datavault4dbt.timestamp_format'.
+          Examples: '2015-01-01T00-00-00' — This snapshot table would hold daily snapshots beginning at 2015.
+      - name: daily_snapshot_time
+        type: time
+        description: >
+          Defines the time that your daily snapshots should have. Usually this is either something right before
+          daily business starts, or after daily business is over.
+          Examples: '07:30:00', '23:00:00'.
+      - name: sdts_alias
+        type: string
+        description: >
+          Defines the name of the snapshot date timestamp column inside the snapshot_table. It is optional,
+          if not set will use the global variable 'datavault4dbt.sdts_alias' set inside dbt_project.yml.
+      - name: end_date
+        type: timestamp
+        description: >
+          Defines the latest timestamp that should be available inside the snapshot_table.

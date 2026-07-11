@@ -1,0 +1,29 @@
+version: 2
+
+macros:
+  - name: fabric__ref_table
+    description: >
+      Microsoft Fabric-specific adapter implementation of the ref_table macro. Called automatically via
+      adapter.dispatch() when running on Fabric. See the parent ref_table macro for full parameter documentation.
+    arguments:
+      - name: ref_hub
+        type: string
+        description: Name of the underlying ref_hub model.
+      - name: src_ldts
+        type: string
+        description: Name of the ldts column. Optional, defaults to 'datavault4dbt.ldts_alias'.
+      - name: src_rsrc
+        type: string
+        description: Name of the rsrc column. Optional, defaults to 'datavault4dbt.rsrc_alias'.
+      - name: ref_satellites
+        type: string | list of strings
+        description: Name(s) of the reference satellites to include.
+      - name: historized
+        type: string
+        description: Possible values are 'full', 'latest', or 'snapshot'.
+      - name: snapshot_relation
+        type: string
+        description: Only required if historized is 'snapshot'. Name of the snapshot_v1 model.
+      - name: snapshot_trigger_column
+        type: string
+        description: Only required if historized is 'snapshot'. Trigger column name in the snapshot relation.

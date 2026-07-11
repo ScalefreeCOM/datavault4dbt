@@ -1,0 +1,20 @@
+version: 2
+
+macros:
+  - name: trino__control_snap_v1
+    description: >
+      Trino-specific adapter implementation of the control_snap_v1 macro. Called automatically via
+      adapter.dispatch() when running on Trino. See the parent control_snap_v1 macro for full parameter
+      documentation.
+    arguments:
+      - name: control_snap_v0
+        type: string
+        description: The name of the underlying version 0 control snapshot table.
+      - name: log_logic
+        type: dictionary
+        description: >
+          Defining the desired durations of each granularity ('daily', 'weekly', 'monthly', 'yearly').
+          Optional — if not set, all snapshots remain active.
+      - name: sdts_alias
+        type: string
+        description: Name of the snapshot date timestamp column. Optional, defaults to 'datavault4dbt.sdts_alias'.

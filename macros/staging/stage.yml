@@ -1,0 +1,82 @@
+version: 2
+
+macros:
+  - name: stage
+    description: '{{ doc("stage") }}'
+    arguments:
+      - name: yaml_metadata
+        type: dictionary
+        description: >
+          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          of specifying each one directly in the macro call.
+      - name: ldts
+        type: string
+        description: >
+          Name of the column inside the source data, that holds information about the Load Date Timestamp.
+          Can also be a SQL expression.
+          Examples: 'edwLoadDate' (column name as-is),
+          'PARSE_TIMESTAMP('%Y-%m-%dT%H-%M-%S', edwLoadDate)' (applying a SQL function).
+      - name: rsrc
+        type: string
+        description: >
+          Name of the column inside the source data, that holds information about the Record Source. Can also
+          be a SQL expression or a static string. A static string must begin with a '!'.
+          Examples: 'edwRecordSource' (column), '!SAP.Accounts' (static string),
+          'CONCAT(source_system, '||', source_object)' (expression).
+      - name: source_model
+        type: string | dictionary
+        description: >
+          Can be just a string holding the name of the referred dbt model to use as a source. But if the 'source'
+          functionality inside the .yml file is used, it must be a dictionary with 'source_name': 'source_table'.
+          Examples: 'source_account' (model name), {'source_data': 'source_account'} (dbt source reference).
+      - name: include_source_columns
+        type: boolean
+        description: >
+          Defines if all columns from the referred source table should be included in the result table, or if only
+          the added columns should be part of the result table. By default the source columns should be included.
+      - name: hashed_columns
+        type: dictionary
+        description: >
+          Defines the names and input for all hashkeys and hashdiffs to create. The key of each hash column is
+          the name of the hash column. The value for Hashkeys is a list of input Business Keys; for Hashdiffs
+          another dictionary with the pairs 'is_hashdiff:true' and 'columns: <list of columns>'.
+          Example: {'hk_account_h': ['account_number', 'account_key'], 'hd_account_s': {'is_hashdiff': true, 'columns': ['name', 'address']}}.
+      - name: derived_columns
+        type: dictionary
+        description: >
+          Defines values and datatypes for derived ('added' or 'calculated') columns. The values of this dictionary
+          are the desired column names; the value is another dictionary with the keys 'value' (holding a column name,
+          a SQL expression, or a static string beginning with '!') and 'datatype' (holding a valid SQL datatype).
+          Example: {'country_isocode': {'value': '!GER', 'datatype': 'STRING'}}.
+      - name: sequence
+        type: string
+        description: >
+          Name of the column inside the source data, that holds a sequence number generated during data source
+          extraction. Optional and not required.
+          Example: 'edwSequence'.
+      - name: prejoined_columns
+        type: dictionary
+        description: >
+          Defines information about columns that need to be prejoined. Most commonly used to create links when
+          the source data does not hold the Business Key but the technical key of the referred object. For each
+          prejoined column define: 'src_name', 'src_table' (or 'ref_model'), 'bk', 'this_column_name',
+          'ref_column_name'.
+      - name: missing_columns
+        type: dictionary
+        description: >
+          If the schema of the source changes over time and columns are disappearing, this parameter gives you
+          the option to create additional columns holding NULL values. The dictionary holds the column names as
+          keys and the SQL datatypes as values.
+          Example: {'legacy_account_uuid': 'INT64', 'shipping_address': 'STRING'}.
+      - name: multi_active_config
+        type: dictionary
+        description: >
+          If the source data holds multi-active data, define here the column(s) holding the multi-active key and
+          the main hashkey column. The combination of multi-active key(s), the main hashkey and the ldts column
+          should be unique in the final result satellite. If not set, the stage will be treated as a single-active stage.
+          Example: {'multi_active_key': 'phonetype', 'main_hashkey_column': 'hk_contact_h'}.
+      - name: enable_ghost_records
+        type: boolean
+        description: >
+          If set to true, the stage will be created with ghost records. By default, ghost records are enabled.
+          Optional Parameter.

@@ -1,0 +1,64 @@
+version: 2
+
+macros:
+  - name: ma_sat_v0
+    description: '{{ doc("ma_sat_v0") }}'
+    arguments:
+      - name: yaml_metadata
+        type: dictionary
+        description: >
+          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          of specifying each one directly in the macro call.
+      - name: parent_hashkey
+        type: string
+        description: >
+          Name of the hashkey column inside the stage of the object that this satellite is attached to.
+          Examples: 'hk_account_h' (attached to hub account), 'hk_account_contact_l' (attached to a link).
+      - name: src_hashdiff
+        type: string
+        description: >
+          Name of the hashdiff column of this satellite, that was created inside the staging area and is
+          calculated out of the entire payload of this satellite. The stage must hold one hashdiff per
+          satellite entity. Examples: 'hd_account_data_sfdc_s'.
+      - name: src_ma_key
+        type: string | list of strings
+        description: >
+          Name(s) of the multi-active keys inside the staging area. Need to be the same ones as defined in the stage model.
+          Examples: 'phonetype' (single), ['phonetype', 'company'] (composite — the combination of both is treated as the key).
+      - name: src_payload
+        type: list of strings
+        description: >
+          A list of all the descriptive attributes that should be included in this satellite. Needs to be the columns that
+          are fed into the hashdiff calculation of this satellite. Do not include the multi-active key in the payload of a
+          multi-active satellite, it is included automatically!
+          Examples: ['name', 'address', 'country', 'phone', 'email'].
+      - name: source_model
+        type: string
+        description: >
+          Name of the underlying staging model, must be available inside dbt as a model.
+          Examples: 'stage_account' — This satellite is loaded out of the stage for account.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source model. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source model. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: additional_columns
+        type: list | string
+        description: >
+          Additional columns from source system or derived columns which should be part of the ma_sat.
+          The columns need to be available in all source models. Optional parameter, defaults to empty list.
+      - name: disable_hwm
+        type: boolean
+        description: >
+          Whether the automatic application of a High-Water Mark (HWM) should be disabled or not.
+          Optional parameter, defaults to False.
+      - name: source_is_single_batch
+        type: boolean
+        description: >
+          Boosts performance by disabling QUALIFY statement. Only activate this if you made sure that the underlying
+          staging model only holds one row per entry. Optional parameter, defaults to False.

@@ -1,0 +1,55 @@
+version: 2
+
+macros:
+  - name: sat_v1
+    description: '{{ doc("sat_v1") }}'
+    arguments:
+      - name: yaml_metadata
+        type: dictionary
+        description: >
+          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          of specifying each one directly in the macro call.
+      - name: sat_v0
+        type: string
+        description: >
+          Name of the underlying version 0 satellite.
+          Examples: 'account_data_sfdc_0_s' — This satellite would be the version 1 satellite of the underlying
+          version 0 data satellite for account.
+      - name: hashkey
+        type: string
+        description: >
+          Name of the parent hashkey column inside the version 0 satellite. Would either be the hashkey of a
+          hub or a link. Needs to be similar to the 'parent_hashkey' parameter inside the sat_v0 model.
+          Examples: 'hk_account_h' (hub), 'hk_account_contact_l' (link).
+      - name: hashdiff
+        type: string
+        description: >
+          Name of the hashdiff column inside the underlying version 0 satellite. Needs to be similar to the
+          'src_hashdiff' parameter inside the sat_v0 model.
+          Examples: 'hd_account_data_sfdc_s'.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: ledts_alias
+        type: string
+        description: >
+          Desired alias for the load end date column. Is optional, will use the global variable 'datavault4dbt.ledts_alias'
+          if set here.
+      - name: add_is_current_flag
+        type: boolean
+        description: >
+          Optional parameter to add a new column to the v1 sat based on the load end date timestamp (ledts). Default is false.
+          If set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if
+          the load end date timestamp is equal to the variable end of all times. If not, the record is not current and will
+          be set to false.
+      - name: include_payload
+        type: boolean
+        description: >
+          Optional parameter to specify if the v1 sat should have the payload columns from sat v0 or not. Default is true.

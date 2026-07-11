@@ -1,0 +1,29 @@
+version: 2
+
+macros:
+  - name: bigquery__nh_sat
+    description: >
+      BigQuery-specific adapter implementation of the nh_sat macro. Called automatically via adapter.dispatch()
+      when running on BigQuery. See the parent nh_sat macro for full parameter documentation.
+    arguments:
+      - name: parent_hashkey
+        type: string
+        description: Name of the hashkey column of the parent hub or link.
+      - name: src_payload
+        type: list of strings
+        description: List of descriptive attribute columns for this non-historized satellite.
+      - name: src_ldts
+        type: string
+        description: Name of the ldts column. Optional, defaults to 'datavault4dbt.ldts_alias'.
+      - name: src_rsrc
+        type: string
+        description: Name of the rsrc column. Optional, defaults to 'datavault4dbt.rsrc_alias'.
+      - name: source_model
+        type: string
+        description: Name of the underlying staging model.
+      - name: source_is_single_batch
+        type: boolean
+        description: Whether the source contains only one batch. Optional, default False.
+      - name: additional_columns
+        type: list | string
+        description: Additional columns to include. Optional, defaults to empty list.

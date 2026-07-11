@@ -1,0 +1,44 @@
+version: 2
+
+macros:
+  - name: eff_sat_v0
+    description: '{{ doc("eff_sat_v0") }}'
+    arguments:
+      - name: yaml_metadata
+        type: dictionary
+        description: >
+          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          of specifying each one directly in the macro call.
+      - name: source_model
+        type: string
+        description: >
+          Name of the source model.
+      - name: tracked_hashkey
+        type: string
+        description: >
+          Name of the hashkey column to be tracked.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the loaddate column in the source model. Optional.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the record source column in the source model. Optional.
+      - name: is_active_alias
+        type: string
+        description: >
+          Name of the new active flag column. Optional.
+      - name: source_is_single_batch
+        type: boolean
+        description: >
+          REQUIRED. Whether the source contains only one batch. Must be defined explicitly (true/false).
+      - name: disable_hwm
+        type: boolean
+        description: >
+          Whether the High Water Mark should be disabled or not. Optional.
+      - name: additional_columns
+        type: list | string
+        description: >
+          Additional columns from source system or derived columns which should be part of the eff_sat.
+          The columns need to be available in all source models. Optional parameter, defaults to empty list.

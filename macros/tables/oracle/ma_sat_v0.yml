@@ -1,0 +1,39 @@
+version: 2
+
+macros:
+  - name: oracle__ma_sat_v0
+    description: >
+      Oracle-specific adapter implementation of the ma_sat_v0 macro. Called automatically via adapter.dispatch()
+      when running on Oracle. Uses a lag_source_data CTE instead of QUALIFY for intra-batch deduplication.
+      See the parent ma_sat_v0 macro for full parameter documentation.
+    arguments:
+      - name: parent_hashkey
+        type: string
+        description: Name of the hashkey column of the parent hub or link.
+      - name: src_hashdiff
+        type: string
+        description: Name of the hashdiff column for this satellite.
+      - name: src_ma_key
+        type: string | list of strings
+        description: Name(s) of the multi-active key column(s).
+      - name: src_payload
+        type: list of strings
+        description: List of descriptive attribute columns (excluding the multi-active key).
+      - name: src_ldts
+        type: string
+        description: Name of the ldts column. Optional, defaults to 'datavault4dbt.ldts_alias'.
+      - name: src_rsrc
+        type: string
+        description: Name of the rsrc column. Optional, defaults to 'datavault4dbt.rsrc_alias'.
+      - name: source_model
+        type: string
+        description: Name of the underlying staging model.
+      - name: additional_columns
+        type: list | string
+        description: Additional columns to include. Optional, defaults to empty list.
+      - name: disable_hwm
+        type: boolean
+        description: Whether the High Water Mark should be turned off. Optional, default False.
+      - name: source_is_single_batch
+        type: boolean
+        description: Whether the source contains only one batch. Skips lag CTE deduplication. Optional, default False.

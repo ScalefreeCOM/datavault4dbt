@@ -1,0 +1,31 @@
+version: 2
+
+macros:
+  - name: control_snap_v1
+    description: '{{ doc("control_snap_v1") }}'
+    arguments:
+      - name: yaml_metadata
+        type: dictionary
+        description: >
+          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          of specifying each one directly in the macro call.
+      - name: control_snap_v0
+        type: string
+        description: >
+          The name of the underlying version 0 control snapshot table. Needs to be available as a dbt model.
+      - name: log_logic
+        type: dictionary
+        description: >
+          Defining the desired durations of each granularity. Available granularities are 'daily', 'weekly',
+          'monthly', and 'yearly'. For each granularity the duration can be defined as an integer and the time
+          unit for that duration (e.g. DAY, WEEK, MONTH, QUARTER, YEAR in BigQuery). A granularity can also be
+          set to 'forever'. If log_logic is not set, no logic will be applied and all snapshots will stay active.
+          The duration is always counted from the current date.
+          EXASOL: Due to a missing 'DAY OF WEEK' function, 'weekly' is not supported and must be left out.
+          Example: {'daily': {'duration': 3, 'unit': 'MONTH'}, 'weekly': {'duration': 1, 'unit': 'YEAR'},
+          'monthly': {'duration': 5, 'unit': 'YEAR'}, 'yearly': {'forever': 'TRUE'}}.
+      - name: sdts_alias
+        type: string
+        description: >
+          Defines the name of the snapshot date timestamp column inside the snapshot_table. It is optional,
+          if not set will use the global variable 'datavault4dbt.sdts_alias' set inside dbt_project.yml.

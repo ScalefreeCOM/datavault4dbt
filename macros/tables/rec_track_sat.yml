@@ -1,0 +1,50 @@
+version: 2
+
+macros:
+  - name: rec_track_sat
+    description: '{{ doc("rec_track_sat") }}'
+    arguments:
+      - name: yaml_metadata
+        type: dictionary
+        description: >
+          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          of specifying each one directly in the macro call.
+      - name: tracked_hashkey
+        type: string
+        description: >
+          The name of the hashkey column you want to track. Needs to be available in the underlying staging layer.
+          If you want to track multiple hashkeys out of one stage, you need to create one record tracking satellite
+          for each hashkey.
+          Examples: 'hk_contact_h' (tracks appearance of the contact hub hashkey),
+          'hk_contact_account_l' (tracks appearance of the link hashkey).
+      - name: source_models
+        type: dictionary
+        description: >
+          Dictionary with information about the source model. The key of the dict is the name of the source model,
+          and the value is another dictionary. This inner dictionary requires to have the key 'rsrc_static', and
+          optionally the key 'hk_column'. The 'rsrc_static' attribute defines a STRING or list of strings that will
+          always be the same over all loads of one source. Wildcards (e.g. '*') can be used to match variable parts.
+          If rsrc_static is solely '*', the performance lookup will not be executed.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_stg
+        type: string
+        description: >
+          Name of the source stage model. Is optional, will use the global variable 'datavault4dbt.stg_alias'.
+      - name: disable_hwm
+        type: boolean
+        description: >
+          Whether the High Water Mark should be turned off. Optional, default False.
+      - name: additional_columns
+        type: list | string
+        description: >
+          Additional columns from source system or derived columns which should be part of the rec_track_sat.
+          The columns need to be available in all source models. Optional parameter, defaults to empty list.

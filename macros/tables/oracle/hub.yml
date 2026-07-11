@@ -1,0 +1,30 @@
+version: 2
+
+macros:
+  - name: oracle__hub
+    description: >
+      Oracle-specific adapter implementation of the hub macro. Called automatically via adapter.dispatch()
+      when running on Oracle. Uses a lag_source_data CTE approach instead of QUALIFY for deduplication.
+      See the parent hub macro for full parameter documentation.
+    arguments:
+      - name: hashkey
+        type: string
+        description: Name of the hashkey column inside the stage, used as PK of the Hub.
+      - name: business_keys
+        type: string | list of strings
+        description: Name(s) of the business key columns loaded into the hub.
+      - name: source_models
+        type: dictionary
+        description: Dictionary with information about the source models.
+      - name: src_ldts
+        type: string
+        description: Name of the ldts column. Optional, defaults to 'datavault4dbt.ldts_alias'.
+      - name: src_rsrc
+        type: string
+        description: Name of the rsrc column. Optional, defaults to 'datavault4dbt.rsrc_alias'.
+      - name: disable_hwm
+        type: boolean
+        description: Whether the High Water Mark should be turned off. Optional, default False.
+      - name: additional_columns
+        type: list | string
+        description: Additional columns to include in the Hub. Optional, defaults to empty list.

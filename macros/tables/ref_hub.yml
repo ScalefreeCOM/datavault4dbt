@@ -1,0 +1,34 @@
+version: 2
+
+macros:
+  - name: ref_hub
+    description: '{{ doc("ref_hub") }}'
+    arguments:
+      - name: yaml_metadata
+        type: dictionary
+        description: >
+          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          of specifying each one directly in the macro call.
+      - name: ref_keys
+        type: string | list of strings
+        description: >
+          Name of the reference key(s) available in the source model(s).
+      - name: source_models
+        type: dictionary
+        description: >
+          Similar to other source_models parameters, e.g. in Hubs or Links.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: additional_columns
+        type: list | string
+        description: >
+          Additional columns from source system or derived columns which should be part of the ref_hub.
+          The columns need to be available in all source models. Optional parameter, defaults to empty list.
