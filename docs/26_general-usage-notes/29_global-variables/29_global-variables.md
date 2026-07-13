@@ -53,6 +53,12 @@ All the following variables are **prefixed with `datavault4dbt`**.
 | hashkey_input_case_sensitive   | Stage | Whether the input business keys for hashkey calculation should be case sensitive or not. |
 | hashdiff_input_case_sensitive  | Stage | Whether the input descriptive attributes for hashdiff calculation should be case sensitive or not. |
 | hashdiff_use_trim              | Stage | Define the global default if hashdiff input columns should be wrapped with TRIM() or not. Defaults to true. Available from v1.16.0 |
+| concat_string                  | Stage | The delimiter placed between columns when concatenating them prior to hashing. Defaults to `\|\|`. |
+| quote_character                | Stage | The character used to wrap each individual column value during concatenation. Defaults to `"`. |
+| null_placeholder_string        | Stage | The string representing a NULL input column during concatenation. Defaults to `^^`. |
+| concat_string_replacement      | Stage | Token substituted for any occurrence of `concat_string` found *inside* the input data, so real values can never collide with the structural delimiter. Defaults to `dv4dbt-concat-replacement`. |
+| quote_character_replacement    | Stage | Token substituted for any occurrence of `quote_character` found *inside* the input data. Defaults to `dv4dbt-quote-replacement`. |
+| null_placeholder_string_replacement | Stage | Token substituted for any occurrence of `null_placeholder_string` found *inside* the input data. Defaults to `dv4dbt-null-replacement`. |
 
 ### STAGE CONFIGURATION
 

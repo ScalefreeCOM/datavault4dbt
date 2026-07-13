@@ -23,8 +23,8 @@
     {# Set Hash definition for new hashkey. #}
     {% set hash_config_dict = {new_hashkey_name: business_key_list} %}
 
-    {% set rename_sql = get_rename_table_sql(hub_relation, hub_relation.identifier ~ '_deprecated') %}
-    {% do run_query(rename_sql) %}
+    {# Rename to _deprecated, recovering safely if a previous run was interrupted. #}
+    {% set old_table_relation = datavault4dbt.rehash_prepare_rename(hub_relation, output_logs=output_logs) %}
 
     {# Get update SQL statement to calculate new hashkey. #}
     {% set create_sql = datavault4dbt.hub_update_statement(hub_relation=hub_relation,
@@ -39,10 +39,8 @@
     {{ log('CREATE statement completed!', output_logs) }}
 
     {% set columns_to_drop = [{"name": hashkey + '_deprecated'}]%}
-    
-    {% set old_table_relation = make_temp_relation(hub_relation,suffix='_deprecated') %}
 
-    {# Drop deprecated Hub table #}
+    {# Drop deprecated Hub table (old_table_relation set above by rehash_prepare_rename). #}
     {{ log('Dropping old table: ' ~ old_table_relation, output_logs) }}
     {% do run_query(drop_table(old_table_relation)) %}
     {% if drop_old_values %}
@@ -65,7 +63,7 @@
     {% set error_value_rsrc = var('datavault4dbt.default_error_rsrc', 'ERROR') %}
 
     {% set old_hashkey_name = hashkey + '_deprecated' %}
-    {% set old_table_relation = make_temp_relation(hub_relation,suffix='_deprecated') %}
+    {% set old_table_relation = datavault4dbt.rehash_deprecated_relation(hub_relation) %}
 
     
     {# Extract business keys from hash_config_dict, since business_key_list is not passed directly to the macro. #}

@@ -122,12 +122,13 @@ deduplicated_numbered_source AS (
     {{ dedup_column }},
     {%- endif %}
     {{ datavault4dbt.print_list(source_cols) }}
+    {% if is_incremental() -%}
+    , rn
+    {%- endif %}
     FROM deduplicated_numbered_source_prep
     WHERE 1=1
         AND ({{ dedup_column }} <> prev_dedup_col OR prev_dedup_col IS NULL)
-        {% if is_incremental() -%}
-        AND rn = 1
-        {%- endif %}
+
     {%- set last_cte = 'deduplicated_numbered_source' -%}
 
 ),
@@ -153,6 +154,9 @@ records_to_insert AS (
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', last_cte], condition='=') }}
         {%- if dedup_column is not none %}
             AND {{ datavault4dbt.multikey(dedup_column, prefix=['latest_entries_in_sat', last_cte], condition='=') }}
+        {%- endif %}
+        {%- if payload_count > 0 and not source_is_single_batch %}
+            AND {{ last_cte }}.rn = 1
         {%- endif %})
     {%- endif %}
 

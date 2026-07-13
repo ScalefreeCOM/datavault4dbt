@@ -137,7 +137,7 @@ deduplicated_numbered_source AS (
     {%- endif %}
     FROM deduplicated_numbered_source_prep
     WHERE 1=1
-        AND {{ dedup_column }} <> prev_dedup_col OR prev_dedup_col IS NULL
+        AND ({{ dedup_column }} <> prev_dedup_col OR prev_dedup_col IS NULL)
 
     {%- set source_cte = 'deduplicated_numbered_source' -%}
 
@@ -166,9 +166,9 @@ records_to_insert AS (
         {%- if dedup_column is not none %}
             AND {{ datavault4dbt.multikey(dedup_column, prefix=['latest_entries_in_sat', 'sc'], condition='=') }}
         {%- endif %}
-            {%- if not source_is_single_batch and payload_count > 0 %}
+        {%- if not source_is_single_batch and payload_count > 0 %}
             AND sc.rn = 1
-            {%- endif %}
+        {%- endif %}
     )
     {%- endif %}
 

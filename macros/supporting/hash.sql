@@ -31,9 +31,9 @@
 {%- macro default__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -78,7 +78,7 @@
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
 
-    {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
     {{- ",'{}',".format(concat_string) if not loop.last -}}
 
     {%- if loop.last -%}
@@ -98,9 +98,9 @@
 {%- macro exasol__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
     {%- set hash = datavault4dbt.hash_method() -%}
-    {%- set concat_string = var('concat_string', '||') -%}
-    {%- set quote = var('quote', '"') -%}
-    {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+    {%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+    {%- set quote = var('datavault4dbt.quote_character', '"') -%}
+    {%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
     {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
     {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -145,7 +145,7 @@
             {%- set column_str = datavault4dbt.as_constant(column) -%}
         {%- endif -%}
 
-        {{- "\n NULLIF(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+        {{- "\n NULLIF(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
         {{- ",'{}',".format(concat_string) if not loop.last -}}
 
         {%- if loop.last -%}
@@ -166,9 +166,9 @@
 {%- macro synapse__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -218,7 +218,7 @@
     {%- endif -%}
     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('attribute_standardise: '~attribute_standardise, false)}}{% endif %}
 
-    {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
     {{- ",'{}',".format(concat_string) if not loop.last -}}
     {{- ", ''" if columns|length == 1 -}}
 
@@ -241,9 +241,9 @@
 
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -295,7 +295,7 @@
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
 
-    {{- "\nCOALESCE(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nCOALESCE(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
     {{- ",'{}',".format(concat_string) if not loop.last -}}
 
     {%- if loop.last -%}
@@ -316,9 +316,9 @@
 {%- macro redshift__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -363,7 +363,7 @@
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
 
-    {{- "\nCOALESCE({}, '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nCOALESCE({}, '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
     {{- "|| '{}' ||".format(concat_string) if not loop.last -}}
 
 
@@ -386,7 +386,7 @@
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
-{%- set quote = var('datavault4dbt.quote', '"') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
 {%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
@@ -444,7 +444,7 @@
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
 
-    {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
     {{- ", " if not loop.last -}}
     {{- ", ''" if columns|length == 1 -}}
 
@@ -466,9 +466,9 @@
 {%- macro databricks__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -514,7 +514,7 @@
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
 
-    {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nIFNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
     {{- ",'{}',".format(concat_string) if not loop.last -}}
 
     {%- if loop.last -%}
@@ -535,9 +535,9 @@
 {%- macro oracle__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-{%- set concat_string = var('concat_string', '||') -%}
-{%- set quote = var('quote', '"') -%}
-{%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+{%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
+{%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
 {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -582,7 +582,7 @@
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
 
-    {{- "\nNVL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nNVL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
     {{- "|| '{}' ||".format(concat_string) if not loop.last -}}
 
 
@@ -602,9 +602,9 @@
 
 {%- macro trino__hash(columns, alias, is_hashdiff, multi_active_key, main_hashkey_column, use_trim, rtrim_hashdiff) -%}
     {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
-    {%- set concat_string = var('concat_string', '||') -%}
-    {%- set quote = var('quote', '"') -%}
-    {%- set null_placeholder_string = var('null_placeholder_string', '^^') -%}
+    {%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
+    {%- set quote = var('datavault4dbt.quote_character', '"') -%}
+    {%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
     {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
     {%- set hashdiff_input_case_sensitive = var('datavault4dbt.hashdiff_input_case_sensitive', TRUE) -%}
@@ -651,7 +651,7 @@
         {%- else -%}
             {%- set column_str = datavault4dbt.as_constant(column) -%}
         {%- endif -%}
-        {{- "\nCOALESCE({}, '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+        {{- "\nCOALESCE({}, '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
         {{- ", " if not loop.last -}}
         {{- ", ''" if columns|length == 1 -}}
 
@@ -668,7 +668,7 @@
 
 {%- set hash = var('datavault4dbt.hash', 'MD5') -%}
 {%- set concat_string = var('datavault4dbt.concat_string', '||') -%}
-{%- set quote = var('datavault4dbt.quote', '"') -%}
+{%- set quote = var('datavault4dbt.quote_character', '"') -%}
 {%- set null_placeholder_string = var('datavault4dbt.null_placeholder_string', '^^') -%}
 
 {%- set hashkey_input_case_sensitive = var('datavault4dbt.hashkey_input_case_sensitive', FALSE) -%}
@@ -726,7 +726,7 @@
         {%- set column_str = datavault4dbt.as_constant(column) -%}
     {%- endif -%}
 
-    {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string), null_placeholder_string) | indent(4) -}}
+    {{- "\nISNULL(({}), '{}')".format(attribute_standardise | replace('[EXPRESSION]', column_str) | replace('[QUOTE]', quote) | replace('[NULL_PLACEHOLDER_STRING]', null_placeholder_string) | replace('[CONCAT_STRING]', concat_string), null_placeholder_string) | indent(4) -}}
     {{- ", " if not loop.last -}}
     {{- ", ''" if columns|length == 1 -}}
 

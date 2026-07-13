@@ -8,7 +8,7 @@ title: Non-Historized Satellite
 
 ---
 
-This macro creates a non-historized satellite that should be materialized as an incremental table. It should be applied `on top` of the staging layer, and is either connected to a Hub or a Link. Besides the missing hashdiff, a non-historized satellite applies the same loading logic as a regular version 0 satellite. Each satellite can only be loaded by one source model, since we typically recommend a satellite split by source system.
+This macro creates a non-historized satellite that should be materialized as an incremental table. It should be applied **on top** of the staging layer, and is either connected to a Hub or a Link. Besides the missing hashdiff, a non-historized satellite applies the same loading logic as a regular version 0 satellite. Each satellite can only be loaded by one source model, since we typically recommend a satellite split by source system.
 
 Features:
 
