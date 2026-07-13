@@ -13,7 +13,7 @@ but is used to classify and enrich other entities.
     ref_keys='country_code',
     source_models={
         'stg_country': {
-            'bk_columns': 'country_code',
+            'ref_keys': 'country_code',
             'rsrc_static': '*/REF/Country/*'
         }
     }
