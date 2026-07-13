@@ -1,10 +1,10 @@
 version: 2
 
 macros:
-  - name: bigquery__nh_sat
+  - name: default__nh_sat
     description: >
-      BigQuery-specific adapter implementation of the nh_sat macro. Called automatically via adapter.dispatch()
-      when running on BigQuery. See the parent nh_sat macro for full parameter documentation.
+      Default implementation of the nh_sat macro, co-located in the bigquery adapter folder as BigQuery uses
+      this fallback via adapter.dispatch(). See the parent nh_sat macro for full parameter documentation.
     arguments:
       - name: parent_hashkey
         type: string

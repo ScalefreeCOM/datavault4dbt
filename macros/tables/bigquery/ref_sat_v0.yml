@@ -1,10 +1,10 @@
 version: 2
 
 macros:
-  - name: bigquery__ref_sat_v0
+  - name: default__ref_sat_v0
     description: >
-      BigQuery-specific adapter implementation of the ref_sat_v0 macro. Called automatically via adapter.dispatch()
-      when running on BigQuery. Uses QUALIFY for deduplication.
+      Default implementation of the ref_sat_v0 macro, co-located in the bigquery adapter folder as BigQuery uses
+      this fallback via adapter.dispatch(). Uses QUALIFY for deduplication.
       See the parent ref_sat_v0 macro for full parameter documentation.
     arguments:
       - name: parent_ref_keys

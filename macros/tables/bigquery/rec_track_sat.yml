@@ -1,10 +1,11 @@
 version: 2
 
 macros:
-  - name: bigquery__rec_track_sat
+  - name: default__rec_track_sat
     description: >
-      BigQuery-specific adapter implementation of the rec_track_sat macro. Called automatically via adapter.dispatch()
-      when running on BigQuery. See the parent rec_track_sat macro for full parameter documentation.
+      Default implementation of the rec_track_sat macro, co-located in the bigquery adapter folder as BigQuery
+      uses this fallback via adapter.dispatch(). See the parent rec_track_sat macro for full parameter
+      documentation.
     arguments:
       - name: tracked_hashkey
         type: string

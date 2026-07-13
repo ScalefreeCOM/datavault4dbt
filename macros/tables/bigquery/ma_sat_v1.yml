@@ -1,10 +1,10 @@
 version: 2
 
 macros:
-  - name: bigquery__ma_sat_v1
+  - name: default__ma_sat_v1
     description: >
-      BigQuery-specific adapter implementation of the ma_sat_v1 macro. Called automatically via adapter.dispatch()
-      when running on BigQuery. See the parent ma_sat_v1 macro for full parameter documentation.
+      Default implementation of the ma_sat_v1 macro, co-located in the bigquery adapter folder as BigQuery uses
+      this fallback via adapter.dispatch(). See the parent ma_sat_v1 macro for full parameter documentation.
     arguments:
       - name: sat_v0
         type: string

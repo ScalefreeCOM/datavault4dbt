@@ -1,10 +1,10 @@
 version: 2
 
 macros:
-  - name: bigquery__hub
+  - name: default__hub
     description: >
-      BigQuery-specific adapter implementation of the hub macro. Called automatically via adapter.dispatch()
-      when running on BigQuery. See the parent hub macro for full parameter documentation.
+      Default implementation of the hub macro, co-located in the bigquery adapter folder as BigQuery uses
+      this fallback via adapter.dispatch(). See the parent hub macro for full parameter documentation.
     arguments:
       - name: hashkey
         type: string

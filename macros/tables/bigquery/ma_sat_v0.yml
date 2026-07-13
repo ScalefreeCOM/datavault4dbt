@@ -1,10 +1,10 @@
 version: 2
 
 macros:
-  - name: bigquery__ma_sat_v0
+  - name: default__ma_sat_v0
     description: >
-      BigQuery-specific adapter implementation of the ma_sat_v0 macro. Called automatically via adapter.dispatch()
-      when running on BigQuery. Uses QUALIFY for intra-batch deduplication.
+      Default implementation of the ma_sat_v0 macro, co-located in the bigquery adapter folder as BigQuery uses
+      this fallback via adapter.dispatch(). Uses QUALIFY for intra-batch deduplication.
       See the parent ma_sat_v0 macro for full parameter documentation.
     arguments:
       - name: parent_hashkey

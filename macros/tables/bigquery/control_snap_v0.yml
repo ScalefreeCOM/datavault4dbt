@@ -1,10 +1,10 @@
 version: 2
 
 macros:
-  - name: bigquery__control_snap_v0
+  - name: default__control_snap_v0
     description: >
-      BigQuery-specific adapter implementation of the control_snap_v0 macro. Called automatically via
-      adapter.dispatch() when running on BigQuery. See the parent control_snap_v0 macro for full parameter
+      Default implementation of the control_snap_v0 macro, co-located in the bigquery adapter folder as BigQuery
+      uses this fallback via adapter.dispatch(). See the parent control_snap_v0 macro for full parameter
       documentation.
     arguments:
       - name: start_date
