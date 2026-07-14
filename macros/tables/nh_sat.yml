@@ -5,7 +5,7 @@ macros:
     description: '{{ doc("nh_sat") }}'
     arguments:
       - name: yaml_metadata
-        type: dictionary
+        type: dict
         description: >
           Optional. A YAML metadata block that passes all parameters as a single dictionary instead
           of specifying each one directly in the macro call.
@@ -15,7 +15,7 @@ macros:
           Name of the hashkey column inside the stage of the object that this satellite is attached to.
           Examples: 'hk_account_h' (attached to hub account), 'hk_account_contact_l' (attached to a link).
       - name: src_payload
-        type: list of strings
+        type: list
         description: >
           A list of all the descriptive attributes that should be included in this satellite.
           Examples: ['name', 'address', 'country', 'phone', 'email'].
@@ -35,11 +35,46 @@ macros:
           Name of the rsrc column inside the source model. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
           Needs to use the same column name as defined as alias inside the staging model.
       - name: source_is_single_batch
-        type: boolean
+        type: bool
         description: >
           Whether the source contains only one batch. Optional, default False.
       - name: additional_columns
-        type: list | string
+        type: Any
         description: >
           Additional columns from source system or derived columns which should be part of the nh_sat.
           The columns need to be available in all source models. Optional parameter, defaults to empty list.
+
+  - name: snowflake__nh_sat
+    description: Snowflake-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: databricks__nh_sat
+    description: Databricks-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: exasol__nh_sat
+    description: Exasol-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: fabric__nh_sat
+    description: Microsoft Fabric-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: oracle__nh_sat
+    description: Oracle-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: postgres__nh_sat
+    description: PostgreSQL-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: redshift__nh_sat
+    description: Amazon Redshift-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: sqlserver__nh_sat
+    description: SQL Server-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: synapse__nh_sat
+    description: Azure Synapse Analytics-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: trino__nh_sat
+    description: Trino-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
+  - name: default__nh_sat
+    description: >
+      Default implementation of nh_sat, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent nh_sat macro.

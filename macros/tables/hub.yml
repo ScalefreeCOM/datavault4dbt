@@ -5,7 +5,7 @@ macros:
     description: '{{ doc("hub") }}'
     arguments:
       - name: yaml_metadata
-        type: dictionary
+        type: dict
         description: >
           Optional. A YAML metadata block that passes all parameters as a single dictionary instead
           of specifying each one directly in the macro call.
@@ -15,7 +15,7 @@ macros:
           Name of the hashkey column inside the stage, that should be used as PK of the Hub.
           Examples: 'hk_account_h' — This hashkey column was created before inside the corresponding staging area, using the stage macro.
       - name: business_keys
-        type: string | list of strings
+        type: Any
         description: >
           Name(s) of the business key columns that should be loaded into the hub and are the input of the hashkey column.
           Needs to be available inside the stage model. If the names differ between multiple sources, define here how the business
@@ -23,7 +23,7 @@ macros:
           'source_model' parameter then.
           Examples: 'account_key' (single), ['account_key', 'account_number'] (composite).
       - name: source_models
-        type: dictionary
+        type: dict
         description: >
           Dictionary with information about the source models. The keys of the dict are the names of the source models,
           and the value of each source model is another dictionary. This inner dictionary requires the key 'bk_columns'
@@ -42,12 +42,47 @@ macros:
           Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
           Needs to use the same column name as defined as alias inside the staging model.
       - name: disable_hwm
-        type: boolean
+        type: bool
         description: >
           Whether the High Water Mark should be turned off. Optional, default False.
       - name: additional_columns
-        type: list | string
+        type: Any
         description: >
           Additional columns from source system or derived columns which should be part of Hub. Useful when you have to
           deviate from the default Hub structure. The columns need to be available in all source models which are used
           for the Hub. Optional parameter, defaults to empty list.
+
+  - name: snowflake__hub
+    description: Snowflake-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: databricks__hub
+    description: Databricks-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: exasol__hub
+    description: Exasol-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: fabric__hub
+    description: Microsoft Fabric-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: oracle__hub
+    description: Oracle-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: postgres__hub
+    description: PostgreSQL-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: redshift__hub
+    description: Amazon Redshift-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: sqlserver__hub
+    description: SQL Server-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: synapse__hub
+    description: Azure Synapse Analytics-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: trino__hub
+    description: Trino-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
+  - name: default__hub
+    description: >
+      Default implementation of hub, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent hub macro.

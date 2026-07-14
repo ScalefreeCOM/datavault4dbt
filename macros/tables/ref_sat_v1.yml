@@ -5,7 +5,7 @@ macros:
     description: '{{ doc("ref_sat_v1") }}'
     arguments:
       - name: yaml_metadata
-        type: dictionary
+        type: dict
         description: >
           Optional. A YAML metadata block that passes all parameters as a single dictionary instead
           of specifying each one directly in the macro call.
@@ -14,7 +14,7 @@ macros:
         description: >
           Name of the underlying ref_sat_v0 dbt model.
       - name: ref_keys
-        type: string | list of strings
+        type: Any
         description: >
           Name(s) of the reference key(s) in the underlying reference sat v0.
       - name: hashdiff
@@ -37,8 +37,43 @@ macros:
           Desired alias for the load end date column. Is optional, will use the global variable 'datavault4dbt.ledts_alias'
           if set here.
       - name: add_is_current_flag
-        type: boolean
+        type: bool
         description: >
           Optional parameter to add a new column to the v1 sat based on the load end date timestamp (ledts). Default is false.
           If set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if
           the load end date timestamp is equal to the variable end of all times. If not, the record is not current.
+
+  - name: snowflake__ref_sat_v1
+    description: Snowflake-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: databricks__ref_sat_v1
+    description: Databricks-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: exasol__ref_sat_v1
+    description: Exasol-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: fabric__ref_sat_v1
+    description: Microsoft Fabric-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: oracle__ref_sat_v1
+    description: Oracle-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: postgres__ref_sat_v1
+    description: PostgreSQL-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: redshift__ref_sat_v1
+    description: Amazon Redshift-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: sqlserver__ref_sat_v1
+    description: SQL Server-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: synapse__ref_sat_v1
+    description: Azure Synapse Analytics-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: trino__ref_sat_v1
+    description: Trino-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
+  - name: default__ref_sat_v1
+    description: >
+      Default implementation of ref_sat_v1, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent ref_sat_v1 macro.

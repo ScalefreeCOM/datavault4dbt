@@ -5,19 +5,19 @@ macros:
     description: '{{ doc("control_snap_v0") }}'
     arguments:
       - name: yaml_metadata
-        type: dictionary
+        type: dict
         description: >
           Optional. A YAML metadata block that passes all parameters as a single dictionary instead
           of specifying each one directly in the macro call.
       - name: start_date
-        type: timestamp
+        type: string
         description: >
           Defines the earliest timestamp that should be available inside the snapshot_table. The time part of this
           timestamp needs to be set to '00:00:00'. The format of this timestamp must equal to the timestamp format
           defined in the global variable 'datavault4dbt.timestamp_format'.
           Examples: '2015-01-01T00-00-00' — This snapshot table would hold daily snapshots beginning at 2015.
       - name: daily_snapshot_time
-        type: time
+        type: string
         description: >
           Defines the time that your daily snapshots should have. Usually this is either something right before
           daily business starts, or after daily business is over.
@@ -28,6 +28,41 @@ macros:
           Defines the name of the snapshot date timestamp column inside the snapshot_table. It is optional,
           if not set will use the global variable 'datavault4dbt.sdts_alias' set inside dbt_project.yml.
       - name: end_date
-        type: timestamp
+        type: string
         description: >
           Defines the latest timestamp that should be available inside the snapshot_table.
+
+  - name: snowflake__control_snap_v0
+    description: Snowflake-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: databricks__control_snap_v0
+    description: Databricks-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: exasol__control_snap_v0
+    description: Exasol-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: fabric__control_snap_v0
+    description: Microsoft Fabric-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: oracle__control_snap_v0
+    description: Oracle-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: postgres__control_snap_v0
+    description: PostgreSQL-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: redshift__control_snap_v0
+    description: Amazon Redshift-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: sqlserver__control_snap_v0
+    description: SQL Server-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: synapse__control_snap_v0
+    description: Azure Synapse Analytics-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: trino__control_snap_v0
+    description: Trino-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
+  - name: default__control_snap_v0
+    description: >
+      Default implementation of control_snap_v0, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent control_snap_v0 macro.

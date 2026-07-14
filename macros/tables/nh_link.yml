@@ -5,7 +5,7 @@ macros:
     description: '{{ doc("nh_link") }}'
     arguments:
       - name: yaml_metadata
-        type: dictionary
+        type: dict
         description: >
           Optional. A YAML metadata block that passes all parameters as a single dictionary instead
           of specifying each one directly in the macro call.
@@ -17,7 +17,7 @@ macros:
           Examples: 'hk_transaction_account_nl' — This hashkey column belongs to the non-historized link
           between transaction and account, and was created at the staging layer by the stage macro.
       - name: payload
-        type: list of strings
+        type: list
         description: >
           A list of all the descriptive attributes that should be the payload of this non-historized link.
           If the names differ between source models, this list defines how the columns are named inside the
@@ -25,7 +25,7 @@ macros:
           defined inside the 'payload' key in 'source_models'.
           Examples: ['currency_isocode', 'amount', 'purpose', 'transaction_date'].
       - name: source_models
-        type: dictionary
+        type: dict
         description: >
           Dictionary with information about the source models. The keys of the dict are the names of the source
           models, and the value of each source model is another dictionary. This inner dictionary optionally has
@@ -33,7 +33,7 @@ macros:
           a STRING or list of strings containing all the patterns of the record_source field that remain the same
           over all loads of one source. Wildcards (e.g. '*') can be used to match variable parts.
       - name: foreign_hashkeys
-        type: list of strings
+        type: list
         description: >
           List of all hashkey columns inside the non-historized link, that refer to other hub entities.
           All hashkey columns must be available inside the stage area.
@@ -49,22 +49,57 @@ macros:
           Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
           Needs to use the same column name as defined as alias inside the staging model.
       - name: disable_hwm
-        type: boolean
+        type: bool
         description: >
           Whether the High Water Mark should be turned off. Optional, default False.
       - name: source_is_single_batch
-        type: boolean
+        type: bool
         description: >
           Whether the source contains only one batch. Optional, default False.
       - name: union_strategy
-        type: "'all' | 'distinct'"
+        type: string
         description: >
           Defines how multiple sources should be unioned. 'all' will result in a UNION ALL and represents the
           default value. Should only be changed if you have duplicates across source systems and do not want
-          to deduplicate them upfront.
+          to deduplicate them upfront. Accepted values: 'all', 'distinct'.
       - name: additional_columns
-        type: list | string
+        type: Any
         description: >
           Additional columns from source system or derived columns which should be part of NH-Link. Useful when
           you have to deviate from the default NH-Link structure. The columns need to be available in all source
           models which are used for the NH-Link. Optional parameter, defaults to empty list.
+
+  - name: snowflake__nh_link
+    description: Snowflake-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: databricks__nh_link
+    description: Databricks-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: exasol__nh_link
+    description: Exasol-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: fabric__nh_link
+    description: Microsoft Fabric-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: oracle__nh_link
+    description: Oracle-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: postgres__nh_link
+    description: PostgreSQL-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: redshift__nh_link
+    description: Amazon Redshift-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: sqlserver__nh_link
+    description: SQL Server-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: synapse__nh_link
+    description: Azure Synapse Analytics-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: trino__nh_link
+    description: Trino-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
+  - name: default__nh_link
+    description: >
+      Default implementation of nh_link, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent nh_link macro.

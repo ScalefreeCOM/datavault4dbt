@@ -5,12 +5,12 @@ macros:
     description: '{{ doc("ref_sat_v0") }}'
     arguments:
       - name: yaml_metadata
-        type: dictionary
+        type: dict
         description: >
           Optional. A YAML metadata block that passes all parameters as a single dictionary instead
           of specifying each one directly in the macro call.
       - name: parent_ref_keys
-        type: string | list of strings
+        type: Any
         description: >
           Name of the reference key(s) of the parent ref_hub.
       - name: src_hashdiff
@@ -21,7 +21,7 @@ macros:
           ref satellite entity.
           Examples: 'hd_nation_sfdc_rs' — hashdiff column of the ref satellite for nation.
       - name: src_payload
-        type: list of strings
+        type: list
         description: >
           A list of all the descriptive attributes that should be included in this ref satellite. Needs to be the
           columns that are fed into the hashdiff calculation of this ref satellite.
@@ -42,15 +42,50 @@ macros:
           Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
           Needs to use the same column name as defined as alias inside the staging model.
       - name: disable_hwm
-        type: boolean
+        type: bool
         description: >
           Whether the High Water Mark should be turned off. Optional, default False.
       - name: source_is_single_batch
-        type: boolean
+        type: bool
         description: >
           Whether the source contains only one batch. Optional, default False.
       - name: additional_columns
-        type: list | string
+        type: Any
         description: >
           Additional columns from source system or derived columns which should be part of the ref_sat.
           The columns need to be available in all source models. Optional parameter, defaults to empty list.
+
+  - name: snowflake__ref_sat_v0
+    description: Snowflake-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: databricks__ref_sat_v0
+    description: Databricks-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: exasol__ref_sat_v0
+    description: Exasol-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: fabric__ref_sat_v0
+    description: Microsoft Fabric-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: oracle__ref_sat_v0
+    description: Oracle-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: postgres__ref_sat_v0
+    description: PostgreSQL-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: redshift__ref_sat_v0
+    description: Amazon Redshift-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: sqlserver__ref_sat_v0
+    description: SQL Server-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: synapse__ref_sat_v0
+    description: Azure Synapse Analytics-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: trino__ref_sat_v0
+    description: Trino-specific implementation of ref_sat_v0. Accepts the same arguments as the parent ref_sat_v0 macro.
+
+  - name: default__ref_sat_v0
+    description: >
+      Default implementation of ref_sat_v0, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent ref_sat_v0 macro.
