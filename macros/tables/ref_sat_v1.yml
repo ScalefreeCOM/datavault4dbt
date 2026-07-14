@@ -35,7 +35,7 @@ macros:
         type: string
         description: >
           Desired alias for the load end date column. Is optional, will use the global variable 'datavault4dbt.ledts_alias'
-          if set here.
+          if not set here.
       - name: add_is_current_flag
         type: bool
         description: >

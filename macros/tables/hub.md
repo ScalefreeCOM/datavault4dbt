@@ -38,9 +38,7 @@ Features:
 ```jinja
 {%- set meta -%}
 hashkey: 'hk_account_h'
-business_keys:
-  - account_key
-  - account_number
+business_keys: account_id
 source_models:
   stg_account_crm:
     bk_columns: account_id
