@@ -59,17 +59,15 @@ If this is the case, you have to list all columns used within the SQL expression
 
 ## OVERWRITE SOURCE COLUMNS
 
-The optional boolean parameter `overwrite_src_cols` can be set per derived column. When set to `true`, the source columns listed under `src_cols_required` are **excluded from the staging CTE output**, so only the derived alias column appears — preventing duplicate columns.
-
-This is particularly useful when **renaming columns whose original name cannot be referenced downstream**, for example columns containing special characters (e.g. German umlauts like `ä`, `ö`, `ü`) on platforms such as Databricks. Without `overwrite_src_cols: true`, both the original and the renamed column would appear side by side in the output.
+The optional boolean parameter `overwrite_src_cols` can be set per derived column. When set to `true`, the source columns listed under `src_cols_required` are **excluded from the staging CTE output**, so only the derived alias column appears. The parameter defaults to `false` when omitted.
 
 ```jinja
 derived_columns:
-    account_name_clean:
-        value: Kontonäme
+    domain:
+        value: Domäne
         datatype: STRING
-        src_cols_required: Kontonäme
+        src_cols_required: Domäne
         overwrite_src_cols: true
 ```
 
-In this example, `Kontonäme` is excluded from the staging CTE and only `account_name_clean` appears in the output. The parameter defaults to `false` when omitted.
+In this example, `Domäne` is excluded from the staging CTE and only `domain` appears in the output.

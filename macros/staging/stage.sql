@@ -70,9 +70,9 @@
                                              'account_name':        {'value': 'name',                                                   it another name. More derived columns can be added as additional keys of
                                                                      'datatype': 'String'}}                                             the dictionary.
 
-                                            {'account_name_clean': {'value': 'Kontonäme',                                              Renames a source column whose name contains a special character. Setting
+                                            {'domain': {'value': 'Domäne',                                              Renames a source column whose name contains a special character. Setting
                                                                     'datatype': 'STRING',                                              'overwrite_src_cols: true' ensures the original column is dropped from the
-                                                                    'src_cols_required': 'Kontonäme',                                  CTE output, so only 'account_name_clean' appears and the special-character
+                                                                    'src_cols_required': 'Domäne',                                  CTE output, so only 'domain' appears and the special-character
                                                                     'overwrite_src_cols': true}}                                       column name does not propagate downstream.
   " %}
 
