@@ -29,7 +29,17 @@ The historization mode controls how much history the table retains: 'latest' kee
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+ref_hub: 'country_rh'
+ref_satellites:
+  - country_1_rs
+historized: 'latest'
+{%- endset -%}
+
 {{ datavault4dbt.ref_table(yaml_metadata=meta) }}
 ```
 

@@ -22,7 +22,18 @@ but is used to classify and enrich other entities.
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+ref_keys: 'country_code'
+source_models:
+  stg_country:
+    ref_keys: country_code
+    rsrc_static: '*/REF/Country/*'
+{%- endset -%}
+
 {{ datavault4dbt.ref_hub(yaml_metadata=meta) }}
 ```
 

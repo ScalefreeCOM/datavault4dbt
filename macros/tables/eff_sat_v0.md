@@ -31,7 +31,16 @@ Note: `source_is_single_batch` is a required parameter — it must be explicitly
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+source_model: 'stg_account_contact'
+tracked_hashkey: 'hk_account_contact_l'
+source_is_single_batch: false
+{%- endset -%}
+
 {{ datavault4dbt.eff_sat_v0(yaml_metadata=meta) }}
 ```
 

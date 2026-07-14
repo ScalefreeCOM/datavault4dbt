@@ -29,7 +29,16 @@ as a view by default. Usually one version 1 sat would be created for each versio
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+sat_v0: 'account_data_sfdc_0_s'
+hashkey: 'hk_account_h'
+hashdiff: 'hd_account_data_sfdc_s'
+{%- endset -%}
+
 {{ datavault4dbt.sat_v1(yaml_metadata=meta) }}
 ```
 

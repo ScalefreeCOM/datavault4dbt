@@ -23,7 +23,15 @@ In addition to the actual snapshot datetimestamp (sdts), the macro generates the
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+start_date: '2020-01-01T00-00-00'
+daily_snapshot_time: '07:00:00'
+{%- endset -%}
+
 {{ datavault4dbt.control_snap_v0(yaml_metadata=meta) }}
 ```
 

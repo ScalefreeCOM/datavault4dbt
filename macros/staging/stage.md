@@ -50,7 +50,32 @@ will be done in the later layers.
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+source_model: 'source_account'
+ldts: 'edwLoadDate'
+rsrc: '!SAP.Accounts'
+hashed_columns:
+  hk_account_h:
+    - account_number
+    - account_key
+  hd_account_s:
+    is_hashdiff: true
+    columns:
+      - name
+      - address
+      - country
+      - phone
+      - email
+derived_columns:
+  country_isocode:
+    value: '!GER'
+    datatype: STRING
+{%- endset -%}
+
 {{ datavault4dbt.stage(yaml_metadata=meta) }}
 ```
 

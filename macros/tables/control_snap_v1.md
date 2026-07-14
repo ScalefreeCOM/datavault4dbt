@@ -32,7 +32,26 @@ applied to each PIT table to remove inactive records.
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+control_snap_v0: 'control_snap_v0'
+log_logic:
+  daily:
+    duration: 3
+    unit: MONTH
+  weekly:
+    duration: 1
+    unit: YEAR
+  monthly:
+    duration: 5
+    unit: YEAR
+  yearly:
+    forever: 'TRUE'
+{%- endset -%}
+
 {{ datavault4dbt.control_snap_v1(yaml_metadata=meta) }}
 ```
 

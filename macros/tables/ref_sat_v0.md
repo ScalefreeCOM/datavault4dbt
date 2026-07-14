@@ -19,7 +19,20 @@ Reference Hub via the reference key.
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+parent_ref_keys: 'country_code'
+src_hashdiff: 'hd_country_rs'
+src_payload:
+  - country_name
+  - continent
+  - region
+source_model: 'stg_country'
+{%- endset -%}
+
 {{ datavault4dbt.ref_sat_v0(yaml_metadata=meta) }}
 ```
 

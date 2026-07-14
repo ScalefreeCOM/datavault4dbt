@@ -26,7 +26,25 @@ descriptive attributes as additional payload.
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+link_hashkey: 'hk_transaction_account_nl'
+foreign_hashkeys:
+  - hk_transaction_h
+  - hk_account_h
+payload:
+  - currency_isocode
+  - amount
+  - purpose
+  - transaction_date
+source_models:
+  stg_transaction:
+    rsrc_static: '*/ERP/Transactions/*'
+{%- endset -%}
+
 {{ datavault4dbt.nh_link(yaml_metadata=meta) }}
 ```
 

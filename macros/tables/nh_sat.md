@@ -21,7 +21,21 @@ Features:
 
 ### Metadata block usage
 
+`meta` is a Jinja string variable containing all macro parameters as YAML. Define it using a
+`set` block in the model SQL file — the macro parses the YAML string at runtime:
+
 ```jinja
+{%- set meta -%}
+parent_hashkey: 'hk_account_h'
+src_payload:
+  - name
+  - address
+  - country
+  - phone
+  - email
+source_model: 'stage_account'
+{%- endset -%}
+
 {{ datavault4dbt.nh_sat(yaml_metadata=meta) }}
 ```
 
