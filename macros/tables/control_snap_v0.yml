@@ -5,9 +5,9 @@ macros:
     description: '{{ doc("control_snap_v0") }}'
     arguments:
       - name: yaml_metadata
-        type: dict
+        type: string
         description: >
-          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          Optional. A YAML-formatted string that defines all parameters in a single block instead
           of specifying each one directly in the macro call.
       - name: start_date
         type: string

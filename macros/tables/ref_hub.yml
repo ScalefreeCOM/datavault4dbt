@@ -5,9 +5,9 @@ macros:
     description: '{{ doc("ref_hub") }}'
     arguments:
       - name: yaml_metadata
-        type: dict
+        type: string
         description: >
-          Optional. A YAML metadata block that passes all parameters as a single dictionary instead
+          Optional. A YAML-formatted string that defines all parameters in a single block instead
           of specifying each one directly in the macro call.
       - name: ref_keys
         type: Any
