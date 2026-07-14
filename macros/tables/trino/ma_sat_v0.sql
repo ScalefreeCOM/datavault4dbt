@@ -7,6 +7,7 @@
 {# Select the additional_columns and put them in an array. If additional_colums is none, then empty array #}
 {%- set additional_columns = additional_columns | default([],true) -%}
 {%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
+{%- set src_ma_key_list = [src_ma_key] if src_ma_key is string else src_ma_key -%}
 
 {%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
 {%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
@@ -53,8 +54,8 @@ latest_entries_in_sat_prep AS (
     SELECT
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }},
-        ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) as rn
-    FROM 
+        ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }} DESC) as rn
+    FROM
         {{ this }}
 ),
 
@@ -63,9 +64,9 @@ latest_entries_in_sat AS (
     SELECT
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }}
-    FROM 
+    FROM
         latest_entries_in_sat_prep
-    WHERE rn = 1  
+    WHERE rn = 1
 ),
 {%- endif %}
 
@@ -76,8 +77,8 @@ latest_entries_in_sat AS (
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }},
-    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias,
-    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
+    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias,
+    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as rn
   FROM source_data
 ),
 

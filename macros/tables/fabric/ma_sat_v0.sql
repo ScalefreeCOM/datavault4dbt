@@ -27,6 +27,7 @@
 {%- set ns.src_hashdiff = datavault4dbt.escape_column_names(ns.src_hashdiff) -%}
 {%- set ns.hdiff_alias = datavault4dbt.escape_column_names(ns.hdiff_alias) -%}
 {%- set src_ma_key = datavault4dbt.escape_column_names(src_ma_key) -%}
+{%- set src_ma_key_list = [src_ma_key] if src_ma_key is string else src_ma_key -%}
 {%- set src_payload = datavault4dbt.escape_column_names(src_payload) -%}
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
@@ -61,8 +62,8 @@ latest_entries_in_sat_prep AS (
     SELECT
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }},
-        ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) as rn
-    FROM 
+        ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }} DESC) as rn
+    FROM
         {{ this }}
 ),
 
@@ -71,21 +72,21 @@ latest_entries_in_sat AS (
     SELECT
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }}
-    FROM 
+    FROM
         latest_entries_in_sat_prep
-    WHERE rn = 1  
+    WHERE rn = 1
 ),
 {%- endif %}
 
 {%- if not source_is_single_batch -%}
 {# Get a list of all distinct hashdiffs that exist for each parent_hashkey. #}
  lag_source_data AS (
-  SELECT 
+  SELECT
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }},
-    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias,
-    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
+    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias,
+    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as rn
   FROM source_data
 ),
 
