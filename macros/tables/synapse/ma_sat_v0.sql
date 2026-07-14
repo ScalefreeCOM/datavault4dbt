@@ -53,6 +53,7 @@ latest_entries_in_sat_prep AS (
     SELECT
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }},
+        {{ datavault4dbt.print_list(src_ma_key_list) }},
         ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }} DESC) as rn
     FROM
         {{ this }}
@@ -62,7 +63,8 @@ latest_entries_in_sat AS (
 
     SELECT
         {{ parent_hashkey }},
-        {{ ns.hdiff_alias }}
+        {{ ns.hdiff_alias }},
+        {{ datavault4dbt.print_list(src_ma_key_list) }}
     FROM
         latest_entries_in_sat_prep
     WHERE rn = 1
@@ -134,6 +136,7 @@ records_to_insert AS (
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
+            AND {{ datavault4dbt.multikey(src_ma_key, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             )
     {%- endif %}
 
