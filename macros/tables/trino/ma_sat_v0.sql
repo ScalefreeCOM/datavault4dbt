@@ -77,6 +77,7 @@ latest_entries_in_sat AS (
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }},
+    {{ datavault4dbt.print_list(src_ma_key_list) }},
     LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias,
     ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as rn
   FROM source_data
@@ -87,6 +88,7 @@ deduped_row_hashdiff AS (
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }},
+    {{ datavault4dbt.print_list(src_ma_key_list) }},
     rn
   FROM lag_source_data
   WHERE {{ ns.hdiff_alias }} != prev_ns_hdiff_alias OR prev_ns_hdiff_alias IS NULL
@@ -105,6 +107,7 @@ deduped_rows AS (
     ON {{ datavault4dbt.multikey(parent_hashkey, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(src_ldts, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
+    AND {{ datavault4dbt.multikey(src_ma_key, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
 
 {%- set source_cte = 'deduped_rows' -%}
 ),

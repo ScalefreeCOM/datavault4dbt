@@ -73,6 +73,7 @@ deduped_row_hashdiff AS (
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }},
+    {{ datavault4dbt.print_list(src_ma_key_list) }},
     ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as rn
   FROM source_data
   QUALIFY CASE
@@ -84,7 +85,7 @@ deduped_row_hashdiff AS (
 {# Dedupe the source data regarding non-delta groups. #}
 deduped_rows AS (
 
-  SELECT 
+  SELECT
     source_data.{{ parent_hashkey }},
     source_data.{{ ns.hdiff_alias }},
     deduped_row_hashdiff.rn,
@@ -94,6 +95,7 @@ deduped_rows AS (
     ON {{ datavault4dbt.multikey(parent_hashkey, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(src_ldts, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
+    AND {{ datavault4dbt.multikey(src_ma_key, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
 
 {%- set source_cte = 'deduped_rows' -%}
 ),
