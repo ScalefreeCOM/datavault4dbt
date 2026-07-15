@@ -11,7 +11,7 @@ macros:
         description: The object to check.
       - name: empty_is_false
         type: bool
-        description: If true, returns false for empty or None lists. Default is false.
+        description: If true, returns false when obj is None/undefined (empty lists still return true). Default is false.
 
   - name: is_nothing
     description: >
