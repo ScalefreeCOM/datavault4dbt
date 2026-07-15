@@ -271,8 +271,8 @@ macros:
   - name: limit_rows
     description: >
       Returns the adapter-appropriate SQL clause for limiting result rows in development
-      queries (e.g. 'TOP 100'). Returns an empty string in production targets on adapters
-      that support it. Dispatches per adapter.
+      queries (e.g. 'TOP 100'). On Synapse and Fabric, returns an empty string when
+      target.schema == 'prod'. Dispatches per adapter.
 
   - name: default__limit_rows
     description: Default implementation of limit_rows returning 'TOP 100'. No arguments.
