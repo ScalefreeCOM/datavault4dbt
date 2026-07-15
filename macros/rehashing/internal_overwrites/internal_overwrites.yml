@@ -1,0 +1,78 @@
+version: 2
+
+macros:
+  - name: custom_alter_relation_add_remove_columns
+    description: >
+      Internal override of dbt's alter_relation_add_remove_columns. Adds or removes columns
+      on an existing relation using adapter-appropriate DDL. The BigQuery implementation uses
+      ADD COLUMN IF NOT EXISTS / DROP COLUMN IF EXISTS to make the operation idempotent.
+      Other adapters fall back to dbt's built-in alter_relation_add_remove_columns.
+      Used by the rehash macros to synchronise the target relation's schema after a rehash.
+    arguments:
+      - name: relation
+        type: Any
+        description: The dbt relation object representing the table to alter.
+      - name: add_columns
+        type: list
+        description: List of dbt Column objects to add to the relation.
+      - name: remove_columns
+        type: list
+        description: List of dbt Column objects to remove from the relation.
+
+  - name: default__custom_alter_relation_add_remove_columns
+    description: Default implementation of custom_alter_relation_add_remove_columns delegating to dbt's built-in. Accepts the same arguments as the parent macro.
+
+  - name: bigquery__custom_alter_relation_add_remove_columns
+    description: BigQuery-specific implementation of custom_alter_relation_add_remove_columns using ADD COLUMN IF NOT EXISTS / DROP COLUMN IF EXISTS. Accepts the same arguments as the parent macro.
+
+  - name: custom_get_rename_column_sql
+    description: >
+      Internal override of dbt's get_rename_column_sql. Returns the DDL statement for renaming
+      a column on an existing relation. Adapter overrides handle platforms where dbt's default
+      does not produce correct syntax (e.g. Databricks ALTER TABLE ... RENAME COLUMN,
+      Snowflake dynamic-table-aware rename). Used by the rehash macros when renaming columns
+      after a rehash operation.
+    arguments:
+      - name: relation
+        type: Any
+        description: The dbt relation object representing the table containing the column.
+      - name: old_col_name
+        type: string
+        description: The current name of the column to rename.
+      - name: new_col_name
+        type: string
+        description: The new name for the column.
+
+  - name: default__custom_get_rename_column_sql
+    description: Default implementation of custom_get_rename_column_sql delegating to dbt's built-in get_rename_column_sql. Accepts the same arguments as the parent macro.
+
+  - name: databricks__custom_get_rename_column_sql
+    description: Databricks-specific implementation of custom_get_rename_column_sql using ALTER TABLE ... RENAME COLUMN. Accepts the same arguments as the parent macro.
+
+  - name: snowflake__custom_get_rename_column_sql
+    description: Snowflake-specific implementation of custom_get_rename_column_sql. Handles dynamic tables via the DDL prefix for ALTER. Accepts the same arguments as the parent macro.
+
+  - name: rehash_deprecated_relation
+    description: >
+      Returns a dbt relation object representing the '_deprecated' copy of the given relation,
+      built deterministically by appending '_deprecated' to the identifier. Unlike
+      make_temp_relation, this never adds uniqueness suffixes, ensuring CREATE, RENAME, and
+      DROP operations all reference the same identifier even across interrupted runs.
+    arguments:
+      - name: relation
+        type: Any
+        description: The source dbt relation object to derive the deprecated copy from.
+
+  - name: rehash_prepare_rename
+    description: >
+      Renames the given relation to its '_deprecated' copy in preparation for a rehash operation.
+      Idempotent — if the deprecated copy already exists (from an interrupted prior run) it is
+      dropped first, so a stale leftover never blocks a fresh run. Logs the steps taken when
+      output_logs is true.
+    arguments:
+      - name: relation
+        type: Any
+        description: The dbt relation object to rename.
+      - name: output_logs
+        type: bool
+        description: Whether to emit log messages for each step. Default is true.

@@ -18,4 +18,178 @@ macros:
         description: Whether this parameter is required for the top-level macro. Default is False. 
       - name: documentation
         type: string
-        description: A string that holds documentation of this parameter. 
+        description: A string that holds documentation of this parameter.
+
+  - name: alias
+    description: >
+      Internal helper. Renders a single column expression as either 'source_column AS alias' or
+      a plain column reference with an optional table prefix. Dispatches to default__alias.
+    arguments:
+      - name: alias_config
+        type: Any
+        description: >
+          Either a dict with 'source_column' and 'alias' keys (produces 'source_column AS alias'),
+          or a plain column name string (produces the column with optional prefix).
+      - name: prefix
+        type: string
+        description: Optional table prefix prepended to the column reference (e.g. 'src').
+
+  - name: default__alias
+    description: Default implementation of alias. Accepts the same arguments as the parent alias macro.
+
+  - name: alias_all
+    description: >
+      Internal helper. Iterates over a list of column definitions and calls alias() on each one,
+      returning a comma-separated list of column expressions. Dispatches to default__alias_all.
+    arguments:
+      - name: columns
+        type: list
+        description: List of column definitions, each passed individually to alias().
+      - name: prefix
+        type: string
+        description: Optional table prefix forwarded to each alias() call.
+
+  - name: default__alias_all
+    description: Default implementation of alias_all. Accepts the same arguments as the parent alias_all macro.
+
+  - name: as_constant
+    description: >
+      Internal helper. Renders a column reference as a SQL literal or expression.
+      A leading '!' prefix strips the '!' and returns the value as a SQL string literal.
+      A SQL expression (quoted, contains parentheses, cast or concatenation operators) is passed
+      through unchanged. A plain identifier is wrapped in the adapter-appropriate escape characters.
+      Dispatches to default__as_constant.
+    arguments:
+      - name: column_str
+        type: string
+        description: The column string to evaluate. Leading '!' indicates a static literal.
+
+  - name: default__as_constant
+    description: Default implementation of as_constant. Accepts the same arguments as the parent as_constant macro.
+
+  - name: check_required_parameters
+    description: >
+      Internal helper. Inspects the kwargs dict of a calling macro and raises a dbt compiler
+      error listing every parameter whose value is None. Used in front-end macros to enforce
+      that all required arguments have been supplied before code generation begins.
+
+  - name: concat_ws
+    description: >
+      Internal helper. Generates a SQL concatenation expression for a list of column strings
+      using an adapter-appropriate syntax. The default implementation uses the SQL CONCAT
+      function with the separator interleaved between arguments. Adapter overrides produce
+      platform-specific syntax (|| operator, CAST to VARCHAR, etc.).
+    arguments:
+      - name: string_list
+        type: list
+        description: List of column names or expressions to concatenate.
+      - name: separator
+        type: string
+        description: The string placed between each element. Default is '||'.
+
+  - name: default__concat_ws
+    description: Default implementation of concat_ws using CONCAT with interleaved separator. Accepts the same arguments as the parent concat_ws macro.
+
+  - name: exasol__concat_ws
+    description: Exasol-specific implementation of concat_ws. Accepts the same arguments as the parent concat_ws macro.
+
+  - name: redshift__concat_ws
+    description: Amazon Redshift-specific implementation of concat_ws using || operator. Accepts the same arguments as the parent concat_ws macro.
+
+  - name: oracle__concat_ws
+    description: Oracle-specific implementation of concat_ws using || operator. Accepts the same arguments as the parent concat_ws macro.
+
+  - name: trino__concat_ws
+    description: Trino-specific implementation of concat_ws with CAST to VARCHAR. Accepts the same arguments as the parent concat_ws macro.
+
+  - name: escape_column_names
+    description: >
+      Internal helper. Applies adapter-specific column name escaping to a single column string,
+      a list of column strings, or a dict with 'source_column' and 'alias' keys. Returns the
+      same structure as the input with each column name escaped.
+    arguments:
+      - name: columns
+        type: Any
+        description: >
+          A column name string, a list of column name strings, or a dict with
+          'source_column' and 'alias' keys.
+
+  - name: escape_column_name
+    description: >
+      Internal helper. Escapes a single column name using the adapter-appropriate escape characters.
+      The default implementation uppercases the name and wraps it in double quotes.
+      Dispatches per adapter.
+    arguments:
+      - name: column
+        type: string
+        description: The raw column name to escape.
+
+  - name: default__escape_column_name
+    description: Default implementation of escape_column_name. Uppercases the name and wraps it in double quotes. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: synapse__escape_column_name
+    description: Azure Synapse Analytics-specific implementation of escape_column_name. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: bigquery__escape_column_name
+    description: BigQuery-specific implementation of escape_column_name using backtick escape characters. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: postgres__escape_column_name
+    description: PostgreSQL-specific implementation of escape_column_name. Lowercases the name. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: redshift__escape_column_name
+    description: Amazon Redshift-specific implementation of escape_column_name. Lowercases the name and wraps it in double quotes. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: exasol__escape_column_name
+    description: Exasol-specific implementation of escape_column_name. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: fabric__escape_column_name
+    description: Microsoft Fabric-specific implementation of escape_column_name. Respects the datavault4dbt.set_casing variable. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: databricks__escape_column_name
+    description: Databricks-specific implementation of escape_column_name. Respects the datavault4dbt.set_casing variable. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: sqlserver__escape_column_name
+    description: SQL Server-specific implementation of escape_column_name. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: trino__escape_column_name
+    description: Trino-specific implementation of escape_column_name. Accepts the same arguments as the parent escape_column_name macro.
+
+  - name: expand_column_list
+    description: >
+      Internal helper. Flattens a list that may contain nested sub-lists and filters out None
+      values, returning a single flat list of column names. Used to normalize column list inputs
+      before further processing.
+    arguments:
+      - name: columns
+        type: list
+        description: A list of column names, possibly containing nested lists or None values.
+
+  - name: multikey
+    description: >
+      Internal helper. Generates a multi-column SQL condition string for JOIN ON clauses or
+      WHERE filters. Pairs each column from 'columns' with the corresponding column from
+      'right_columns' (if provided) or with itself, applying an optional table prefix and
+      comparison operator. Dispatches to default__multikey.
+    arguments:
+      - name: columns
+        type: list
+        description: List of column names on the left side of the condition.
+      - name: prefix
+        type: string
+        description: Optional table alias prefix prepended to each left-side column.
+      - name: condition
+        type: string
+        description: >
+          The SQL logical operator used to join multiple conditions. Typically 'AND' or 'OR'.
+      - name: operator
+        type: string
+        description: >
+          The SQL comparison operator between left and right columns. Typically '=' or 'IS NOT DISTINCT FROM'.
+      - name: right_columns
+        type: list
+        description: >
+          Optional list of column names for the right side. If not provided, each left column
+          is compared to itself (useful for self-joins or deduplication conditions).
+
+  - name: default__multikey
+    description: Default implementation of multikey. Accepts the same arguments as the parent multikey macro.
