@@ -85,7 +85,7 @@ macros:
         description: List of column names or expressions to concatenate.
       - name: separator
         type: string
-        description: The string placed between each element. Default is '||'.
+        description: The string placed between each element. Default is '||' (Redshift/Oracle default to '|').
 
   - name: default__concat_ws
     description: Default implementation of concat_ws using CONCAT with interleaved separator. Accepts the same arguments as the parent concat_ws macro.

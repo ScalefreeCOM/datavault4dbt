@@ -61,12 +61,4 @@ macros:
     description: Trino-specific implementation of control_snap_v1. Accepts the same arguments as the parent control_snap_v1 macro.
 
   - name: bigquery__control_snap_v1
-    description: >
-      BigQuery-specific implementation of control_snap_v1. Unlike the other adapters which use the default__
-      fallback, BigQuery has a dedicated implementation for this macro. Accepts the same arguments as the parent
-      control_snap_v1 macro.
-
-  - name: default__control_snap_v1
-    description: >
-      Default implementation of control_snap_v1, co-located in the BigQuery adapter folder. Accepts the same
-      arguments as the parent control_snap_v1 macro.
+    description: BigQuery-specific implementation of control_snap_v1. Accepts the same arguments as the parent control_snap_v1 macro.
