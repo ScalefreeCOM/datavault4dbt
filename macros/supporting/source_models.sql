@@ -54,7 +54,7 @@
             {% set ns_source_models.source_model_list = source_model_backup %}
         {% endif %}
 
-        {% if load_relation(this) is none or should_full_refresh() %}
+        {% if this is none or this is string or model.resource_type == 'unit_test' or load_relation(this) is none or should_full_refresh() %}
             {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Relation does not exist or should be full refreshed', false) }}{% endif %}
             {% set ns_source_models.source_model_list = source_model_backup %}
         {% endif %}
