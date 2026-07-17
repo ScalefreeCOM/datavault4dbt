@@ -100,7 +100,7 @@ deduped_rows AS (
     ON {{ datavault4dbt.multikey(parent_hashkey, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(src_ldts, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
-    AND {{ datavault4dbt.multikey(src_ma_key, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
+    AND {{ datavault4dbt.multikey(src_ma_key, prefix=['source_data', 'deduped_row_hashdiff'], condition='=', null_safe=true) }}
 
 {%- set source_cte = 'deduped_rows' -%}
 ),
@@ -124,7 +124,7 @@ records_to_insert AS (
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
-            AND {{ datavault4dbt.multikey(src_ma_key, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
+            AND {{ datavault4dbt.multikey(src_ma_key, prefix=['latest_entries_in_sat', source_cte], condition='=', null_safe=true) }}
             )
     {%- endif %}
 
