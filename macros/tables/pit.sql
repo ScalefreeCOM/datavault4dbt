@@ -104,8 +104,10 @@
     {%- for sat in sat_names -%}
         {%- if sat is string -%}
             {%- do sat_names_normalized.append({'name': sat, 'mandatory': false}) -%}
-        {%- else -%}
+        {%- elif sat is mapping and 'name' in sat -%}
             {%- do sat_names_normalized.append({'name': sat['name'], 'mandatory': sat.get('mandatory', false)}) -%}
+        {%- else -%}
+            {{ exceptions.raise_compiler_error("datavault4dbt.pit: Invalid sat_names entry. Must be a string or a dict with a 'name' key, got: " ~ sat) }}
         {%- endif -%}
     {%- endfor -%}
     {%- set sat_names = sat_names_normalized -%}
@@ -121,6 +123,14 @@
     {%- set refer_to_ghost_records  = datavault4dbt.yaml_metadata_parser(name='refer_to_ghost_records', yaml_metadata=yaml_metadata, parameter=refer_to_ghost_records, required=False, documentation=refer_to_ghost_records_description) -%}
     {%- set snapshot_optimization  = datavault4dbt.yaml_metadata_parser(name='snapshot_optimization', yaml_metadata=yaml_metadata, parameter=snapshot_optimization, required=False, documentation=snapshot_optimization_description) -%}
     {%- set mandatory_strategy      = datavault4dbt.yaml_metadata_parser(name='mandatory_strategy', yaml_metadata=yaml_metadata, parameter=mandatory_strategy, required=False, documentation=mandatory_strategy_description) -%}
+
+    {# Validate mandatory_strategy: normalize to lowercase and reject anything other than 'any' or 'all'. #}
+    {%- if datavault4dbt.is_something(mandatory_strategy) -%}
+        {%- set mandatory_strategy = mandatory_strategy | lower -%}
+        {%- if mandatory_strategy not in ['any', 'all'] -%}
+            {{ exceptions.raise_compiler_error("datavault4dbt.pit: Invalid mandatory_strategy '" ~ mandatory_strategy ~ "'. Accepted are 'any' and 'all'.") }}
+        {%- endif -%}
+    {%- endif -%}
 
     {# Applying the default aliases as stored inside the global variables, if ldts, sdts and ledts are not set. #}
 
