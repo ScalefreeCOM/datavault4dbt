@@ -55,12 +55,13 @@ macros:
           extraction. Optional and not required.
           Example: 'edwSequence'.
       - name: prejoined_columns
-        type: dict[string, dict[string, string]]
+        type: any
         description: >
           Defines information about columns that need to be prejoined. Most commonly used to create links when
-          the source data does not hold the Business Key but the technical key of the referred object. For each
-          prejoined column define: 'src_name', 'src_table' (or 'ref_model'), 'bk', 'this_column_name',
-          'ref_column_name'.
+          the source data does not hold the Business Key but the technical key of the referred object. Accepts
+          either a dictionary of dictionaries (old syntax) or a list of dictionaries (new syntax); see
+          process_prejoined_columns. For each prejoined column define: 'src_name', 'src_table' (or 'ref_model'),
+          'bk', 'this_column_name', 'ref_column_name'.
       - name: missing_columns
         type: dict[string, string]
         description: >
