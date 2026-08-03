@@ -15,7 +15,7 @@ macros:
           Name of the hashkey column inside the stage of the object that this satellite is attached to.
           Examples: 'hk_account_h' (attached to hub account), 'hk_account_contact_l' (attached to a link).
       - name: src_payload
-        type: list
+        type: list[string]
         description: >
           A list of all the descriptive attributes that should be included in this satellite.
           Examples: ['name', 'address', 'country', 'phone', 'email'].
@@ -39,7 +39,7 @@ macros:
         description: >
           Whether the source contains only one batch. Optional, default False.
       - name: additional_columns
-        type: Any
+        type: any
         description: >
           Additional columns from source system or derived columns which should be part of the nh_sat.
           The columns need to be available in all source models. Optional parameter, defaults to empty list.

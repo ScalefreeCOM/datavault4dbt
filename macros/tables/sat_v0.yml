@@ -21,7 +21,7 @@ macros:
           calculated out of the entire payload of this satellite. The stage must hold one hashdiff per
           satellite entity. Examples: 'hd_account_data_sfdc_s'.
       - name: src_payload
-        type: list
+        type: list[string]
         description: >
           A list of all the descriptive attributes that should be included in this satellite. Needs to be the
           columns that are fed into the hashdiff calculation of this satellite.
@@ -50,7 +50,7 @@ macros:
         description: >
           Whether the source contains only one batch. Optional, default False.
       - name: additional_columns
-        type: Any
+        type: any
         description: >
           Additional columns from source system or derived columns which should be part of the Sat.
           The columns need to be available in all source models. Optional parameter, defaults to empty list.

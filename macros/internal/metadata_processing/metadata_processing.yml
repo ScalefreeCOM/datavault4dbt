@@ -14,7 +14,7 @@ macros:
         type: string
         description: The forwarded parameter of the top-level macro. This is used, if the yaml-metadata is none. 
       - name: required
-        type: boolean
+        type: bool
         description: Whether this parameter is required for the top-level macro. Default is False. 
       - name: documentation
         type: string
@@ -26,7 +26,7 @@ macros:
       a plain column reference with an optional table prefix. Dispatches to default__alias.
     arguments:
       - name: alias_config
-        type: Any
+        type: any
         description: >
           Either a dict with 'source_column' and 'alias' keys (produces 'source_column AS alias'),
           or a plain column name string (produces the column with optional prefix).
@@ -43,7 +43,7 @@ macros:
       returning a comma-separated list of column expressions. Dispatches to default__alias_all.
     arguments:
       - name: columns
-        type: list
+        type: list[string]
         description: List of column definitions, each passed individually to alias().
       - name: prefix
         type: string
@@ -81,7 +81,7 @@ macros:
       platform-specific syntax (|| operator, CAST to VARCHAR, etc.).
     arguments:
       - name: string_list
-        type: list
+        type: list[string]
         description: List of column names or expressions to concatenate.
       - name: separator
         type: string
@@ -109,7 +109,7 @@ macros:
       same structure as the input with each column name escaped.
     arguments:
       - name: columns
-        type: Any
+        type: any
         description: >
           A column name string, a list of column name strings, or a dict with
           'source_column' and 'alias' keys.
@@ -161,7 +161,7 @@ macros:
       before further processing.
     arguments:
       - name: columns
-        type: list
+        type: list[any]
         description: A list of column names, possibly containing nested lists or None values.
 
   - name: multikey
@@ -172,7 +172,7 @@ macros:
       comparison operator. Dispatches to default__multikey.
     arguments:
       - name: columns
-        type: list
+        type: list[string]
         description: List of column names on the left side of the condition.
       - name: prefix
         type: string
@@ -186,7 +186,7 @@ macros:
         description: >
           The SQL comparison operator between left and right columns. Typically '=' or 'IS NOT DISTINCT FROM'.
       - name: right_columns
-        type: list
+        type: list[string]
         description: >
           Optional list of column names for the right side. If not provided, each left column
           is compared to itself (useful for self-joins or deduplication conditions).

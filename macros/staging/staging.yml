@@ -8,8 +8,10 @@ macros:
       When multiple columns are to be extracted from the same prejoin-target and with the same conditions(columns and operator) they will be combined into one item.
     arguments:
       - name: prejoined_columns
-        type: list|dict
-        description: The value of the prejoined_columns as defined in the yaml_metadata of the stage-model.
+        type: any
+        description: >
+          The value of the prejoined_columns as defined in the yaml_metadata of the stage-model. Accepts either
+          a list of dictionaries (new syntax) or a dictionary of dictionaries (old syntax).
 
   - name: extract_prejoin_column_names
     description: >
@@ -19,5 +21,142 @@ macros:
       Returns an empty list if the passed parameter is empty.
     arguments:
       - name: prejoined_columns
-        type: list
+        type: list[dict[string, string]]
         description: The prejoined_columns as process by the process_prejoined_columns-macro
+
+  - name: derive_columns
+    description: >
+      Renders the SELECT-list of a stage model's derived ('added' or 'calculated') columns together with the
+      remaining source columns, in source-columns-then-derived-columns order. Dispatches per adapter.
+    arguments:
+      - name: source_relation
+        type: relation
+        description: The dbt relation of the source model, used to look up its existing columns.
+      - name: columns
+        type: dict[string, dict[string, any]]
+        description: >
+          Dictionary of derived column definitions, keyed by the desired output column name. Same shape as the
+          'derived_columns' parameter of the stage macro.
+
+  - name: default__derive_columns
+    description: Default implementation of derive_columns. Accepts the same arguments as the parent macro.
+
+  - name: derived_columns_datatypes
+    description: >
+      Enriches a derived_columns definition with the detected 'datatype', 'value' and 'col_size' for each entry
+      that does not already define them explicitly, by looking up the referenced column in the source relation.
+      Returns the enriched dictionary as a JSON string. Dispatches per adapter.
+    arguments:
+      - name: columns
+        type: dict[string, dict[string, any]]
+        description: Dictionary of derived column definitions, keyed by the desired output column name.
+      - name: source_relation
+        type: relation
+        description: The dbt relation of the source model, used to detect datatypes and column sizes.
+
+  - name: default__derived_columns_datatypes
+    description: Default implementation of derived_columns_datatypes. Accepts the same arguments as the parent macro.
+
+  - name: hash_columns
+    description: >
+      Renders the SELECT-list of hashkey and hashdiff expressions for a stage model's 'hashed_columns'
+      definition, delegating to the hash macro for each entry and applying multi-active satellite hashing
+      rules when a multi-active key is configured. Dispatches per adapter.
+    arguments:
+      - name: columns
+        type: dict[string, any]
+        description: Dictionary of hashkey/hashdiff definitions. Same shape as the 'hashed_columns' parameter of the stage macro.
+      - name: multi_active_key
+        type: any
+        description: Optional multi-active key column(s), used to apply multi-active hashing rules.
+      - name: main_hashkey_column
+        type: string
+        description: Optional name of the parent hashkey column, used in multi-active hashdiff calculations.
+
+  - name: default__hash_columns
+    description: Default implementation of hash_columns. Accepts the same arguments as the parent macro.
+
+  - name: redshift__hash_columns
+    description: Redshift-specific implementation of hash_columns. Accepts the same arguments as the parent macro.
+
+  - name: source_columns
+    description: >
+      Returns a plain list of column name strings for the given relation, wrapping
+      adapter.get_columns_in_relation().
+    arguments:
+      - name: source_relation
+        type: relation
+        description: The dbt relation to look up columns for.
+
+  - name: process_columns_to_select
+    description: >
+      Filters a list of column names down to only those not present in an exclude list, normalising casing
+      per the adapter's 'datavault4dbt.set_casing' configuration. Dispatches per adapter.
+    arguments:
+      - name: columns_list
+        type: list[string]
+        description: The full list of column names to filter.
+      - name: exclude_columns_list
+        type: list[string]
+        description: The list of column names to exclude from the result.
+
+  - name: default__process_columns_to_select
+    description: Default implementation of process_columns_to_select. Accepts the same arguments as the parent macro.
+
+  - name: fabric__process_columns_to_select
+    description: Microsoft Fabric-specific implementation of process_columns_to_select. Accepts the same arguments as the parent macro.
+
+  - name: databricks__process_columns_to_select
+    description: Databricks-specific implementation of process_columns_to_select. Accepts the same arguments as the parent macro.
+
+  - name: synapse__process_columns_to_select
+    description: Azure Synapse Analytics-specific implementation of process_columns_to_select. Delegates to default__process_columns_to_select.
+
+  - name: sqlserver__process_columns_to_select
+    description: SQL Server-specific implementation of process_columns_to_select. Delegates to default__process_columns_to_select.
+
+  - name: extract_column_names
+    description: >
+      Returns the list of keys of a columns dictionary (e.g. a 'hashed_columns' or 'derived_columns'
+      definition), or an empty list if the input is not a mapping.
+    arguments:
+      - name: columns_dict
+        type: dict[string, any]
+        description: The columns dictionary to extract keys from.
+
+  - name: extract_input_columns
+    description: >
+      Extracts the list of underlying source column names referenced by a columns or prejoin definition,
+      handling the 'src_cols_required', hashdiff 'columns', and prejoin 'this_column_name' shapes.
+    arguments:
+      - name: columns_dict
+        type: any
+        description: A dictionary of hash/derived column configs, or a list of processed prejoin dictionaries.
+
+  - name: process_hash_column_excludes
+    description: >
+      For each entry in a 'hashed_columns' definition that specifies 'exclude_columns' instead of an explicit
+      'columns' list, resolves the actual list of columns to hash by subtracting the excludes from the full
+      list of source columns.
+    arguments:
+      - name: hash_columns
+        type: dict[string, any]
+        description: Dictionary of hashkey/hashdiff definitions, potentially using the 'exclude_columns' shorthand.
+      - name: source_columns
+        type: list[string]
+        description: The full list of available source column names.
+
+  - name: print_list
+    description: >
+      Renders a comma-separated, indented list of column names for use inside a SELECT statement, optionally
+      prefixed with a source alias.
+    arguments:
+      - name: list_to_print
+        type: list[string]
+        description: The list of column names to render.
+      - name: indent
+        type: integer
+        description: Number of spaces to indent each rendered line. Defaults to 4.
+      - name: src_alias
+        type: string
+        description: Optional table alias prepended to each column name (e.g. 'src.column_name').

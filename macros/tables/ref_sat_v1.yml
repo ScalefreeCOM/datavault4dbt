@@ -14,7 +14,7 @@ macros:
         description: >
           Name of the underlying ref_sat_v0 dbt model.
       - name: ref_keys
-        type: Any
+        type: any
         description: >
           Name(s) of the reference key(s) in the underlying reference sat v0.
       - name: hashdiff

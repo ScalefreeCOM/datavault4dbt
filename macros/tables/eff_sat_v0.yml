@@ -38,7 +38,7 @@ macros:
         description: >
           Whether the High Water Mark should be disabled or not. Optional.
       - name: additional_columns
-        type: Any
+        type: any
         description: >
           Additional columns from source system or derived columns which should be part of the eff_sat.
           The columns need to be available in all source models. Optional parameter, defaults to empty list.

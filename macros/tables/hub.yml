@@ -15,7 +15,7 @@ macros:
           Name of the hashkey column inside the stage, that should be used as PK of the Hub.
           Examples: 'hk_account_h' — This hashkey column was created before inside the corresponding staging area, using the stage macro.
       - name: business_keys
-        type: Any
+        type: any
         description: >
           Name(s) of the business key columns that should be loaded into the hub and are the input of the hashkey column.
           Needs to be available inside the stage model. If the names differ between multiple sources, define here how the business
@@ -23,7 +23,7 @@ macros:
           'source_model' parameter then.
           Examples: 'account_key' (single), ['account_key', 'account_number'] (composite).
       - name: source_models
-        type: dict
+        type: dict[string, dict[string, any]]
         description: >
           Dictionary with information about the source models. The keys of the dict are the names of the source models,
           and the value of each source model is another dictionary. This inner dictionary requires the key 'bk_columns'
@@ -46,7 +46,7 @@ macros:
         description: >
           Whether the High Water Mark should be turned off. Optional, default False.
       - name: additional_columns
-        type: Any
+        type: any
         description: >
           Additional columns from source system or derived columns which should be part of Hub. Useful when you have to
           deviate from the default Hub structure. The columns need to be available in all source models which are used

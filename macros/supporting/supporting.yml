@@ -121,7 +121,7 @@ macros:
         type: string
         description: The custom schema name defined in the model config, or none.
       - name: node
-        type: Any
+        type: any
         description: The dbt node object (passed by dbt internals, not set by users).
 
   - name: get_distinct_value
@@ -131,13 +131,13 @@ macros:
       values at compile time. Dispatches per adapter.
     arguments:
       - name: source_relation
-        type: Any
+        type: any
         description: A dbt relation object pointing to the source table or view to query.
       - name: column_name
         type: string
         description: The column from which to retrieve a distinct value.
       - name: exclude_values
-        type: list
+        type: list[any]
         description: Optional list of values to exclude from the result.
 
   - name: default__get_distinct_value
@@ -151,13 +151,13 @@ macros:
       Returns the corrected list of hashed column expressions.
     arguments:
       - name: hashed_columns
-        type: list
+        type: list[string]
         description: List of column name strings that will be included in a hash calculation.
       - name: all_datatype_columns
-        type: list
+        type: list[column]
         description: List of dbt Column objects representing all columns of the source relation.
       - name: derived_columns
-        type: dict
+        type: dict[string, dict[string, string]]
         description: Optional dict of derived column definitions that may override the detected datatype.
 
   - name: get_standard_string
@@ -166,7 +166,7 @@ macros:
       standardised string, replacing NULL values with '^^' placeholders and trimming each value.
     arguments:
       - name: string_list
-        type: list
+        type: list[string]
         description: List of column names to concatenate into the standardised string.
 
   - name: ghost_record_per_datatype
@@ -202,7 +202,7 @@ macros:
       syntax. Dispatches per adapter.
     arguments:
       - name: columns
-        type: list
+        type: list[string]
         description: List of column names or expressions to hash together.
       - name: alias
         type: string
@@ -211,7 +211,7 @@ macros:
         type: bool
         description: If true, generates a hashdiff expression. If false, generates a hashkey. Default is false.
       - name: multi_active_key
-        type: Any
+        type: any
         description: Optional multi-active key configuration used in multi-active satellite hashing.
       - name: main_hashkey_column
         type: string
@@ -301,7 +301,7 @@ macros:
       Handles plain column strings, list-of-lists, and alias dicts. Dispatches per adapter.
     arguments:
       - name: columns
-        type: list
+        type: list[any]
         description: List of column names, nested lists, or alias dicts to prefix.
       - name: prefix_str
         type: string
@@ -333,7 +333,7 @@ macros:
       before rendering their SQL.
     arguments:
       - name: source_models
-        type: Any
+        type: any
         description: >
           The raw source_models parameter as passed by the user — may be a string (single
           source), a list of strings, or a dict mapping model names to per-source config dicts.
@@ -341,19 +341,19 @@ macros:
         type: bool
         description: Whether to resolve and validate rsrc_static values. Default is true.
       - name: parameters
-        type: dict
+        type: dict[string, any]
         description: Additional per-source parameters merged into a single-source dict when source_models is a string.
       - name: business_keys
-        type: Any
+        type: any
         description: Business key columns forwarded from the calling macro.
       - name: reference_keys
-        type: Any
+        type: any
         description: Reference key columns forwarded from the calling macro.
       - name: foreign_hashkeys
-        type: Any
+        type: any
         description: Foreign hashkey columns forwarded from the calling macro.
       - name: payload
-        type: Any
+        type: any
         description: Payload columns forwarded from the calling macro.
 
   - name: string_default_dtype

@@ -18,7 +18,7 @@ macros:
           Examples: 'hk_contact_h' (tracks appearance of the contact hub hashkey),
           'hk_contact_account_l' (tracks appearance of the link hashkey).
       - name: source_models
-        type: dict
+        type: dict[string, dict[string, any]]
         description: >
           Dictionary with information about the source model. The key of the dict is the name of the source model,
           and the value is another dictionary. This inner dictionary requires to have the key 'rsrc_static', and
@@ -44,7 +44,7 @@ macros:
         description: >
           Whether the High Water Mark should be turned off. Optional, default False.
       - name: additional_columns
-        type: Any
+        type: any
         description: >
           Additional columns from source system or derived columns which should be part of the rec_track_sat.
           The columns need to be available in all source models. Optional parameter, defaults to empty list.

@@ -14,7 +14,7 @@ macros:
         description: >
           The name of the underlying version 0 control snapshot table. Needs to be available as a dbt model.
       - name: log_logic
-        type: dict
+        type: dict[string, any]
         description: >
           Defining the desired durations of each granularity. Available granularities are 'daily', 'weekly',
           'monthly', and 'yearly'. For each granularity the duration can be defined as an integer and the time

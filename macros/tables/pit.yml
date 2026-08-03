@@ -18,7 +18,7 @@ macros:
         description: >
           The name of the hashkey column inside the previously referred Hub entity.
       - name: sat_names
-        type: list
+        type: list[string]
         description: >
           A list of all the satellites that should be included in this PIT table. Can only be satellites that
           are attached to the tracked Hub, and should typically include all those satellites. You should always

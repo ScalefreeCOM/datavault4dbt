@@ -14,7 +14,7 @@ macros:
         description: >
           Name of the underlying ref_hub model.
       - name: ref_satellites
-        type: Any
+        type: any
         description: >
           Name(s) of the reference satellites to be included in this ref_table. Optional: 'include' and 'exclude'
           as dictionary keys for each satellite.

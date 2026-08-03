@@ -10,11 +10,11 @@ macros:
           Optional. A YAML-formatted string that defines all parameters in a single block instead
           of specifying each one directly in the macro call.
       - name: ref_keys
-        type: Any
+        type: any
         description: >
           Name of the reference key(s) available in the source model(s).
       - name: source_models
-        type: dict
+        type: dict[string, dict[string, any]]
         description: >
           Similar to other source_models parameters, e.g. in Hubs or Links.
       - name: src_ldts
@@ -28,7 +28,7 @@ macros:
           Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
           Needs to use the same column name as defined as alias inside the staging model.
       - name: additional_columns
-        type: Any
+        type: any
         description: >
           Additional columns from source system or derived columns which should be part of the ref_hub.
           The columns need to be available in all source models. Optional parameter, defaults to empty list.

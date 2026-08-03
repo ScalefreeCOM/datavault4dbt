@@ -28,7 +28,7 @@ macros:
           'src_hashdiff' parameter inside the sat_v0 model. Must not include the ma_attribute in calculation.
           Examples: 'hd_contact_phonenumber_s'.
       - name: ma_attribute
-        type: Any
+        type: any
         description: >
           Name of the multi active attribute inside the v0 satellite. This needs to be identified under the
           requirement that the combination of hashkey + ldts + ma_attribute is unique over the entire stage/satellite.

@@ -7,7 +7,7 @@ macros:
       not a mapping). Used throughout the package to distinguish list inputs from scalars.
     arguments:
       - name: obj
-        type: Any
+        type: any
         description: The object to check.
       - name: empty_is_false
         type: bool
@@ -18,7 +18,7 @@ macros:
       Internal helper. Returns true if the given object is None, undefined, or falsy.
     arguments:
       - name: obj
-        type: Any
+        type: any
         description: The object to check.
 
   - name: is_something
@@ -27,7 +27,7 @@ macros:
       Inverse of is_nothing.
     arguments:
       - name: obj
-        type: Any
+        type: any
         description: The object to check.
 
   - name: is_expression
@@ -37,7 +37,7 @@ macros:
       recognized SQL keyword on Trino.
     arguments:
       - name: obj
-        type: Any
+        type: any
         description: The object to check.
 
   - name: is_attribute
@@ -47,7 +47,7 @@ macros:
       Raises a compiler error if obj is null or not a string.
     arguments:
       - name: obj
-        type: Any
+        type: any
         description: The object to check. Must be a non-null string.
 
   - name: is_something_or_false
@@ -56,7 +56,7 @@ macros:
       even if it evaluates to false (e.g. 0 or empty string).
     arguments:
       - name: obj
-        type: Any
+        type: any
         description: The object to check.
 
   - name: prepend_generated_by
@@ -71,12 +71,12 @@ macros:
       if the variable is not set.
     arguments:
       - name: input_variable
-        type: Any
+        type: any
         description: The value passed in by the caller. If None or empty string, the fallback is used.
       - name: global_variable
         type: string
         description: >
           The name of the dbt project variable to use as fallback (resolved via var()).
       - name: default_value
-        type: Any
+        type: any
         description: The value returned if both input_variable and global_variable are unset.

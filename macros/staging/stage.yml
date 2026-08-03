@@ -24,7 +24,7 @@ macros:
           Examples: 'edwRecordSource' (column), '!SAP.Accounts' (static string),
           "CONCAT(source_system, '||', source_object)" (expression).
       - name: source_model
-        type: Any
+        type: any
         description: >
           Can be just a string holding the name of the referred dbt model to use as a source. But if the 'source'
           functionality inside the .yml file is used, it must be a dictionary with 'source_name': 'source_table'.
@@ -35,14 +35,14 @@ macros:
           Defines if all columns from the referred source table should be included in the result table, or if only
           the added columns should be part of the result table. By default the source columns should be included.
       - name: hashed_columns
-        type: dict
+        type: dict[string, any]
         description: >
           Defines the names and input for all hashkeys and hashdiffs to create. The key of each hash column is
           the name of the hash column. The value for Hashkeys is a list of input Business Keys; for Hashdiffs
           another dictionary with the pairs 'is_hashdiff:true' and 'columns: <list of columns>'.
           Example: {'hk_account_h': ['account_number', 'account_key'], 'hd_account_s': {'is_hashdiff': true, 'columns': ['name', 'address']}}.
       - name: derived_columns
-        type: dict
+        type: dict[string, dict[string, string]]
         description: >
           Defines values and datatypes for derived ('added' or 'calculated') columns. The values of this dictionary
           are the desired column names; the value is another dictionary with the keys 'value' (holding a column name,
@@ -55,21 +55,21 @@ macros:
           extraction. Optional and not required.
           Example: 'edwSequence'.
       - name: prejoined_columns
-        type: dict
+        type: dict[string, dict[string, string]]
         description: >
           Defines information about columns that need to be prejoined. Most commonly used to create links when
           the source data does not hold the Business Key but the technical key of the referred object. For each
           prejoined column define: 'src_name', 'src_table' (or 'ref_model'), 'bk', 'this_column_name',
           'ref_column_name'.
       - name: missing_columns
-        type: dict
+        type: dict[string, string]
         description: >
           If the schema of the source changes over time and columns are disappearing, this parameter gives you
           the option to create additional columns holding NULL values. The dictionary holds the column names as
           keys and the SQL datatypes as values.
           Example: {'legacy_account_uuid': 'INT64', 'shipping_address': 'STRING'}.
       - name: multi_active_config
-        type: dict
+        type: dict[string, string]
         description: >
           If the source data holds multi-active data, define here the column(s) holding the multi-active key and
           the main hashkey column. The combination of multi-active key(s), the main hashkey and the ldts column
@@ -80,3 +80,38 @@ macros:
         description: >
           If set to true, the stage will be created with ghost records. By default, ghost records are enabled.
           Optional Parameter.
+
+  - name: snowflake__stage
+    description: Snowflake-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: databricks__stage
+    description: Databricks-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: exasol__stage
+    description: Exasol-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: fabric__stage
+    description: Microsoft Fabric-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: oracle__stage
+    description: Oracle-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: postgres__stage
+    description: PostgreSQL-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: redshift__stage
+    description: Amazon Redshift-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: sqlserver__stage
+    description: SQL Server-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: synapse__stage
+    description: Azure Synapse Analytics-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: trino__stage
+    description: Trino-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: default__stage
+    description: >
+      Default implementation of stage, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent stage macro.
