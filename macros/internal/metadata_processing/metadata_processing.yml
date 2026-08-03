@@ -40,11 +40,14 @@ macros:
   - name: alias_all
     description: >
       Internal helper. Iterates over a list of column definitions and calls alias() on each one,
-      returning a comma-separated list of column expressions. Dispatches to default__alias_all.
+      returning a comma-separated list of column expressions. Also accepts a single column definition
+      directly, in which case it is forwarded to alias() as-is. Dispatches to default__alias_all.
     arguments:
       - name: columns
-        type: list[string]
-        description: List of column definitions, each passed individually to alias().
+        type: any
+        description: >
+          A list of column definitions, or a single column definition. Each definition is either a plain
+          column name string or a dict with 'source_column' and 'alias' keys, passed individually to alias().
       - name: prefix
         type: string
         description: Optional table prefix forwarded to each alias() call.
