@@ -9,14 +9,17 @@ Deletion is safe here because no actual data is deleted — only pointers to sat
 ### Usage as a post-hook
 
 ```jinja
+{% raw %}
 {{ config(
     post_hook="{{ datavault4dbt.clean_up_pit('control_snap_v1') }}"
 ) }}
+{% endraw %}
 ```
 
 ### With custom column names
 
 ```jinja
+{% raw %}
 {{ config(
     post_hook="{{ datavault4dbt.clean_up_pit(
         snapshot_relation='control_snap_v1',
@@ -24,6 +27,7 @@ Deletion is safe here because no actual data is deleted — only pointers to sat
         sdts='sdts'
     ) }}"
 ) }}
+{% endraw %}
 ```
 
 {% enddocs %}

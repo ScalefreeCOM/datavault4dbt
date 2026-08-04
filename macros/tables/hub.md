@@ -14,6 +14,7 @@ Features:
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.hub(
     hashkey='hk_account_h',
     business_keys='account_id',
@@ -28,6 +29,7 @@ Features:
         }
     }
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -36,6 +38,7 @@ Features:
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 hashkey: 'hk_account_h'
 business_keys: account_id
@@ -49,6 +52,7 @@ source_models:
 {%- endset -%}
 
 {{ datavault4dbt.hub(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

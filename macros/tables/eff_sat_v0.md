@@ -11,22 +11,26 @@ Note: `source_is_single_batch` is a required parameter — it must be explicitly
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.eff_sat_v0(
     source_model='stg_account_contact',
     tracked_hashkey='hk_account_contact_l',
     source_is_single_batch=false
 ) }}
+{% endraw %}
 ```
 
 ### With custom alias for the active flag
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.eff_sat_v0(
     source_model='stg_account_contact',
     tracked_hashkey='hk_account_contact_l',
     is_active_alias='is_active',
     source_is_single_batch=false
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -35,6 +39,7 @@ Note: `source_is_single_batch` is a required parameter — it must be explicitly
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 source_model: 'stg_account_contact'
 tracked_hashkey: 'hk_account_contact_l'
@@ -42,6 +47,7 @@ source_is_single_batch: false
 {%- endset -%}
 
 {{ datavault4dbt.eff_sat_v0(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

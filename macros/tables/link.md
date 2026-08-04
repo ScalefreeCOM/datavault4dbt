@@ -9,6 +9,7 @@ If multiple sources are used, they must all have the same number of foreign keys
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.link(
     link_hashkey='hk_account_contact_l',
     foreign_hashkeys=['hk_account_h', 'hk_contact_h'],
@@ -18,6 +19,7 @@ If multiple sources are used, they must all have the same number of foreign keys
         }
     }
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -26,6 +28,7 @@ If multiple sources are used, they must all have the same number of foreign keys
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 link_hashkey: 'hk_account_contact_l'
 foreign_hashkeys:
@@ -37,6 +40,7 @@ source_models:
 {%- endset -%}
 
 {{ datavault4dbt.link(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

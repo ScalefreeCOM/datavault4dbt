@@ -10,6 +10,7 @@ will be done in the later layers.
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.stage(
     source_model='source_account',
     ldts='edwLoadDate',
@@ -25,11 +26,13 @@ will be done in the later layers.
         'country_isocode': {'value': '!GER', 'datatype': 'STRING'}
     }
 ) }}
+{% endraw %}
 ```
 
 ### Multi-active stage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.stage(
     source_model='source_contact_phones',
     ldts='edwLoadDate',
@@ -46,6 +49,7 @@ will be done in the later layers.
         'main_hashkey_column': 'hk_contact_h'
     }
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -54,6 +58,7 @@ will be done in the later layers.
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 source_model: 'source_account'
 ldts: 'edwLoadDate'
@@ -77,6 +82,7 @@ derived_columns:
 {%- endset -%}
 
 {{ datavault4dbt.stage(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

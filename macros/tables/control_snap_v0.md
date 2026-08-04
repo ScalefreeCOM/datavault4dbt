@@ -15,10 +15,12 @@ In addition to the actual snapshot datetimestamp (sdts), the macro generates the
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.control_snap_v0(
     start_date='2020-01-01T00-00-00',
     daily_snapshot_time='07:00:00'
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -27,12 +29,14 @@ In addition to the actual snapshot datetimestamp (sdts), the macro generates the
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 start_date: '2020-01-01T00-00-00'
 daily_snapshot_time: '07:00:00'
 {%- endset -%}
 
 {{ datavault4dbt.control_snap_v0(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

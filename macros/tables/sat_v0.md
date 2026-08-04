@@ -16,12 +16,14 @@ Features:
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.sat_v0(
     parent_hashkey='hk_account_h',
     src_hashdiff='hd_account_data_sfdc_s',
     src_payload=['name', 'address', 'country', 'phone', 'email'],
     source_model='stage_account'
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -30,6 +32,7 @@ Features:
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 parent_hashkey: 'hk_account_h'
 src_hashdiff: 'hd_account_data_sfdc_s'
@@ -43,6 +46,7 @@ source_model: 'stage_account'
 {%- endset -%}
 
 {{ datavault4dbt.sat_v0(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

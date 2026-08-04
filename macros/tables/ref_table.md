@@ -9,22 +9,26 @@ The historization mode controls how much history the table retains: 'latest' kee
 ### Usage (latest — current values only)
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.ref_table(
     ref_hub='country_rh',
     ref_satellites=['country_1_rs'],
     historized='latest'
 ) }}
+{% endraw %}
 ```
 
 ### Usage (snapshot-based)
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.ref_table(
     ref_hub='country_rh',
     ref_satellites=['country_1_rs'],
     historized='snapshot',
     snapshot_relation='control_snap_v1'
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -33,6 +37,7 @@ The historization mode controls how much history the table retains: 'latest' kee
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 ref_hub: 'country_rh'
 ref_satellites:
@@ -41,6 +46,7 @@ historized: 'latest'
 {%- endset -%}
 
 {{ datavault4dbt.ref_table(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

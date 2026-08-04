@@ -17,6 +17,7 @@ Features:
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.rec_track_sat(
     tracked_hashkey='hk_contact_h',
     source_models={
@@ -29,6 +30,7 @@ Features:
         }
     }
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -37,6 +39,7 @@ Features:
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 tracked_hashkey: 'hk_contact_h'
 source_models:
@@ -48,6 +51,7 @@ source_models:
 {%- endset -%}
 
 {{ datavault4dbt.rec_track_sat(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

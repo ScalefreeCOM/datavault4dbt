@@ -9,22 +9,26 @@ as a view by default. Usually one version 1 sat would be created for each versio
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.sat_v1(
     sat_v0='account_data_sfdc_0_s',
     hashkey='hk_account_h',
     hashdiff='hd_account_data_sfdc_s'
 ) }}
+{% endraw %}
 ```
 
 ### With is_current flag
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.sat_v1(
     sat_v0='account_data_sfdc_0_s',
     hashkey='hk_account_h',
     hashdiff='hd_account_data_sfdc_s',
     add_is_current_flag=true
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -33,6 +37,7 @@ as a view by default. Usually one version 1 sat would be created for each versio
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 sat_v0: 'account_data_sfdc_0_s'
 hashkey: 'hk_account_h'
@@ -40,6 +45,7 @@ hashdiff: 'hd_account_data_sfdc_s'
 {%- endset -%}
 
 {{ datavault4dbt.sat_v1(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

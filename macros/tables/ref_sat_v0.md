@@ -9,12 +9,14 @@ Reference Hub via the reference key.
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.ref_sat_v0(
     parent_ref_keys='country_code',
     src_hashdiff='hd_country_rs',
     src_payload=['country_name', 'continent', 'region'],
     source_model='stg_country'
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -23,6 +25,7 @@ Reference Hub via the reference key.
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 parent_ref_keys: 'country_code'
 src_hashdiff: 'hd_country_rs'
@@ -34,6 +37,7 @@ source_model: 'stg_country'
 {%- endset -%}
 
 {{ datavault4dbt.ref_sat_v0(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

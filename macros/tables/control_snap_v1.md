@@ -19,6 +19,7 @@ applied to each PIT table to remove inactive records.
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.control_snap_v1(
     control_snap_v0='control_snap_v0',
     log_logic={
@@ -28,6 +29,7 @@ applied to each PIT table to remove inactive records.
         'yearly':  {'forever': 'TRUE'}
     }
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -36,6 +38,7 @@ applied to each PIT table to remove inactive records.
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 control_snap_v0: 'control_snap_v0'
 log_logic:
@@ -53,6 +56,7 @@ log_logic:
 {%- endset -%}
 
 {{ datavault4dbt.control_snap_v1(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

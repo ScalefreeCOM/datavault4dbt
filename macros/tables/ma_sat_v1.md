@@ -15,23 +15,27 @@ Features:
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.ma_sat_v1(
     sat_v0='contact_phonenumber_0_s',
     hashkey='hk_contact_h',
     hashdiff='hd_contact_phonenumber_s',
     ma_attribute='phone_type'
 ) }}
+{% endraw %}
 ```
 
 ### With composite multi-active attribute
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.ma_sat_v1(
     sat_v0='contact_phonenumber_0_s',
     hashkey='hk_contact_h',
     hashdiff='hd_contact_phonenumber_s',
     ma_attribute=['phone_type', 'iid']
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -40,6 +44,7 @@ Features:
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 sat_v0: 'contact_phonenumber_0_s'
 hashkey: 'hk_contact_h'
@@ -48,6 +53,7 @@ ma_attribute: 'phone_type'
 {%- endset -%}
 
 {{ datavault4dbt.ma_sat_v1(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

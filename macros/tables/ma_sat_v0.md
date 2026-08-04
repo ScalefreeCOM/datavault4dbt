@@ -17,6 +17,7 @@ Features:
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.ma_sat_v0(
     parent_hashkey='hk_contact_h',
     src_hashdiff='hd_contact_phonenumber_s',
@@ -24,11 +25,13 @@ Features:
     src_payload=['phone_number', 'is_primary'],
     source_model='stage_contact'
 ) }}
+{% endraw %}
 ```
 
 ### With composite multi-active key
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.ma_sat_v0(
     parent_hashkey='hk_contact_h',
     src_hashdiff='hd_contact_phonenumber_s',
@@ -36,6 +39,7 @@ Features:
     src_payload=['phone_number'],
     source_model='stage_contact'
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -44,6 +48,7 @@ Features:
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 parent_hashkey: 'hk_contact_h'
 src_hashdiff: 'hd_contact_phonenumber_s'
@@ -55,6 +60,7 @@ source_model: 'stage_contact'
 {%- endset -%}
 
 {{ datavault4dbt.ma_sat_v0(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

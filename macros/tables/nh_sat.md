@@ -12,11 +12,13 @@ Features:
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.nh_sat(
     parent_hashkey='hk_account_h',
     src_payload=['name', 'address', 'country', 'phone', 'email'],
     source_model='stage_account'
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -25,6 +27,7 @@ Features:
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 parent_hashkey: 'hk_account_h'
 src_payload:
@@ -37,6 +40,7 @@ source_model: 'stage_account'
 {%- endset -%}
 
 {{ datavault4dbt.nh_sat(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

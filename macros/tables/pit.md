@@ -16,6 +16,7 @@ Features:
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.pit(
     tracked_entity='account_h',
     hashkey='hk_account_h',
@@ -26,6 +27,7 @@ Features:
     snapshot_relation='control_snap_v1',
     dimension_key='hk_account_h_d'
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -34,6 +36,7 @@ Features:
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 tracked_entity: 'account_h'
 hashkey: 'hk_account_h'
@@ -45,6 +48,7 @@ dimension_key: 'hk_account_h_d'
 {%- endset -%}
 
 {{ datavault4dbt.pit(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

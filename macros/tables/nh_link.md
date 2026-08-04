@@ -12,6 +12,7 @@ descriptive attributes as additional payload.
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.nh_link(
     link_hashkey='hk_transaction_account_nl',
     foreign_hashkeys=['hk_transaction_h', 'hk_account_h'],
@@ -22,6 +23,7 @@ descriptive attributes as additional payload.
         }
     }
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -30,6 +32,7 @@ descriptive attributes as additional payload.
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 link_hashkey: 'hk_transaction_account_nl'
 foreign_hashkeys:
@@ -46,6 +49,7 @@ source_models:
 {%- endset -%}
 
 {{ datavault4dbt.nh_link(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}

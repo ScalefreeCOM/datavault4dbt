@@ -9,6 +9,7 @@ but is used to classify and enrich other entities.
 ### Usage
 
 ```jinja
+{% raw %}
 {{ datavault4dbt.ref_hub(
     ref_keys='country_code',
     source_models={
@@ -18,6 +19,7 @@ but is used to classify and enrich other entities.
         }
     }
 ) }}
+{% endraw %}
 ```
 
 ### Metadata block usage
@@ -26,6 +28,7 @@ but is used to classify and enrich other entities.
 `set` block in the model SQL file — the macro parses the YAML string at runtime:
 
 ```jinja
+{% raw %}
 {%- set meta -%}
 ref_keys: 'country_code'
 source_models:
@@ -35,6 +38,7 @@ source_models:
 {%- endset -%}
 
 {{ datavault4dbt.ref_hub(yaml_metadata=meta) }}
+{% endraw %}
 ```
 
 {% enddocs %}
