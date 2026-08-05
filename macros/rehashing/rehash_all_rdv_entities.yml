@@ -11,7 +11,7 @@ macros:
           satellites, multi-active satellites, and non-historized satellites. This YAML is used to drive the 
           rehash process for all specified entities.
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: >
           A boolean flag that determines whether to drop the old hashkey columns after the rehash operation. 
           If set to `true`, the old hashkey columns are dropped. If set to `false`, they are retained with a 

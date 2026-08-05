@@ -1,0 +1,91 @@
+version: 2
+
+macros:
+  - name: sat_v0
+    description: '{{ doc("sat_v0") }}'
+    arguments:
+      - name: yaml_metadata
+        type: string
+        description: >
+          Optional. A YAML-formatted string that defines all parameters in a single block instead
+          of specifying each one directly in the macro call.
+      - name: parent_hashkey
+        type: string
+        description: >
+          Name of the hashkey column inside the stage of the object that this satellite is attached to.
+          Examples: 'hk_account_h' (attached to hub account), 'hk_account_contact_l' (attached to a link).
+      - name: src_hashdiff
+        type: string
+        description: >
+          Name of the hashdiff column of this satellite, that was created inside the staging area and is
+          calculated out of the entire payload of this satellite. The stage must hold one hashdiff per
+          satellite entity. Examples: 'hd_account_data_sfdc_s'.
+      - name: src_payload
+        type: list[string]
+        description: >
+          A list of all the descriptive attributes that should be included in this satellite. Needs to be the
+          columns that are fed into the hashdiff calculation of this satellite.
+          Examples: ['name', 'address', 'country', 'phone', 'email'].
+      - name: source_model
+        type: string
+        description: >
+          Name of the underlying staging model, must be available inside dbt as a model.
+          Examples: 'stage_account' — This satellite is loaded out of the stage for account.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: disable_hwm
+        type: bool
+        description: >
+          Whether the High Water Mark should be turned off. Optional, default False.
+      - name: source_is_single_batch
+        type: bool
+        description: >
+          Whether the source contains only one batch. Optional, default False.
+      - name: additional_columns
+        type: any
+        description: >
+          Additional columns from source system or derived columns which should be part of the Sat.
+          The columns need to be available in all source models. Optional parameter, defaults to empty list.
+
+  - name: snowflake__sat_v0
+    description: Snowflake-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: databricks__sat_v0
+    description: Databricks-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: exasol__sat_v0
+    description: Exasol-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: fabric__sat_v0
+    description: Microsoft Fabric-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: oracle__sat_v0
+    description: Oracle-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: postgres__sat_v0
+    description: PostgreSQL-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: redshift__sat_v0
+    description: Amazon Redshift-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: sqlserver__sat_v0
+    description: SQL Server-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: synapse__sat_v0
+    description: Azure Synapse Analytics-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: trino__sat_v0
+    description: Trino-specific implementation of sat_v0. Accepts the same arguments as the parent sat_v0 macro.
+
+  - name: default__sat_v0
+    description: >
+      Default implementation of sat_v0, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent sat_v0 macro.
