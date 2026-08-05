@@ -31,6 +31,13 @@ vars:
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   datavault4dbt.hashdiff_use_trim: TRUE
 
+  # Datatypes that the hash inputs are casted to, before they are handed over to the hash function.
+  # 'attribute' applies to one single column, 'concat' applies to the fully concatenated payload.
+  # Multi Active Satellites are not affected by these variables, they keep the hardcoded datatype.
+  # CAUTION: A datatype shorter than the actual hash input truncates it silently, which changes the resulting hashes.
+  datavault4dbt.hash_input_attribute_dtype: {"bigquery":"STRING","snowflake":"STRING", "exasol": "VARCHAR(20000) UTF8", "postgres": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle":"VARCHAR2(2000)", databricks: "STRING", trino: "VARCHAR", "sqlserver": "VARCHAR(MAX)"}
+  datavault4dbt.hash_input_concat_dtype: {"bigquery":"STRING","snowflake":"STRING", "exasol": "VARCHAR(2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle":"VARCHAR2(2000)", databricks: "STRING", trino: "VARCHAR", "sqlserver": "VARCHAR(MAX)"}
+
   # Delimiters used when concatenating columns before hashing
   datavault4dbt.concat_string: '||'
   datavault4dbt.quote_character: '"'

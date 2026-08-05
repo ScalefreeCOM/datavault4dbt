@@ -59,6 +59,14 @@ All the following variables are **prefixed with `datavault4dbt`**.
 | concat_string_replacement      | Stage | Token substituted for any occurrence of `concat_string` found *inside* the input data, so real values can never collide with the structural delimiter. Defaults to `dv4dbt-concat-replacement`. |
 | quote_character_replacement    | Stage | Token substituted for any occurrence of `quote_character` found *inside* the input data. Defaults to `dv4dbt-quote-replacement`. |
 | null_placeholder_string_replacement | Stage | Token substituted for any occurrence of `null_placeholder_string` found *inside* the input data. Defaults to `dv4dbt-null-replacement`. |
+| hash_input_attribute_dtype     | Stage | A mapping dictionary that defines, per database adapter, the datatype that a **single input column** is casted to inside `attribute_standardise`, before it is concatenated. |
+| hash_input_concat_dtype        | Stage | A mapping dictionary that defines, per database adapter, the datatype that the **fully concatenated payload** is casted to inside `concattenated_standardise`, before it is hashed. |
+
+Multi Active Satellites are **not** affected by either variable. Their payload is aggregated across all active records of one group before it is hashed, which makes a shortened datatype much more likely to be exceeded, so `multi_active_concattenated_standardise` keeps its hardcoded datatype. This lets you shorten the cast for all non-multi-active entities without putting your Multi Active Satellites at risk.
+
+:::warning
+Shortening `hash_input_attribute_dtype` or `hash_input_concat_dtype` below the actual length of your hash input truncates that input silently on most adapters. Truncated input produces different hash values, and two rows that only differ behind the truncation point collapse into the same hashkey or hashdiff. Only lower these values if you are certain that your concatenated input stays below the chosen limit, and treat any later change as a full reload of the affected entities.
+:::
 
 ### STAGE CONFIGURATION
 
