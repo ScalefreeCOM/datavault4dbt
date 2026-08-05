@@ -4,7 +4,7 @@
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 
-{%- set ns = namespace(last_cte= "") -%}
+{%- set ns = namespace(last_cte="", use_subquery_hwm=false) -%}
 
 {%- set source_relation = ref(source_model) -%}
 
@@ -26,9 +26,13 @@
 {# Get max(ldts) #}
 {% if execute %}
     {%- if is_incremental() and not disable_hwm %}
-        {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
-        {% set max_ldts_results = run_query(max_ldts_query) %}
-        {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+        {%- if '__dbt__cte__' in (this | string | lower) -%}
+            {%- set ns.use_subquery_hwm = true -%}
+        {%- else -%}
+            {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
+            {% set max_ldts_results = run_query(max_ldts_query) %}
+            {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+        {%- endif %}
     {%- endif %}
 {% endif %}
 
@@ -52,7 +56,15 @@ source_data AS (
     FROM {{ source_relation }} src
     WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
     {%- if is_incremental() and not disable_hwm %}
+    {%- if ns.use_subquery_hwm %}
+    AND src.{{ src_ldts }} > (
+        SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
+        FROM {{ this }}
+        WHERE {{ src_ldts }} < {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    )
+    {%- else %}
     AND src.{{ src_ldts }} > '{{ max_ldts }}'
+    {%- endif %}
     {%- endif %}
 ),
 

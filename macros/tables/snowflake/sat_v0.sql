@@ -9,7 +9,7 @@
 {%- set payload_count = src_payload | length -%}
 {%- set has_hashdiff = src_hashdiff is not none and src_hashdiff != '' -%}
 
-{%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
+{%- set ns=namespace(src_hashdiff="", hdiff_alias="", use_subquery_hwm=false) %}
 
 {%- if has_hashdiff -%}
     {%- if src_hashdiff is mapping -%}
@@ -34,9 +34,13 @@
 {# Get max(ldts) #}
 {% if execute %}
     {%- if is_incremental() and not disable_hwm %}
-        {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
-        {% set max_ldts_results = run_query(max_ldts_query) %}
-        {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+        {%- if '__dbt__cte__' in (this | string | lower) -%}
+            {%- set ns.use_subquery_hwm = true -%}
+        {%- else -%}
+            {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
+            {% set max_ldts_results = run_query(max_ldts_query) %}
+            {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+        {%- endif %}
     {%- endif %}
 {% endif %}
 
@@ -56,7 +60,15 @@ source_data AS (
     FROM {{ source_relation }}
 
     {%- if is_incremental() and not disable_hwm %}
+    {%- if ns.use_subquery_hwm %}
+    WHERE {{ src_ldts }} > (
+        SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
+        FROM {{ this }}
+        WHERE {{ src_ldts }} < {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+    )
+    {%- else %}
     WHERE {{ src_ldts }} > '{{ max_ldts }}'
+    {%- endif %}
     {%- endif %}
 
     {%- set last_cte = 'source_data' -%}
