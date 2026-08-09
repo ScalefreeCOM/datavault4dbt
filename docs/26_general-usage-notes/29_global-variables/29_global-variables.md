@@ -88,6 +88,15 @@ All the following variables are **prefixed with `datavault4dbt`**.
 | stg_default_dtype              | Record Tracking Satellite     | The default datatype for the `stg_alias` column inside a record tracking satellite. |
 | derived_columns_default_dtype  | Stage                         | The default datatype for derived columns, if no other datatype can be detected automatically. |
 
+### CLOCKTICK CONFIGURATION
+
+| Name                           | Usage                         | Explanation |
+|--------------------------------|-------------------------------|-------------|
+| clocktick_unit                 | v1- & pit-macros                         | The unit of time used for clocktick operations (e.g. the unit of time that is subtracted when calculating the end-ldts based on the "next" ldts for the corresponding hashkey in a satellite). |
+| clocktick_step_size            | v1- & pit-macros                         | The step size used for clocktick operations described above. |
+
+It is advised that the format of your ldts corresponds to the chosen clocktick settings. For example, if your ldts is a timestamp with the granularity of seconds, you should set your clocktick to 1 second. 
+
 ### DATATYPE SPECIFIC DEFAULT VALUES
 
 For each datatype there is a default unknown and error value defined. Additionally, an alternative, usually much shorter value is defined. See the applied default values in the table below.

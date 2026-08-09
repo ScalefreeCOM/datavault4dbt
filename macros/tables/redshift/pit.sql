@@ -76,7 +76,7 @@ FROM {{ ref(tracked_entity) }} te
             {{ hashkey }},
             {{ ldts }},
             COALESCE(
-                LEAD({{ ldts }} - interval '00:00:00.000001') OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),
+                LEAD({{ datavault4dbt.subtract_clocktick(ldts) }}) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),
                 {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             ) AS {{ ledts }}
         FROM {{ ref(satellite) }}
