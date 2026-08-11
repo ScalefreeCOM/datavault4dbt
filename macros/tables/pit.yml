@@ -1,0 +1,114 @@
+version: 2
+
+macros:
+  - name: pit
+    description: '{{ doc("pit") }}'
+    arguments:
+      - name: yaml_metadata
+        type: string
+        description: >
+          Optional. A YAML-formatted string that defines all parameters in a single block instead
+          of specifying each one directly in the macro call.
+      - name: tracked_entity
+        type: string
+        description: >
+          Name of the tracked Hub entity. Must be available as a model inside the dbt project.
+      - name: hashkey
+        type: string
+        description: >
+          The name of the hashkey column inside the previously referred Hub entity.
+      - name: sat_names
+        type: list[string]
+        description: >
+          A list of all the satellites that should be included in this PIT table. Can only be satellites that
+          are attached to the tracked Hub, and should typically include all those satellites. You should always
+          refer here to the version 1 satellites, since those hold the load-end-date. The macro currently
+          supports regular satellites and nh-satellites.
+      - name: snapshot_relation
+        type: string
+        description: >
+          The name of the snapshot relation. It needs to be available as a model inside this dbt project.
+      - name: dimension_key
+        type: string
+        description: >
+          The desired name of the dimension key inside the PIT table. Should follow some naming conventions.
+          Recommended is the name of the hashkey with a '_d' suffix.
+      - name: snapshot_trigger_column
+        type: string
+        description: >
+          The name of the column inside the previously mentioned snapshot relation, that is boolean and identifies
+          the snapshots that should be included in the PIT table.
+      - name: ldts
+        type: string
+        description: >
+          Name of the ldts column inside all source models. Is optional, will use the global variable
+          'datavault4dbt.ldts_alias'. Needs to use the same column name as defined as alias inside the staging model.
+      - name: custom_rsrc
+        type: string
+        description: >
+          A custom string that should be inserted into the 'rsrc' column inside the PIT table. Since a PIT table
+          is a business vault entity, the technical record source is no longer used here. Is optional, if not
+          defined, no column is added.
+      - name: ledts
+        type: string
+        description: >
+          Name of the load-end-date column inside the satellites. Is optional, will use the global variable
+          'datavault4dbt.ledts_alias' if not set here.
+      - name: sdts
+        type: string
+        description: >
+          Name of the snapshot date timestamp column inside the snapshot table. It is optional, will use the
+          global variable 'datavault4dbt.sdts_alias' if not set here.
+      - name: pit_type
+        type: string
+        description: >
+          String to insert into the 'pit_type' column. Has to be prefixed by a !. Can be set freely, something
+          like 'PIT' could be the default. Is optional, if not set, no column will be added.
+      - name: refer_to_ghost_records
+        type: bool
+        description: >
+          Value to define if a NULL satellite hashkey should be replaced by the unknown key.
+          Optional parameter, default is True.
+      - name: snapshot_optimization
+        type: bool
+        description: >
+          If set to True, and if the model is run in incremental mode, only the relevant snapshots
+          (i.e. those that are newer than or equal to the max sdts in the existing PIT table) will be considered.
+          This can significantly improve performance of incremental loads on large snapshot tables. If set to True,
+          the model needs to be configured with a unique_key constraint as there may be updates due to late arriving data.
+          Affected Adapters: Snowflake only! Optional parameter, default is False.
+
+  - name: snowflake__pit
+    description: Snowflake-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: databricks__pit
+    description: Databricks-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: exasol__pit
+    description: Exasol-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: fabric__pit
+    description: Microsoft Fabric-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: oracle__pit
+    description: Oracle-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: postgres__pit
+    description: PostgreSQL-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: redshift__pit
+    description: Amazon Redshift-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: sqlserver__pit
+    description: SQL Server-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: synapse__pit
+    description: Azure Synapse Analytics-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: trino__pit
+    description: Trino-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
+  - name: default__pit
+    description: >
+      Default implementation of pit, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent pit macro.

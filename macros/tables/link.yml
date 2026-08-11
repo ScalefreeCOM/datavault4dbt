@@ -1,0 +1,87 @@
+version: 2
+
+macros:
+  - name: link
+    description: '{{ doc("link") }}'
+    arguments:
+      - name: yaml_metadata
+        type: string
+        description: >
+          Optional. A YAML-formatted string that defines all parameters in a single block instead
+          of specifying each one directly in the macro call.
+      - name: link_hashkey
+        type: string
+        description: >
+          Name of the link hashkey column inside the stage. Should get calculated out of all business keys inside the link.
+          Examples: 'hk_account_contact_l' — This hashkey column belongs to the link between account and contact, and
+          was created at the staging layer by the stage macro.
+      - name: foreign_hashkeys
+        type: list[string]
+        description: >
+          List of all hashkey columns inside the link, that refer to other hub entities. All hashkey columns must
+          be available inside the stage area.
+          Examples: ['hk_account_h', 'hk_contact_h'] — The link between account and contact needs to contain both
+          the hashkey of account and contact to enable joins to the corresponding hub entities.
+      - name: source_models
+        type: dict[string, dict[string, any]]
+        description: >
+          Dictionary with information about the source models. The keys of the dict are the names of the source models,
+          and the value of each source model is another dictionary. This inner dictionary requires the key 'rsrc_static',
+          and optionally the keys 'hk_column' and 'fk_columns'. The 'rsrc_static' attribute defines a STRING or list of
+          strings containing all the patterns of the record_source field that remain the same over all loads of one source.
+          Wildcards (e.g. '*') can be used to match variable parts.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: disable_hwm
+        type: bool
+        description: >
+          Whether the High Water Mark should be turned off. Optional, default False.
+      - name: additional_columns
+        type: any
+        description: >
+          Additional columns from source system or derived columns which should be part of Link. Useful when you have to
+          deviate from the default Link structure. The columns need to be available in all source models which are used
+          for the Link. Optional parameter, defaults to empty list.
+
+  - name: snowflake__link
+    description: Snowflake-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: databricks__link
+    description: Databricks-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: exasol__link
+    description: Exasol-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: fabric__link
+    description: Microsoft Fabric-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: oracle__link
+    description: Oracle-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: postgres__link
+    description: PostgreSQL-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: redshift__link
+    description: Amazon Redshift-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: sqlserver__link
+    description: SQL Server-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: synapse__link
+    description: Azure Synapse Analytics-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: trino__link
+    description: Trino-specific implementation of link. Accepts the same arguments as the parent link macro.
+
+  - name: default__link
+    description: >
+      Default implementation of link, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent link macro.

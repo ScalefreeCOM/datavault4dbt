@@ -22,7 +22,7 @@ macros:
                   - c_custkey
             ```
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: >
           Whether to drop the old hashkey columns after rehashing.
           If true, the old hashkeys are dropped. If false, they are renamed with a "_deprecated" suffix.
@@ -67,7 +67,7 @@ macros:
                     business_keys:
                       - c_custkey
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: >
           Whether to drop the old hashkey columns after rehashing.
           If true, the old hashkeys are dropped. If false, they are renamed with a "_deprecated" suffix.
@@ -96,7 +96,7 @@ macros:
                 business_keys: C_CUSTKEY
             ```
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: >
           Whether to drop the old hashkey and hashdiff columns after rehashing.
           If true, the old columns are dropped. If false, they are renamed with a "_deprecated" suffix.
@@ -121,7 +121,7 @@ macros:
                 parent_entity: order_customer_nl
             ```
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: >
           Whether to drop the old hashkey column after rehashing.
           If true, the old column is dropped. If false, it is renamed with a "_deprecated" suffix.
@@ -153,7 +153,7 @@ macros:
                   - C_CUSTKEY
             ```
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: >
           Whether to drop the old hashkey and hashdiff columns after rehashing.
           If true, the old columns are dropped. If false, they are renamed with a "_deprecated" suffix.

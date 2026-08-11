@@ -1,0 +1,91 @@
+version: 2
+
+macros:
+  - name: ma_sat_v1
+    description: '{{ doc("ma_sat_v1") }}'
+    arguments:
+      - name: yaml_metadata
+        type: string
+        description: >
+          Optional. A YAML-formatted string that defines all parameters in a single block instead
+          of specifying each one directly in the macro call.
+      - name: sat_v0
+        type: string
+        description: >
+          Name of the underlying version 0 multi-active satellite.
+          Examples: 'contact_phonenumber_0_s' — This satellite would be the version 1 satellite of the underlying
+          version 0 phone number satellite for contacts.
+      - name: hashkey
+        type: string
+        description: >
+          Name of the parent hashkey column inside the version 0 satellite. Would either be the hashkey of a
+          hub or a link. Needs to be similar to the 'parent_hashkey' parameter inside the sat_v0 model.
+          Examples: 'hk_contact_h' (hub), 'hk_order_contact_l' (link).
+      - name: hashdiff
+        type: string
+        description: >
+          Name of the hashdiff column inside the underlying version 0 satellite. Needs to be similar to the
+          'src_hashdiff' parameter inside the sat_v0 model. Must not include the ma_attribute in calculation.
+          Examples: 'hd_contact_phonenumber_s'.
+      - name: ma_attribute
+        type: any
+        description: >
+          Name of the multi active attribute inside the v0 satellite. This needs to be identified under the
+          requirement that the combination of hashkey + ldts + ma_attribute is unique over the entire stage/satellite.
+          Examples: 'phone_type' (single), ['phone_type', 'iid'] (composite — needed when multiple records share the same phone_type).
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: ledts_alias
+        type: string
+        description: >
+          Desired alias for the load end date column. Is optional, will use the global variable 'datavault4dbt.ledts_alias'
+          if not set here.
+      - name: add_is_current_flag
+        type: bool
+        description: >
+          Optional parameter to add a new column to the v1 sat based on the load end date timestamp (ledts). Default is false.
+          If set to true it will add this is_current flag to the v1 sat. For each record this column will be set to true if
+          the load end date timestamp is equal to the variable end of all times. If not, the record is not current.
+
+  - name: snowflake__ma_sat_v1
+    description: Snowflake-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: databricks__ma_sat_v1
+    description: Databricks-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: exasol__ma_sat_v1
+    description: Exasol-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: fabric__ma_sat_v1
+    description: Microsoft Fabric-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: oracle__ma_sat_v1
+    description: Oracle-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: postgres__ma_sat_v1
+    description: PostgreSQL-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: redshift__ma_sat_v1
+    description: Amazon Redshift-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: sqlserver__ma_sat_v1
+    description: SQL Server-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: synapse__ma_sat_v1
+    description: Azure Synapse Analytics-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: trino__ma_sat_v1
+    description: Trino-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
+  - name: default__ma_sat_v1
+    description: >
+      Default implementation of ma_sat_v1, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent ma_sat_v1 macro.
