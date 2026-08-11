@@ -22,6 +22,10 @@
 
 {%- macro default__hash_input_dtype(type) %}
 
+    {%- if type not in ['attribute', 'concat'] -%}
+        {%- do exceptions.raise_compiler_error("hash_input_dtype: type must be 'attribute' or 'concat', got: " ~ type) -%}
+    {%- endif -%}
+
     {%- if type == 'attribute' -%}
         {%- set var_name = 'datavault4dbt.hash_input_attribute_dtype' -%}
         {%- set fallbacks = {"bigquery": "STRING", "snowflake": "STRING", "exasol": "VARCHAR(20000) UTF8", "postgres": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle": "VARCHAR2(2000)", "databricks": "STRING", "trino": "VARCHAR", "sqlserver": "VARCHAR(MAX)"} -%}
