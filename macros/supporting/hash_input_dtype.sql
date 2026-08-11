@@ -31,23 +31,23 @@
     {%- endif -%}
 
     {%- set global_var = var(var_name, none) -%}
+    {%- set adapter_name = (target.type | lower) -%}
+    {%- set hash_input_dtype = none -%}
 
-    {%- if global_var is mapping and target.type in global_var.keys()|map('lower') -%}
-
-        {%- set hash_input_dtype = global_var[target.type] -%}
-
-    {%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
-
-        {%- set hash_input_dtype = global_var -%}
-
-    {%- else -%}
-
-        {%- set hash_input_dtype = fallbacks.get(target.type, 'STRING') -%}
-
-        {%- if execute -%}
-            {%- do exceptions.warn("Warning: Adapter '"~ target.type ~"' not found in '" ~ var_name ~ "' variable. Defaulting to '" ~ hash_input_dtype ~ "'.") -%}
+    {%- if global_var is mapping -%}
+        {%- set hash_input_dtype = global_var.get(adapter_name) -%}
+        {%- if hash_input_dtype is none -%}
+            {%- set hash_input_dtype = global_var.get(target.type) -%}
         {%- endif -%}
+    {%- elif datavault4dbt.is_something(global_var) -%}
+        {%- set hash_input_dtype = global_var -%}
+    {%- endif -%}
 
+    {%- if not datavault4dbt.is_something(hash_input_dtype) -%}
+        {%- set hash_input_dtype = fallbacks.get(adapter_name, 'STRING') -%}
+        {%- if execute and global_var is mapping -%}
+            {%- do exceptions.warn("Warning: Adapter '" ~ target.type ~ "' not found in '" ~ var_name ~ "' variable. Defaulting to '" ~ hash_input_dtype ~ "'.") -%}
+        {%- endif -%}
     {%- endif -%}
 
     {{ return(hash_input_dtype) }}
