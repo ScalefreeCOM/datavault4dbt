@@ -1,10 +1,10 @@
-{%- macro multikey(columns, prefix=none, condition=none, operator='AND', right_columns=none, null_safe=false) -%}
+{%- macro multikey(columns, prefix=none, condition=none, operator='AND', right_columns=none) -%}
 
-    {{- adapter.dispatch('multikey', 'datavault4dbt')(columns=columns, prefix=prefix, condition=condition, operator=operator, right_columns=right_columns, null_safe=null_safe) -}}
+    {{- adapter.dispatch('multikey', 'datavault4dbt')(columns=columns, prefix=prefix, condition=condition, operator=operator, right_columns=right_columns) -}}
 
 {%- endmacro %}
 
-{%- macro default__multikey(columns, prefix=none, condition=none, operator='AND', right_columns=none, null_safe=false) -%}
+{%- macro default__multikey(columns, prefix=none, condition=none, operator='AND', right_columns=none) -%}
 
     {%- if prefix is string -%}
         {%- set prefix = [prefix] -%}
@@ -32,13 +32,7 @@
     {%- if condition in ['<>', '!=', '='] -%}
         {%- for col in columns -%}
             {%- if prefix -%}
-                {%- set left = datavault4dbt.prefix([col], prefix[0], alias_target='target') -%}
-                {%- set right = datavault4dbt.prefix([right_columns[loop.index0]], prefix[1]) -%}
-                {%- if null_safe and condition == '=' -%}
-                    ({{ left }} {{ condition }} {{ right }} OR ({{ left }} IS NULL AND {{ right }} IS NULL))
-                {%- else -%}
-                    {{ left }} {{ condition }} {{ right }}
-                {%- endif -%}
+                {{- datavault4dbt.prefix([col], prefix[0], alias_target='target') }} {{ condition }} {{ datavault4dbt.prefix([right_columns[loop.index0]], prefix[1]) -}}
             {%- endif %}
             {%- if not loop.last %} {{ operator }} {% endif -%}
         {% endfor -%}

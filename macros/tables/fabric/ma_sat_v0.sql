@@ -27,7 +27,6 @@
 {%- set ns.src_hashdiff = datavault4dbt.escape_column_names(ns.src_hashdiff) -%}
 {%- set ns.hdiff_alias = datavault4dbt.escape_column_names(ns.hdiff_alias) -%}
 {%- set src_ma_key = datavault4dbt.escape_column_names(src_ma_key) -%}
-{%- set src_ma_key_list = [src_ma_key] if src_ma_key is string else src_ma_key -%}
 {%- set src_payload = datavault4dbt.escape_column_names(src_payload) -%}
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
@@ -62,8 +61,7 @@ latest_entries_in_sat_prep AS (
     SELECT
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }},
-        {{ datavault4dbt.print_list(src_ma_key_list) }},
-        ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }} DESC) as rn
+        ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) as rn
     FROM
         {{ this }}
 ),
@@ -72,8 +70,7 @@ latest_entries_in_sat AS (
 
     SELECT
         {{ parent_hashkey }},
-        {{ ns.hdiff_alias }},
-        {{ datavault4dbt.print_list(src_ma_key_list) }}
+        {{ ns.hdiff_alias }}
     FROM
         latest_entries_in_sat_prep
     WHERE rn = 1
@@ -87,9 +84,8 @@ latest_entries_in_sat AS (
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(src_ma_key_list) }},
-    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias,
-    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as rn
+    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias,
+    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
   FROM source_data
 ),
 
@@ -98,7 +94,6 @@ deduped_row_hashdiff AS (
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(src_ma_key_list) }},
     rn
   FROM lag_source_data
   WHERE {{ ns.hdiff_alias }} != prev_ns_hdiff_alias OR prev_ns_hdiff_alias IS NULL
@@ -117,7 +112,6 @@ deduped_rows AS (
     ON {{ datavault4dbt.multikey(parent_hashkey, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(src_ldts, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
-    AND {{ datavault4dbt.multikey(src_ma_key, prefix=['source_data', 'deduped_row_hashdiff'], condition='=', null_safe=true) }}
 {% set source_cte = 'deduped_rows' %}
 ),
 {%- endif %}
@@ -140,7 +134,6 @@ records_to_insert AS (
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
-            AND {{ datavault4dbt.multikey(src_ma_key, prefix=['latest_entries_in_sat', source_cte], condition='=', null_safe=true) }}
             )
     {%- endif %}
 

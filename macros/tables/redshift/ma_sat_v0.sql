@@ -7,7 +7,6 @@
 {# Select the additional_columns and put them in an array. If additional_colums is none, then empty array #}
 {%- set additional_columns = additional_columns | default([],true) -%}
 {%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
-{%- set src_ma_key_list = [src_ma_key] if src_ma_key is string else src_ma_key -%}
 
 {%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
 {%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
@@ -53,11 +52,10 @@ latest_entries_in_sat AS (
 
     SELECT
         sat.{{ parent_hashkey }},
-        sat.{{ ns.hdiff_alias }},
-        {{ datavault4dbt.alias_all(columns=src_ma_key_list, prefix='sat') }}
+        sat.{{ ns.hdiff_alias }}
     FROM {{ this }} sat
     WHERE sat.{{ parent_hashkey }} IN (SELECT {{ parent_hashkey }} FROM source_data)
-    QUALIFY ROW_NUMBER() OVER(PARTITION BY sat.{{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY sat.{{ src_ldts }} DESC) = 1
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY sat.{{ parent_hashkey }} ORDER BY sat.{{ src_ldts }} DESC) = 1
 ),
 {%- endif %}
 
@@ -69,11 +67,10 @@ deduped_row_hashdiff AS (
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }},
-    {{ datavault4dbt.print_list(src_ma_key_list) }},
-    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) as rn
+    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
   FROM source_data redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
   QUALIFY CASE
-            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }}, {{ datavault4dbt.print_list(src_ma_key_list) }} ORDER BY {{ src_ldts }}) THEN FALSE
+            WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
             ELSE TRUE
           END
 ),
@@ -91,7 +88,6 @@ deduped_rows AS (
     ON {{ datavault4dbt.multikey(parent_hashkey, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(src_ldts, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
     AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['source_data', 'deduped_row_hashdiff'], condition='=') }}
-    AND {{ datavault4dbt.multikey(src_ma_key, prefix=['source_data', 'deduped_row_hashdiff'], condition='=', null_safe=true) }}
 
 {%- set source_cte = 'deduped_rows' -%}
 ),
@@ -115,7 +111,6 @@ records_to_insert AS (
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
-            AND {{ datavault4dbt.multikey(src_ma_key, prefix=['latest_entries_in_sat', source_cte], condition='=', null_safe=true) }}
             )
     {%- endif %}
 
