@@ -32,6 +32,31 @@
 
 {%- endmacro -%}
 
+{%- macro trino__process_columns_to_select(columns_list, exclude_columns_list) -%}
+    {% set columns_to_select = [] %}
+
+    {% if not datavault4dbt.is_list(columns_list) or not datavault4dbt.is_list(exclude_columns_list)  %}
+
+        {{- exceptions.raise_compiler_error("One or both arguments are not of list type.") -}}
+
+    {%- endif -%}
+
+    {%- if datavault4dbt.is_something(columns_list) and datavault4dbt.is_something(exclude_columns_list) -%}
+        {%- for col in columns_list -%}
+
+            {%- if col not in exclude_columns_list -%}
+                {%- do columns_to_select.append(col) -%}
+            {%- endif -%}
+
+        {%- endfor -%}
+    {%- elif datavault4dbt.is_something(columns_list) and not datavault4dbt.is_something(exclude_columns_list) %}
+        {% set columns_to_select = columns_list %}
+    {%- endif -%}
+
+    {%- do return(columns_to_select) -%}
+
+{%- endmacro -%}
+
     
 {%- macro fabric__process_columns_to_select(columns_list, exclude_columns_list) -%}
 
