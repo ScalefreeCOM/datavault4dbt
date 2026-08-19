@@ -1,0 +1,406 @@
+version: 2
+
+macros:
+  - name: beginning_of_all_times
+    description: >
+      Returns the configured beginning-of-all-times timestamp string used as the load date for
+      ghost records (unknown records). Reads the global variable 'datavault4dbt.beginning_of_all_times'.
+      Default value is '0001-01-01T00-00-01'. Dispatches per adapter.
+
+  - name: default__beginning_of_all_times
+    description: Default implementation of beginning_of_all_times. No arguments.
+
+  - name: beginning_of_all_times_date
+    description: >
+      Returns the configured beginning-of-all-times date string (date only, no time component)
+      used for ghost records. Reads the global variable 'datavault4dbt.beginning_of_all_times_date'.
+      Default value is '0001-01-01'. Dispatches per adapter.
+
+  - name: default__beginning_of_all_times_date
+    description: Default implementation of beginning_of_all_times_date. No arguments.
+
+  - name: current_timestamp
+    description: >
+      Returns the current timestamp expression for the target adapter. Wraps dbt.current_timestamp()
+      by default. Overrides exist for adapters that need a different syntax (e.g. Synapse, Fabric).
+      Dispatches per adapter.
+
+  - name: default__current_timestamp
+    description: Default implementation of current_timestamp using dbt.current_timestamp(). No arguments.
+
+  - name: synapse__current_timestamp
+    description: Synapse-specific implementation of current_timestamp using sysdatetime(). No arguments.
+
+  - name: fabric__current_timestamp
+    description: Fabric-specific implementation of current_timestamp returning CAST(SYSDATETIME() AS DATETIME2(6)). No arguments.
+
+  - name: current_timestamp_in_utc
+    description: >
+      Returns the current UTC timestamp expression for the target adapter. Overrides exist for
+      adapters that distinguish local time from UTC (e.g. Synapse, Fabric). Dispatches per adapter.
+
+  - name: default__current_timestamp_in_utc
+    description: Default implementation of current_timestamp_in_utc using dbt.current_timestamp(). No arguments.
+
+  - name: synapse__current_timestamp_in_utc
+    description: Synapse-specific implementation of current_timestamp_in_utc using sysutcdatetime(). No arguments.
+
+  - name: fabric__current_timestamp_in_utc
+    description: Fabric-specific implementation of current_timestamp_in_utc using sysutcdatetime(). No arguments.
+
+  - name: type_timestamp
+    description: >
+      Returns the adapter-appropriate SQL data type keyword for timestamp columns. Default is
+      dbt.type_timestamp(). Overrides exist for adapters that use non-standard keyword spellings
+      (e.g. Synapse, Fabric, SQL Server). Dispatches per adapter.
+
+  - name: default__type_timestamp
+    description: Default implementation of type_timestamp using dbt.type_timestamp(). No arguments.
+
+  - name: synapse__type_timestamp
+    description: Synapse-specific implementation of type_timestamp returning 'datetime2'. No arguments.
+
+  - name: fabric__type_timestamp
+    description: Fabric-specific implementation of type_timestamp returning 'datetime2(6)'. No arguments.
+
+  - name: sqlserver__type_timestamp
+    description: SQL Server-specific implementation of type_timestamp returning 'datetime2(7)'. No arguments.
+
+  - name: date_format
+    description: >
+      Returns the configured date format string used when parsing date values. Reads the global
+      variable 'datavault4dbt.date_format'. Default value is '%Y-%m-%d'. Dispatches per adapter.
+
+  - name: default__date_format
+    description: Default implementation of date_format. No arguments.
+
+  - name: end_of_all_times
+    description: >
+      Returns the configured end-of-all-times timestamp string used as the load end date for
+      active satellite records. Reads the global variable 'datavault4dbt.end_of_all_times'.
+      Default value is '8888-12-31T23-59-59'. Dispatches per adapter.
+
+  - name: default__end_of_all_times
+    description: Default implementation of end_of_all_times. No arguments.
+
+  - name: end_of_all_times_date
+    description: >
+      Returns the configured end-of-all-times date string (date only, no time component).
+      Reads the global variable 'datavault4dbt.end_of_all_times_date'.
+      Default value is '8888-12-31'. Dispatches per adapter.
+
+  - name: default__end_of_all_times_date
+    description: Default implementation of end_of_all_times_date. No arguments.
+
+  - name: first_day_of_week
+    description: >
+      Returns the configured first day of the week as an integer. Reads the global variable
+      'datavault4dbt.first_day_of_week'. Default value is 1 (Monday). Dispatches per adapter.
+
+  - name: default__first_day_of_week
+    description: Default implementation of first_day_of_week. No arguments.
+
+  - name: get_static_analysis_config
+    description: >
+      Returns a static analysis configuration override ('off' or none) for a given macro name
+      and target adapter. Used internally to suppress Snowpark static analysis warnings on
+      macros that generate dynamic SQL. Reads the global variable
+      'datavault4dbt.enable_static_analysis_overwrite'.
+    arguments:
+      - name: macro_name
+        type: string
+        description: The name of the macro to look up in the static analysis configuration.
+
+  - name: generate_schema_name
+    description: >
+      Overrides the dbt built-in generate_schema_name behaviour. If a custom_schema_name is
+      provided the schema name is used exactly as-is (no target schema prefix), otherwise the
+      target schema is used. This matches standard single-schema project conventions.
+    arguments:
+      - name: custom_schema_name
+        type: string
+        description: The custom schema name defined in the model config, or none.
+      - name: node
+        type: any
+        description: The dbt node object (passed by dbt internals, not set by users).
+
+  - name: get_distinct_value
+    description: >
+      Queries the given source relation and returns a single distinct value from the specified
+      column, optionally excluding a list of values. Used internally to resolve dynamic column
+      values at compile time. Dispatches per adapter.
+    arguments:
+      - name: source_relation
+        type: any
+        description: A dbt relation object pointing to the source table or view to query.
+      - name: column_name
+        type: string
+        description: The column from which to retrieve a distinct value.
+      - name: exclude_values
+        type: list[any]
+        description: Optional list of values to exclude from the result.
+
+  - name: default__get_distinct_value
+    description: Default implementation of get_distinct_value. Accepts the same arguments as the parent macro.
+
+  - name: get_field_hash_by_datatype
+    description: >
+      Compares hashed column names against the list of all columns in a relation to determine
+      each column's data type, then substitutes special type-aware expressions where needed
+      (e.g. DECODE for BOOLEAN, FNV_HASH(ST_AsBinary(...)) for GEOMETRY on Snowflake).
+      Returns the corrected list of hashed column expressions.
+    arguments:
+      - name: hashed_columns
+        type: list[string]
+        description: List of column name strings that will be included in a hash calculation.
+      - name: all_datatype_columns
+        type: list[column]
+        description: List of dbt Column objects representing all columns of the source relation.
+      - name: derived_columns
+        type: dict[string, dict[string, string]]
+        description: Optional dict of derived column definitions that may override the detected datatype.
+
+  - name: get_standard_string
+    description: >
+      Generates a BigQuery-specific SQL expression that concatenates a list of columns into a
+      standardised string, replacing NULL values with '^^' placeholders and trimming each value.
+    arguments:
+      - name: string_list
+        type: list[string]
+        description: List of column names to concatenate into the standardised string.
+
+  - name: ghost_record_per_datatype
+    description: >
+      Generates the SQL expression for a single ghost record column, rendering either the
+      unknown or the error ghost value appropriate for the column's data type. Adapts the
+      expression to the target platform via adapter dispatch.
+    arguments:
+      - name: column_name
+        type: string
+        description: The name of the column for which the ghost record value is generated.
+      - name: datatype
+        type: string
+        description: The SQL data type of the column (e.g. 'TIMESTAMP', 'VARCHAR', 'NUMBER').
+      - name: ghost_record_type
+        type: string
+        description: Whether to render the 'unknown' or the 'error' ghost record value.
+      - name: col_size
+        type: string
+        description: Optional column size, used for fixed-length character types.
+      - name: alias
+        type: string
+        description: Optional column alias in the generated expression. Defaults to column_name.
+
+  - name: default__ghost_record_per_datatype
+    description: Default implementation of ghost_record_per_datatype. Accepts the same arguments as the parent macro.
+
+  - name: hash
+    description: >
+      Generates the complete hash (hashkey or hashdiff) SQL expression for one or more columns.
+      Handles string standardisation, null replacement, concatenation, and the chosen hash
+      algorithm. Adapter-specific implementations handle platform differences in hash function
+      syntax. Dispatches per adapter.
+    arguments:
+      - name: columns
+        type: list[string]
+        description: List of column names or expressions to hash together.
+      - name: alias
+        type: string
+        description: The output column alias for the hash expression.
+      - name: is_hashdiff
+        type: bool
+        description: If true, generates a hashdiff expression. If false, generates a hashkey. Default is false.
+      - name: multi_active_key
+        type: any
+        description: Optional multi-active key configuration used in multi-active satellite hashing.
+      - name: main_hashkey_column
+        type: string
+        description: Optional name of the parent hashkey column, used in hashdiff calculations.
+      - name: use_trim
+        type: bool
+        description: >
+          Whether to trim string values before hashing. Defaults to the global variable
+          'datavault4dbt.hashdiff_use_trim' for hashdiffs, or true for hashkeys.
+      - name: rtrim_hashdiff
+        type: bool
+        description: If true, applies RTRIM to the final hashdiff concatenated string. Default is false.
+
+  - name: default__hash
+    description: Default implementation of hash. Accepts the same arguments as the parent hash macro.
+
+  - name: hash_default_values
+    description: >
+      Returns a JSON string containing the hash algorithm name and the pre-computed unknown
+      and error key values for the given hash function. Used to populate ghost record hash columns.
+      Dispatches per adapter.
+    arguments:
+      - name: hash_function
+        type: string
+        description: The hash function name to look up (e.g. 'MD5', 'SHA256').
+      - name: hash_datatype
+        type: string
+        description: Optional data type override for the hash column.
+
+  - name: default__hash_default_values
+    description: Default implementation of hash_default_values. Accepts the same arguments as the parent macro.
+
+  - name: hash_method
+    description: >
+      Returns the configured hash algorithm name for the target adapter. Reads the global
+      variable 'datavault4dbt.hash'. Default value is 'MD5'. Dispatches per adapter.
+
+  - name: default__hash_method
+    description: Default implementation of hash_method. No arguments.
+
+  - name: attribute_standardise
+    description: >
+      Generates the SQL expression that casts and standardises a single column value before
+      it is included in a hash calculation. Handles quoting, NULL replacement, and
+      platform-specific cast syntax. Dispatches per adapter.
+    arguments:
+      - name: hash_type
+        type: string
+        description: Optional hash type context passed through to the adapter implementation.
+      - name: use_trim
+        type: bool
+        description: Whether to apply TRIM to the cast expression. Default is true.
+
+  - name: default__attribute_standardise
+    description: Default implementation of attribute_standardise. Accepts the same arguments as the parent macro.
+
+  - name: limit_rows
+    description: >
+      Returns the adapter-appropriate SQL clause for limiting result rows in development
+      queries (e.g. 'TOP 100'). On Synapse and Fabric, returns an empty string when
+      target.schema == 'prod'. Dispatches per adapter.
+
+  - name: default__limit_rows
+    description: Default implementation of limit_rows returning 'TOP 100'. No arguments.
+
+  - name: max_datetime
+    description: >
+      Returns the maximum representable datetime literal string for the target adapter.
+      Used as a sentinel upper bound in date range calculations. Dispatches per adapter.
+
+  - name: default__max_datetime
+    description: Default implementation of max_datetime returning '9999-12-31 23:59:59.999999'. No arguments.
+
+  - name: filter_latest_entries_in_sat
+    description: >
+      Returns an optional SQL WHERE clause fragment that filters satellite queries to only
+      the latest entries for the current hashkeys. An empty string is returned on adapters
+      where this optimisation is not applicable. Dispatches per adapter.
+
+  - name: default__filter_latest_entries_in_sat
+    description: Default implementation of filter_latest_entries_in_sat returning an empty string. No arguments.
+
+  - name: prefix
+    description: >
+      Applies a table alias prefix to a list of column names or column alias mappings,
+      generating 'prefix.column' references for use in JOIN conditions or SELECT lists.
+      Handles plain column strings, list-of-lists, and alias dicts. Dispatches per adapter.
+    arguments:
+      - name: columns
+        type: list[any]
+        description: List of column names, nested lists, or alias dicts to prefix.
+      - name: prefix_str
+        type: string
+        description: The table alias to prepend (e.g. 'src', 'tgt').
+      - name: alias_target
+        type: string
+        description: >
+          For alias dicts, which side to prefix — 'source' uses the source_column,
+          'target' uses the alias. Default is 'source'.
+
+  - name: default__prefix
+    description: Default implementation of prefix. Accepts the same arguments as the parent prefix macro.
+
+  - name: source_model_should_be_selected
+    description: >
+      Returns true if the given source model name is present in the current dbt run's selected
+      resources. Used to implement execution-aware loading — skipping source models that were
+      not selected in the current run to avoid empty-join errors.
+    arguments:
+      - name: source_model_name
+        type: string
+        description: The dbt model name to check against the selected_resources list.
+
+  - name: source_model_processing
+    description: >
+      Normalises and enriches the source_models input into a standardised list of source
+      model dicts, resolving rsrc_static values, business keys, reference keys, and other
+      per-source metadata. Called internally by hub, link, satellite and reference macros
+      before rendering their SQL.
+    arguments:
+      - name: source_models
+        type: any
+        description: >
+          The raw source_models parameter as passed by the user — may be a string (single
+          source), a list of strings, or a dict mapping model names to per-source config dicts.
+      - name: set_rsrc_static
+        type: bool
+        description: Whether to resolve and validate rsrc_static values. Default is true.
+      - name: parameters
+        type: dict[string, any]
+        description: Additional per-source parameters merged into a single-source dict when source_models is a string.
+      - name: business_keys
+        type: any
+        description: Business key columns forwarded from the calling macro.
+      - name: reference_keys
+        type: any
+        description: Reference key columns forwarded from the calling macro.
+      - name: foreign_hashkeys
+        type: any
+        description: Foreign hashkey columns forwarded from the calling macro.
+      - name: payload
+        type: any
+        description: Payload columns forwarded from the calling macro.
+
+  - name: string_default_dtype
+    description: >
+      Returns the configured default string SQL data type for a given column category.
+      Reads the appropriate global variable (datavault4dbt.rsrc_default_dtype,
+      datavault4dbt.stg_default_dtype, or datavault4dbt.derived_columns_default_dtype)
+      based on the type argument. Default value is 'STRING'. Dispatches per adapter.
+    arguments:
+      - name: type
+        type: string
+        description: >
+          The column category to look up. Accepts 'rsrc', 'stg', or 'derived_columns'.
+
+  - name: default__string_default_dtype
+    description: Default implementation of string_default_dtype. Accepts the same arguments as the parent macro.
+
+  - name: string_to_timestamp
+    description: >
+      Converts a string literal to a timestamp using the adapter-appropriate SQL function and
+      the given format string. Used to render beginning_of_all_times and end_of_all_times
+      ghost record values as typed timestamp columns. Dispatches per adapter.
+    arguments:
+      - name: format
+        type: string
+        description: The timestamp format string (e.g. '%Y-%m-%dT%H-%M-%S').
+      - name: timestamp
+        type: string
+        description: The timestamp string literal to convert.
+
+  - name: default__string_to_timestamp
+    description: Default (BigQuery) implementation of string_to_timestamp using PARSE_TIMESTAMP. Accepts the same arguments as the parent macro.
+
+  - name: timestamp_default_dtype
+    description: >
+      Returns the configured default SQL data type for timestamp columns. Reads the global
+      variable 'datavault4dbt.timestamp_default_dtype'. Default value is 'TIMESTAMP'.
+      Dispatches per adapter.
+
+  - name: default__timestamp_default_dtype
+    description: Default implementation of timestamp_default_dtype. No arguments.
+
+  - name: timestamp_format
+    description: >
+      Returns the configured timestamp format string used when parsing timestamp literals.
+      Reads the global variable 'datavault4dbt.timestamp_format'. Default value is
+      '%Y-%m-%dT%H-%M-%S'. Dispatches per adapter.
+
+  - name: default__timestamp_format
+    description: Default implementation of timestamp_format. No arguments.
