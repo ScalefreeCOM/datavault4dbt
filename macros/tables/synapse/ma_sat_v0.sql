@@ -121,7 +121,7 @@ records_to_insert AS (
     FROM {{ source_cte }}
     {%- if is_incremental() %}
     WHERE
-        {%- if not source_is_single_batch %}
+        {%- if not source_is_single_batch and not disable_hwm %}
         {{ source_cte }}.rn > 1
         OR
         {%- endif %}
