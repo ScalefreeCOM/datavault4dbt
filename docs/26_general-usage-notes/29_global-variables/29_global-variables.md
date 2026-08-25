@@ -59,6 +59,21 @@ All the following variables are **prefixed with `datavault4dbt`**.
 | concat_string_replacement      | Stage | Token substituted for any occurrence of `concat_string` found *inside* the input data, so real values can never collide with the structural delimiter. Defaults to `dv4dbt-concat-replacement`. |
 | quote_character_replacement    | Stage | Token substituted for any occurrence of `quote_character` found *inside* the input data. Defaults to `dv4dbt-quote-replacement`. |
 | null_placeholder_string_replacement | Stage | Token substituted for any occurrence of `null_placeholder_string` found *inside* the input data. Defaults to `dv4dbt-null-replacement`. |
+| hash_input_attribute_dtype     | Stage | A mapping dictionary that defines, per database adapter, the datatype that a **single input column** is casted to inside `attribute_standardise`, before concatenation. Advanced. On T-SQL adapters a bounded value here also bounds the total payload, see the warning below. Leave at the default unless you have measured. |
+| hash_input_concat_dtype        | Stage | A mapping dictionary that defines, per database adapter, the datatype that the **fully concatenated payload** is casted to inside `concattenated_standardise`, before it is hashed. This is the variable to shorten if you want the performance benefit. |
+
+
+Multi Active Satellites are excluded from `hash_input_concat_dtype`: `multi_active_concattenated_standardise` keeps its hardcoded datatype, so their aggregated payload can never overflow `STRING_AGG`. They are **not** excluded from `hash_input_attribute_dtype`, which is shared with all other entities and applies per column, so a Multi Active Satellite needs the same width check as a regular Satellite.
+
+:::warning
+Shortening `hash_input_attribute_dtype` or `hash_input_concat_dtype` below the actual length of your hash input truncates that input silently on most adapters. Truncated input produces different hash values, and two rows that only differ behind the truncation point collapse into the same hashkey or hashdiff. Only lower these values if you are certain that your concatenated input stays below the chosen limit, and treat any later change as a full reload of the affected entities.
+:::
+
+:::danger
+On **sqlserver**, **synapse** and **fabric** the columns are joined with `CONCAT()` / `CONCAT_WS()`, and those functions derive their own maximum length from their arguments: the result is capped at 8000 characters unless at least one argument is an unbounded type. A bounded `hash_input_attribute_dtype` therefore bounds your **total** hash input, not the single column it is named after, and the later cast of the concatenated payload cannot recover what was already dropped.
+
+The safe per-column bound on those adapters is roughly `8000 / number_of_columns_in_the_hash`, not 8000. Twenty columns of 500 characters already exceed the limit, even though every column is far inside its own. Leave `hash_input_attribute_dtype` at its default unless you have measured the concatenated length of your widest entity, and re-measure whenever you add a column.
+:::
 
 ### STAGE CONFIGURATION
 
