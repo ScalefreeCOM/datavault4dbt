@@ -34,7 +34,9 @@
 {# Get max(ldts) #}
 {% if execute %}
     {%- if is_incremental() and not disable_hwm %}
-        {%- if '__dbt__cte__' in (this | string | lower) -%}
+        {%- if this is none -%}
+            {{ exceptions.raise_compiler_error("datavault4dbt: `this` is not available. If this is a unit test on an incremental model, add the model itself as a `given` input so dbt can populate `this`.") }}
+        {%- elif this is string -%}
             {%- set ns.use_subquery_hwm = true -%}
         {%- else -%}
             {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
