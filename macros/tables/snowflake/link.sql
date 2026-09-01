@@ -75,7 +75,7 @@ WITH
             ),
 
             {%- set source_in_target = true -%}
-            
+
             {%- if execute -%}
                 {%- set rsrc_static_result = run_query(rsrc_static_query_source) -%}
 
@@ -162,9 +162,9 @@ WITH
         {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('rsrc_statics defined?: ' ~ ns.source_models_rsrc_dict[source_number|string], false) }}{% endif %}
 
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
-        WHERE 
+        WHERE
         {% for rsrc_static in rsrc_statics %}
-          (src.{{ src_rsrc }} = '{{ rsrc_static }}' AND src.{{ src_ldts }} > (
+          (src.{{ src_rsrc }} LIKE '{{ rsrc_static }}' AND src.{{ src_ldts }} > (
             SELECT MAX(max_ldts)
             FROM max_ldts_per_rsrc_static_in_target
             WHERE rsrc_static = '{{ rsrc_static }}' AND max_ldts != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
@@ -237,7 +237,7 @@ earliest_hk_over_all_sources AS (
 {%- if is_incremental() %}
 {# Get all link hashkeys out of the existing link for later incremental logic. #}
     distinct_target_hashkeys AS (
-        
+
         SELECT
         {{ link_hashkey }}
         FROM {{ this }}
