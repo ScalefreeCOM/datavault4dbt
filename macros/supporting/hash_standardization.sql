@@ -552,12 +552,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
-{%- if 'SHA2' in hash_alg -%}
-    {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=var('datavault4dbt.hash', 'MD5'), hash_datatype=var('datavault4dbt.hash_datatype', 'VARCHAR(32)'))) -%}
-    {%- set hash_bits = hash_default_values['hash_bits'] -%}
-{%- else  -%}
-    {%- set hash_bits = '' -%}
-{%- endif -%}
+{#- Resolve via hash_method(), not var(): a dict-valued 'datavault4dbt.hash' would drop the SHA2 bit length. -#}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=datavault4dbt.hash_method(), hash_datatype=datatype)) -%}
+{%- set hash_bits = hash_default_values['hash_bits'] -%}
 
 {%- if is_hashdiff and rtrim_hashdiff -%}
     {%- set hdiff_prefix = "RTRIM('[NULL_PLACEHOLDER_STRING][CONCAT_STRING]',"-%}
@@ -567,42 +564,34 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
     {%- set hdiff_suffix = "" -%}
 {%- endif -%}
 
-{%- if datatype == 'STRING' -%}
+{#- Databricks hash functions return hex text: LOWER() keeps it, UNHEX() decodes it to the digest. -#}
+{%- set datatype_upper = datatype | string | upper -%}
 
-    {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
-        {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{})), {}) AS {}".format(hdiff_suffix, hash_bits, zero_key, alias)-%}
-        {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}){})), {})".format(hdiff_suffix, hash_bits, zero_key)-%}
-        {%- endif -%}
-    {%- else -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
-        {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{})), {}) AS {}".format(hdiff_suffix, hash_bits, zero_key, alias)-%}
-        {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{})), {})".format(hdiff_suffix, hash_bits, zero_key)-%}
-        {%- endif -%}
-    {%- endif -%}
-
+{%- if 'CHAR' in datatype_upper or 'STRING' in datatype_upper or 'TEXT' in datatype_upper -%}
+    {%- set hash_wrapper = 'LOWER' -%}
+{%- elif 'BINARY' in datatype_upper -%}
+    {%- set hash_wrapper = 'UNHEX' -%}
 {%- else -%}
-
-    {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
-        {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{}) as {}), CAST({} AS {})) AS {}".format(hdiff_suffix, hash_bits, datatype, zero_key, datatype, alias)-%}
-        {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{}) as {}), CAST({} AS {}))".format(hdiff_suffix, hash_bits, datatype, zero_key, datatype)-%}
-        {%- endif -%}
-    {%- else -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
-        {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{}) as {}), CAST({} AS {})) AS {}".format(hdiff_suffix, hash_bits, datatype, zero_key, datatype, alias)-%}
-        {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{}) as {}), CAST({} AS {}))".format(hdiff_suffix, hash_bits, datatype, zero_key, datatype)-%}
-        {%- endif -%}
+    {%- set hash_wrapper = 'LOWER' -%}
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("datavault4dbt: unsupported 'datavault4dbt.hash_datatype' for Databricks: '" ~ datatype ~ "'. Use a string type (e.g. 'STRING') or 'BINARY'.") }}
     {%- endif -%}
+{%- endif -%}
 
+{%- if not case_sensitive -%}
+    {%- set standardise_prefix = "IFNULL({}({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_wrapper, hash_alg, hdiff_prefix)-%}
+    {%- if alias is not none -%}
+        {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{})), {}) AS {}".format(hdiff_suffix, hash_bits, zero_key, alias)-%}
+    {%- else -%}
+        {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{})), {})".format(hdiff_suffix, hash_bits, zero_key)-%}
+    {%- endif -%}
+{%- else -%}
+    {%- set standardise_prefix = "IFNULL({}({}({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_wrapper, hash_alg, hdiff_prefix)-%}
+    {%- if alias is not none -%}
+        {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{})), {}) AS {}".format(hdiff_suffix, hash_bits, zero_key, alias)-%}
+    {%- else -%}
+        {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){}{})), {})".format(hdiff_suffix, hash_bits, zero_key)-%}
+    {%- endif -%}
 {%- endif -%}
 
 {%- do dict_result.update({"standardise_suffix": standardise_suffix, "standardise_prefix": standardise_prefix }) -%}
@@ -1225,59 +1214,46 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
     {%- set hdiff_suffix = "" -%}
 {%- endif -%}
 
-{%- if 'SHA2' in hash_alg -%}
-    {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=var('datavault4dbt.hash', 'MD5'), hash_datatype=var('datavault4dbt.hash_datatype', 'VARCHAR(32)'))) -%}
-    {%- set hash_bits = hash_default_values['hash_bits'] -%}
-{%- else  -%}
-    {%- set hash_bits = '' -%}
-{%- endif -%}
+{#- See databricks__concattenated_standardise for why hash_bits is resolved this way. -#}
+{%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=datavault4dbt.hash_method(), hash_datatype=datatype)) -%}
+{%- set hash_bits = hash_default_values['hash_bits'] -%}
 
 {%- if datavault4dbt.is_list(multi_active_key) -%}
     {%- set multi_active_key_string = multi_active_key|join(", ") -%}
-{%- else -%}    
+{%- else -%}
     {%- set multi_active_key_string = multi_active_key -%}
 {%- endif -%}
 
-{%- if datatype == 'STRING' -%}
+{#- LOWER() keeps the hash as hex text, UNHEX() decodes it into the digest bytes. -#}
+{%- set datatype_upper = datatype | string | upper -%}
 
-    {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
-
-        {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
-        {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
-        {%- endif -%}
-    {%- else -%}
-        {%- set standardise_prefix = "IFNULL(LOWER({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix) -%}
-
-        {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
-        {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
-        {%- endif -%}
-    {%- endif -%}
-
+{%- if 'CHAR' in datatype_upper or 'STRING' in datatype_upper or 'TEXT' in datatype_upper -%}
+    {%- set hash_wrapper = 'LOWER' -%}
+{%- elif 'BINARY' in datatype_upper -%}
+    {%- set hash_wrapper = 'UNHEX' -%}
 {%- else -%}
-
-    {%- if not case_sensitive -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
-
-        {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
-        {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
-        {%- endif -%}
-    {%- else -%}
-        {%- set standardise_prefix = "IFNULL(CAST({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
-
-        {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
-        {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
-        {%- endif -%}
+    {%- set hash_wrapper = 'LOWER' -%}
+    {%- if execute -%}
+        {{ exceptions.raise_compiler_error("datavault4dbt: unsupported 'datavault4dbt.hash_datatype' for Databricks: '" ~ datatype ~ "'. Use a string type (e.g. 'STRING') or 'BINARY'.") }}
     {%- endif -%}
+{%- endif -%}
 
+{%- if not case_sensitive -%}
+    {%- set standardise_prefix = "IFNULL({}({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_wrapper, hash_alg, hdiff_prefix)-%}
+
+    {%- if alias is not none -%}
+        {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
+    {%- else -%}
+        {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
+    {%- endif -%}
+{%- else -%}
+    {%- set standardise_prefix = "IFNULL({}({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_wrapper, hash_alg, hdiff_prefix) -%}
+
+    {%- if alias is not none -%}
+        {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
+    {%- else -%}
+        {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
+    {%- endif -%}
 {%- endif -%}
 
 {%- do dict_result.update({"standardise_suffix": standardise_suffix, "standardise_prefix": standardise_prefix }) -%}

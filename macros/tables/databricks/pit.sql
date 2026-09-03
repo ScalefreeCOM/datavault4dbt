@@ -7,8 +7,9 @@
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
 {%- set error_key = hash_default_values['error_key'] -%}
 
-{%- if hash_dtype == 'BYTES' -%}
-    {%- set hashkey_string = 'TO_HEX({})'.format(datavault4dbt.prefix([hashkey],'te')) -%}
+{#- Hex-encode binary hashkeys first: CAST(BINARY AS STRING) is a UTF-8 decode that collapses distinct digests. -#}
+{%- if 'BINARY' in (hash_dtype | string | upper) -%}
+    {%- set hashkey_string = 'HEX({})'.format(datavault4dbt.prefix([hashkey],'te')) -%}
 {%- else -%}
     {%- set hashkey_string = datavault4dbt.prefix([hashkey],'te') -%}
 {%- endif -%}

@@ -595,8 +595,9 @@
 {%- set unknown_value__numeric = var('datavault4dbt.unknown_value__numeric', -1) -%}
 {%- set error_value__numeric = var('datavault4dbt.error_value__numeric', -2) -%}
 
+{#- Binary form returns UNHEX('00…') - already binary, and without the '!' sentinel only as_constant() strips. -#}
 {%- set hash = datavault4dbt.hash_method() -%}
-{%- set hash_default_values =  fromjson(datavault4dbt.hash_default_values(hash_function=hash)) -%}
+{%- set hash_default_values =  fromjson(datavault4dbt.hash_default_values(hash_function=hash, hash_datatype='BINARY')) -%}
 {%- set unknown_value__HASHTYPE = hash_default_values.get('unknown_key') -%}
 {%- set error_value__HASHTYPE = hash_default_values['error_key'] -%}
 
@@ -611,7 +612,7 @@
         {%- elif datatype in ['INT', 'SMALLINT', 'TINYINT', 'BIGINT', 'DOUBLE', 'FLOAT'] %} CAST('{{unknown_value__numeric}}' as {{ datatype}}) as {{ alias }}
         {%- elif datatype.upper().startswith('DECIMAL') %} CAST('{{unknown_value__numeric}}' as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
-        {%- elif datatype == 'BINARY' %} CAST('{{ unknown_value__HASHTYPE }}' as BINARY) as {{ alias }}
+        {%- elif datatype == 'BINARY' %} {{ unknown_value__HASHTYPE }} as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
@@ -621,7 +622,7 @@
         {%- elif datatype in ['INT', 'SMALLINT', 'TINYINT', 'BIGINT', 'DOUBLE', 'FLOAT'] %} CAST('{{error_value__numeric}}' as {{ datatype}}) as {{ alias }}
         {%- elif datatype.upper().startswith('DECIMAL') %} CAST('{{error_value__numeric}}' as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST('FALSE' as BOOLEAN) as {{ alias }}
-        {%- elif datatype == 'BINARY' %} CAST('{{ error_value__HASHTYPE }}' as BINARY) as {{ alias }}
+        {%- elif datatype == 'BINARY' %} {{ error_value__HASHTYPE }} as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- else -%}
