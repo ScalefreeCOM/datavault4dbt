@@ -241,22 +241,33 @@
 
     {%- if hash_function == 'MD5' -%}
         {%- set hash_alg = 'MD5' -%}
-        {%- set unknown_key = '!00000000000000000000000000000000' -%}
-        {%- set error_key = '!ffffffffffffffffffffffffffffffff' -%}
+        {%- set unknown_key = '00000000000000000000000000000000' -%}
+        {%- set error_key = 'ffffffffffffffffffffffffffffffff' -%}
     {%- elif hash_function == 'SHA' or hash_function == 'SHA1' -%}
         {%- set hash_alg = 'SHA1' -%}
-        {%- set unknown_key = '!0000000000000000000000000000000000000000' -%}
-        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- set unknown_key = '0000000000000000000000000000000000000000' -%}
+        {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffff' -%}
     {%- elif hash_function == 'SHA2' or hash_function == 'SHA256' -%}
         {%- set hash_alg = 'SHA2' -%}
         {%- set hash_bits = ', 256' -%}
-        {%- set unknown_key = '!0000000000000000000000000000000000000000000000000000000000000000' -%}
-        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- set unknown_key = '0000000000000000000000000000000000000000000000000000000000000000' -%}
+        {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
     {%- elif hash_function == 'SHA512' -%}
         {%- set hash_alg = 'SHA2' -%}
         {%- set hash_bits = ', 512' -%}
-        {%- set unknown_key = '!00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' -%}
-        {%- set error_key = '!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+        {%- set unknown_key = '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' -%}
+        {%- set error_key = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' -%}
+    {%- endif -%}
+
+    {#- Binary datatypes need the constants hex-decoded so ghost keys match a real hashkey's width. -#}
+    {%- if unknown_key -%}
+        {%- if 'BINARY' in (hash_datatype | default('STRING', true) | string | upper) -%}
+            {%- set unknown_key = "UNHEX('" ~ unknown_key ~ "')" -%}
+            {%- set error_key = "UNHEX('" ~ error_key ~ "')" -%}
+        {%- else -%}
+            {%- set unknown_key = '!' ~ unknown_key -%}
+            {%- set error_key = '!' ~ error_key -%}
+        {%- endif -%}
     {%- endif -%}
 
     {%- do dict_result.update({"hash_alg": hash_alg, "unknown_key": unknown_key, "error_key": error_key, "hash_bits": hash_bits }) -%}

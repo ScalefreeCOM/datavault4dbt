@@ -29,6 +29,10 @@ The hashing logic concatenates the input columns as `"value"||"value"||^^|...`, 
 
 This closes a class of hash collisions where two different inputs could produce the same hash (for example a single value literally containing `||` versus two separate columns). It is **output-affecting only for data that actually contains the `"`, `^^` or `||` sequences** — all other data hashes identically to before. If any of your business keys or hashdiff attributes can contain these sequences, rehash the affected entities using the macros below. Changing any of the delimiter or replacement variables from their defaults has the same effect and likewise requires rehashing.
 
+## ATTENTION: Databricks binary hash datatype
+
+Up to and including **2.1.0**, a binary `hash_datatype` on Databricks stored the hex text of the hash rather than the digest. It now stores the real digest, so hash values change: Databricks projects using `datavault4dbt.hash_datatype: 'BINARY'` must fully refresh or rehash. Projects on `STRING` are unaffected. See [Databricks](../33_adapter-specific-notes/38_databricks/38_databricks.md).
+
 ## CORE CAPABILITIES
 
 The package offers multiple levels of rehashing functionality, ranging from individual entity updates to a full RDV refresh.
