@@ -42,3 +42,31 @@ Sometimes multiple different wildcard expressions belong to the same record sour
 ### NO STATIC PART
 
 Sometimes the record source column of a stage has no static part, and the rows can not be grouped together again. In such a case rsrc_static is not to be set at all. The downside is, that the loading procedures do not benefit of the performance boost provided by the rsrc_static parameter. We recommend re-evaluating the contents of the record source column in such a case, to create at least a partially static content.
+
+### SNOWFLAKE
+
+Snowflake requires special handling when wildcard expressions are used in rsrc_static.
+
+By default, rsrc_static values are compared using the `=` operator and the wildcard character is `*`. However, Snowflake does not interpret wildcard characters when using an equality comparison.
+
+For example, the following condition does not perform pattern matching in Snowflake:
+
+`WHERE dw_record_source = '*/SALESFORCE/Partners/*'`
+
+Instead, Snowflake interprets `*/SALESFORCE/Partners/*` as a literal string.
+
+To support dynamic record sources, the Snowflake implementation of the macros therefore uses the `LIKE` operator whenever rsrc_static is evaluated. Consequently, the wildcard character for Snowflake is `%` instead of `*`.
+
+For example, the equivalent Snowflake rsrc_static value would be:
+
+`%/SALESFORCE/Partners/%`
+
+This results in a comparison such as:
+
+`WHERE dw_record_source LIKE '%/SALESFORCE/Partners/%'`
+
+Therefore, when configuring rsrc_static for Snowflake:
+
+- Use `%` as the wildcard character instead of `*`.
+- Wildcard-based rsrc_static values are evaluated using the `LIKE` operator.
+- Static record sources without dynamic parts can still be configured without wildcard characters.
