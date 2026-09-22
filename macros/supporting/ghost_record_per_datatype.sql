@@ -517,7 +517,7 @@
         CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as {{ alias }}
     {%- elif datatype in ['DATETIMEOFFSET'] %}
         {%- if '(' not in datatype -%}
-            {%- set datatype = "DATETIMEOFFSET(7)" -%}
+            {%- set datatype = "DATETIMEOFFSET(6)" -%}
         {%- endif -%}
         CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as {{ alias }}
     {%- elif 'CHAR' in datatype -%}
@@ -569,7 +569,7 @@
         CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ alias }}
     {%- elif datatype in ['DATETIMEOFFSET'] %}
         {%- if '(' not in datatype -%}
-            {%- set datatype = "DATETIMEOFFSET(7)" -%}
+            {%- set datatype = "DATETIMEOFFSET(6)" -%}
         {%- endif -%}
         CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ alias }}
     {%- elif 'CHAR' in datatype -%}
