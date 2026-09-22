@@ -539,7 +539,7 @@
             CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as {{ alias }}
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('254' as {{ datatype }}) as {{ alias }}
-    {%- elif datatype == 'DECIMAL' or datatype == 'NUMERIC' -%}
+    {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
         {%- set numeric_default_value = unknown_value__numeric -%}
         {%- if numeric_precision is not none and numeric_precision != '' and '(' not in datatype -%}
             {%- if numeric_scale is not none and numeric_scale != '' -%}
@@ -599,7 +599,7 @@
             CAST('{{ error_value__STRING }}' as {{ datatype }} ) as {{ alias }}
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('255' as {{ datatype }}) as {{ alias }}
-    {%- elif datatype == 'DECIMAL' or datatype == 'NUMERIC' -%}
+    {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
         {%- set numeric_default_value = error_value__numeric -%}
         {%- if numeric_precision is not none and numeric_precision != '' and '(' not in datatype -%}
             {%- if numeric_scale is not none and numeric_scale != '' -%}
@@ -859,7 +859,7 @@
             CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as {{ alias }}
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('254' as {{ datatype }}) as {{ alias }}
-    {%- elif datatype == 'DECIMAL' or datatype == 'NUMERIC' -%}
+    {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
         {%- set numeric_default_value = unknown_value__numeric -%}
         {%- if numeric_precision is not none and numeric_precision != '' and '(' not in datatype -%}
             {%- if numeric_scale is not none and numeric_scale != '' -%}
@@ -918,7 +918,7 @@
             CAST('{{ error_value__STRING }}' as {{ datatype }} ) as {{ alias }}
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('255' as {{ datatype }}) as {{ alias }}
-    {%- elif datatype == 'DECIMAL' or datatype == 'NUMERIC' -%}
+    {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
         {%- set numeric_default_value = error_value__numeric -%}
         {%- if numeric_precision is not none and numeric_precision != '' and '(' not in datatype -%}
             {%- if numeric_scale is not none and numeric_scale != '' -%}
