@@ -1,4 +1,4 @@
-{%- macro ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size=none, alias=none, numeric_precision=none, numeric_scale=none) -%}
+{%- macro ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size=none, alias=none) -%}
 
 {%- if not datavault4dbt.is_something(alias) -%}
     {%- set alias = column_name -%}
@@ -8,13 +8,45 @@
                                                                             datatype=datatype,
                                                                             ghost_record_type=ghost_record_type,
                                                                             col_size=col_size,
-                                                                            numeric_precision=numeric_precision,
-                                                                            numeric_scale=numeric_scale,
                                                                             alias=alias)) }}
 {%- endmacro -%}
 
 
-{%- macro default__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro parameterize_numeric_datatype(datatype, numeric_precision=none, numeric_scale=none) -%}
+
+{%- set upper_datatype = datatype|string|upper|trim -%}
+{# Restricted to DECIMAL/NUMERIC because types like INT report a precision too, but cannot carry one #}
+{%- set is_parameterizable = ('DECIMAL' in upper_datatype or 'NUMERIC' in upper_datatype) and '(' not in upper_datatype -%}
+
+{%- if is_parameterizable and numeric_precision is not none and numeric_precision != '' -%}
+    {%- if numeric_scale is not none and numeric_scale != '' -%}
+        {%- do return(datatype ~ "(" ~ (numeric_precision|int|string) ~ "," ~ (numeric_scale|int|string) ~ ")") -%}
+    {%- else -%}
+        {%- do return(datatype ~ "(" ~ (numeric_precision|int|string) ~ ")") -%}
+    {%- endif -%}
+{%- endif -%}
+
+{%- do return(datatype) -%}
+
+{%- endmacro -%}
+
+
+{%- macro numeric_ghost_value(datatype, sentinel_value) -%}
+
+{# A negative sentinel overflows a fully fractional type like DECIMAL(2,2) #}
+{%- if '(' in datatype and ',' in datatype -%}
+    {%- set type_parameters = datatype.split('(')[1].split(')')[0].split(',') -%}
+    {%- if (type_parameters[0]|trim|int) <= (type_parameters[1]|trim|int) -%}
+        {%- do return(0) -%}
+    {%- endif -%}
+{%- endif -%}
+
+{%- do return(sentinel_value) -%}
+
+{%- endmacro -%}
+
+
+{%- macro default__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -67,7 +99,7 @@
 {%- endmacro -%}
 
 
-{%- macro exasol__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro exasol__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -161,7 +193,7 @@
 
 
 
-{%- macro snowflake__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro snowflake__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -255,7 +287,7 @@
 {%- endmacro -%}
 
 
-{%- macro synapse__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro synapse__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -351,7 +383,7 @@
 {%- endmacro -%}
 
 
-{%- macro postgres__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro postgres__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -398,7 +430,7 @@
 {%- endmacro -%}
 
 
-{%- macro redshift__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro redshift__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -484,7 +516,7 @@
 {%- endmacro -%}
 
 
-{%- macro fabric__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro fabric__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -540,18 +572,7 @@
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('254' as {{ datatype }}) as {{ alias }}
     {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
-        {%- set numeric_default_value = unknown_value__numeric -%}
-        {%- if numeric_precision is not none and numeric_precision != '' and '(' not in datatype -%}
-            {%- if numeric_scale is not none and numeric_scale != '' -%}
-                {%- set datatype = datatype ~ "(" ~ (numeric_precision|int|string) ~ "," ~ (numeric_scale|int|string) ~ ")" -%}
-                {%- if (numeric_precision|int) <= (numeric_scale|int) -%}
-                    {%- set numeric_default_value = 0 -%}
-                {%- endif -%}
-            {%- else -%}
-                {%- set datatype = datatype ~ "(" ~ (numeric_precision|int|string) ~ ")" -%}
-            {%- endif -%}
-        {%- endif -%}
-        CAST({{ numeric_default_value }} as {{ datatype }}) as {{ alias }}
+        CAST({{ datavault4dbt.numeric_ghost_value(datatype, unknown_value__numeric) }} as {{ datatype }}) as {{ alias }}
     {%- elif 'INT' in datatype or 'MONEY' in datatype %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ beginning_of_all_times_date }}') as {{ alias }}
@@ -600,18 +621,7 @@
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('255' as {{ datatype }}) as {{ alias }}
     {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
-        {%- set numeric_default_value = error_value__numeric -%}
-        {%- if numeric_precision is not none and numeric_precision != '' and '(' not in datatype -%}
-            {%- if numeric_scale is not none and numeric_scale != '' -%}
-                {%- set datatype = datatype ~ "(" ~ (numeric_precision|int|string) ~ "," ~ (numeric_scale|int|string) ~ ")" -%}
-                {%- if (numeric_precision|int) <= (numeric_scale|int) -%}
-                    {%- set numeric_default_value = 0 -%}
-                {%- endif -%}
-            {%- else -%}
-                {%- set datatype = datatype ~ "(" ~ (numeric_precision|int|string) ~ ")" -%}
-            {%- endif -%}
-        {%- endif -%}
-        CAST({{ numeric_default_value }} as {{ datatype }}) as {{ alias }}
+        CAST({{ datavault4dbt.numeric_ghost_value(datatype, error_value__numeric) }} as {{ datatype }}) as {{ alias }}
     {%- elif 'INT' in datatype or 'MONEY' in datatype %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ end_of_all_times_date }}') as {{ alias }}
@@ -638,7 +648,7 @@
 {%- endmacro -%}
 
 
-{%- macro databricks__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro databricks__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -690,7 +700,7 @@
 {%- endmacro -%}
 
 
-{%- macro oracle__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro oracle__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -734,7 +744,7 @@
 {%- endmacro -%}
 
 
-{%- macro trino__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro trino__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -805,7 +815,7 @@
 {%- endmacro -%}
 
 
-{%- macro sqlserver__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias, numeric_precision=none, numeric_scale=none) -%}
+{%- macro sqlserver__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
@@ -860,18 +870,7 @@
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('254' as {{ datatype }}) as {{ alias }}
     {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
-        {%- set numeric_default_value = unknown_value__numeric -%}
-        {%- if numeric_precision is not none and numeric_precision != '' and '(' not in datatype -%}
-            {%- if numeric_scale is not none and numeric_scale != '' -%}
-                {%- set datatype = datatype ~ "(" ~ (numeric_precision|int|string) ~ "," ~ (numeric_scale|int|string) ~ ")" -%}
-                {%- if (numeric_precision|int) <= (numeric_scale|int) -%}
-                    {%- set numeric_default_value = 0 -%}
-                {%- endif -%}
-            {%- else -%}
-                {%- set datatype = datatype ~ "(" ~ (numeric_precision|int|string) ~ ")" -%}
-            {%- endif -%}
-        {%- endif -%}
-        CAST({{ numeric_default_value }} as {{ datatype }}) as {{ alias }}
+        CAST({{ datavault4dbt.numeric_ghost_value(datatype, unknown_value__numeric) }} as {{ datatype }}) as {{ alias }}
     {%- elif 'INT' in datatype or 'MONEY' in datatype %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ beginning_of_all_times_date }}') as {{ alias }}
@@ -919,18 +918,7 @@
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('255' as {{ datatype }}) as {{ alias }}
     {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
-        {%- set numeric_default_value = error_value__numeric -%}
-        {%- if numeric_precision is not none and numeric_precision != '' and '(' not in datatype -%}
-            {%- if numeric_scale is not none and numeric_scale != '' -%}
-                {%- set datatype = datatype ~ "(" ~ (numeric_precision|int|string) ~ "," ~ (numeric_scale|int|string) ~ ")" -%}
-                {%- if (numeric_precision|int) <= (numeric_scale|int) -%}
-                    {%- set numeric_default_value = 0 -%}
-                {%- endif -%}
-            {%- else -%}
-                {%- set datatype = datatype ~ "(" ~ (numeric_precision|int|string) ~ ")" -%}
-            {%- endif -%}
-        {%- endif -%}
-        CAST({{ numeric_default_value }} as {{ datatype }}) as {{ alias }}
+        CAST({{ datavault4dbt.numeric_ghost_value(datatype, error_value__numeric) }} as {{ datatype }}) as {{ alias }}
     {%- elif 'INT' in datatype or 'MONEY' in datatype %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ end_of_all_times_date }}') as {{ alias }}

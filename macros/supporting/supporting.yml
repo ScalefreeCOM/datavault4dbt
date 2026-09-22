@@ -194,6 +194,34 @@ macros:
   - name: default__ghost_record_per_datatype
     description: Default implementation of ghost_record_per_datatype. Accepts the same arguments as the parent macro.
 
+  - name: parameterize_numeric_datatype
+    description: >
+      Renders a bare DECIMAL/NUMERIC as DECIMAL(precision, scale), so that a ghost record keeps the
+      precision of the column it stands in for. Types that already carry parameters, and types that
+      cannot carry a precision, are returned unchanged.
+    arguments:
+      - name: datatype
+        type: string
+        description: The SQL data type to parameterize.
+      - name: numeric_precision
+        type: string
+        description: Optional numeric precision. Without it the datatype is returned unchanged.
+      - name: numeric_scale
+        type: string
+        description: Optional numeric scale.
+
+  - name: numeric_ghost_value
+    description: >
+      Returns the numeric ghost record value for a given type. A negative sentinel overflows a fully
+      fractional type such as DECIMAL(2,2), so those fall back to 0.
+    arguments:
+      - name: datatype
+        type: string
+        description: The SQL data type the value is cast to.
+      - name: sentinel_value
+        type: any
+        description: The configured unknown or error sentinel to use when the type can represent it.
+
   - name: hash
     description: >
       Generates the complete hash (hashkey or hashdiff) SQL expression for one or more columns.
