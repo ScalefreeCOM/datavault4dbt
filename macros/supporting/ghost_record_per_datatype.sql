@@ -834,7 +834,7 @@
     {%- if 'DATETIME2' in datatype or 'DATETIMEOFFSET' in datatype %}
         {%- if '(' not in datatype -%}
             {%- if 'DATETIME2' in datatype -%}
-                {%- set datatype = "DATETIME2(6)" -%}
+                {%- set datatype = "DATETIME2(7)" -%}
             {%- else -%}
                 {%- set datatype = "DATETIMEOFFSET(7)" -%}
             {%- endif -%}
@@ -893,7 +893,7 @@
     {%- if 'DATETIME2' in datatype or 'DATETIMEOFFSET' in datatype %}
         {%- if '(' not in datatype -%}
             {%- if 'DATETIME2' in datatype -%}
-                {%- set datatype = "DATETIME2(6)" -%}
+                {%- set datatype = "DATETIME2(7)" -%}
             {%- else -%}
                 {%- set datatype = "DATETIMEOFFSET(7)" -%}
             {%- endif -%}
