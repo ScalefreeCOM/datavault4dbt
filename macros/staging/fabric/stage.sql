@@ -512,7 +512,7 @@ unknown_values AS (
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
               {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('column found? yes, for column: ' ~ column.name , false) }}{% endif %}
-              ,{{ datavault4dbt.ghost_record_per_datatype(column_name=datavault4dbt.escape_column_names(column.name), datatype=column.dtype, ghost_record_type='unknown', alias=datavault4dbt.escape_column_names(prejoin['aliases'][prejoin_col_index])) }}
+              ,{{ datavault4dbt.ghost_record_per_datatype(column_name=datavault4dbt.escape_column_names(column.name), datatype=column.dtype, ghost_record_type='unknown', col_size=column.char_size, numeric_precision=column.numeric_precision, numeric_scale=column.numeric_scale, alias=datavault4dbt.escape_column_names(prejoin['aliases'][prejoin_col_index])) }}
             {%- endif -%}
 
           {%- endfor -%}
@@ -578,7 +578,7 @@ error_values AS (
               {%- set prejoin_extract_cols_lower = prejoin['extract_columns']|map('lower')|list -%}
               {%- set prejoin_col_index = prejoin_extract_cols_lower.index(column.name|lower) -%}
               {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('column found? yes, for column: ' ~ column.name , false) }}{% endif %}
-             ,{{ datavault4dbt.ghost_record_per_datatype(column_name=datavault4dbt.escape_column_names(column.name), datatype=column.dtype, ghost_record_type='error', alias=datavault4dbt.escape_column_names(prejoin['aliases'][prejoin_col_index])) }}
+             ,{{ datavault4dbt.ghost_record_per_datatype(column_name=datavault4dbt.escape_column_names(column.name), datatype=column.dtype, ghost_record_type='error', col_size=column.char_size, numeric_precision=column.numeric_precision, numeric_scale=column.numeric_scale, alias=datavault4dbt.escape_column_names(prejoin['aliases'][prejoin_col_index])) }}
           {%- endif -%}
 
         {%- endfor -%}
