@@ -157,3 +157,32 @@ macros:
         description: >
           Whether to drop the old hashkey and hashdiff columns after rehashing.
           If true, the old columns are dropped. If false, they are renamed with a "_deprecated" suffix.
+
+  - name: rehash_ref_satellites
+    description: >
+      This macro is used to rehash multiple reference satellite tables based on a provided YAML configuration.
+      Unlike standard satellites, no join to a parent hub is required — only the hashdiff is rehashed.
+    arguments:
+      - name: ref_satellite_yaml
+        type: string
+        description: >
+          A YAML string that describes the reference satellites to be rehashed.
+          The YAML should include a `config` section for global settings and a `ref_satellites` section
+          containing a list of ref satellite definitions.
+          Example:
+            ```yaml
+            config:
+              overwrite_hash_values: true
+            ref_satellites:
+              - name: customer_ref_rs
+                refkey: RK_CUSTOMER_R
+                hashdiff: HD_CUSTOMER_RS
+                payload:
+                  - C_NAME
+                  - C_REGION
+            ```
+      - name: drop_old_values
+        type: bool
+        description: >
+          Whether to drop the old hashdiff column after rehashing.
+          If true, the old column is dropped. If false, it is renamed with a "_deprecated" suffix.

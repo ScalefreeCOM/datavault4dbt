@@ -70,10 +70,17 @@
                 parent_entity: customer_h
                 business_keys:
                     - C_CUSTKEY
-          nh_satellites: 
+          nh_satellites:
               - name: order_customer_n_ns
                 hashkey: HK_ORDER_CUSTOMER_NL
                 parent_entity: order_customer_nl
+          ref_satellites:
+              - name: customer_ref_rs
+                refkey: RK_CUSTOMER_R
+                hashdiff: HD_CUSTOMER_RS
+                payload:
+                    - C_NAME
+                    - C_REGION
           hubs:
               - name: customer_h
                 hashkey: hk_customer_h

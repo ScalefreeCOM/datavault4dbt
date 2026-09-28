@@ -67,10 +67,17 @@
                 parent_entity: customer_h
                 business_keys:
                     - C_CUSTKEY
-            nh_satellites: 
+            nh_satellites:
               - name: order_customer_n_ns
                 hashkey: HK_ORDER_CUSTOMER_NL
                 parent_entity: order_customer_nl
+            ref_satellites:
+              - name: customer_ref_rs
+                refkey: RK_CUSTOMER_R
+                hashdiff: HD_CUSTOMER_RS
+                payload:
+                    - C_NAME
+                    - C_REGION
             hubs:
               - name: customer_h
                 hashkey: hk_customer_h
@@ -145,8 +152,9 @@
     {% set satellite_cols_to_drop =     datavault4dbt.rehash_satellites(entity_yaml, drop_old_values=false) %}
     {% set ma_satellite_cols_to_drop =  datavault4dbt.rehash_ma_satellites(entity_yaml, drop_old_values=false) %}
     {% set nh_satellite_cols_to_drop =  datavault4dbt.rehash_nh_satellites(entity_yaml, drop_old_values=false) %}
+    {% set ref_satellite_cols_to_drop = datavault4dbt.rehash_ref_satellites(entity_yaml, drop_old_values=false) %}
 
-    {% set all_cols_to_drop = hub_cols_to_drop + link_cols_to_drop + satellite_cols_to_drop + ma_satellite_cols_to_drop + nh_satellite_cols_to_drop %}
+    {% set all_cols_to_drop = hub_cols_to_drop + link_cols_to_drop + satellite_cols_to_drop + ma_satellite_cols_to_drop + nh_satellite_cols_to_drop + ref_satellite_cols_to_drop %}
 
     {{ log('all_cols_to_drop: ' ~ all_cols_to_drop, true) }}
 

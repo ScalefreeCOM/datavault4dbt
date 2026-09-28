@@ -293,3 +293,60 @@ macros:
       - name: parent_relation
         type: relation
         description: The parent entity relation.
+
+  - name: rehash_single_ref_satellite
+    description: >
+      This macro is used to rehash a reference satellite table by adding a new hashdiff column,
+      calculating the new value, and optionally replacing the old one.
+      Unlike standard satellites, no join to a parent hub is required — the hashdiff is
+      recalculated directly from the payload columns on the ref satellite itself.
+
+      Usage example:
+          dbt run-operation rehash_single_ref_satellite --args '{ref_satellite: customer_ref_rs, refkey: RK_CUSTOMER_R, hashdiff: HD_CUSTOMER_RS, payload: [C_NAME, C_REGION], overwrite_hash_values: true}'
+    arguments:
+      - name: ref_satellite
+        type: string
+        description: The name of the reference satellite table to rehash.
+      - name: refkey
+        type: any
+        description: The reference key column(s) used as the row identifier in the UPDATE join. Accepts either a single string or a list of strings for composite reference keys.
+      - name: hashdiff
+        type: string
+        description: The name of the existing hashdiff column.
+      - name: payload
+        type: list[string]
+        description: The payload columns of the ref satellite.
+      - name: overwrite_hash_values
+        type: bool
+        description: Whether to overwrite the old hashdiff with the new one.
+      - name: output_logs
+        type: bool
+        description: Whether to output logs during the macro execution.
+      - name: drop_old_values
+        type: bool
+        description: Whether to drop the old hashdiff column after renaming.
+
+  - name: ref_satellite_update_statement
+    description: >
+      Dispatches to the appropriate adapter-specific macro to generate the UPDATE statement
+      for rehashing a reference satellite. No parent join is performed — hashing is done
+      directly against the ref satellite table.
+    arguments:
+      - name: satellite_relation
+        type: relation
+        description: The reference satellite table relation.
+      - name: new_hashdiff_name
+        type: string
+        description: The name of the new hashdiff column.
+      - name: refkey
+        type: any
+        description: The reference key column(s) used as the join key in the UPDATE. Accepts either a single string or a list of strings for composite reference keys.
+      - name: hashdiff
+        type: string
+        description: The name of the existing hashdiff column.
+      - name: ldts_col
+        type: string
+        description: The load date timestamp column name.
+      - name: hash_config_dict
+        type: dict[string, any]
+        description: A dictionary containing the hash configuration for the hashdiff.
