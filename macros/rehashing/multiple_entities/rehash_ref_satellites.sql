@@ -38,19 +38,21 @@
         {% for ref_satellite in ref_satellite_dict.get('ref_satellites') %}
             {% set specific_overwrite_hash = ref_satellite.get('overwrite_hash_values', overwrite_hash_values) %}
 
-            {% set columns_to_drop_list = datavault4dbt.rehash_single_ref_satellite(ref_satellite=ref_satellite.name,
-                                                                                    refkey=ref_satellite.refkey,
-                                                                                    hashdiff=ref_satellite.hashdiff,
-                                                                                    payload=ref_satellite.payload,
-                                                                                    overwrite_hash_values=specific_overwrite_hash,
-                                                                                    output_logs=false,
-                                                                                    drop_old_values=drop_old_values) %}
+            {% if execute %}
+                {% set columns_to_drop_list = datavault4dbt.rehash_single_ref_satellite(ref_satellite=ref_satellite.name,
+                                                                                        refkey=ref_satellite.refkey,
+                                                                                        hashdiff=ref_satellite.hashdiff,
+                                                                                        payload=ref_satellite.payload,
+                                                                                        overwrite_hash_values=specific_overwrite_hash,
+                                                                                        output_logs=false,
+                                                                                        drop_old_values=drop_old_values) %}
 
-            {{ log(ref_satellite.name ~ ' rehashed successfully.', true) }}
+                {{ log(ref_satellite.name ~ ' rehashed successfully.', true) }}
 
-            {% set columns_to_drop_dict = {'model_name': ref_satellite.name, 'columns_to_drop': (columns_to_drop_list | trim) } %}
+                {% set columns_to_drop_dict = {'model_name': ref_satellite.name, 'columns_to_drop': (columns_to_drop_list | trim) } %}
 
-            {% do ns.columns_to_drop.append(columns_to_drop_dict) %}
+                {% do ns.columns_to_drop.append(columns_to_drop_dict) %}
+            {% endif %}
 
         {% endfor %}
     {% endif %}
