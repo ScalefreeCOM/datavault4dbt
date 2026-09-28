@@ -17,10 +17,14 @@
     {% for hub in hub_config %}
         {% set hub_join_alias = 'hub' ~ loop.index %}
         {% set prefixed_business_keys = datavault4dbt.prefix(columns=hub.business_keys, prefix_str=hub_join_alias).split(',') %}
-        {% set new_hub_hashkey_name = hub.hub_hashkey ~ '_new' %}
+        {# foreign_hashkey: the alias column in the link.
+           Falls back to hub_hashkey when absent, which covers standard links, where the hub hashkeys in hub and link are the same. #}
+        {% set link_alias = hub.get('foreign_hashkey', hub.hub_hashkey) %}
+        {% set new_hub_hashkey_name = link_alias ~ '_new' %}
 
         {% set hub_hashkey_dict = {
-            "current_hashkey_name": hub.hub_hashkey,
+            "current_hashkey_name": link_alias,
+            "hub_hashkey": hub.hub_hashkey,
             "new_hashkey_name": new_hub_hashkey_name,
             "hub_name": hub.hub_name,
             "hub_join_alias": hub_join_alias,
@@ -35,9 +39,9 @@
         } %}
 
         {% do ns.new_hash_columns.append(new_hash_col_dict) %}
-        
+
         {# Add to columns to drop later if needed #}
-        {% do ns.columns_to_drop.append({"name": hub.hub_hashkey + '_deprecated'}) %}
+        {% do ns.columns_to_drop.append({"name": link_alias + '_deprecated'}) %}
 
     {% endfor %}
 
@@ -62,8 +66,9 @@
     {% set potential_stuck_cols = [new_link_hashkey_name, link_hashkey + '_deprecated'] %}
     
     {% for hub in hub_config %}
-        {% do potential_stuck_cols.append(hub.hub_hashkey ~ '_new') %}
-        {% do potential_stuck_cols.append(hub.hub_hashkey ~ '_deprecated') %}
+        {% set link_alias_stuck = hub.get('foreign_hashkey', hub.hub_hashkey) %}
+        {% do potential_stuck_cols.append(link_alias_stuck ~ '_new') %}
+        {% do potential_stuck_cols.append(link_alias_stuck ~ '_deprecated') %}
     {% endfor %}
 
     {# Loop through and drop if they exist #}
@@ -170,15 +175,16 @@
             {# Query Hub columns to check if the deprecated column exists #}
             {% set all_hub_columns = adapter.get_columns_in_relation(ref(hub.hub_name)) %}
             {% for column in all_hub_columns %}
-                {% if column.name|lower == hub.current_hashkey_name|lower + '_deprecated' %}
+                {# Use hub_hashkey to detect the deprecated column in the hub, not the link's foreign hub hashkey. #}
+                {% if column.name|lower == hub.hub_hashkey|lower + '_deprecated' %}
                     {% set hub_ns.hub_already_rehashed = true %}
                 {% endif %}
             {% endfor %}
 
             {% if hub_ns.hub_already_rehashed %}
-                {% set join_hashkey_col = hub.current_hashkey_name + '_deprecated' %}
+                {% set join_hashkey_col = hub.hub_hashkey + '_deprecated' %}
             {% else %}
-                {% set join_hashkey_col = hub.current_hashkey_name %}
+                {% set join_hashkey_col = hub.hub_hashkey %}
             {% endif %}
 
             {# Perform the LEFT JOIN to the Hub table #}

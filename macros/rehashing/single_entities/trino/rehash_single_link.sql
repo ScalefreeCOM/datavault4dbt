@@ -30,12 +30,16 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% for hub in hub_config %}
         {% set hub_join_alias = 'hub' ~ loop.index %}
         {% set prefixed_business_keys = datavault4dbt.prefix(columns=hub.business_keys, prefix_str=hub_join_alias).split(',') %}
-        {% set new_hub_hashkey_name = hub.hub_hashkey ~ '_new' %}
+        {# foreign_hashkey: the alias column in the link.
+           Falls back to hub_hashkey when absent, which covers standard links, where the hub hashkeys in hub and link are the same. #}
+        {% set link_alias = hub.get('foreign_hashkey', hub.hub_hashkey) %}
+        {% set new_hub_hashkey_name = link_alias ~ '_new' %}
 
         {# Check if this hub has already been rehashed (has a _deprecated hashkey column). #}
         {% set hub_ns = namespace(hub_already_rehashed=false) %}
         {% set all_hub_columns = adapter.get_columns_in_relation(ref(hub.hub_name)) %}
         {% for column in all_hub_columns %}
+            {# Use hub_hashkey to detect the deprecated column in the hub, not the link's foreign hub hashkey. #}
             {% if column.name|lower == hub.hub_hashkey|lower + '_deprecated' %}
                 {% set hub_ns.hub_already_rehashed = true %}
                 {{ log('Hub ' ~ hub.hub_name ~ ' already rehashed, joining on _deprecated column', false) }}
@@ -49,7 +53,8 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
         {% endif %}
 
         {% set hub_hashkey_dict = {
-            "current_hashkey_name": hub.hub_hashkey,
+            "current_hashkey_name": link_alias,
+            "hub_hashkey": hub.hub_hashkey,
             "new_hashkey_name": new_hub_hashkey_name,
             "hub_name": hub.hub_name,
             "hub_relation": ref(hub.hub_name),

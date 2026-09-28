@@ -21,10 +21,14 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
     {% for hub in hub_config %}
         {% set hub_join_alias = 'hub' ~ loop.index %}
         {% set prefixed_business_keys = datavault4dbt.prefix(columns=hub.business_keys, prefix_str=hub_join_alias).split(',') %}
-        {% set new_hub_hashkey_name =  hub.hub_hashkey ~ '_new' %}
+        {# foreign_hashkey: the alias column in the link.
+           Falls back to hub_hashkey when absent, which covers standard links, where the hub hashkeys in hub and link are the same. #}
+        {% set link_alias = hub.get('foreign_hashkey', hub.hub_hashkey) %}
+        {% set new_hub_hashkey_name = link_alias ~ '_new' %}
 
         {% set hub_hashkey_dict = {
-            "current_hashkey_name": hub.hub_hashkey,
+            "current_hashkey_name": link_alias,
+            "hub_hashkey": hub.hub_hashkey,
             "new_hashkey_name": new_hub_hashkey_name,
             "hub_name": hub.hub_name,
             "hub_join_alias": hub_join_alias,
@@ -147,20 +151,20 @@ dbt run-operation rehash_single_link --args '{link: customer_nation_l, link_hash
             
             {% set all_hub_columns = adapter.get_columns_in_relation(ref(hub.hub_name)) %}
             {% for column in all_hub_columns %}
-                {% if column.name|lower == hub.current_hashkey_name|lower + '_deprecated' %}
+                {# Use hub_hashkey to detect the deprecated column in the hub, not the link's foreign hub hashkey. #}
+                {% if column.name|lower == hub.hub_hashkey|lower + '_deprecated' %}
                     {% set hub_ns.hub_already_rehashed = true %}
                     {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Hub already hashed!', false) }}{% endif %}
                 {% endif %}
             {% endfor %}
 
             {% if hub_ns.hub_already_rehashed %}
-                {% set join_hashkey_col = hub.current_hashkey_name + '_deprecated' %}
-                {% set select_hashkey_col = hub.current_hashkey_name %}
+                {% set join_hashkey_col = hub.hub_hashkey + '_deprecated' %}
             {% else %}
-                {% set join_hashkey_col = hub.current_hashkey_name %}
-                {% set select_hashkey_col = hub.new_hashkey_name %}
+                {% set join_hashkey_col = hub.hub_hashkey %}
             {% endif %}
 
+            {# Left side uses the link alias (current_hashkey_name); right side uses the hub's real column (join_hashkey_col). #}
             {% set ns.update_sql_part2 = ns.update_sql_part2 + '\n LEFT JOIN ' + ref(hub.hub_name).render() + ' ' + hub.hub_join_alias + '\n    ON link.' + hub.current_hashkey_name + ' = ' + hub.hub_join_alias + '.' + join_hashkey_col %}
 
         {% endfor %}
