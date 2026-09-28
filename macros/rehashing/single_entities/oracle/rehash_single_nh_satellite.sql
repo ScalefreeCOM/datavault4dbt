@@ -16,7 +16,7 @@
     {% set nh_satellite_relation = ref(nh_satellite) %}
     {% set parent_relation = ref(parent_entity) %}
 
-    {% set ldts_col = var(datavault4dbt.ldts_alias, 'ldts') %}
+    {% set ldts_col = var('datavault4dbt.ldts_alias', 'ldts') %}
 
     {% set new_hashkey_name = hashkey + '_new' %}
 
