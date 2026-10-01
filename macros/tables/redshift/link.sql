@@ -12,6 +12,7 @@
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
 {# Select the additional_columns from the link model and put them in an array. If additional_colums none, then empty array #}
@@ -75,14 +76,14 @@
       {% if is_incremental() and ns.has_rsrc_static_defined and not disable_hwm -%}
         AND 
             (src.{{ src_ldts }} > (
-                select MAX({{ src_ldts }}) AS {{ src_ldts }} FROM {{ this }}
+                select COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ src_ldts }} FROM {{ this }}
                 WHERE {{ src_rsrc }} LIKE '{{ rsrc_static }}' AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
             AND src.{{ link_hk }} NOT IN (
                 select {{ link_hashkey }} FROM {{ this }} WHERE 1=1 {{ datavault4dbt.filter_distinct_target_hashkey_in_link(src_rsrc = src_rsrc, rsrc_static = rsrc_static) }})
             AND src.{{ src_rsrc }} LIKE '{{ rsrc_static }}')
       {%- elif is_incremental() and not ns.has_rsrc_static_defined and not disable_hwm %}
         AND src.{{ src_ldts }} > (
-            select MAX({{ src_ldts }}) AS {{ src_ldts }} FROM {{ this }} WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
+            select COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS {{ src_ldts }} FROM {{ this }} WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
         AND src.{{ link_hk }} NOT IN (select {{ link_hashkey }} FROM {{ this }} WHERE 1=1 {{ datavault4dbt.filter_distinct_target_hashkey_in_link() }})
       {%- elif is_incremental() %}
         AND src.{{ link_hk }} NOT IN (select {{ link_hashkey }} FROM {{ this }} WHERE 1=1 {{ datavault4dbt.filter_distinct_target_hashkey_in_link() }})
