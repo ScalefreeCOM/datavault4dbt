@@ -335,15 +335,30 @@ prejoined_columns AS (
     {%- else -%}
       {%- set operator = prejoin['operator'] -%}
     {%- endif -%}
+
     {%- if 'join_type' not in prejoin.keys() -%}
       {%- set join_type = 'left' -%}
     {%- else -%}
-      {%- set join_type = prejoin['join_type'] -%}
+      {%- set join_type = join_type -%}
     {%- endif -%}
-      {%- set prejoin_alias = 'pj_' + loop.index|string %}
+
+    {%- if 'condition' not in prejoin.keys()-%}
+      {%- set condition = '=' -%}
+    {%- elif prejoin['condition'] | reject("in", ['<>', '!=', '=', '<=', '>=', '<', '>']) | list | length > 0 -%}
+      {%- set error_message -%}
+          Value Error: One of the defined conditions is not supported
+          Got: 
+              condition: {{ prejoin['condition'] }}
+      {%- endset -%}
+      {{- exceptions.raise_compiler_error(error_message) -}}
+    {%- else -%}
+      {%- set condition = prejoin['condition'] -%}
+    {%- endif -%}
+
+    {%- set prejoin_alias = 'pj_' + loop.index|string %}
       
-      {{ join_type }} join {{ relation }} as {{ prejoin_alias }}
-        on {{ datavault4dbt.multikey(columns=prejoin['this_column_name'], prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=prejoin['ref_column_name']) }}
+    {{ join_type }} join {{ relation }} as {{ prejoin_alias }}
+      on {{ datavault4dbt.multikey(columns=prejoin['this_column_name'], prefix=['lcte', prejoin_alias], condition=condition, operator=operator, right_columns=prejoin['ref_column_name']) }}
   {%- endfor -%}
 
   {% set last_cte = "prejoined_columns" -%}
