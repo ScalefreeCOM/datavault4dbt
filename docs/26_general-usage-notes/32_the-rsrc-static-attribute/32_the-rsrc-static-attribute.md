@@ -27,7 +27,27 @@ If an entity is loaded from multiple sources, each source should be filtered dow
 
 Sometimes the record source column inside one staging area is not always the same, but has some dynamic parts in it. Sometimes the rsrc column includes the ldts of each load and could look something like this: `SALESFORCE/Partners/2022-01-01T07:00:00`.
 
-Obviously the timestamp part inside that rsrc would change from load to load, and we now need to identify parts of it that will be static over all loads. In the shown example it would be `SALESFORCE/Partners`. That expression now needs to be enriched with wildcard expressions to catch all occurrences of the static part of the record source. In BigQuery the wildcard would be `*` and therefore the rsrc_static would be `*/SALESFORCE/Partners/*`.
+Obviously the timestamp part inside that rsrc would change from load to load, and we now need to identify parts of it that will be static over all loads. In the shown example it would be `SALESFORCE/Partners`. That expression now needs to be enriched with wildcard expressions to catch all occurrences of the static part of the record source. In BigQuery the wildcard would be `*` and therefore the rsrc_static would be `*/SALESFORCE/Partners/*`. 
+
+#### EXCEPTIONS
+
+By default, `rsrc_static` values are compared using the `=` operator and the wildcard character is `*`. However, Snowflake does not interpret wildcard characters when using an equality comparison. Instead, Snowflake interprets `*/SALESFORCE/Partners/*` as a literal string.
+
+To support dynamic record sources, the Snowflake implementation of the macros therefore uses the `LIKE` operator whenever `rsrc_static` is evaluated. Consequently, the wildcard character for Snowflake is `%` instead of `*`. For example, the equivalent Snowflake `rsrc_static` value would be:
+
+`%/SALESFORCE/Partners/%`
+
+Additionally, when using the `LIKE` operator in Snowflake, the underscore character `_` is treated as a wildcard matching exactly one character. Therefore, if an underscore is intended to be matched as a literal character within `rsrc_static`, it needs to be escaped as `\\_`.
+
+For example, a record source containing:
+
+`SALESFORCE/ORDER_ITEMS`
+
+should use an `rsrc_static` pattern such as:
+
+`%/SALESFORCE/ORDER\\_ITEMS/%`
+
+This ensures that the underscore is treated as a literal underscore instead of a single-character wildcard.
 
 ## SPECIAL CASES
 
