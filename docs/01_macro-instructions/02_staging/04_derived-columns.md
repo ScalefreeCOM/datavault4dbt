@@ -24,6 +24,11 @@ derived_columns:
         src_cols_required:
             - <src_col_2>
             - <src_col_3>
+    <col_alias_3>:
+        value: <expression_3>
+        datatype: <datatype_3>
+        src_cols_required: <src_col_3>
+        overwrite_src_cols: true   # optional — drops src_col_3 from the output
 ```
 
 Depending on how `col_alias` and `src_col` are called, two different behaviors can be achieved:
@@ -51,3 +56,18 @@ It must only be set for SQL expressions. For static strings, it will be set to S
 The parameter `src_cols_required` is only required when the Stage model is configured to not include the source columns by setting the parameter `include_source_columns` to false.
 
 If this is the case, you have to list all columns used within the SQL expressions under the parameter `src_cols_required`. This information is required to properly generate the model SQL.
+
+## OVERWRITE SOURCE COLUMNS
+
+The optional boolean parameter `overwrite_src_cols` can be set per derived column. When set to `true`, the source columns listed under `src_cols_required` are **excluded from the staging CTE output**, so only the derived alias column appears. The parameter defaults to `false` when omitted.
+
+```jinja
+derived_columns:
+    domain:
+        value: Domäne
+        datatype: STRING
+        src_cols_required: Domäne
+        overwrite_src_cols: true
+```
+
+In this example, `Domäne` is excluded from the staging CTE and only `domain` appears in the output.
