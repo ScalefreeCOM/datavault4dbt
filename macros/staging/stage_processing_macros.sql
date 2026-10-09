@@ -78,6 +78,10 @@
     {% elif set_casing|lower in ['lower', 'lowercase'] %}
         {% set exclude_columns_list = exclude_columns_list | map('lower') | list %}
         {% set columns_list = columns_list | map('lower') | list %}
+    {% else %}
+        {#- Callers pass '| map' generators; materialize them, otherwise the first 'in' check below consumes the exclude list. -#}
+        {% if datavault4dbt.is_list(exclude_columns_list) %}{% set exclude_columns_list = exclude_columns_list | list %}{% endif %}
+        {% if datavault4dbt.is_list(columns_list) %}{% set columns_list = columns_list | list %}{% endif %}
     {% endif %}
 
     {% set columns_to_select = [] %}
