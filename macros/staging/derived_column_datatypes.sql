@@ -65,7 +65,13 @@
             {%- endif -%}
 
             {%- do columns.update({column_name: {'datatype': datatype, 'value': value, 'col_size': col_size} }) -%}
-        
+
+        {%- elif column_value is mapping and not column_value.get('datatype') and column_value.get('value') is string and column_value.get('value') | first == '!' -%}
+        {# Static string without datatype. It is rendered as a string literal, so the default string datatype is applied. #}
+
+            {%- set datatype = datavault4dbt.string_default_dtype(type='derived_columns') -%}
+            {%- do columns.update({column_name: {'datatype': datatype, 'value': column_value['value'], 'col_size': ""} }) -%}
+
         {%- elif column_value is mapping and not column_value.get('datatype') -%}
 
                 {%- set value = column_value['value'] -%}
