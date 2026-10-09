@@ -104,6 +104,10 @@
     {% elif set_casing|lower in ['lower', 'lowercase'] %}
         {% set exclude_columns_list = exclude_columns_list | map('lower') | list %}
         {% set columns_list = columns_list | map('lower') | list %}
+    {% else %}
+        {#- Callers pass '| map' generators; materialize them, otherwise the first 'in' check below consumes the exclude list. -#}
+        {% if datavault4dbt.is_list(exclude_columns_list) %}{% set exclude_columns_list = exclude_columns_list | list %}{% endif %}
+        {% if datavault4dbt.is_list(columns_list) %}{% set columns_list = columns_list | list %}{% endif %}
     {% endif %}
 
     {% set columns_to_select = [] %}
@@ -196,6 +200,37 @@
     {%- endif -%}
 
     {%- do return(ns.extracted_input_columns) -%}
+
+{%- endmacro -%}
+
+
+{%- macro extract_overwrite_columns(columns_dict=none) -%}
+{#- Returns all src_cols_required for derived columns where overwrite_src_cols=true.
+    Used to drop the original source column from the derived_columns CTE SELECT list,
+    so only the renamed alias survives (e.g. when renaming a column with special characters).
+    Without src_cols_required, 'value' is used if it is a plain column name; otherwise an error is raised. -#}
+
+    {%- set ns = namespace(overwrite_columns = []) -%}
+
+    {%- if columns_dict is mapping -%}
+        {%- for key, value in columns_dict.items() -%}
+            {%- if value is mapping and value.get('overwrite_src_cols', false) -%}
+                {%- if 'src_cols_required' in value -%}
+                    {%- if datavault4dbt.is_list(value['src_cols_required']) -%}
+                        {%- set ns.overwrite_columns = ns.overwrite_columns + value['src_cols_required'] -%}
+                    {%- else -%}
+                        {%- do ns.overwrite_columns.append(value['src_cols_required']) -%}
+                    {%- endif -%}
+                {%- elif datavault4dbt.is_attribute(value['value']) -%}
+                    {%- do ns.overwrite_columns.append(value['value']) -%}
+                {%- else -%}
+                    {{- exceptions.raise_compiler_error("Derived column '" ~ key ~ "' sets 'overwrite_src_cols: true', but its 'value' is not a plain column name: " ~ value['value'] ~ ". Use 'src_cols_required' to list the source columns to overwrite.") -}}
+                {%- endif -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endif -%}
+
+    {%- do return(ns.overwrite_columns) -%}
 
 {%- endmacro -%}
 
