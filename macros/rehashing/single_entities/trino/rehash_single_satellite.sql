@@ -10,7 +10,7 @@ dbt run-operation rehash_single_satellite --args '{satellite: customer_n0_s, has
     {% set satellite_relation = ref(satellite) %}
     {% set parent_relation = ref(parent_entity) %}
 
-    {% set ldts_col = var(datavault4dbt.ldts_alias, 'ldts') %}
+    {% set ldts_col = var('datavault4dbt.ldts_alias', 'ldts') %}
 
     {% set new_hashkey_name = hashkey + '_new' %}
     {% set new_hashdiff_name = hashdiff + '_new' %}

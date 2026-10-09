@@ -9,7 +9,7 @@
 
     {% set parent_relation = ref(parent_entity) %}
 
-    {% set ldts_col = var(datavault4dbt.ldts_alias, 'ldts') %}
+    {% set ldts_col = var('datavault4dbt.ldts_alias', 'ldts') %}
 
     {% if overwrite_hash_values %}
         {% set new_hashkey_name = hashkey %}

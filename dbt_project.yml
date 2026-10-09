@@ -31,6 +31,12 @@ vars:
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   datavault4dbt.hashdiff_use_trim: TRUE
 
+  # Datatypes the hash inputs are casted to before hashing. 'attribute' is one column, 'concat' the joined payload.
+  # Shortening either truncates hash input silently. On sqlserver, synapse and fabric a shortened 'attribute'
+  # also bounds the whole payload. Read the Global Variables docs page before changing them.
+  datavault4dbt.hash_input_attribute_dtype: {"bigquery":"STRING","snowflake":"STRING", "exasol": "VARCHAR(20000) UTF8", "postgres": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle":"VARCHAR2(2000)", databricks: "STRING", trino: "VARCHAR", "sqlserver": "VARCHAR(MAX)"}
+  datavault4dbt.hash_input_concat_dtype: {"bigquery":"STRING","snowflake":"STRING", "exasol": "VARCHAR(2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle":"VARCHAR2(2000)", databricks: "STRING", trino: "VARCHAR", "sqlserver": "VARCHAR(MAX)"}
+
   # Delimiters used when concatenating columns before hashing
   datavault4dbt.concat_string: '||'
   datavault4dbt.quote_character: '"'

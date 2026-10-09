@@ -244,6 +244,23 @@ macros:
   - name: default__hash_default_values
     description: Default implementation of hash_default_values. Accepts the same arguments as the parent macro.
 
+  - name: hash_input_dtype
+    description: >
+      Returns the string datatype that hash inputs are casted to, before they are handed over to
+      the hash function. Reads the global variables 'datavault4dbt.hash_input_attribute_dtype'
+      and 'datavault4dbt.hash_input_concat_dtype'. Multi Active Satellites keep a hardcoded
+      datatype for the concatenated payload, but not for the single input columns.
+    arguments:
+      - name: type
+        type: string
+        description: >
+          Which cast to resolve. 'attribute' for a single input column inside
+          attribute_standardise, 'concat' for the fully concatenated payload inside
+          concattenated_standardise. Defaults to 'concat'.
+
+  - name: default__hash_input_dtype
+    description: Default implementation of hash_input_dtype. Accepts the same arguments as the parent macro.
+
   - name: hash_method
     description: >
       Returns the configured hash algorithm name for the target adapter. Reads the global
