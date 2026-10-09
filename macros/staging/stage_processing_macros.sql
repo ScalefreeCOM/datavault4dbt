@@ -181,17 +181,24 @@
 {%- macro extract_overwrite_columns(columns_dict=none) -%}
 {#- Returns all src_cols_required for derived columns where overwrite_src_cols=true.
     Used to drop the original source column from the derived_columns CTE SELECT list,
-    so only the renamed alias survives (e.g. when renaming a column with special characters). -#}
+    so only the renamed alias survives (e.g. when renaming a column with special characters).
+    Without src_cols_required, 'value' is used if it is a plain column name; otherwise an error is raised. -#}
 
     {%- set ns = namespace(overwrite_columns = []) -%}
 
     {%- if columns_dict is mapping -%}
         {%- for key, value in columns_dict.items() -%}
-            {%- if value is mapping and value.get('overwrite_src_cols', false) and 'src_cols_required' in value -%}
-                {%- if datavault4dbt.is_list(value['src_cols_required']) -%}
-                    {%- set ns.overwrite_columns = ns.overwrite_columns + value['src_cols_required'] -%}
+            {%- if value is mapping and value.get('overwrite_src_cols', false) -%}
+                {%- if 'src_cols_required' in value -%}
+                    {%- if datavault4dbt.is_list(value['src_cols_required']) -%}
+                        {%- set ns.overwrite_columns = ns.overwrite_columns + value['src_cols_required'] -%}
+                    {%- else -%}
+                        {%- do ns.overwrite_columns.append(value['src_cols_required']) -%}
+                    {%- endif -%}
+                {%- elif datavault4dbt.is_attribute(value['value']) -%}
+                    {%- do ns.overwrite_columns.append(value['value']) -%}
                 {%- else -%}
-                    {%- do ns.overwrite_columns.append(value['src_cols_required']) -%}
+                    {{- exceptions.raise_compiler_error("Derived column '" ~ key ~ "' sets 'overwrite_src_cols: true', but its 'value' is not a plain column name: " ~ value['value'] ~ ". Use 'src_cols_required' to list the source columns to overwrite.") -}}
                 {%- endif -%}
             {%- endif -%}
         {%- endfor -%}
