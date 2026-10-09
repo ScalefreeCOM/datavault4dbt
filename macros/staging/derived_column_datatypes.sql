@@ -98,7 +98,9 @@
                 {%- else -%}
                 {# The input column name could not be found inside the source relation. #}
 
-                    {%- if execute -%}
+                    {%- if execute and datavault4dbt.is_expression(value) -%}
+                        {{ exceptions.raise_compiler_error("The derived column '" ~ column_name ~ "' uses the SQL expression " ~ value ~ " without a 'datatype'. The datatype of a SQL expression can not be detected. Set it with the key 'datatype'." ) }}
+                    {%- elif execute -%}
                         {{ exceptions.raise_compiler_error("Could not find the derived_column input column " + value + " inside the source relation " + source_relation|string + ". Try setting it manually with the key 'datatype'." ) }}
                     {%- else -%}
                         {%- set datatype = "" -%}
