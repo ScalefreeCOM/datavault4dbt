@@ -62,7 +62,7 @@ latest_entries_in_sat_prep AS (
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }},
         ROW_NUMBER() OVER(PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }} DESC) as rn
-    FROM 
+    FROM
         {{ this }}
 ),
 
@@ -71,40 +71,41 @@ latest_entries_in_sat AS (
     SELECT
         {{ parent_hashkey }},
         {{ ns.hdiff_alias }}
-    FROM 
+    FROM
         latest_entries_in_sat_prep
-    WHERE rn = 1  
+    WHERE rn = 1
 ),
 {%- endif %}
 
 {%- if not source_is_single_batch -%}
 {# Get a list of all distinct hashdiffs that exist for each parent_hashkey. #}
  lag_source_data AS (
-  SELECT 
+  SELECT
     {{ parent_hashkey }},
     {{ src_ldts }},
     {{ ns.hdiff_alias }},
-    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias
+    LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as prev_ns_hdiff_alias,
+    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
   FROM source_data
 ),
 
 deduped_row_hashdiff AS (
-  SELECT 
+  SELECT
     {{ parent_hashkey }},
     {{ src_ldts }},
-    {{ ns.hdiff_alias }}
+    {{ ns.hdiff_alias }},
+    rn
   FROM lag_source_data
   WHERE {{ ns.hdiff_alias }} != prev_ns_hdiff_alias OR prev_ns_hdiff_alias IS NULL
 ),
 
-
-
 {# Dedupe the source data regarding non-delta groups. #}
 deduped_rows AS (
 
-  SELECT 
+  SELECT
     source_data.{{ parent_hashkey }},
     source_data.{{ ns.hdiff_alias }},
+    deduped_row_hashdiff.rn,
     {{ datavault4dbt.alias_all(columns=source_cols, prefix='source_data') }}
   FROM source_data
   INNER JOIN deduped_row_hashdiff
@@ -123,11 +124,16 @@ records_to_insert AS (
         {{ datavault4dbt.alias_all(columns=source_cols, prefix=source_cte) }}
     FROM {{ source_cte }}
     {%- if is_incremental() %}
-    WHERE NOT EXISTS (
+    WHERE
+        {%- if not source_is_single_batch and not disable_hwm %}
+        {{ source_cte }}.rn > 1
+        OR
+        {%- endif %}
+        NOT EXISTS (
         SELECT 1
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
-            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }} 
+            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             )
     {%- endif %}
 
