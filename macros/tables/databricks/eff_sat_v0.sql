@@ -40,7 +40,7 @@ source_data AS (
         {{ src_ldts }},
         {{ src_rsrc }}
     FROM {{ source_relation }} src
-    WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
+    WHERE {{ src_ldts }} NOT IN ({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
     {%- if is_incremental() and not disable_hwm %}
     AND src.{{ src_ldts }} > (
         SELECT

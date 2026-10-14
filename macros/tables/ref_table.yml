@@ -1,0 +1,79 @@
+version: 2
+
+macros:
+  - name: ref_table
+    description: '{{ doc("ref_table") }}'
+    arguments:
+      - name: yaml_metadata
+        type: string
+        description: >
+          Optional. A YAML-formatted string that defines all parameters in a single block instead
+          of specifying each one directly in the macro call.
+      - name: ref_hub
+        type: string
+        description: >
+          Name of the underlying ref_hub model.
+      - name: ref_satellites
+        type: any
+        description: >
+          Name(s) of the reference satellites to be included in this ref_table. Optional: 'include' and 'exclude'
+          as dictionary keys for each satellite.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: historized
+        type: string
+        description: >
+          Possible values are 'full', 'latest', or 'snapshot'. Influences how much history this reference table
+          will hold.
+      - name: snapshot_relation
+        type: string
+        description: >
+          Only required if 'historized' is set to 'snapshot'. Name of the snapshot_v1 model to be used.
+      - name: snapshot_trigger_column
+        type: string
+        description: >
+          Only required if 'historized' is set to 'snapshot'. Defaults to global variable
+          'datavault4dbt.snapshot_trigger_column'. Only needs to be set if alias deviates from global variable.
+
+  - name: snowflake__ref_table
+    description: Snowflake-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: databricks__ref_table
+    description: Databricks-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: exasol__ref_table
+    description: Exasol-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: fabric__ref_table
+    description: Microsoft Fabric-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: oracle__ref_table
+    description: Oracle-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: postgres__ref_table
+    description: PostgreSQL-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: redshift__ref_table
+    description: Amazon Redshift-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: sqlserver__ref_table
+    description: SQL Server-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: synapse__ref_table
+    description: Azure Synapse Analytics-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: trino__ref_table
+    description: Trino-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
+  - name: default__ref_table
+    description: >
+      Default implementation of ref_table, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent ref_table macro.

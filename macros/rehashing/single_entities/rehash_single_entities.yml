@@ -16,16 +16,16 @@ macros:
         type: string
         description: The name of the existing hashkey column.
       - name: business_keys
-        type: string|list
-        description: The business key(s) used to calculate the new hash.
+        type: any
+        description: The business key(s) used to calculate the new hash. Accepts either a single string or a list of strings.
       - name: overwrite_hash_values
-        type: boolean
+        type: bool
         description: Whether to overwrite the old hashkey with the new one.
       - name: output_logs
-        type: boolean
+        type: bool
         description: Whether to output logs during the macro execution.
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: Whether to drop the old hashkey column after renaming.
 
   - name: hub_update_statement
@@ -43,7 +43,7 @@ macros:
         type: string
         description: The name of the existing hashkey column.
       - name: hash_config_dict
-        type: dict
+        type: dict[string, any]
         description: A dictionary containing the hash configuration.
 
   - name: rehash_single_link
@@ -62,19 +62,19 @@ macros:
         type: string
         description: The name of the existing link hashkey column.
       - name: hub_config
-        type: list
+        type: list[dict[string, any]]
         description: A list of dictionaries, where each dictionary contains hub_hashkey, hub_name, and business_keys for each hub involved in the link.
       - name: additional_hash_input_cols
-        type: list
+        type: list[string]
         description: A list of additional columns to include in the link hashkey calculation.
       - name: overwrite_hash_values
-        type: boolean
+        type: bool
         description: Whether to overwrite the old hashkeys with the new ones.
       - name: output_logs
-        type: boolean
+        type: bool
         description: Whether to output logs during the macro execution.
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: Whether to drop the old hashkey columns after renaming.
 
   - name: link_update_statement
@@ -86,7 +86,7 @@ macros:
         type: relation
         description: The link table relation.
       - name: hub_hashkeys
-        type: list
+        type: list[dict[string, any]]
         description: A list of dictionaries containing hub hashkey information.
       - name: link_hashkey
         type: string
@@ -95,7 +95,7 @@ macros:
         type: string
         description: The name of the new link hashkey column.
       - name: additional_hash_input_cols
-        type: list
+        type: list[string]
         description: Additional columns used in hash calculation.
 
   - name: rehash_single_ma_satellite
@@ -116,25 +116,25 @@ macros:
         type: string
         description: The name of the existing hashdiff column.
       - name: ma_keys
-        type: list
+        type: list[string]
         description: The multi-active key(s) of the satellite.
       - name: payload
-        type: list
+        type: list[string]
         description: The payload columns of the satellite.
       - name: parent_entity
         type: string
         description: The name of the parent entity (hub or link).
       - name: business_keys
-        type: string|list
-        description: The business key(s) of the parent entity.
+        type: any
+        description: The business key(s) of the parent entity. Accepts either a single string or a list of strings.
       - name: overwrite_hash_values
-        type: boolean
+        type: bool
         description: Whether to overwrite the old hashkey and hashdiff with the new ones.
       - name: output_logs
-        type: boolean
+        type: bool
         description: Whether to output logs during the macro execution.
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: Whether to drop the old hashkey and hashdiff columns after renaming.
 
   - name: ma_satellite_update_statement
@@ -155,16 +155,16 @@ macros:
         type: string
         description: The name of the existing hashkey column.
       - name: business_key_list
-        type: list
+        type: list[string]
         description: A list of business keys.
       - name: ma_keys
-        type: list
+        type: list[string]
         description: A list of multi-active keys.
       - name: ldts_col
         type: string
         description: The load date timestamp column name.
       - name: hash_config_dict
-        type: dict
+        type: dict[string, any]
         description: A dictionary containing the hash configuration.
       - name: parent_relation
         type: relation
@@ -195,16 +195,16 @@ macros:
         type: string
         description: The name of the parent entity (hub or link).
       - name: business_keys
-        type: string|list
-        description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
+        type: any
+        description: The business key(s) of the parent entity. Optional, only needed if parent is hub. Accepts either a single string or a list of strings.
       - name: overwrite_hash_values
-        type: boolean
+        type: bool
         description: Whether to overwrite the old hashkey with the new one.
       - name: output_logs
-        type: boolean
+        type: bool
         description: Whether to output logs during the macro execution.
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: Whether to drop the old hashkey column after renaming.
 
   - name: nh_satellite_update_statement
@@ -228,7 +228,7 @@ macros:
         type: relation
         description: The parent entity relation.
       - name: hash_config_dict
-        type: dict
+        type: dict[string, any]
         description: A dictionary containing the hash configuration.
 
   - name: rehash_single_satellite
@@ -249,22 +249,22 @@ macros:
         type: string
         description: The name of the existing hashdiff column.
       - name: payload
-        type: list
+        type: list[string]
         description: The payload columns of the satellite.
       - name: parent_entity
         type: string
         description: The name of the parent entity (hub or link).
       - name: business_keys
-        type: string|list
-        description: The business key(s) of the parent entity. Optional, only needed if parent is hub.
+        type: any
+        description: The business key(s) of the parent entity. Optional, only needed if parent is hub. Accepts either a single string or a list of strings.
       - name: overwrite_hash_values
-        type: boolean
+        type: bool
         description: Whether to overwrite the old hashkey and hashdiff with the new ones.
       - name: output_logs
-        type: boolean
+        type: bool
         description: Whether to output logs during the macro execution.
       - name: drop_old_values
-        type: boolean
+        type: bool
         description: Whether to drop the old hashkey and hashdiff columns after renaming.
 
   - name: satellite_update_statement
@@ -288,7 +288,7 @@ macros:
         type: string
         description: The load date timestamp column name.
       - name: hash_config_dict
-        type: dict
+        type: dict[string, any]
         description: A dictionary containing the hash configuration.
       - name: parent_relation
         type: relation

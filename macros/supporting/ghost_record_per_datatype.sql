@@ -690,6 +690,8 @@
 
 {%- set unknown_value__STRING = var('datavault4dbt.unknown_value__STRING', '(unknown)') -%}
 {%- set error_value__STRING = var('datavault4dbt.error_value__STRING', '(error)') -%}
+{%- set unknown_value_alt__STRING = var('datavault4dbt.unknown_value_alt__STRING', 'u') -%}
+{%- set error_value_alt__STRING = var('datavault4dbt.error_value_alt__STRING', 'e') -%}
 
 {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=datavault4dbt.hash_method())) -%}
 {%- set unknown_key = hash_default_values['unknown_key'] -%}
@@ -697,20 +699,44 @@
 
 {%- set datatype = datatype | string | upper | trim -%}
 
+{#- Extract the declared length of sized character types (e.g. VARCHAR(50) -> 50), if present. -#}
+{%- set char_length = none -%}
+{%- if (datatype.startswith('VARCHAR') or datatype.startswith('CHAR')) and '(' in datatype -%}
+    {%- set char_length = datatype.split('(')[1].split(')')[0] | int -%}
+{%- endif -%}
+
 {%- if ghost_record_type == 'unknown' -%}
         {%- if 'TIMESTAMP' in datatype %} CAST({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }} AS {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'DATE' %} CAST('{{ beginning_of_all_times_date }}' AS DATE) as {{ alias }}
-        {%- elif datatype in ['VARCHAR', 'STRING', 'TEXT'] %} '{{ unknown_value__STRING }}' as {{ alias }}
-        {%- elif datatype in ['INTEGER', 'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'DOUBLE', 'FLOAT', 'REAL', 'DECIMAL'] %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
+        {%- elif datatype.startswith('TIME') -%}
+            {%- if 'WITH TIME ZONE' in datatype %} CAST('00:00:01+00:00' AS {{ datatype }}) as {{ alias }}
+            {%- else %} CAST('00:00:01' AS {{ datatype }}) as {{ alias }}
+            {%- endif -%}
+        {%- elif datatype.startswith('VARCHAR') or datatype.startswith('CHAR') -%}
+            {%- if char_length is not none and char_length < unknown_value__STRING | length %} CAST('{{ unknown_value_alt__STRING }}' as {{ datatype }}) as {{ alias }}
+            {%- else %} CAST('{{ unknown_value__STRING }}' as {{ datatype }}) as {{ alias }}
+            {%- endif -%}
+        {%- elif datatype in ['STRING', 'TEXT'] %} '{{ unknown_value__STRING }}' as {{ alias }}
+        {%- elif datatype.startswith('DECIMAL') or datatype in ['INTEGER', 'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'DOUBLE', 'FLOAT', 'REAL'] %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST(FALSE as BOOLEAN) as {{ alias }}
+        {%- elif 'BINARY' in datatype %} from_hex({{ datavault4dbt.as_constant(column_str=unknown_key) }}) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- elif ghost_record_type == 'error' -%}
         {%- if 'TIMESTAMP' in datatype %} CAST({{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }} AS {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'DATE' %} CAST('{{ end_of_all_times_date }}' AS DATE) as {{ alias }}
-        {%- elif datatype in ['VARCHAR', 'STRING', 'TEXT'] %} '{{ error_value__STRING }}' as {{ alias }}
-        {%- elif datatype in ['INTEGER', 'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'DOUBLE', 'FLOAT', 'REAL', 'DECIMAL'] %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}
+        {%- elif datatype.startswith('TIME') -%}
+            {%- if 'WITH TIME ZONE' in datatype %} CAST('23:59:59+00:00' AS {{ datatype }}) as {{ alias }}
+            {%- else %} CAST('23:59:59' AS {{ datatype }}) as {{ alias }}
+            {%- endif -%}
+        {%- elif datatype.startswith('VARCHAR') or datatype.startswith('CHAR') -%}
+            {%- if char_length is not none and char_length < error_value__STRING | length %} CAST('{{ error_value_alt__STRING }}' as {{ datatype }}) as {{ alias }}
+            {%- else %} CAST('{{ error_value__STRING }}' as {{ datatype }}) as {{ alias }}
+            {%- endif -%}
+        {%- elif datatype in ['STRING', 'TEXT'] %} '{{ error_value__STRING }}' as {{ alias }}
+        {%- elif datatype.startswith('DECIMAL') or datatype in ['INTEGER', 'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'DOUBLE', 'FLOAT', 'REAL'] %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}
         {%- elif datatype == 'BOOLEAN' %} CAST(FALSE as BOOLEAN) as {{ alias }}
+        {%- elif 'BINARY' in datatype %} from_hex({{ datavault4dbt.as_constant(column_str=error_key) }}) as {{ alias }}
         {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
         {% endif %}
 {%- else -%}

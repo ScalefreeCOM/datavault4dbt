@@ -1,0 +1,79 @@
+version: 2
+
+macros:
+  - name: eff_sat_v0
+    description: '{{ doc("eff_sat_v0") }}'
+    arguments:
+      - name: yaml_metadata
+        type: string
+        description: >
+          Optional. A YAML-formatted string that defines all parameters in a single block instead
+          of specifying each one directly in the macro call.
+      - name: source_model
+        type: string
+        description: >
+          Name of the source model.
+      - name: tracked_hashkey
+        type: string
+        description: >
+          Name of the hashkey column to be tracked.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the loaddate column in the source model. Optional.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the record source column in the source model. Optional.
+      - name: is_active_alias
+        type: string
+        description: >
+          Name of the new active flag column. Optional.
+      - name: source_is_single_batch
+        type: bool
+        description: >
+          REQUIRED. Whether the source contains only one batch. Must be defined explicitly (true/false).
+      - name: disable_hwm
+        type: bool
+        description: >
+          Whether the High Water Mark should be disabled or not. Optional.
+      - name: additional_columns
+        type: any
+        description: >
+          Additional columns from source system or derived columns which should be part of the eff_sat.
+          The columns need to be available in all source models. Optional parameter, defaults to empty list.
+
+  - name: snowflake__eff_sat_v0
+    description: Snowflake-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: databricks__eff_sat_v0
+    description: Databricks-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: exasol__eff_sat_v0
+    description: Exasol-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: fabric__eff_sat_v0
+    description: Microsoft Fabric-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: oracle__eff_sat_v0
+    description: Oracle-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: postgres__eff_sat_v0
+    description: PostgreSQL-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: redshift__eff_sat_v0
+    description: Amazon Redshift-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: sqlserver__eff_sat_v0
+    description: SQL Server-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: synapse__eff_sat_v0
+    description: Azure Synapse Analytics-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: trino__eff_sat_v0
+    description: Trino-specific implementation of eff_sat_v0. Accepts the same arguments as the parent eff_sat_v0 macro.
+
+  - name: default__eff_sat_v0
+    description: >
+      Default implementation of eff_sat_v0, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent eff_sat_v0 macro.

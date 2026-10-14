@@ -1,0 +1,69 @@
+version: 2
+
+macros:
+  - name: ref_hub
+    description: '{{ doc("ref_hub") }}'
+    arguments:
+      - name: yaml_metadata
+        type: string
+        description: >
+          Optional. A YAML-formatted string that defines all parameters in a single block instead
+          of specifying each one directly in the macro call.
+      - name: ref_keys
+        type: any
+        description: >
+          Name of the reference key(s) available in the source model(s).
+      - name: source_models
+        type: dict[string, dict[string, any]]
+        description: >
+          Similar to other source_models parameters, e.g. in Hubs or Links.
+      - name: src_ldts
+        type: string
+        description: >
+          Name of the ldts column inside the source models. Is optional, will use the global variable 'datavault4dbt.ldts_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: src_rsrc
+        type: string
+        description: >
+          Name of the rsrc column inside the source models. Is optional, will use the global variable 'datavault4dbt.rsrc_alias'.
+          Needs to use the same column name as defined as alias inside the staging model.
+      - name: additional_columns
+        type: any
+        description: >
+          Additional columns from source system or derived columns which should be part of the ref_hub.
+          The columns need to be available in all source models. Optional parameter, defaults to empty list.
+
+  - name: snowflake__ref_hub
+    description: Snowflake-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: databricks__ref_hub
+    description: Databricks-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: exasol__ref_hub
+    description: Exasol-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: fabric__ref_hub
+    description: Microsoft Fabric-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: oracle__ref_hub
+    description: Oracle-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: postgres__ref_hub
+    description: PostgreSQL-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: redshift__ref_hub
+    description: Amazon Redshift-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: sqlserver__ref_hub
+    description: SQL Server-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: synapse__ref_hub
+    description: Azure Synapse Analytics-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: trino__ref_hub
+    description: Trino-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
+  - name: default__ref_hub
+    description: >
+      Default implementation of ref_hub, co-located in the BigQuery adapter folder as BigQuery uses this fallback
+      via adapter.dispatch(). Accepts the same arguments as the parent ref_hub macro.

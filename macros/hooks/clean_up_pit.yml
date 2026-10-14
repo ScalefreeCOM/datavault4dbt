@@ -1,0 +1,21 @@
+version: 2
+
+macros:
+  - name: clean_up_pit
+    description: '{{ doc("clean_up_pit") }}'
+    arguments:
+      - name: snapshot_relation
+        type: string
+        description: >
+          The name of the dbt model that creates the snapshot table / view that has the logarithmic snapshot
+          logic applied.
+      - name: snapshot_trigger_column
+        type: string
+        description: >
+          The name of the boolean column inside the snapshot tables that activates/deactivates single snapshots.
+          If not set, the name defined inside the global variable 'datavault4dbt.snapshot_trigger_column' is used.
+      - name: sdts
+        type: string
+        description: >
+          The name of the snapshot date timestamp column inside the snapshot table. If not set, the name defined
+          inside the global variable 'datavault4dbt.sdts_alias' is used.
