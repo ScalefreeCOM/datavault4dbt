@@ -53,6 +53,8 @@ Inside `yaml_metadata`, always quote an rsrc_static that starts with `%`. YAML d
 
 Record Tracking Satellites write the rsrc_static value itself into the record source column. Therefore the escaping does not change which rows they load.
 
+The examples in the macro documentation do not escape `_`, because the escape syntax differs between data platforms. An unescaped `_` still matches a literal underscore. Escape it if another record source in the same stage differs from the intended one only at that position.
+
 ## SPECIAL CASES
 
 ### NO DYNAMIC PART

@@ -87,7 +87,7 @@ source_models:
         - currency
         - status_flag
         - date
-      rsrc_static: '%/SHOP/Creditcard_Purchases/%'
+      rsrc_static: '%/SHOP/CreditcardPurchases/%'
 {%- endset -%}    
 
 {{ datavault4dbt.nh_link(yaml_metadata=yaml_metadata) }}
