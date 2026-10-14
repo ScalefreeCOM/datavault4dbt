@@ -21,11 +21,11 @@ Features:
     source_models={
         'stg_account_crm': {
             'bk_columns': 'account_id',
-            'rsrc_static': '*/CRM/Accounts/*'
+            'rsrc_static': '%/CRM/Accounts/%'
         },
         'stg_account_erp': {
             'bk_columns': 'account_id',
-            'rsrc_static': '*/ERP/Accounts/*'
+            'rsrc_static': '%/ERP/Accounts/%'
         }
     }
 ) }}
@@ -45,10 +45,10 @@ business_keys: account_id
 source_models:
   stg_account_crm:
     bk_columns: account_id
-    rsrc_static: '*/CRM/Accounts/*'
+    rsrc_static: '%/CRM/Accounts/%'
   stg_account_erp:
     bk_columns: account_id
-    rsrc_static: '*/ERP/Accounts/*'
+    rsrc_static: '%/ERP/Accounts/%'
 {%- endset -%}
 
 {{ datavault4dbt.hub(yaml_metadata=meta) }}

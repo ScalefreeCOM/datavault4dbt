@@ -16,6 +16,7 @@ This page explains the rsrc_static attribute, which is used in multiple macros:
 - Links
 - Non-Historized Links
 - Record Tracking Satellites
+- Reference Hubs
 
 ## PURPOSE
 
@@ -27,27 +28,30 @@ If an entity is loaded from multiple sources, each source should be filtered dow
 
 Sometimes the record source column inside one staging area is not always the same, but has some dynamic parts in it. Sometimes the rsrc column includes the ldts of each load and could look something like this: `SALESFORCE/Partners/2022-01-01T07:00:00`.
 
-Obviously the timestamp part inside that rsrc would change from load to load, and we now need to identify parts of it that will be static over all loads. In the shown example it would be `SALESFORCE/Partners`. That expression now needs to be enriched with wildcard expressions to catch all occurrences of the static part of the record source. In BigQuery the wildcard would be `*` and therefore the rsrc_static would be `*/SALESFORCE/Partners/*`. 
+Obviously the timestamp part inside that rsrc would change from load to load, and we now need to identify parts of it that will be static over all loads. In the shown example it would be `SALESFORCE/Partners/`. That expression now needs to be enriched with wildcards to catch all occurrences of the static part of the record source. Therefore the rsrc_static would be `SALESFORCE/Partners/%`.
 
-#### EXCEPTIONS
+## WILDCARDS
 
-By default, `rsrc_static` values are compared using the `=` operator and the wildcard character is `*`. However, Snowflake does not interpret wildcard characters when using an equality comparison. Instead, Snowflake interprets `*/SALESFORCE/Partners/*` as a literal string.
+On all data platforms, the macros compare the record source column with rsrc_static by using the SQL `LIKE` operator. Therefore the `LIKE` syntax of your data platform applies:
 
-To support dynamic record sources, the Snowflake implementation of the macros therefore uses the `LIKE` operator whenever `rsrc_static` is evaluated. Consequently, the wildcard character for Snowflake is `%` instead of `*`. For example, the equivalent Snowflake `rsrc_static` value would be:
+- `%` matches any sequence of characters, including an empty one.
+- `_` matches exactly one character.
 
-`%/SALESFORCE/Partners/%`
+The character `*` is not a wildcard. An rsrc_static like `*/SALESFORCE/Partners/*` is compared as a literal string and does not match the record sources. Use `%` instead.
 
-Additionally, when using the `LIKE` operator in Snowflake, the underscore character `_` is treated as a wildcard matching exactly one character. Therefore, if an underscore is intended to be matched as a literal character within `rsrc_static`, it needs to be escaped as `\\_`.
+### LITERAL UNDERSCORES IN SNOWFLAKE
 
-For example, a record source containing:
+Since `_` matches any single character, `SALESFORCE/ORDER_ITEMS/%` also matches a record source like `SALESFORCE/ORDERXITEMS/2022-01-01T07:00:00`. To match a literal `_`, it needs to be escaped. In Snowflake, the macros for Hubs, Links, Non-Historized Links and Reference Hubs use the backslash as escape character, and the generated SQL must contain `\\_`. How many backslashes you type depends on where rsrc_static is defined:
 
-`SALESFORCE/ORDER_ITEMS`
+| Definition of rsrc_static | Value to type |
+|---|---|
+| `yaml_metadata`, single quotes | `'SALESFORCE/ORDER\\_ITEMS/%'` |
+| `yaml_metadata`, double quotes | `"SALESFORCE/ORDER\\\\_ITEMS/%"` |
+| Jinja dictionary | `'SALESFORCE/ORDER\\\\_ITEMS/%'` |
 
-should use an `rsrc_static` pattern such as:
+Inside `yaml_metadata`, always quote an rsrc_static that starts with `%`. YAML does not allow an unquoted value to start with `%`.
 
-`%/SALESFORCE/ORDER\\_ITEMS/%`
-
-This ensures that the underscore is treated as a literal underscore instead of a single-character wildcard.
+Record Tracking Satellites write the rsrc_static value itself into the record source column. Therefore the escaping does not change which rows they load.
 
 ## SPECIAL CASES
 
