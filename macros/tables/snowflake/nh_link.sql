@@ -3,6 +3,7 @@
 {%- set ns = namespace(last_cte= "", source_included_before = {}, has_rsrc_static_defined=true, source_models_rsrc_dict={}) -%}
 
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
+{%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_models: '~source_models, false) }}{% endif %}
 
@@ -131,7 +132,7 @@ WITH
 
             SELECT
                 rsrc_static,
-                MAX({{ src_ldts }}) AS max_ldts
+                COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) AS max_ldts
             FROM {{ ns.last_cte }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             GROUP BY rsrc_static
@@ -183,7 +184,7 @@ src_new_{{ source_number }} AS (
         WHERE 
         {% for rsrc_static in rsrc_statics %}
           (src.{{ src_rsrc }} = '{{ rsrc_static }}' AND src.{{ src_ldts }} > (
-            SELECT MAX(max_ldts)
+            SELECT COALESCE(MAX(max_ldts), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM max_ldts_per_rsrc_static_in_target
             WHERE rsrc_static = '{{ rsrc_static }}' AND max_ldts != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             ))
@@ -193,7 +194,7 @@ src_new_{{ source_number }} AS (
         {%- endfor -%}
     {%- elif is_incremental() and source_models | length == 1 and not ns.has_rsrc_static_defined and not disable_hwm %}
         WHERE src.{{ src_ldts }} > (
-            SELECT MAX({{ src_ldts }})
+            SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM {{ this }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
