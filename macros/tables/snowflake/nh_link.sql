@@ -65,7 +65,7 @@ WITH
                     SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}' ESCAPE '\\'
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
@@ -78,7 +78,7 @@ WITH
                     SELECT max(t.{{ src_ldts }}) as {{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}' ESCAPE '\\'
 					AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
                     GROUP BY rsrc_static
                     {%- if not loop.last %}
