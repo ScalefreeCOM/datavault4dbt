@@ -39,21 +39,27 @@ On all data platforms, the macros compare the record source column with rsrc_sta
 
 The character `*` is not a wildcard. An rsrc_static like `*/SALESFORCE/Partners/*` is compared as a literal string and does not match the record sources. Use `%` instead.
 
-### LITERAL UNDERSCORES IN SNOWFLAKE
+### LITERAL UNDERSCORES AND PERCENT SIGNS
 
-Since `_` matches any single character, `SALESFORCE/ORDER_ITEMS/%` also matches a record source like `SALESFORCE/ORDERXITEMS/2022-01-01T07:00:00`. To match a literal `_`, it needs to be escaped. In Snowflake, the macros for Hubs, Links, Non-Historized Links and Reference Hubs use the backslash as escape character, and the generated SQL must contain `\\_`. How many backslashes you type depends on where rsrc_static is defined:
+Since `_` matches any single character, `SALESFORCE/ORDER_ITEMS/%` also matches a record source like `SALESFORCE/ORDERXITEMS/2022-01-01T07:00:00`. An unescaped `_` still matches a literal underscore, so this only matters if another record source in the same stage differs from the intended one exactly at that position. The examples in the macro documentation therefore do not escape `_`.
 
-| Definition of rsrc_static | Value to type |
+To match only a literal `_`, escape it. The syntax depends on the data platform:
+
+| Data platform | rsrc_static with a literal `_` |
 |---|---|
-| `yaml_metadata`, single quotes | `'SALESFORCE/ORDER\\_ITEMS/%'` |
-| `yaml_metadata`, double quotes | `"SALESFORCE/ORDER\\\\_ITEMS/%"` |
-| Jinja dictionary | `'SALESFORCE/ORDER\\\\_ITEMS/%'` |
+| Snowflake, BigQuery, Databricks, Redshift | `'SALESFORCE/ORDER\\_ITEMS/%'` |
+| PostgreSQL, Oracle, Trino, Exasol | `'SALESFORCE/ORDER\_ITEMS/%'` |
+| SQL Server, Azure Synapse, Microsoft Fabric | `'SALESFORCE/ORDER[_]ITEMS/%'` |
+
+A literal `%` is escaped the same way: replace `_` with `%` in the table, for example `'SALESFORCE/100\\%/%'` on Snowflake or `'SALESFORCE/100[%]/%'` on SQL Server.
+
+The values in the table apply to single-quoted strings in `yaml_metadata`. In a Jinja dictionary or a double-quoted YAML string, type every backslash twice, for example `'SALESFORCE/ORDER\\\\_ITEMS/%'` on Snowflake. The PostgreSQL value assumes `standard_conforming_strings = on`, which is the default.
+
+On the platforms of the first two rows, the backslash is the escape character. A record source that contains a literal backslash therefore needs it doubled in rsrc_static: `\\\\` in the first row, `\\` in the second row. On SQL Server, Azure Synapse and Microsoft Fabric, `[` and `]` are wildcards as well. Write a literal `[` as `[[]`.
 
 Inside `yaml_metadata`, always quote an rsrc_static that starts with `%`. YAML does not allow an unquoted value to start with `%`.
 
-Record Tracking Satellites write the rsrc_static value itself into the record source column. Therefore the escaping does not change which rows they load.
-
-The examples in the macro documentation do not escape `_`, because the escape syntax differs between data platforms. An unescaped `_` still matches a literal underscore. Escape it if another record source in the same stage differs from the intended one only at that position.
+Do not escape `_` or `%` in the rsrc_static of Record Tracking Satellites. They write the rsrc_static value itself into the record source column and look it up again with `LIKE`. On most data platforms, an escaped value does not match its own stored text, and the incremental load then loses the high-water mark of that value.
 
 ## SPECIAL CASES
 
