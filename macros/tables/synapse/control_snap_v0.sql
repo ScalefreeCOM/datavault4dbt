@@ -27,7 +27,7 @@ initial_timestamps_prep AS (
 
 initial_timestamps AS (
     SELECT TOP (DATEDIFF(DAY, '{{ start_date }}', {{ end_date }}) + 1)
-    DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, CONVERT({{ datavault4dbt.timestamp_default_dtype() }}, '{{ start_date }} {{ daily_snapshot_time }}')) AS {{ sdts_alias }}
+    DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, CONVERT(datetime2(6), '{{ start_date }} {{ daily_snapshot_time }}')) AS {{ sdts_alias }}
     FROM initial_timestamps_prep s1
     CROSS JOIN initial_timestamps_prep s2
     CROSS JOIN initial_timestamps_prep s3

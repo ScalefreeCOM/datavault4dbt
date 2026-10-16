@@ -26,7 +26,7 @@ with generate_dates({{ sdts_alias }}) as (
 initial_timestamps AS (
     
     SELECT
-        CAST({{ sdts_alias }} AS {{ datavault4dbt.timestamp_default_dtype() }}) AS {{ sdts_alias }}
+        {{ sdts_alias }}
     FROM 
         generate_dates
     {%- if is_incremental() %}
@@ -39,9 +39,9 @@ initial_timestamps AS (
 enriched_timestamps AS (
 
     SELECT
-        sdts as {{ sdts_alias }},
+        CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) as {{ sdts_alias }},
         1 as force_active,
-        sdts AS replacement_sdts,
+        CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) AS replacement_sdts,
         CONCAT('Snapshot ', TO_CHAR(sdts, 'YYYY-MM-DD')) AS caption,
         CASE
             WHEN EXTRACT(MINUTE FROM sdts) = 0 AND EXTRACT(SECOND FROM sdts) = 0 THEN 1
