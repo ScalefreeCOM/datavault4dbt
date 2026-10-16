@@ -50,10 +50,7 @@
     {# Add New Columns #}
     {{ log('Executing ALTER TABLE to add columns...', output_logs) }}
     
-    {% set rename_queries = ['BEGIN'] %}
-    {{ rename_queries.append(datavault4dbt.custom_alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns)) }}
-    {{ rename_queries.append('END') }}
-    {% do run_query(rename_queries|join('\n')) %}
+    {% do datavault4dbt.custom_alter_relation_add_remove_columns(relation=satellite_relation, add_columns=new_hash_columns) %}
 
 
     {# Calculate Hashes (MERGE) #}
@@ -93,20 +90,21 @@
     {% if overwrite_hash_values %}
         {{ log('Replacing existing hash values...', output_logs) }}
 
-        {% set ns_rename = namespace(rename_queries = ['BEGIN']) %}
+        {% set ns_rename = namespace(rename_queries = []) %}
 
         {# Rename Hashkey #}
-        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) }}
+        {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
 
-        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) }}
+        {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
 
         {# Rename Hashdiff #}
-        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) }}
+        {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=hashdiff, new_col_name=hashdiff + '_deprecated')) %}
 
-        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) }}
+        {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=satellite_relation, old_col_name=new_hashdiff_name, new_col_name=hashdiff)) %}
 
-        {{ ns_rename.rename_queries.append('END') }}
-        {% do run_query(ns_rename.rename_queries|join('\n')) %}
+        {% for rename_query in ns_rename.rename_queries %}
+            {% do run_query(rename_query) %}
+        {% endfor %}
 
         {# Drop Old Values #}
         {% if drop_old_values %}
