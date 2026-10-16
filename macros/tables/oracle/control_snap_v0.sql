@@ -26,7 +26,7 @@ with generate_dates({{ sdts_alias }}) as (
 initial_timestamps AS (
     
     SELECT
-        {{ sdts_alias }}
+        CAST({{ sdts_alias }} AS {{ datavault4dbt.timestamp_default_dtype() }}) AS {{ sdts_alias }}
     FROM 
         generate_dates
     {%- if is_incremental() %}

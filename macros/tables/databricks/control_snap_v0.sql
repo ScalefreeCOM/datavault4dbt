@@ -27,7 +27,7 @@ cte as(
 
 initial_timestamps AS (
 
-    SELECT *
+    SELECT CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) AS sdts
     FROM
         cte
     WHERE

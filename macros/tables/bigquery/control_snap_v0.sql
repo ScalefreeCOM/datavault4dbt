@@ -18,7 +18,7 @@ WITH
 
 initial_timestamps AS (
 
-    SELECT sdts
+    SELECT CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) AS sdts
     FROM
         UNNEST(GENERATE_TIMESTAMP_ARRAY(
             TIMESTAMP_ADD(

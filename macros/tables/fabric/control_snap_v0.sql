@@ -28,7 +28,7 @@ initial_timestamps_prep AS (
 
 initial_timestamps AS (
     SELECT TOP (DATEDIFF(DAY, '{{ start_date }}', {{ end_date}}) + 1)
-    DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, CONVERT(datetime2(6), '{{ start_date }} {{ daily_snapshot_time }}')) AS {{ sdts_alias }}
+    DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, CONVERT({{ datavault4dbt.timestamp_default_dtype() }}, '{{ start_date }} {{ daily_snapshot_time }}')) AS {{ sdts_alias }}
     FROM initial_timestamps_prep s1
     CROSS JOIN initial_timestamps_prep s2
 		CROSS JOIN initial_timestamps_prep s3
@@ -39,9 +39,9 @@ initial_timestamps AS (
 enriched_timestamps AS (
 
     SELECT 
-        CONVERT(datetime2(6), {{ sdts_alias }}) as {{ sdts_alias }},
+        CONVERT({{ datavault4dbt.timestamp_default_dtype() }}, {{ sdts_alias }}) as {{ sdts_alias }},
         1 as force_active,
-        CONVERT(datetime2(6), {{ sdts_alias }}) AS replacement_{{ sdts_alias }},
+        CONVERT({{ datavault4dbt.timestamp_default_dtype() }}, {{ sdts_alias }}) AS replacement_{{ sdts_alias }},
         CONCAT('Snapshot ', CONVERT(date, {{ sdts_alias }}, 23)) AS caption,
         CASE
             WHEN DATEPART(MINUTE, {{ sdts_alias }}) = 0 AND DATEPART(SECOND, {{ sdts_alias }}) = 0 THEN 1
