@@ -18,12 +18,14 @@ macros:
         description: >
           The name of the hashkey column inside the previously referred Hub entity.
       - name: sat_names
-        type: list[string]
+        type: list[any]
         description: >
           A list of all the satellites that should be included in this PIT table. Can only be satellites that
           are attached to the tracked Hub, and should typically include all those satellites. You should always
           refer here to the version 1 satellites, since those hold the load-end-date. The macro currently
-          supports regular satellites and nh-satellites.
+          supports regular satellites and nh-satellites. Each entry can be a plain string (the satellite name)
+          or a dict with 'name' and an optional 'mandatory' (bool, default false). When mandatory is true, PIT
+          rows are only included where this satellite found a match.
       - name: snapshot_relation
         type: string
         description: >
@@ -77,6 +79,15 @@ macros:
           This can significantly improve performance of incremental loads on large snapshot tables. If set to True,
           the model needs to be configured with a unique_key constraint as there may be updates due to late arriving data.
           Affected Adapters: Snowflake only! Optional parameter, default is False.
+      - name: mandatory_strategy
+        type: string
+        description: >
+          Optional. When set, applies a satellite coverage filter to all satellites in sat_names. Accepted
+          values: 'any' or 'all'. 'any' includes a row only if at least one satellite has a record at that
+          snapshot time (OR logic). 'all' includes a row only if every satellite has a record at that snapshot
+          time (AND logic). Mutually exclusive with the per-satellite 'mandatory' flags in sat_names: when
+          mandatory_strategy is set, those flags are ignored and all satellites participate. Default: not set
+          (no filtering applied).
 
   - name: snowflake__pit
     description: Snowflake-specific implementation of pit. Accepts the same arguments as the parent pit macro.
