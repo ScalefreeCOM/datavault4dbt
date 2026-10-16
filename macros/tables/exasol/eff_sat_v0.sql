@@ -239,6 +239,7 @@ current_status AS (
 
             SELECT DISTINCT 
                 cus.{{ tracked_hashkey }},
+                {# Typed NULL, not a bare null: see the comment in the multi-batch CTE above. #}
                 {% for col in additional_columns -%}
                 NULLIF(cus.{{ col }}, cus.{{ col }}) as {{ col }},
                 {% endfor -%}
