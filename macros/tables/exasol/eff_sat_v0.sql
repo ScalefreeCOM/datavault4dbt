@@ -210,8 +210,11 @@ current_status AS (
 
             SELECT DISTINCT 
                 cus.{{ tracked_hashkey }},
+                {# An uncast NULL fails in the UNION below on Exasol: "datatypes are
+                   not compatible for Union". NULLIF(x, x) is always NULL and has the
+                   type of the existing column. #}
                 {% for col in additional_columns -%}
-                null as {{ col }},
+                NULLIF(cus.{{ col }}, cus.{{ col }}) as {{ col }},
                 {% endfor -%}
                 ldts.min_ldts as {{ src_ldts }},
                 '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
@@ -236,8 +239,9 @@ current_status AS (
 
             SELECT DISTINCT 
                 cus.{{ tracked_hashkey }},
+                {# Typed NULL, not a bare null: see the comment in the multi-batch CTE above. #}
                 {% for col in additional_columns -%}
-                null as {{ col }},
+                NULLIF(cus.{{ col }}, cus.{{ col }}) as {{ col }},
                 {% endfor -%}
                 ldts.min_ldts as {{ src_ldts }},
                 '{{unknown_value_rsrc}}' AS {{ src_rsrc }},
