@@ -61,18 +61,21 @@ All the following variables are **prefixed with `datavault4dbt`**.
 | null_placeholder_string_replacement | Stage | Token substituted for any occurrence of `null_placeholder_string` found *inside* the input data. Defaults to `dv4dbt-null-replacement`. |
 | hash_input_attribute_dtype     | Stage | A mapping dictionary that defines, per database adapter, the datatype that a **single input column** is casted to inside `attribute_standardise`, before concatenation. Advanced. On T-SQL adapters a bounded value here also bounds the total payload, see the warning below. Leave at the default unless you have measured. |
 | hash_input_concat_dtype        | Stage | A mapping dictionary that defines, per database adapter, the datatype that the **fully concatenated payload** is casted to inside `concattenated_standardise`, before it is hashed. This is the variable to shorten if you want the performance benefit. |
+| hash_input_multi_active_concat_dtype | Stage | A mapping dictionary that defines, per database adapter, the datatype that the **payload of one record of a Multi Active group** is casted to inside `multi_active_concattenated_standardise`, before the group is aggregated and hashed. Defaults to the same values as `hash_input_concat_dtype`. |
 
 
-Multi Active Satellites are excluded from `hash_input_concat_dtype`: `multi_active_concattenated_standardise` keeps its hardcoded datatype, so their aggregated payload can never overflow `STRING_AGG`. They are **not** excluded from `hash_input_attribute_dtype`, which is shared with all other entities and applies per column, so a Multi Active Satellite needs the same width check as a regular Satellite.
+Multi Active Satellites have their own variable rather than sharing `hash_input_concat_dtype`, because their payload is aggregated across all active records of one group before it is hashed. A width that is comfortable for a regular Satellite is exceeded there by a factor of however many active records a group has, so shortening `hash_input_concat_dtype` for the performance benefit must not silently break your Multi Active hashes. `hash_input_attribute_dtype` is shared with all other entities and applies per column, so a Multi Active Satellite needs the same width check as a regular Satellite there.
 
 :::warning
-Shortening `hash_input_attribute_dtype` or `hash_input_concat_dtype` below the actual length of your hash input truncates that input silently on most adapters. Truncated input produces different hash values, and two rows that only differ behind the truncation point collapse into the same hashkey or hashdiff. Only lower these values if you are certain that your concatenated input stays below the chosen limit, and treat any later change as a full reload of the affected entities.
+Shortening any of the three below the actual length of your hash input truncates that input silently on most adapters. Truncated input produces different hash values, and two rows that only differ behind the truncation point collapse into the same hashkey or hashdiff. Only lower these values if you are certain that your concatenated input stays below the chosen limit, and treat any later change as a full reload of the affected entities.
 :::
 
 :::danger
 On **sqlserver**, **synapse** and **fabric** the columns are joined with `CONCAT()` / `CONCAT_WS()`, and those functions derive their own maximum length from their arguments: the result is capped at 8000 characters unless at least one argument is an unbounded type. A bounded `hash_input_attribute_dtype` therefore bounds your **total** hash input, not the single column it is named after, and the later cast of the concatenated payload cannot recover what was already dropped.
 
 The safe per-column bound on those adapters is roughly `8000 / number_of_columns_in_the_hash`, not 8000. Twenty columns of 500 characters already exceed the limit, even though every column is far inside its own. Leave `hash_input_attribute_dtype` at its default unless you have measured the concatenated length of your widest entity, and re-measure whenever you add a column.
+
+`STRING_AGG()` behaves the same way: it derives its return type from its argument, so a bounded `hash_input_multi_active_concat_dtype` bounds the aggregate over the whole Multi Active group, not the single record it is applied to. On those adapters the aggregate does not truncate but raises an error once it exceeds 8000 bytes.
 :::
 
 ### STAGE CONFIGURATION
