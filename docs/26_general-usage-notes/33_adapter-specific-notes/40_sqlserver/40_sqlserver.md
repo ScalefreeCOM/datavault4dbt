@@ -22,7 +22,7 @@ The SQL Server macros fall back to `VARBINARY(16)` internally, but if you copied
 
 Before hashing, both the single input columns and the concatenated payload are casted to a string datatype. On SQL Server this defaults to `VARCHAR(MAX)`, which is a large-value type: it is stored off-row, cannot be held in memory the same way as a regular `VARCHAR(n)`, and blocks several optimizations for the `REPLACE()`, `UPPER()` and `HASHBYTES()` calls wrapped around it. On wide satellites this can dominate the runtime of a load.
 
-Both casts are configurable per adapter. **Shorten only the concatenated payload cast:**
+All three casts are configurable per adapter. **Shorten only the concatenated payload cast:**
 
 ```yaml
 vars:
@@ -62,9 +62,9 @@ If you still need the per-column cast, the safe bound is approximately `8000 / n
 
 ### MULTI ACTIVE SATELLITES
 
-`hash_input_concat_dtype` does not reach Multi Active Satellites: `multi_active_concattenated_standardise` keeps its hardcoded datatype, so their aggregated payload can never overflow `STRING_AGG()`.
+`hash_input_concat_dtype` does not reach Multi Active Satellites. They read their own variable, `datavault4dbt.hash_input_multi_active_concat_dtype`, which defaults to the same value but stays untouched when you shorten the regular payload cast above.
 
-`STRING_AGG()` is the reason. It only returns `VARCHAR(MAX)` if its input expression is `VARCHAR(MAX)`; with a shorter input it returns `VARCHAR(8000)` and **raises an error** as soon as the aggregated result of a single group exceeds 8000 bytes. Since that limit applies to a whole group instead of a single record, it is far easier to hit than the per-record limit of a regular Satellite.
+**Leave theirs at `VARCHAR(MAX)`.** `STRING_AGG()` is the reason. It only returns `VARCHAR(MAX)` if its input expression is `VARCHAR(MAX)`; with a shorter input it returns `VARCHAR(8000)` and **raises an error** as soon as the aggregated result of a single group exceeds 8000 bytes. Since that limit applies to a whole group instead of a single record, it is far easier to hit than the per-record limit of a regular Satellite.
 
-`hash_input_attribute_dtype` **does** reach them, because the per-column cast is shared with all other entities. A Multi Active Satellite therefore needs the same width check as a regular Satellite.
+`hash_input_attribute_dtype` reaches them as well, because the per-column cast is shared with all other entities. A Multi Active Satellite therefore needs the same width check as a regular Satellite.
 
