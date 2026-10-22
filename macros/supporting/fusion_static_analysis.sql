@@ -10,6 +10,12 @@
         - ma_sat_v1
         - ref_sat_v1
         - control_snap_v1
+    fabricspark:
+        - stage
+        - sat_v1
+        - ma_sat_v1
+        - ref_sat_v1
+        - control_snap_v1
     redshift:
         - ma_sat_v1
     {% endset %}

@@ -95,6 +95,9 @@ macros:
   - name: databricks__pit
     description: Databricks-specific implementation of pit. Accepts the same arguments as the parent pit macro.
 
+  - name: fabricspark__pit
+    description: Fabric Spark-specific implementation of pit. Accepts the same arguments as the parent pit macro.
+
   - name: exasol__pit
     description: Exasol-specific implementation of pit. Accepts the same arguments as the parent pit macro.
 
