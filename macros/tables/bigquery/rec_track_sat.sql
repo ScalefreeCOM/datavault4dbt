@@ -19,7 +19,7 @@
 {%- set additional_columns = additional_columns | default([],true) -%}
 {%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
-{%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true) -%}
+{%- set ns = namespace(last_cte = '', source_included_before = {},  source_models_rsrc_dict={},  has_rsrc_static_defined=true, use_subquery_hwm=false, max_ldts_per_source={}) -%}
 
 {%- if source_models is not mapping and not datavault4dbt.is_list(source_models) -%}
     {%- set source_models = {source_models: {}} -%}
@@ -32,6 +32,21 @@
 {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('source_models: '~source_models, false) }}{% endif %}
 
 {%- set final_columns_to_select = [tracked_hashkey] + [src_ldts] + [src_rsrc] + [src_stg] + additional_columns -%}
+
+{# Get max(ldts) #}
+{% if execute %}
+    {%- if is_incremental() and not disable_hwm %}
+        {%- if this is none -%}
+            {{ exceptions.raise_compiler_error("datavault4dbt: `this` is not available. If this is a unit test on an incremental model, add the model itself as a `given` input so dbt can populate `this`.") }}
+        {%- elif this is string -%}
+            {%- set ns.use_subquery_hwm = true -%}
+        {%- elif source_models | length == 1 and not ns.has_rsrc_static_defined -%}
+            {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ') FROM ' ~ this ~ ' WHERE ' ~ src_ldts ~ ' != ' ~ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) %}
+            {% set max_ldts_results = run_query(max_ldts_query) %}
+            {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+        {%- endif %}
+    {%- endif %}
+{% endif %}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -47,7 +62,9 @@ WITH
         FROM {{ this }}
     ),
     {%- if ns.has_rsrc_static_defined and not disable_hwm -%}
+        {%- if ns.use_subquery_hwm %}
         rsrc_static_unionized AS (
+        {%- endif %}
         {% for source_model in source_models %}
         {# Create a query with a rsrc_static column with each rsrc_static for each source model. #}
               {%- set source_number = source_model.id | string -%}
@@ -84,7 +101,9 @@ WITH
                 {%- endfor -%}
             {% endset %}
 
+            {%- if ns.use_subquery_hwm %}
             {{ rsrc_static_query_source }}  
+            {%- endif %}
 
             {%- set source_in_target = true -%}
             
@@ -97,16 +116,33 @@ WITH
 
                 {%- if row_count == 0 -%}
                     {%- set source_in_target = false -%}
+                {%- elif not ns.use_subquery_hwm -%}
+                    {# Get the max(ldts) per rsrc_static of this source as literal values, to allow partition pruning on the source. #}
+                    {%- set max_ldts_query -%}
+                        SELECT
+                        {%- for rsrc_static in rsrc_statics %}
+                            COALESCE(MAX(CASE WHEN {{ src_rsrc }} like '{{ rsrc_static }}' THEN {{ src_ldts }} END), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
+                            {%- if not loop.last %},{% endif %}
+                        {%- endfor %}
+                        FROM {{ this }}
+                        WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+                    {% endset %}
+                    {%- set max_ldts_results = run_query(max_ldts_query) -%}
+                    {%- do ns.max_ldts_per_source.update({source_model.id: {}}) -%}
+                    {%- for rsrc_static in rsrc_statics -%}
+                        {%- do ns.max_ldts_per_source[source_model.id].update({rsrc_static: max_ldts_results.columns[loop.index0].values()[0]}) -%}
+                    {%- endfor -%}
                 {%- endif -%}
             {%- endif -%}
 
             {%- do ns.source_included_before.update({source_model.id: source_in_target}) -%}
             {# Unionize over all sources #}
-            {%- if not loop.last %}
+            {%- if not loop.last and ns.use_subquery_hwm %}
                 UNION ALL 
             {% endif -%}
 
         {% endfor -%}
+        {%- if ns.use_subquery_hwm %}
         {%- set ns.last_cte = "rsrc_static_unionized" -%}
         ),
 
@@ -120,6 +156,7 @@ WITH
             GROUP BY rsrc_static
 
         ),
+        {%- endif %}
     {%- endif %}
 {% endif -%}
 
@@ -150,9 +187,13 @@ WITH
 
 
             {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
+                {%- if ns.use_subquery_hwm %}
                 INNER JOIN max_ldts_per_rsrc_static_in_target max
                     ON max.rsrc_static = '{{ rsrc_static }}'
                 WHERE src.{{ src_ldts }} > max.max_ldts
+                {%- else %}
+                WHERE src.{{ src_ldts }} > '{{ ns.max_ldts_per_source[source_number|int][rsrc_static] }}'
+                {%- endif %}
             {%- endif %}
             {%- if not loop.last %}
                 UNION ALL
@@ -172,11 +213,15 @@ WITH
                 {% endfor -%}
             FROM {{ ref(source_model.name) }} src
             {%- if is_incremental() and source_models | length == 1 and not disable_hwm %}
+                {%- if ns.use_subquery_hwm %}
                 WHERE src.{{ src_ldts }} > (
             SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM {{ this }}
             WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
             )
+                {%- else %}
+                WHERE src.{{ src_ldts }} > '{{ max_ldts }}'
+                {%- endif %}
             {%- endif %}
         ),
     {%- endif -%}
