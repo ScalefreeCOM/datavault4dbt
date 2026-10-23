@@ -139,6 +139,38 @@
 
 {% endmacro %}
 
+{% macro fabricspark__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
+
+    {% if add_columns or remove_columns %}
+
+    {# 1. Handle ADD COLUMNS (Can be done in one batch) #}
+    {% if add_columns %}
+        {% set add_sql -%}
+            ALTER TABLE {{ relation.render() }} ADD COLUMNS (
+              {% for column in add_columns %}
+                {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+              {% endfor %}
+            )
+        {%- endset %}
+        {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Executing ADD COLUMNS on Fabric Spark: ' ~ add_sql, false) }}{% endif %}
+        {% do run_query(add_sql) %}
+    {% endif %}
+
+    {# 2. Handle REMOVE COLUMNS (Execute sequentially to avoid Syntax Errors) #}
+    {% if remove_columns %}
+        {% for column in remove_columns %}
+            {% set remove_sql -%}
+                ALTER TABLE {{ relation.render() }} DROP COLUMN IF EXISTS {{ column.name }}
+            {%- endset %}
+            {% if var('datavault4dbt.show_debug_logs', false) %}{{ log('Executing DROP COLUMN on Fabric Spark: ' ~ remove_sql, false) }}{% endif %}
+            {% do run_query(remove_sql) %}
+        {% endfor %}
+    {% endif %}
+
+    {% endif %}
+
+{% endmacro %}
+
 {% macro snowflake__custom_alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
 
     {% if relation.is_dynamic_table -%}

@@ -61,6 +61,9 @@ macros:
   - name: databricks__ma_sat_v1
     description: Databricks-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
 
+  - name: fabricspark__ma_sat_v1
+    description: Fabric Spark-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
+
   - name: exasol__ma_sat_v1
     description: Exasol-specific implementation of ma_sat_v1. Accepts the same arguments as the parent ma_sat_v1 macro.
 
