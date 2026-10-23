@@ -18,7 +18,7 @@ WITH
 initial_timestamps AS (
     
     SELECT
-        sdts::timestamp
+        CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) AS sdts
     FROM 
         generate_series(timestamp '{{ start_date }} {{ daily_snapshot_time }}', {{ end_date }}, Interval '1 day') AS sdts(day)
     {%- if is_incremental() %}

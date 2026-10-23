@@ -180,11 +180,11 @@ virtual_logic AS (
         c.is_beginning_of_year,
         c.is_end_of_year,
         CASE
-            WHEN EXTRACT(YEAR FROM c.{{ sdts_alias }}) = EXTRACT(YEAR FROM CURRENT_DATE) THEN 1
+            WHEN EXTRACT(YEAR FROM CAST(c.{{ sdts_alias }} AS TIMESTAMP)) = EXTRACT(YEAR FROM CURRENT_DATE) THEN 1
             ELSE 0
         END AS is_current_year,
         CASE
-            WHEN EXTRACT(YEAR FROM c.{{ sdts_alias }}) = EXTRACT(YEAR FROM CURRENT_DATE)-1 THEN 1
+            WHEN EXTRACT(YEAR FROM CAST(c.{{ sdts_alias }} AS TIMESTAMP)) = EXTRACT(YEAR FROM CURRENT_DATE)-1 THEN 1
             ELSE 0
         END AS is_last_year,
         CASE
