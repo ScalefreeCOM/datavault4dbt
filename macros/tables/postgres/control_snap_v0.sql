@@ -23,7 +23,7 @@ initial_timestamps AS (
         generate_series(timestamp '{{ start_date }} {{ daily_snapshot_time }}', {{ end_date }}, Interval '1 day') AS sdts(day)
     {%- if is_incremental() %}
     WHERE
-        sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
+        CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}
 
 ),

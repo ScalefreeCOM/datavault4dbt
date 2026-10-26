@@ -29,7 +29,7 @@ initial_timestamps AS (
         generate_dates
     {%- if is_incremental() %}
     WHERE
-        {{ sdts_alias }} > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
+        CAST({{ sdts_alias }} AS {{ datavault4dbt.timestamp_default_dtype() }}) > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}
 
 ),
