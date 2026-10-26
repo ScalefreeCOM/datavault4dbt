@@ -27,13 +27,13 @@ cte as(
 
 initial_timestamps AS (
 
-    SELECT *
+    SELECT CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) AS sdts
     FROM
         cte
     WHERE
         sdts < to_date({{ end_date }})+1
     {%- if is_incremental() %}
-    AND sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
+    AND CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif %}
 
 ),
