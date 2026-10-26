@@ -30,6 +30,7 @@ vars:
   datavault4dbt.hashkey_input_case_sensitive: FALSE
   datavault4dbt.hashdiff_input_case_sensitive: TRUE
   datavault4dbt.hashdiff_use_trim: TRUE
+  datavault4dbt.hashdiff_use_rtrim: FALSE
 
   # Datatypes the hash inputs are casted to before hashing. 'attribute' is one column, 'concat' the joined payload.
   # Shortening either truncates hash input silently. On sqlserver, synapse and fabric a shortened 'attribute'
