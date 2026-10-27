@@ -12,6 +12,48 @@
 {%- endmacro -%}
 
 
+{%- macro parameterize_numeric_datatype(datatype, numeric_precision=none, numeric_scale=none) -%}
+
+{%- set upper_datatype = datatype|string|upper|trim -%}
+
+{# DATETIME2/DATETIMEOFFSET report their fractional-seconds precision as numeric_scale too #}
+{%- if ('DATETIME2' in upper_datatype or 'DATETIMEOFFSET' in upper_datatype)
+        and '(' not in upper_datatype
+        and numeric_scale is not none and numeric_scale != '' -%}
+    {%- do return(datatype ~ "(" ~ (numeric_scale|int|string) ~ ")") -%}
+{%- endif -%}
+
+{# Restricted to DECIMAL/NUMERIC because types like INT report a precision too, but cannot carry one #}
+{%- set is_parameterizable = ('DECIMAL' in upper_datatype or 'NUMERIC' in upper_datatype) and '(' not in upper_datatype -%}
+
+{%- if is_parameterizable and numeric_precision is not none and numeric_precision != '' -%}
+    {%- if numeric_scale is not none and numeric_scale != '' -%}
+        {%- do return(datatype ~ "(" ~ (numeric_precision|int|string) ~ "," ~ (numeric_scale|int|string) ~ ")") -%}
+    {%- else -%}
+        {%- do return(datatype ~ "(" ~ (numeric_precision|int|string) ~ ")") -%}
+    {%- endif -%}
+{%- endif -%}
+
+{%- do return(datatype) -%}
+
+{%- endmacro -%}
+
+
+{%- macro numeric_ghost_value(datatype, sentinel_value) -%}
+
+{# A negative sentinel overflows a fully fractional type like DECIMAL(2,2) #}
+{%- if '(' in datatype and ',' in datatype -%}
+    {%- set type_parameters = datatype.split('(')[1].split(')')[0].split(',') -%}
+    {%- if (type_parameters[0]|trim|int) <= (type_parameters[1]|trim|int) -%}
+        {%- do return(0) -%}
+    {%- endif -%}
+{%- endif -%}
+
+{%- do return(sentinel_value) -%}
+
+{%- endmacro -%}
+
+
 {%- macro default__ghost_record_per_datatype(column_name, datatype, ghost_record_type, col_size, alias) -%}
 
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
@@ -508,8 +550,16 @@
 
 {%- if ghost_record_type == 'unknown' -%}
 
-    {%- if 'DATETIME2' in datatype %} CONVERT(datetime2(6),{{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as {{ alias }}
-    {%- elif datatype in ['DATETIMEOFFSET'] %} CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as {{ alias }}
+    {%- if 'DATETIME2' in datatype %}
+        {%- if '(' not in datatype -%}
+            {%- set datatype = "DATETIME2(6)" -%}
+        {%- endif -%}
+        CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as {{ alias }}
+    {%- elif 'DATETIMEOFFSET' in datatype %}
+        {%- if '(' not in datatype -%}
+            {%- set datatype = "DATETIMEOFFSET(6)" -%}
+        {%- endif -%}
+        CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , beginning_of_all_times) }}) as {{ alias }}
     {%- elif 'CHAR' in datatype -%}
         {%- if col_size is not none -%}
             {%- if (col_size | int) == -1 -%}
@@ -529,10 +579,19 @@
             CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as {{ alias }}
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('254' as {{ datatype }}) as {{ alias }}
-    {%- elif 'INT' in datatype or datatype == 'DECIMAL' or datatype == 'NUMERIC' or 'MONEY' in datatype %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
+    {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
+        CAST({{ datavault4dbt.numeric_ghost_value(datatype, unknown_value__numeric) }} as {{ datatype }}) as {{ alias }}
+    {%- elif 'INT' in datatype or 'MONEY' in datatype %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ beginning_of_all_times_date }}') as {{ alias }}
     {%- elif 'BINARY' in datatype -%}
+        {%- if col_size is not none and col_size != '' and '(' not in datatype -%}
+            {%- if (col_size | int) == -1 -%}
+                {%- set datatype = datatype ~ "(MAX)" -%}
+            {%- else -%}
+                {%- set datatype = datatype ~ "(" ~ (col_size|int|string) ~ ")" -%}
+            {%- endif -%}
+        {%- endif -%}
        CAST({{ unknown_value__HASHTYPE }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'FLOAT' -%} CAST({{ unknown_value__numeric }} as {{datatype}}) as {{ alias }}
     {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
@@ -540,8 +599,16 @@
 
 {%- elif ghost_record_type == 'error' -%}
 
-    {%- if 'DATETIME2' in datatype %} CONVERT(datetime2(6),{{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ alias }}
-    {%- elif datatype in ['DATETIMEOFFSET'] %} CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ alias }}
+    {%- if 'DATETIME2' in datatype %}
+        {%- if '(' not in datatype -%}
+            {%- set datatype = "DATETIME2(6)" -%}
+        {%- endif -%}
+        CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ alias }}
+    {%- elif 'DATETIMEOFFSET' in datatype %}
+        {%- if '(' not in datatype -%}
+            {%- set datatype = "DATETIMEOFFSET(6)" -%}
+        {%- endif -%}
+        CONVERT({{ datatype }},{{- datavault4dbt.string_to_timestamp( timestamp_format , end_of_all_times) }}) as {{ alias }}
     {%- elif 'CHAR' in datatype -%}
         {%- if col_size is not none -%}
             {%- if (col_size | int) == -1 -%}
@@ -561,10 +628,19 @@
             CAST('{{ error_value__STRING }}' as {{ datatype }} ) as {{ alias }}
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('255' as {{ datatype }}) as {{ alias }}
-    {%- elif 'INT' in datatype or datatype == 'DECIMAL' or datatype == 'NUMERIC' or 'MONEY' in datatype %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}
+    {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
+        CAST({{ datavault4dbt.numeric_ghost_value(datatype, error_value__numeric) }} as {{ datatype }}) as {{ alias }}
+    {%- elif 'INT' in datatype or 'MONEY' in datatype %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ end_of_all_times_date }}') as {{ alias }}
     {%- elif 'BINARY' in datatype -%}
+        {%- if col_size is not none and col_size != '' and '(' not in datatype -%}
+            {%- if (col_size | int) == -1 -%}
+                {%- set datatype = datatype ~ "(MAX)" -%}
+            {%- else -%}
+                {%- set datatype = datatype ~ "(" ~ (col_size|int|string) ~ ")" -%}
+            {%- endif -%}
+        {%- endif -%}
        CAST({{ error_value__HASHTYPE }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'FLOAT' -%} CAST({{ error_value__numeric }} as {{datatype}}) as {{ alias }}
     {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
@@ -773,7 +849,14 @@
 
 {%- if ghost_record_type == 'unknown' -%}
 
-    {%- if 'DATETIME2' in datatype or datatype in ['DATETIMEOFFSET'] %}
+    {%- if 'DATETIME2' in datatype or 'DATETIMEOFFSET' in datatype %}
+        {%- if '(' not in datatype -%}
+            {%- if 'DATETIME2' in datatype -%}
+                {%- set datatype = "DATETIME2(7)" -%}
+            {%- else -%}
+                {%- set datatype = "DATETIMEOFFSET(7)" -%}
+            {%- endif -%}
+        {%- endif -%}
         CONVERT({{ datatype }}, {{- datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) as {{ alias }}
     {%- elif 'CHAR' in datatype -%}
         {%- if col_size is not none -%}
@@ -794,10 +877,19 @@
             CAST('{{ unknown_value__STRING }}' as {{ datatype }} ) as {{ alias }}
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('254' as {{ datatype }}) as {{ alias }}
-    {%- elif 'INT' in datatype or datatype == 'DECIMAL' or datatype == 'NUMERIC' or 'MONEY' in datatype %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
+    {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
+        CAST({{ datavault4dbt.numeric_ghost_value(datatype, unknown_value__numeric) }} as {{ datatype }}) as {{ alias }}
+    {%- elif 'INT' in datatype or 'MONEY' in datatype %} CAST({{ unknown_value__numeric }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ beginning_of_all_times_date }}') as {{ alias }}
     {%- elif 'BINARY' in datatype -%}
+        {%- if col_size is not none and col_size != '' and '(' not in datatype -%}
+            {%- if (col_size | int) == -1 -%}
+                {%- set datatype = datatype ~ "(MAX)" -%}
+            {%- else -%}
+                {%- set datatype = datatype ~ "(" ~ (col_size|int|string) ~ ")" -%}
+            {%- endif -%}
+        {%- endif -%}
        CAST({{ unknown_value__HASHTYPE }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'FLOAT' -%} CAST({{ unknown_value__numeric }} as {{datatype}}) as {{ alias }}
     {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
@@ -805,7 +897,14 @@
 
 {%- elif ghost_record_type == 'error' -%}
 
-    {%- if 'DATETIME2' in datatype or datatype in ['DATETIMEOFFSET'] %}
+    {%- if 'DATETIME2' in datatype or 'DATETIMEOFFSET' in datatype %}
+        {%- if '(' not in datatype -%}
+            {%- if 'DATETIME2' in datatype -%}
+                {%- set datatype = "DATETIME2(7)" -%}
+            {%- else -%}
+                {%- set datatype = "DATETIMEOFFSET(7)" -%}
+            {%- endif -%}
+        {%- endif -%}
         CONVERT({{ datatype }}, {{- datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ alias }}
     {%- elif 'CHAR' in datatype -%}
         {%- if col_size is not none -%}
@@ -826,10 +925,19 @@
             CAST('{{ error_value__STRING }}' as {{ datatype }} ) as {{ alias }}
         {%- endif -%}
     {%- elif datatype == 'TINYINT' -%} CAST('255' as {{ datatype }}) as {{ alias }}
-    {%- elif 'INT' in datatype or datatype == 'DECIMAL' or datatype == 'NUMERIC' or 'MONEY' in datatype %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}
+    {%- elif 'DECIMAL' in datatype or 'NUMERIC' in datatype -%}
+        CAST({{ datavault4dbt.numeric_ghost_value(datatype, error_value__numeric) }} as {{ datatype }}) as {{ alias }}
+    {%- elif 'INT' in datatype or 'MONEY' in datatype %} CAST({{ error_value__numeric }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'BIT' -%} CAST(0 as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'DATE'-%} CONVERT(DATE, '{{ end_of_all_times_date }}') as {{ alias }}
     {%- elif 'BINARY' in datatype -%}
+        {%- if col_size is not none and col_size != '' and '(' not in datatype -%}
+            {%- if (col_size | int) == -1 -%}
+                {%- set datatype = datatype ~ "(MAX)" -%}
+            {%- else -%}
+                {%- set datatype = datatype ~ "(" ~ (col_size|int|string) ~ ")" -%}
+            {%- endif -%}
+        {%- endif -%}
        CAST({{ error_value__HASHTYPE }} as {{ datatype }}) as {{ alias }}
     {%- elif datatype == 'FLOAT' -%} CAST({{ error_value__numeric }} as {{datatype}}) as {{ alias }}
     {%- else %} CAST(NULL as {{ datatype }}) as {{ alias }}
