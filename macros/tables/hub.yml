@@ -58,6 +58,9 @@ macros:
   - name: databricks__hub
     description: Databricks-specific implementation of hub. Accepts the same arguments as the parent hub macro.
 
+  - name: fabricspark__hub
+    description: Fabric Spark-specific implementation of hub. Accepts the same arguments as the parent hub macro.
+
   - name: exasol__hub
     description: Exasol-specific implementation of hub. Accepts the same arguments as the parent hub macro.
 
