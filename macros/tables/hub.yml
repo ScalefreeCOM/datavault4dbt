@@ -29,8 +29,8 @@ macros:
           and the value of each source model is another dictionary. This inner dictionary requires the key 'bk_columns'
           (which contains the name of the business keys of that source model), and can have the optional keys 'hk_column'
           and 'rsrc_static'. The 'rsrc_static' attribute defines a STRING or list of strings containing all the patterns
-          of the record_source field that remain the same over all loads of one source. Wildcards (e.g. '*') can be used
-          to match variable parts.
+          of the record_source field that remain the same over all loads of one source. The record source is compared with SQL LIKE,
+          so the wildcards '%' and '_' can be used to match variable parts.
       - name: src_ldts
         type: string
         description: >

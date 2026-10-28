@@ -38,13 +38,13 @@
 
                                 Examples:
                                     {'stage_account': {'bk_columns': ['account_number', 'account_key'],     This would create a hub loaded from only one source, which is not uncommon.
-                                                       'rsrc_static': '*/SAP/Accounts/*'}}                  It uses the model 'stage_account', and defines the same columns as 'bk_columns'
+                                                       'rsrc_static': '%/SAP/Accounts/%'}}                  It uses the model 'stage_account', and defines the same columns as 'bk_columns'
                                                                                                             that were used to calculate the hashkey for the hub 'hk_account_h'.
 
                                     {'stage_account': {'bk_columns': 'account_key',                         This would create a hub loaded from two sources, which also is not uncommon.
-                                                       'rsrc_static': '*/SAP/Accounts/*'},                  It again uses the model 'stage_account' but in this case the hashkey 'hk_account_h'
+                                                       'rsrc_static': '%/SAP/Accounts/%'},                  It again uses the model 'stage_account' but in this case the hashkey 'hk_account_h'
                                      'stage_partner': {'bk_columns': 'partner_key',                         inside it was only calculated out of one business key. therefore you see that
-                                                       'rsrc_static': '*/SALESFORCE/Partners/*',            'bk_columns' can either be a string or a list. It just has to match exactly the
+                                                       'rsrc_static': '%/SALESFORCE/Partners/%',            'bk_columns' can either be a string or a list. It just has to match exactly the
                                                        'hk_column': 'hk_partner_h'}}                        attributes that were used to calculate the hashkey inside that source.
                                                                                                             Additionally the model 'stage_partner' is used, with the assumption that both sources
                                                                                                             share the same definition of an account, just under different names. Therefore
@@ -59,7 +59,7 @@
                                                                                                             If a list of strings is defined that means that the record_source may have different patterns
                                                                                                             coming from the same source system. For example a source may be generating files with the pattern
                                                                                                             '{file_id}-{timestamp}-source.txt' or with the pattern '{file_id}-{timestamp}-{store_id}-source.csv'
-                                                                                                            Those two patterns must be included then in the rsrc_static with the appropriate regex and wildcards in place.
+                                                                                                            Those two patterns must be included then in the rsrc_static with the appropriate wildcards in place.
                                                                                                             If the model has two source models as input and only one source model defines a rsrc_static, then this
                                                                                                             macro won't use the rsrc_static at all to do the look up in target. Therefore, if there are multiple
                                                                                                             source models defined, if there is a desire to execute this macro with the performance look up for the
@@ -68,8 +68,9 @@
                                                                                                             like this: 'SALESFORCE/Partners/2022-01-01T07:00:00'. Obviously the timestamp part
                                                                                                             inside that rsrc would change from load to load, and we now need to identify parts of
                                                                                                             it that will be static over all loads. Here it would be 'SALESFORCE/Partners'. This static
-                                                                                                            part is now enriched by wildcard expressions (in BigQuery that would be '*') to catch
-                                                                                                            the variable part of the rsrc values.
+                                                                                                            part is now enriched by wildcard expressions (the SQL LIKE wildcard '%') to catch
+                                                                                                            the variable part of the rsrc values. Here the rsrc_static would be
+                                                                                                            'SALESFORCE/Partners/%'.
                                                                                                             If the record source is the same over all loads, then it might look something like
                                                                                                             this: 'SAP/Accounts/'. Here everything would be static over all loads and
                                                                                                             therefore the rsrc_static can be set to 'SAP/Accounts/' without any wildcards in place.
