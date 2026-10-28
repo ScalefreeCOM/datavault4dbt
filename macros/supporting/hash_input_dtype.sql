@@ -1,13 +1,15 @@
 {#
     Returns the string datatype that hash inputs are casted to, before they are handed over to the hash function.
 
-    Two different casts exist, which can be configured independently:
-      - 'attribute': The cast of one single column inside `attribute_standardise`.
-      - 'concat':    The cast of the fully concatenated payload inside `concattenated_standardise`.
+    Three different casts exist, which can be configured independently:
+      - 'attribute':           The cast of one single column inside `attribute_standardise`.
+      - 'concat':              The cast of the fully concatenated payload inside `concattenated_standardise`.
+      - 'multi_active_concat': The cast of the per-record payload inside `multi_active_concattenated_standardise`,
+                               which determines the return type of the aggregate around it.
 
-    Multi Active Satellites are deliberately NOT covered here. Their payload is aggregated across all
-    active records of one group before it is hashed, so a shortened datatype is far more likely to be
-    exceeded there. `multi_active_concattenated_standardise` therefore keeps its hardcoded datatype.
+    Multi Active Satellites have their own variable because their payload is aggregated across all active
+    records of one group before it is hashed, so a shortened datatype is exceeded far earlier there.
+    Shortening `hash_input_concat_dtype` for performance must not silently break Multi Active hashes.
 
     CAUTION: Choosing a datatype that is shorter than the actual hash input leads to a silent
     truncation on most adapters, which changes the resulting hash values.
@@ -22,18 +24,18 @@
 
 {%- macro default__hash_input_dtype(type) %}
 
-    {%- if type not in ['attribute', 'concat'] -%}
-        {%- do exceptions.raise_compiler_error("hash_input_dtype: type must be 'attribute' or 'concat', got: " ~ type) -%}
+    {%- if type not in ['attribute', 'concat', 'multi_active_concat'] -%}
+        {%- do exceptions.raise_compiler_error("hash_input_dtype: type must be 'attribute', 'concat' or 'multi_active_concat', got: " ~ type) -%}
     {%- endif -%}
 
+    {#- 'concat' and 'multi_active_concat' share their fallbacks, they cast the same joined payload -#}
     {%- if type == 'attribute' -%}
-        {%- set var_name = 'datavault4dbt.hash_input_attribute_dtype' -%}
         {%- set fallbacks = {"bigquery": "STRING", "snowflake": "STRING", "exasol": "VARCHAR(20000) UTF8", "postgres": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle": "VARCHAR2(2000)", "databricks": "STRING", "trino": "VARCHAR", "sqlserver": "VARCHAR(MAX)"} -%}
     {%- else -%}
-        {%- set var_name = 'datavault4dbt.hash_input_concat_dtype' -%}
         {%- set fallbacks = {"bigquery": "STRING", "snowflake": "STRING", "exasol": "VARCHAR(2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle": "VARCHAR2(2000)", "databricks": "STRING", "trino": "VARCHAR", "sqlserver": "VARCHAR(MAX)"} -%}
     {%- endif -%}
 
+    {%- set var_name = 'datavault4dbt.hash_input_' ~ type ~ '_dtype' -%}
     {%- set global_var = var(var_name, none) -%}
     {%- set adapter_name = (target.type | lower) -%}
     {%- set hash_input_dtype = none -%}
