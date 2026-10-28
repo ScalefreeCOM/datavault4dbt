@@ -15,11 +15,11 @@ WITH
 initial_timestamps AS (
     
     SELECT
-        DATEADD(DAY, SEQ4(), 
+        CAST(DATEADD(DAY, SEQ4(), 
         TIMESTAMPADD(SECOND, EXTRACT(SECOND FROM TO_TIME('{{ daily_snapshot_time }}')), 
             TIMESTAMPADD(MINUTE, EXTRACT(MINUTE FROM TO_TIME('{{ daily_snapshot_time }}')), 
                 TIMESTAMPADD(HOUR, EXTRACT(HOUR FROM TO_TIME('{{ daily_snapshot_time }}')), TO_DATE('{{ start_date }}', 'YYYY-MM-DD')))
-                ))::TIMESTAMP AS sdts
+                )) AS {{ datavault4dbt.timestamp_default_dtype() }}) AS sdts
     FROM 
         TABLE(GENERATOR(ROWCOUNT => 100000))
     WHERE 

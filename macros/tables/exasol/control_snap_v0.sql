@@ -18,9 +18,9 @@ WITH
 initial_timestamps AS 
 (
     select
-    add_days(ADD_MINUTES(ADD_HOURS(DATE_TRUNC('day', DATE '{{ start_date }}' ), EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) ),
+    CAST(add_days(ADD_MINUTES(ADD_HOURS(DATE_TRUNC('day', DATE '{{ start_date }}' ), EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) ),
                                                         EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) 
-                                                    ), level-1) as sdts
+                                                    ), level-1) AS {{ datavault4dbt.timestamp_default_dtype() }}) as sdts
     from dual
     connect by level <= days_between(ADD_MINUTES(ADD_HOURS({{ end_date }}, EXTRACT(HOUR FROM {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) ),
                                                         EXTRACT(MINUTE FROM  {{ datavault4dbt.string_to_timestamp(timestamp_format, daily_snapshot_time) }}) 

@@ -3,8 +3,14 @@
     {%- if is_hashdiff is none -%}
         {%- set is_hashdiff = false -%}
     {%- endif -%}
+    {%- set global_hdiff_rtrim = var('datavault4dbt.hashdiff_use_rtrim', false) -%}
+
     {%- if rtrim_hashdiff is none -%}
-        {%- set rtrim_hashdiff = false -%}
+            {%- if is_hashdiff -%}
+                {%- set rtrim_hashdiff = global_hdiff_rtrim -%}
+            {%- else -%}
+                {%- set rtrim_hashdiff = false -%}
+            {%- endif -%}
     {%- endif -%}
 
     {%- set global_hdiff_trim = var('datavault4dbt.hashdiff_use_trim', true) -%}
