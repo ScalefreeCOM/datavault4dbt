@@ -257,8 +257,9 @@ macros:
         description: >
           Which cast to resolve. 'attribute' for a single input column inside
           attribute_standardise, 'concat' for the fully concatenated payload inside
-          concattenated_standardise, 'multi_active_concat' for the aggregated payload inside
-          multi_active_concattenated_standardise. Defaults to 'concat'.
+          concattenated_standardise, 'multi_active_concat' for the payload of one record inside
+          multi_active_concattenated_standardise, applied before the group is aggregated.
+          Defaults to 'concat'.
 
   - name: default__hash_input_dtype
     description: Default implementation of hash_input_dtype. Accepts the same arguments as the parent macro.
