@@ -18,7 +18,7 @@ WITH
 
 initial_timestamps AS (
 
-    SELECT sdts
+    SELECT CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) AS sdts
     FROM
         UNNEST(GENERATE_TIMESTAMP_ARRAY(
             TIMESTAMP_ADD(
@@ -34,7 +34,7 @@ initial_timestamps AS (
         INTERVAL 1 DAY)) AS sdts
 
     {%- if is_incremental() %}
-    WHERE sdts > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
+    WHERE CAST(sdts AS {{ datavault4dbt.timestamp_default_dtype() }}) > (SELECT MAX({{ sdts_alias }}) FROM {{ this }})
     {%- endif -%}
 
 ),

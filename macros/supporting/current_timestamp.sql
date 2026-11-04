@@ -34,6 +34,10 @@
     {{ return('current_timestamp()') }}
 {%- endmacro -%}
 
+{%- macro fabricspark__current_timestamp() -%}
+    {{ return('current_timestamp()') }}
+{%- endmacro -%}
+
 {%- macro trino__current_timestamp() -%}
     {#- default is current_timestamp(3), which is incompatible with trino iceberg backend -#}
     current_timestamp(6)

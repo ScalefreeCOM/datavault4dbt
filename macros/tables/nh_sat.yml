@@ -50,6 +50,9 @@ macros:
   - name: databricks__nh_sat
     description: Databricks-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
 
+  - name: fabricspark__nh_sat
+    description: Fabric Spark-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
+
   - name: exasol__nh_sat
     description: Exasol-specific implementation of nh_sat. Accepts the same arguments as the parent nh_sat macro.
 

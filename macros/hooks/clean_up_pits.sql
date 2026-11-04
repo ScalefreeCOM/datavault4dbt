@@ -136,6 +136,19 @@ WHERE pit.{{ sdts }} not in (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }}
 
 {%- endmacro -%}
 
+{%- macro fabricspark__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
+
+MERGE INTO {{ this }} pit
+USING (SELECT {{ sdts }} FROM {{ ref(snapshot_relation) }} snap WHERE {{ snapshot_trigger_column }}=TRUE) active_snapshots
+ON pit.{{ sdts }} = active_snapshots.{{ sdts }}
+WHEN NOT MATCHED BY SOURCE THEN DELETE
+
+{%- if execute -%}
+{{ log("PIT " ~ this ~ " successfully cleaned!", True) }}
+{%- endif -%}
+
+{%- endmacro -%}
+
 
 {%- macro oracle__clean_up_pit(snapshot_relation, snapshot_trigger_column, sdts) -%}
 
