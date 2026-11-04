@@ -88,6 +88,9 @@ macros:
   - name: databricks__stage
     description: Databricks-specific implementation of stage. Accepts the same arguments as the parent stage macro.
 
+  - name: fabricspark__stage
+    description: Fabric Spark-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
   - name: exasol__stage
     description: Exasol-specific implementation of stage. Accepts the same arguments as the parent stage macro.
 

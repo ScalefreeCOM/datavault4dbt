@@ -49,6 +49,9 @@ macros:
   - name: databricks__ref_table
     description: Databricks-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
 
+  - name: fabricspark__ref_table
+    description: Fabric Spark-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
+
   - name: exasol__ref_table
     description: Exasol-specific implementation of ref_table. Accepts the same arguments as the parent ref_table macro.
 

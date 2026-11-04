@@ -60,14 +60,15 @@
     {% if overwrite_hash_values %}
         {{ log('Renaming columns...', output_logs) }}
         
-        {% set ns_rename = namespace(rename_queries = ['BEGIN']) %}
+        {% set ns_rename = namespace(rename_queries = []) %}
 
-        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) }}
+        {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=hashkey, new_col_name=hashkey + '_deprecated')) %}
         
-        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) }}
+        {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=nh_satellite_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
         
-        {{ ns_rename.rename_queries.append('END') }}
-        {% do run_query(ns_rename.rename_queries|join('\n')) %}
+        {% for rename_query in ns_rename.rename_queries %}
+            {% do run_query(rename_query) %}
+        {% endfor %}
 
         {% if drop_old_values %}
             {{ log('Dropping deprecated columns...', output_logs) }}

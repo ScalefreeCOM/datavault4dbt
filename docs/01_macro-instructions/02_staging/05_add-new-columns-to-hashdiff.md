@@ -46,6 +46,8 @@ hashed_columns:
 {{ datavault4dbt.stage(yaml_metadata=yaml_metadata) }}
 ```
 
+To enable this for all hashdiffs at once, set the global variable `datavault4dbt.hashdiff_use_rtrim: true` in your `dbt_project.yml`. A `use_rtrim` key set on a hashdiff still overrides the global value.
+
 ## EXAMPLE 1 - SATELLITE V0 DEFINITION
 
 Note that you have to add the `on_schema_change` key with the value `append_new_columns` to your config clause in the Satellite v0 model. In the `src_payload` just add the new columns **after** the already present columns (this is important because we trim the hashdiff on the right). In this example below, the columns `name`, `address`, `phone`, `email` were already in the satellite and we added the columns `new_col1` and `new_col2`

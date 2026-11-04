@@ -75,6 +75,9 @@ macros:
   - name: databricks__nh_link
     description: Databricks-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
 
+  - name: fabricspark__nh_link
+    description: Fabric Spark-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
+
   - name: exasol__nh_link
     description: Exasol-specific implementation of nh_link. Accepts the same arguments as the parent nh_link macro.
 

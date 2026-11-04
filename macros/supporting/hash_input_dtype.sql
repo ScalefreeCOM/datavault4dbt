@@ -30,9 +30,9 @@
 
     {#- 'concat' and 'multi_active_concat' share their fallbacks, they cast the same joined payload -#}
     {%- if type == 'attribute' -%}
-        {%- set fallbacks = {"bigquery": "STRING", "snowflake": "STRING", "exasol": "VARCHAR(20000) UTF8", "postgres": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle": "VARCHAR2(2000)", "databricks": "STRING", "trino": "VARCHAR", "sqlserver": "VARCHAR(MAX)"} -%}
+        {%- set fallbacks = {"bigquery": "STRING", "snowflake": "STRING", "exasol": "VARCHAR(20000) UTF8", "postgres": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle": "VARCHAR2(2000)", "databricks": "STRING", "fabricspark": "STRING", "trino": "VARCHAR", "sqlserver": "VARCHAR(MAX)"} -%}
     {%- else -%}
-        {%- set fallbacks = {"bigquery": "STRING", "snowflake": "STRING", "exasol": "VARCHAR(2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle": "VARCHAR2(2000)", "databricks": "STRING", "trino": "VARCHAR", "sqlserver": "VARCHAR(MAX)"} -%}
+        {%- set fallbacks = {"bigquery": "STRING", "snowflake": "STRING", "exasol": "VARCHAR(2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR(4000)", "fabric": "VARCHAR(4000)", "oracle": "VARCHAR2(2000)", "databricks": "STRING", "fabricspark": "STRING", "trino": "VARCHAR", "sqlserver": "VARCHAR(MAX)"} -%}
     {%- endif -%}
 
     {%- set var_name = 'datavault4dbt.hash_input_' ~ type ~ '_dtype' -%}

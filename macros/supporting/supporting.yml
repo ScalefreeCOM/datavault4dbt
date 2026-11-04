@@ -223,7 +223,9 @@ macros:
           'datavault4dbt.hashdiff_use_trim' for hashdiffs, or true for hashkeys.
       - name: rtrim_hashdiff
         type: bool
-        description: If true, applies RTRIM to the final hashdiff concatenated string. Default is false.
+        description: >
+          If true, applies RTRIM to the final hashdiff concatenated string. Defaults to the global variable
+          'datavault4dbt.hashdiff_use_rtrim' for hashdiffs, or false for hashkeys.
 
   - name: default__hash
     description: Default implementation of hash. Accepts the same arguments as the parent hash macro.
