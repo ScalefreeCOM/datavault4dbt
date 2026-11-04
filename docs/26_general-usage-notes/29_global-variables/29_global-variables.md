@@ -81,6 +81,7 @@ The safe per-column bound on those adapters is roughly `8000 / number_of_columns
 | Name                       | Usage | Explanation |
 |----------------------------|-------|-------------|
 | copy_rsrc_ldts_input_columns | Stage | Whether the columns that are used for ldts and rsrc should also be inside the stage, or not. If true, the stage would hold the ldts- & rsrc-alias columns, and the original columns. If false, only the aliased columns are kept. |
+| prejoin_deduplicate | Stage | Default for the `deduplicate` key of all prejoins in the project. If true, every prejoined object is wrapped in a `SELECT DISTINCT` over its join and extracted columns, so that a referenced object which is not unique on `ref_column_name` does not multiply the rows of the stage. Defaults to false, which is the behaviour of previous versions. Can be overridden per prejoin. See [Prejoining](../../01_macro-instructions/02_staging/03_prejoining.md). |
 
 ### SATELLITE CONFIGURATION
 
