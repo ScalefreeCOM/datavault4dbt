@@ -74,6 +74,7 @@ current_status AS (
             {{ src_rsrc }},
             ROW_NUMBER() OVER(PARTITION BY {{ tracked_hashkey }} ORDER BY {{ src_ldts }} DESC) as rn
         FROM {{ this }}
+        WHERE {{ src_ldts }} NOT IN ({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
     ) t
     WHERE rn = 1
 
@@ -330,6 +331,18 @@ records_to_insert AS (
     {% endif %}
     ) disappeared_hashkeys
     {%- endif %}
+
+    UNION ALL
+    SELECT
+        {{ tracked_hashkey }},
+        {% for col in additional_columns -%}
+        {{ col }},
+        {% endfor -%}
+        {{ src_ldts }},
+        {{ src_rsrc }},
+        1 as {{ is_active_alias }}
+    FROM {{ source_relation }} src
+    WHERE {{ src_ldts }} IN ({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
 
 )
 
