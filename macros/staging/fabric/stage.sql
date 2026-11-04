@@ -344,7 +344,7 @@ prejoined_columns AS (
     {%- endif -%}
       {%- set prejoin_alias = 'pj_' + loop.index|string %}
       
-      {{ join_type }} join {{ relation }} as {{ prejoin_alias }}
+      {{ join_type }} join {{ datavault4dbt.prejoin_relation(prejoin=prejoin, relation=relation, escape=true) }} as {{ prejoin_alias }}
         on {{ datavault4dbt.multikey(columns=datavault4dbt.escape_column_names(prejoin['this_column_name']), prefix=['lcte', prejoin_alias], condition='=', operator=operator, right_columns=datavault4dbt.escape_column_names(prejoin['ref_column_name'])) }}
   {%- endfor -%}
 

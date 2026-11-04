@@ -24,6 +24,23 @@ macros:
         type: list[dict[string, any]]
         description: The prejoined_columns as processed by the process_prejoined_columns-macro
 
+  - name: prejoin_relation
+    description: >
+      Returns the object a prejoin is joined against, either unchanged or wrapped in a SELECT DISTINCT
+      over its join and extracted columns. Deduplication keeps a referenced object that is not unique
+      on ref_column_name from multiplying the rows of the stage. Reads the 'deduplicate' key of the
+      prejoin, falling back to the global variable 'datavault4dbt.prejoin_deduplicate'. Off by default.
+    arguments:
+      - name: prejoin
+        type: dict[string, any]
+        description: One prejoin as processed by the process_prejoined_columns-macro.
+      - name: relation
+        type: relation
+        description: The dbt relation of the referenced object, resolved from ref_model or src_name/src_table.
+      - name: escape
+        type: boolean
+        description: Whether the column names of the SELECT DISTINCT are escaped. Set by the adapters that escape identifiers.
+
   - name: derive_columns
     description: >
       Renders the SELECT-list of a stage model's derived ('added' or 'calculated') columns together with the

@@ -21,8 +21,36 @@ Prejoins are described as dictionaries with the following keys:
 | src_table           | string                    | If a dbt source should be prejoined, use this parameter to set the table of the source `src_name`, as defined in the sources section of a yml file. Must be used together with `src_name`, and instead of `ref_model`. |
 | operator (optional) | string                    | Only used when multiple columns are defined for `this_col_name` and `ref_col_name`. Influences which logical operator is used to combine multiple JOIN conditions. Default is `AND`, use only if other operator is desired. |
 | join_type (optional)| string                    | Can be used to determine the join type (left, right, inner, etc...). Whatever string is passed as `join_type` parameter will be inserted before the `join` keyword in the compiled staging-model. Defaults to `left`. New in v1.9.11. |
+| deduplicate (optional)| boolean                 | If `true`, the referenced object is wrapped in a `SELECT DISTINCT` over its join and extracted columns before it is joined. Use it when the referenced object is not unique on `ref_column_name`. Defaults to the global variable `datavault4dbt.prejoin_deduplicate`, which itself defaults to `false`. See [Non-unique referenced objects](#non-unique-referenced-objects). |
 
 Prejoining is used to enrich source data by attributes from other database objects. In general, it should only be used when the source data does not hold the Business Key, but the technical Key of an object.
+
+## NON-UNIQUE REFERENCED OBJECTS
+
+A prejoin is meant as a lookup: for one row of this stage it resolves one row of the referenced
+object. Nothing enforces that, though. If `ref_column_name` is not unique in the referenced
+object, the join multiplies every row of the stage by the number of matches.
+
+This happens whenever the referenced object keeps history instead of the current state, for
+example a Persistent Staging Area, an append-only raw layer, or a Satellite. There the join key
+appears once per load, so a prejoin against it returns one row per historical version. If the
+source model of the stage is historised as well, both sides multiply and the result is a cross
+product of both histories.
+
+Set `deduplicate: true` on the prejoin, or `datavault4dbt.prejoin_deduplicate: true` for the whole
+project, to collapse the referenced object to its distinct join and extracted columns first:
+
+```sql
+left join (
+    SELECT DISTINCT customer_id, customer_number
+    FROM psa_customer
+  ) as pj_1
+  on lcte.customer_id = pj_1.customer_id
+```
+
+Note that this removes duplicate rows, not ambiguity: if the extracted value itself changed over
+the history of the referenced object, more than one row remains and the prejoin stays non-unique.
+In that case point the prejoin at an object that holds one row per key, such as a current view.
 
 ## CONFIGURING PREJOINS
 

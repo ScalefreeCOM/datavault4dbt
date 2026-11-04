@@ -311,6 +311,9 @@
                         {%- else -%}
             {%- set join_type = value.get('join_type') -%}
             {%- endif -%}
+            {%- if 'deduplicate' not in value.keys() -%}
+                {%- do value.update({'deduplicate': none}) -%}
+            {%- endif -%}
                         
     {% set match_criteria = (
             ref_model and output | selectattr('ref_model', 'equalto', ref_model) or
@@ -319,6 +322,7 @@
         | selectattr('ref_column_name', 'equalto', value.ref_column_name)
         | selectattr('operator', 'equalto', value.operator)
         | selectattr('join_type', 'equalto', value.join_type)
+        | selectattr('deduplicate', 'equalto', value.deduplicate)
         | list | first %}
         
             {% if match_criteria %}
@@ -331,7 +335,8 @@
                     'this_column_name': value.this_column_name,
                     'ref_column_name': value.ref_column_name,
                     'operator': operator,
-                    'join_type': join_type
+                    'join_type': join_type,
+                    'deduplicate': value.deduplicate
                 } %}            
                 
                 {% if ref_model %}
@@ -375,5 +380,51 @@
     {%- endfor -%}
     
     {%- do return(extracted_column_names) -%}
+
+{%- endmacro -%}
+
+
+{%- macro prejoin_relation(prejoin=none, relation=none, escape=false) -%}
+
+    {# A ref_column_name that is not unique in the referenced object multiplies the stage rows #}
+
+    {%- set deduplicate = prejoin.get('deduplicate') -%}
+
+    {%- if deduplicate is none -%}
+        {%- set deduplicate = var('datavault4dbt.prejoin_deduplicate', false) -%}
+    {%- endif -%}
+
+    {%- if not deduplicate -%}
+        {%- do return(relation) -%}
+    {%- endif -%}
+
+    {%- if datavault4dbt.is_list(prejoin['ref_column_name']) -%}
+        {%- set join_columns = prejoin['ref_column_name'] -%}
+    {%- else -%}
+        {%- set join_columns = [prejoin['ref_column_name']] -%}
+    {%- endif -%}
+
+    {%- if datavault4dbt.is_list(prejoin['extract_columns']) -%}
+        {%- set extract_columns = prejoin['extract_columns'] -%}
+    {%- else -%}
+        {%- set extract_columns = [prejoin['extract_columns']] -%}
+    {%- endif -%}
+
+    {# Case-insensitive, a derived table must not expose the same column name twice #}
+    {%- set distinct_columns = [] -%}
+    {%- set seen_columns = [] -%}
+
+    {%- for column in join_columns + extract_columns -%}
+        {%- if column|lower not in seen_columns -%}
+            {%- do seen_columns.append(column|lower) -%}
+            {%- do distinct_columns.append(column) -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {%- if escape -%}
+        {%- set distinct_columns = datavault4dbt.escape_column_names(distinct_columns) -%}
+    {%- endif -%}
+
+    {%- do return("(SELECT DISTINCT " ~ distinct_columns|join(', ') ~ " FROM " ~ relation ~ ")") -%}
 
 {%- endmacro -%}
