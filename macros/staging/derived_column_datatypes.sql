@@ -27,13 +27,15 @@
                 {%- set datatype = datavault4dbt.string_default_dtype(type='derived_columns') -%}
                 {%- set value = column_value -%}
                 {%- set col_size = "" -%}
+                {%- set numeric_precision = "" -%}
+                {%- set numeric_scale = "" -%}
 
             {%- else -%}
             {# The value is an attribute and therefore the datatype gets detected out of the source relation. #}
 
                 {%- set value = column_value -%}
 
-                {%- set ns = namespace(datatype = "", col_size="") -%}
+                {%- set ns = namespace(datatype = "", col_size="", numeric_precision="", numeric_scale="") -%}
 
                 {%- for source_column in all_source_columns -%}
                     {%- if source_column.name|upper == value|upper -%}
@@ -43,10 +45,18 @@
                         {% if datavault4dbt.is_something(source_column.char_size) %}
                             {%- set ns.col_size = source_column.char_size -%}
                         {%- endif -%}
+                        {% if datavault4dbt.is_something(source_column.numeric_precision) %}
+                            {%- set ns.numeric_precision = source_column.numeric_precision -%}
+                        {%- endif -%}
+                        {% if datavault4dbt.is_something(source_column.numeric_scale) %}
+                            {%- set ns.numeric_scale = source_column.numeric_scale -%}
+                        {%- endif -%}
                     {%- endif -%}
 
                 {%- endfor -%}
                 {%- set col_size = ns.col_size | int-%}
+                {%- set numeric_precision = ns.numeric_precision -%}
+                {%- set numeric_scale = ns.numeric_scale -%}
                 {%- if ns.datatype != "" -%}
 
                     {%- set datatype = ns.datatype -%}
@@ -64,13 +74,13 @@
 
             {%- endif -%}
 
-            {%- do columns.update({column_name: {'datatype': datatype, 'value': value, 'col_size': col_size} }) -%}
-        
+            {%- do columns.update({column_name: {'datatype': datatype, 'value': value, 'col_size': col_size, 'numeric_precision': numeric_precision, 'numeric_scale': numeric_scale} }) -%}
+
         {%- elif column_value is mapping and not column_value.get('datatype') -%}
 
                 {%- set value = column_value['value'] -%}
 
-                {%- set ns = namespace(datatype = "", col_size="") -%}
+                {%- set ns = namespace(datatype = "", col_size="", numeric_precision="", numeric_scale="") -%}
 
                 {%- for source_column in all_source_columns -%}
 
@@ -80,6 +90,12 @@
 
                         {% if datavault4dbt.is_something(source_column.char_size) %}
                             {%- set ns.col_size = source_column.char_size -%}
+                        {%- endif -%}
+                        {% if datavault4dbt.is_something(source_column.numeric_precision) %}
+                            {%- set ns.numeric_precision = source_column.numeric_precision -%}
+                        {%- endif -%}
+                        {% if datavault4dbt.is_something(source_column.numeric_scale) %}
+                            {%- set ns.numeric_scale = source_column.numeric_scale -%}
                         {%- endif -%}
                     {%- endif -%}
 
@@ -102,25 +118,35 @@
 
                 {%- endif -%}
                 {%- set col_size = ns.col_size | int-%}
-                {%- do columns.update({column_name: {'datatype': datatype, 'value': value, "col_size": col_size} }) -%}
+                {%- set numeric_precision = ns.numeric_precision -%}
+                {%- set numeric_scale = ns.numeric_scale -%}
+                {%- do columns.update({column_name: {'datatype': datatype, 'value': value, "col_size": col_size, 'numeric_precision': numeric_precision, 'numeric_scale': numeric_scale} }) -%}
         {%- elif column_value is mapping and not column_value.get('col_size') -%}
 
             {%- set value = column_value['value'] -%}
             {%- set datatype = column_value['datatype'] -%}
-            {%- set ns = namespace(col_size = "") -%}
+            {%- set ns = namespace(col_size = "", numeric_precision="", numeric_scale="") -%}
 
             {%- for source_column in all_source_columns -%}
 
                 {%- if source_column.name|upper == value|upper -%}
 
                     {%- set ns.col_size = source_column.char_size | int -%}
+                    {% if datavault4dbt.is_something(source_column.numeric_precision) %}
+                        {%- set ns.numeric_precision = source_column.numeric_precision -%}
+                    {%- endif -%}
+                    {% if datavault4dbt.is_something(source_column.numeric_scale) %}
+                        {%- set ns.numeric_scale = source_column.numeric_scale -%}
+                    {%- endif -%}
                 {%- endif -%}
 
             {%- endfor -%}
 
             {%- set col_size = ns.col_size -%}
+            {%- set numeric_precision = ns.numeric_precision -%}
+            {%- set numeric_scale = ns.numeric_scale -%}
 
-            {%- do columns.update({column_name: {'datatype': datatype, 'value': value, 'col_size': col_size} }) -%}
+            {%- do columns.update({column_name: {'datatype': datatype, 'value': value, 'col_size': col_size, 'numeric_precision': numeric_precision, 'numeric_scale': numeric_scale} }) -%}
         {%- endif -%}
 
     {%- endfor -%}
