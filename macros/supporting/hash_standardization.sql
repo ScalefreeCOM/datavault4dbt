@@ -889,6 +889,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- macro default__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 {%- set dict_result = {} -%}
 
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
+
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
 {%- if is_hashdiff and rtrim_hashdiff -%}
@@ -909,17 +911,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "IFNULL(TO_HEX({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){} ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'){} ORDER BY {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){} ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'){} ORDER BY {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL(TO_HEX({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){} ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'){} ORDER BY {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){} ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'){} ORDER BY {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -929,17 +931,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "IFNULL(TO_HEX({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){} ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'){} ORDER BY {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){} ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'){} ORDER BY {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL(TO_HEX({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){} ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'){} ORDER BY {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'){} ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'){} ORDER BY {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -955,6 +957,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- macro exasol__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 
     {%- set dict_result = {} -%}
+
+    {%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
     
     {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
@@ -973,18 +977,18 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "NULLIF({}(LISTAGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {})), {}) AS {} ".format(hdiff_suffix, multi_active_key, zero_key, alias) -%}
+            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}),'[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {})), {}) AS {} ".format(cast_dtype, hdiff_suffix, multi_active_key, zero_key, alias) -%}
         {%- else -%}
-            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8),'[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {})), {})".format(hdiff_suffix, multi_active_key, zero_key) -%}
+            {%- set standardise_suffix = ")), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}),'[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {})), {})".format(cast_dtype, hdiff_suffix, multi_active_key, zero_key) -%}
         {%- endif -%}
 
     {%- else -%}
         {%- set standardise_prefix = "NULLIF({}(LISTAGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(CONCAT(".format(hash_alg, hdiff_prefix) -%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {})), {}) AS {} ".format(hdiff_suffix, multi_active_key, zero_key , alias) -%}
+            {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {})), {}) AS {} ".format(cast_dtype, hdiff_suffix, multi_active_key, zero_key , alias) -%}
         {%- else %}
-            {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS VARCHAR(2000000) UTF8), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {})), {})".format(hdiff_suffix, multi_active_key, zero_key) -%}
+            {%- set standardise_suffix = "), char(10), '') , char(9), '') , char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {})), {})".format(cast_dtype, hdiff_suffix, multi_active_key, zero_key) -%}
         {%- endif -%}
 
     {%- endif -%}
@@ -1000,6 +1004,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- set ldts_alias = var('datavault4dbt.ldts_alias', 'ldts') -%}
 
 {%- set dict_result = {} -%}
+
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
@@ -1022,17 +1028,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "IFNULL(LOWER({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS STRING), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {}))), {}) AS {}".format(hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS STRING), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {}))), {})".format(hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key)-%}
+            {%- set standardise_suffix = "\n)), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL(LOWER({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS STRING), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {}))), {}) AS {}".format(hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS STRING), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {}))), {})".format(hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key)-%}
+            {%- set standardise_suffix = "\n), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1042,17 +1048,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "IFNULL({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS STRING), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {})), {}) AS {}".format(hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS STRING), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {})), {})".format(hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key)-%}
+            {%- set standardise_suffix = "\n)), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {})), {})".format(cast_dtype, hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS STRING), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {})), {}) AS {}".format(hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS STRING), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {})), {})".format(hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key)-%}
+            {%- set standardise_suffix = "\n), char(10), '') , char(9), ''), char(11), '') , char(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) OVER (PARTITION BY {}, {})), {})".format(cast_dtype, hdiff_suffix, multi_active_key, main_hashkey_column, ldts_alias, zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1068,6 +1074,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- macro synapse__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 
 {%- set dict_result = {} -%}
+
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
@@ -1087,9 +1095,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
     {%- if case_sensitive -%}
         {%- set standardise_prefix = "ISNULL(LOWER(HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), {}) AS {}".format(hdiff_suffix, multi_active_key, zero_key,  alias)-%}
+            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, zero_key,  alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
 
     {%- else -%}
@@ -1097,9 +1105,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "ISNULL(LOWER(HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), {}) AS {}".format(hdiff_suffix, multi_active_key, zero_key, alias)-%}
+            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}    
     {%- endif -%}
 
@@ -1110,9 +1118,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "ISNULL(CONVERT({}, HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(CONCAT(".format(datatype, hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2), CAST({} as {})) AS {}".format(hdiff_suffix, multi_active_key,zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2), CAST({} as {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2), CAST({} as {}))".format(hdiff_suffix, multi_active_key,zero_key, datatype)-%}
+            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2), CAST({} as {}))".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, datatype)-%}
         {%- endif -%}
 
     {%- else -%}
@@ -1120,9 +1128,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "ISNULL(CONVERT({}, HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(CONCAT(".format(datatype, hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2), CAST({} as {})) AS {}".format(hdiff_suffix, multi_active_key,zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2), CAST({} as {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2), CAST({} as {}))".format(hdiff_suffix, multi_active_key,zero_key, datatype)-%}
+            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2), CAST({} as {}))".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, datatype)-%}
         {%- endif -%}    
     {%- endif -%}
 
@@ -1138,6 +1146,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- macro postgres__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 
 {%- set dict_result = {} -%}
+
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
@@ -1159,17 +1169,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "COALESCE(LOWER({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',' ORDER BY {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',' ORDER BY {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "COALESCE(LOWER({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',' ORDER BY {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',' ORDER BY {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1179,17 +1189,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "COALESCE({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {})), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',' ORDER BY {})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {})), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',' ORDER BY {})), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "COALESCE({}(STRING_AGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {})), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',' ORDER BY {})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',' ORDER BY {})), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',' ORDER BY {})), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1203,6 +1213,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 
 {%- macro redshift__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 {%- set dict_result = {} -%}
+
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
 
 {%- if 'SHA2' in hash_alg -%}
     {%- set hash_default_values = fromjson(datavault4dbt.hash_default_values(hash_function=var('datavault4dbt.hash', 'MD5'), hash_datatype=var('datavault4dbt.hash_datatype', 'VARCHAR(32)'))) -%}
@@ -1231,17 +1243,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "COALESCE(LOWER({}(LISTAGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',') within group (ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS {}), '[ALL_NULL]'){}, ',') within group (ORDER BY {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',') within group (ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS {}), '[ALL_NULL]'){}, ',') within group (ORDER BY {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "COALESCE(LOWER({}(LISTAGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n, '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',') within group (ORDER BY {}))), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n, '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',') within group (ORDER BY {}))), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n, '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',') within group (ORDER BY {}))), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n, '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',') within group (ORDER BY {}))), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1251,17 +1263,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "COALESCE({}(LISTAGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',') within group (ORDER BY {})), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS {}), '[ALL_NULL]'){}, ',') within group (ORDER BY {})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',') within group (ORDER BY {})), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS {}), '[ALL_NULL]'){}, ',') within group (ORDER BY {})), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "COALESCE({}(LISTAGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n, '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',') within group (ORDER BY {})), {}) AS {}".format(hdiff_suffix, multi_active_key,zero_key, alias)-%}
+            {%- set standardise_suffix = "\n, '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS {}), '[ALL_NULL]'){}, ',') within group (ORDER BY {})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS VARCHAR), '[ALL_NULL]'){}, ',') within group (ORDER BY {})), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "\n), '\\\\n', '') \n, '\\\\t', '') \n, '\\\\v', '') \n, '\\\\r', '') AS {}), '[ALL_NULL]'){}, ',') within group (ORDER BY {})), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1277,6 +1289,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- macro fabric__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 
 {%- set dict_result = {} -%}
+
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
@@ -1312,9 +1326,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
     {%- set standardise_prefix = "ISNULL({}CONVERT({}, HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE([CONCAT_FUNCTION]".format(lower_prefix, datatype, hash_alg, hdiff_prefix)-%}
 
     {%- if alias is not none -%}
-        {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2){}, CAST({} as {})) AS {}".format(hdiff_suffix, multi_active_key, lower_suffix, zero_key, datatype, alias)-%}
+        {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2){}, CAST({} as {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, lower_suffix, zero_key, datatype, alias)-%}
     {%- else -%}
-        {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2){}, CAST({} as {}))".format(hdiff_suffix, multi_active_key, lower_suffix, zero_key, datatype)-%}
+        {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2){}, CAST({} as {}))".format(cast_dtype, hdiff_suffix, multi_active_key, lower_suffix, zero_key, datatype)-%}
     {%- endif -%}
 
 {%- else -%}
@@ -1322,9 +1336,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
     {%- set standardise_prefix = "ISNULL({}CONVERT({}, HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER([CONCAT_FUNCTION]".format(lower_prefix, datatype, hash_alg, hdiff_prefix)-%}
 
     {%- if alias is not none -%}
-        {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2){}, CAST({} as {})) AS {}".format(hdiff_suffix, multi_active_key, lower_suffix, zero_key, datatype, alias)-%}
+        {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2){}, CAST({} as {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, lower_suffix, zero_key, datatype, alias)-%}
     {%- else -%}
-        {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(4000)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2){}, CAST({} as {}))".format(hdiff_suffix, multi_active_key, lower_suffix, zero_key, datatype)-%}
+        {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )),2){}, CAST({} as {}))".format(cast_dtype, hdiff_suffix, multi_active_key, lower_suffix, zero_key, datatype)-%}
     {%- endif -%}
 
 {%- endif -%}
@@ -1339,6 +1353,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- macro databricks__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 {%- set dict_result = {} -%}
 
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
+
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
 {%- if is_hashdiff and rtrim_hashdiff -%}
@@ -1368,17 +1384,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "IFNULL(LOWER({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL(LOWER({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix) -%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1388,17 +1404,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "IFNULL(CAST({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL(CAST({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1413,6 +1429,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- macro fabricspark__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 {%- set dict_result = {} -%}
 
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
+
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
 {%- if is_hashdiff and rtrim_hashdiff -%}
@@ -1442,17 +1460,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "IFNULL(LOWER({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL(LOWER({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix) -%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){})), {})".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1462,17 +1480,17 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "IFNULL(CAST({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(UPPER(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
+            {%- set standardise_suffix = "\n)), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
         {%- endif -%}
     {%- else -%}
         {%- set standardise_prefix = "IFNULL(CAST({}(LISTAGG({}NULLIF(CAST(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(CONCAT(".format(hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS STRING), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
+            {%- set standardise_suffix = "\n), r'\\n', '') \n, r'\\t', '') \n, r'\\v', '') \n, r'\\r', '') AS {}), '[ALL_NULL]'{}), ',') WITHIN GROUP (ORDER BY {}){}) AS {}), CAST({} AS {}))".format(cast_dtype, hdiff_suffix, multi_active_key_string, hash_bits, datatype, zero_key, datatype)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1488,6 +1506,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- macro oracle__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 
 {%- set dict_result = {} -%}
+
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 {%- set varchar_size = var('datavault4dbt.oracle_varchar_size', '32767') -%}
@@ -1508,9 +1528,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
     {%- set standardise_prefix = "NULLIF(LOWER(CAST(standard_hash(LISTAGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(".format(hdiff_prefix) -%}
 
     {%- if alias is not none -%}
-        {%- set standardise_suffix = "), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'){}, ',')WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2({}))),{}) AS {} ".format(hdiff_suffix, multi_active_key, hash_alg, varchar_size, zero_key, alias) -%}
+        {%- set standardise_suffix = "), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS {}),'[ALL_NULL]'){}, ',')WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2({}))),{}) AS {} ".format(cast_dtype, hdiff_suffix, multi_active_key, hash_alg, varchar_size, zero_key, alias) -%}
     {%- else -%}
-        {%- set standardise_suffix = "), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'){}, ',')WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2({}))),{})".format(hdiff_suffix, multi_active_key, hash_alg, varchar_size, zero_key) -%}
+        {%- set standardise_suffix = "), chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS {}),'[ALL_NULL]'){}, ',')WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2({}))),{})".format(cast_dtype, hdiff_suffix, multi_active_key, hash_alg, varchar_size, zero_key) -%}
     {%- endif -%}
 
 {%- else -%}
@@ -1518,9 +1538,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
     {%- set standardise_prefix = "NULLIF(LOWER(CAST(standard_hash(LISTAGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(".format(hdiff_prefix) -%}
     
     {%- if alias is not none -%}
-        {%- set standardise_suffix = ", chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'){}, ',')WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2({}))),{}) AS {} ".format(hdiff_suffix, multi_active_key, hash_alg, varchar_size, zero_key, alias) -%}
+        {%- set standardise_suffix = ", chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS {}),'[ALL_NULL]'){}, ',')WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2({}))),{}) AS {} ".format(cast_dtype, hdiff_suffix, multi_active_key, hash_alg, varchar_size, zero_key, alias) -%}
     {%- else %}
-        {%- set standardise_suffix = ", chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS VARCHAR2(2000)),'[ALL_NULL]'){}, ',')WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2({}))),{})".format(hdiff_suffix, multi_active_key, hash_alg, varchar_size, zero_key) -%}
+        {%- set standardise_suffix = ", chr(10), '') , chr(9), ''), chr(11), '') , chr(13), '') AS {}),'[ALL_NULL]'){}, ',')WITHIN GROUP (ORDER BY {}),'{}')as VARCHAR2({}))),{})".format(cast_dtype, hdiff_suffix, multi_active_key, hash_alg, varchar_size, zero_key) -%}
     {%- endif -%}
 {%- endif -%}
 
@@ -1532,6 +1552,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 
 {%- macro trino__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
     {%- set dict_result = {} -%}
+
+    {%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
     {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
 
@@ -1551,10 +1573,10 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 
     {%- if not case_sensitive -%}
         {%- set standardise_prefix = standardise_prefix ~ "UPPER(CONCAT(" -%}
-        {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]') " ~ hdiff_suffix ~ ", ',') WITHIN GROUP (ORDER BY " ~ multi_active_key ~ ")))))" ~ ", CAST(" ~ zero_key ~ " AS VARCHAR))" -%}
+        {%- set standardise_suffix = "\n)), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS " ~ cast_dtype ~ "), '[ALL_NULL]') " ~ hdiff_suffix ~ ", ',') WITHIN GROUP (ORDER BY " ~ multi_active_key ~ ")))))" ~ ", CAST(" ~ zero_key ~ " AS VARCHAR))" -%}
     {%- else -%}
         {%- set standardise_prefix = standardise_prefix ~ "CONCAT(" -%}
-        {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS VARCHAR), '[ALL_NULL]') " ~ hdiff_suffix ~ ", ',') WITHIN GROUP (ORDER BY " ~ multi_active_key ~ ")))))" ~ ", CAST(" ~ zero_key ~ " AS VARCHAR))" -%}
+        {%- set standardise_suffix = "\n), '\\n', '') \n, '\\t', '') \n, '\\v', '') \n, '\\r', '') AS " ~ cast_dtype ~ "), '[ALL_NULL]') " ~ hdiff_suffix ~ ", ',') WITHIN GROUP (ORDER BY " ~ multi_active_key ~ ")))))" ~ ", CAST(" ~ zero_key ~ " AS VARCHAR))" -%}
     {%- endif -%}
 
     {%- if alias is not none -%}
@@ -1569,6 +1591,8 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
 {%- macro sqlserver__multi_active_concattenated_standardise(case_sensitive, hash_alg, datatype, zero_key, alias, multi_active_key, main_hashkey_column, is_hashdiff, rtrim_hashdiff) -%}
 
 {%- set dict_result = {} -%}
+
+{%- set cast_dtype = datavault4dbt.hash_input_dtype(type='multi_active_concat') -%}
 
 {%- set zero_key = datavault4dbt.as_constant(column_str=zero_key) -%}
 
@@ -1589,9 +1613,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
     {%- if case_sensitive -%}
         {%- set standardise_prefix = "ISNULL(LOWER(CONVERT({}, HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE([CONCAT_FUNCTION]".format(datatype, hash_alg, hdiff_prefix)-%}
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(MAX)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )), 2)), {}) AS {}".format(hdiff_suffix, multi_active_key, zero_key,  alias)-%}
+            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )), 2)), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, zero_key,  alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(MAX)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )), 2)), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )), 2)), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
 
     {%- else -%}
@@ -1599,9 +1623,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "ISNULL(LOWER(CONVERT({}, HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER([CONCAT_FUNCTION]".format(datatype, hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(MAX)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )), 2)), {}) AS {}".format(hdiff_suffix, multi_active_key, zero_key, alias)-%}
+            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )), 2)), {}) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key, zero_key, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(MAX)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )), 2)), {})".format(hdiff_suffix, multi_active_key,zero_key)-%}
+            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) )), 2)), {})".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key)-%}
         {%- endif -%}
     {%- endif -%}
 
@@ -1612,9 +1636,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "ISNULL(CONVERT({}, HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE([CONCAT_FUNCTION]".format(datatype, hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(MAX)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), CAST({} as {})) AS {}".format(hdiff_suffix, multi_active_key,zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), CAST({} as {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(MAX)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), CAST({} as {}))".format(hdiff_suffix, multi_active_key,zero_key, datatype)-%}
+            {%- set standardise_suffix = "), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), CAST({} as {}))".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, datatype)-%}
         {%- endif -%}
 
     {%- else -%}
@@ -1622,9 +1646,9 @@ NULLIF('"' || REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\\', '\\\\\'), '[QUO
         {%- set standardise_prefix = "ISNULL(CONVERT({}, HASHBYTES('{}', (STRING_AGG({}NULLIF(CAST(REPLACE(REPLACE(REPLACE(REPLACE(UPPER([CONCAT_FUNCTION]".format(datatype, hash_alg, hdiff_prefix)-%}
 
         {%- if alias is not none -%}
-            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(MAX)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), CAST({} as {})) AS {}".format(hdiff_suffix, multi_active_key,zero_key, datatype, alias)-%}
+            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), CAST({} as {})) AS {}".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, datatype, alias)-%}
         {%- else -%}
-            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS VARCHAR(MAX)), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), CAST({} as {}))".format(hdiff_suffix, multi_active_key,zero_key, datatype)-%}
+            {%- set standardise_suffix = ")), CHAR(10), ''), CHAR(9), ''), CHAR(11), ''), CHAR(13), '') AS {}), '[ALL_NULL]'){}, ',') WITHIN GROUP (ORDER BY {}) ))), CAST({} as {}))".format(cast_dtype, hdiff_suffix, multi_active_key,zero_key, datatype)-%}
         {%- endif -%}
     {%- endif -%}
 
