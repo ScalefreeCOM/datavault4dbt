@@ -66,7 +66,7 @@ WITH
                     SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}' ESCAPE '\'
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
@@ -79,7 +79,7 @@ WITH
                     SELECT t.*,
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}' ESCAPE '\'
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
@@ -179,7 +179,7 @@ src_new_{{ source_number }} AS (
     {# then an inner join is performed on the CTE for the maximum load date timestamp per record source static to get the records
     that match any of the rsrc_static present in it #}
     {# if there are records in the source with a newer load date time stamp than the ones present in the target, those will be selected to be inserted later #}
-    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_model] %}
+    {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
         INNER JOIN max_ldts_per_rsrc_static_in_target max ON
         ({%- for rsrc_static in rsrc_statics -%}
             max.rsrc_static = '{{ rsrc_static }}'

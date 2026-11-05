@@ -77,7 +77,7 @@ payload:
     - transaction_date
 source_models:
     - name: stage_creditcard_transactions
-      rsrc_static: '*/VISA/Transactions/*'
+      rsrc_static: '%/VISA/Transactions/%'
     - name: stage_purchases
       link_hk: 'transaction_hashkey'
       fk_columns: ['creditcard_hkey']
@@ -87,7 +87,7 @@ source_models:
         - currency
         - status_flag
         - date
-      rsrc_static: '*/SHOP/Creditcard_Purchases/*'
+      rsrc_static: '%/SHOP/CreditcardPurchases/%'
 {%- endset -%}    
 
 {{ datavault4dbt.nh_link(yaml_metadata=yaml_metadata) }}

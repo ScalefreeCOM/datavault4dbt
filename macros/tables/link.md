@@ -15,7 +15,7 @@ If multiple sources are used, they must all have the same number of foreign keys
     foreign_hashkeys=['hk_account_h', 'hk_contact_h'],
     source_models={
         'stg_account_contact': {
-            'rsrc_static': '*/CRM/AccountContact/*'
+            'rsrc_static': '%/CRM/AccountContact/%'
         }
     }
 ) }}
@@ -36,7 +36,7 @@ foreign_hashkeys:
   - hk_contact_h
 source_models:
   stg_account_contact:
-    rsrc_static: '*/CRM/AccountContact/*'
+    rsrc_static: '%/CRM/AccountContact/%'
 {%- endset -%}
 
 {{ datavault4dbt.link(yaml_metadata=meta) }}

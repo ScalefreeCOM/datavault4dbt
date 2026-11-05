@@ -31,11 +31,11 @@
 
                                     Examples:
                                         {'stage_account': {'hk_column': 'hk_account_h',                         This record tracking satellite tracks the hashkey 'hk_account_h' inside the
-                                                        'rsrc_static': '*/SAP/Accounts/*'}}                     source model named 'stage_account'.
+                                                        'rsrc_static': '%/SAP/Accounts/%'}}                     source model named 'stage_account'.
 
-                                        {'stage_contact': {'rsrc_static': '*/SALESFORCE/Contact/*'},            This tracks the appearance of one hub hashkey that is loaded from the two source
+                                        {'stage_contact': {'rsrc_static': '%/SALESFORCE/Contact/%'},            This tracks the appearance of one hub hashkey that is loaded from the two source
                                         'stage_partner': {'hk_column': 'hk_partner_h',                          models 'stage_contact' and 'stage_partner'. For 'stage_account' no 'hk_column' is defined,
-                                                          'rsrc_static': '*/SALESFORCE/Partners/*'}}            and therefore the input of the upper level variable 'tracked_hashkey' will be used.
+                                                          'rsrc_static': '%/SALESFORCE/Partners/%'}}            and therefore the input of the upper level variable 'tracked_hashkey' will be used.
                                                                                                                 For 'stage_partner' the name of the hashkey column differs from the upper level definition
                                                                                                                 and therefore this other name is set under the variable 'hk_column.'
 
@@ -47,13 +47,12 @@
                                                                                                                 like this: 'SALESFORCE/Partners/2022-01-01T07:00:00'. Obviously the timestamp part
                                                                                                                 inside that rsrc would change from load to load, and we now need to identify parts of
                                                                                                                 it that will be static over all loads. Here it would be 'SALESFORCE/Partners'. This static
-                                                                                                                part is now enriched by wildcard expressions (in BigQuery that would be '*') to catch
-                                                                                                                the variable part of the rsrc values.
+                                                                                                                part is now enriched by wildcard expressions (the SQL LIKE wildcard '%') to catch
+                                                                                                                the variable part of the rsrc values. Here the rsrc_static would be
+                                                                                                                'SALESFORCE/Partners/%'.
                                                                                                                 If my rsrc would be the same over all loads, then it might look something like
                                                                                                                 this: 'SAP/Accounts/'. Here everything would be static over all loads and
                                                                                                                 therefore I would set rsrc_static to 'SAP/Accounts/' without any wildcards in place.
-                                                                                                                If the rsrc_static is defined as solely the wildcard '*' for any source then 
-                                                                                                                this record source performance lookup will not be executed. 
                                                                                                                 If the rsrc_static is not set in one of the source models, then the assumption is made that
                                                                                                                 or this source there is always the same value for any record in the record source column. 
                                                                                                                 The macro will then get automatically this unique value querying the source model.
