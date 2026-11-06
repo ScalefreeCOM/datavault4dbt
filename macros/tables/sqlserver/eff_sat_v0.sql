@@ -35,7 +35,7 @@
         {%- elif this is string -%}
             {%- set ns.use_subquery_hwm = true -%}
         {%- else -%}
-            {% set max_ldts_query = 'SELECT CONVERT(VARCHAR(27), CAST(COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ') AS datetime2(7)), 121) FROM ' ~ this ~ ' WHERE ' ~ src_ldts ~ ' != ' ~ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) %}
+            {% set max_ldts_query = 'SELECT CONVERT(VARCHAR(27), CAST(COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ') AS datetime2(7)), 121) AS max_ldts FROM ' ~ this ~ ' WHERE ' ~ src_ldts ~ ' != ' ~ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) %}
             {% set max_ldts_results = run_query(max_ldts_query) %}
             {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
         {%- endif %}

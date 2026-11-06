@@ -8,7 +8,7 @@
 {%- set additional_columns = additional_columns | default([],true) -%}
 {%- set additional_columns = [additional_columns] if additional_columns is string else additional_columns -%}
 
-{%- set ns=namespace(src_hashdiff="", hdiff_alias="") %}
+{%- set ns=namespace(src_hashdiff="", hdiff_alias="", use_subquery_hwm=false) %}
 {%- if  src_hashdiff is mapping and src_hashdiff is not none -%}
     {% set ns.src_hashdiff = src_hashdiff["source_column"] %}
     {% set ns.hdiff_alias = src_hashdiff["alias"] %}
@@ -31,6 +31,21 @@
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
  
+{# Get max(ldts) as a literal value. Style 121 with 7 fractional digits keeps it a string in dbt, preserving datetime2(7) precision. #}
+{% if execute %}
+    {%- if is_incremental() and not disable_hwm %}
+        {%- if this is none -%}
+            {{ exceptions.raise_compiler_error("datavault4dbt: `this` is not available. If this is a unit test on an incremental model, add the model itself as a `given` input so dbt can populate `this`.") }}
+        {%- elif this is string -%}
+            {%- set ns.use_subquery_hwm = true -%}
+        {%- else -%}
+            {% set max_ldts_query = 'SELECT CONVERT(VARCHAR(27), CAST(COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ') AS datetime2(7)), 121) AS max_ldts FROM ' ~ this ~ ' WHERE ' ~ src_ldts ~ ' != ' ~ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) %}
+            {% set max_ldts_results = run_query(max_ldts_query) %}
+            {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+        {%- endif %}
+    {%- endif %}
+{% endif %}
+
 {# Selecting all source data, that is newer than latest data in sat if incremental #}
 WITH 
 
@@ -45,11 +60,15 @@ source_data AS (
     FROM {{ source_relation }}
 
     {%- if is_incremental() and not disable_hwm %}
+    {%- if ns.use_subquery_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
             COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
+    {%- else %}
+    WHERE {{ src_ldts }} > CONVERT(datetime2(7), '{{ max_ldts }}', 121)
+    {%- endif %}
     {%- endif %}
 {% set source_cte = 'source_data' %}
 ),
