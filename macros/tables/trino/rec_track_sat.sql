@@ -57,7 +57,7 @@ WITH
                     {{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }}
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}' ESCAPE '\'
                     {%- if not loop.last %} 
                         UNION ALL
                     {% endif -%}
@@ -72,7 +72,7 @@ WITH
                     {{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }}
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}' ESCAPE '\'
                     {%- if not loop.last %} 
                         UNION ALL
                     {% endif -%}

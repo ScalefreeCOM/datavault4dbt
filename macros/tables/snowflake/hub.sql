@@ -50,7 +50,7 @@ WITH
                     SELECT t.{{ src_rsrc }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}' ESCAPE '\\'
                     {%- if not loop.last %}
                         UNION ALL
                     {% endif -%}
@@ -65,7 +65,7 @@ WITH
                     SELECT max(t.{{ src_ldts }}) as {{ src_ldts }},
                     '{{ rsrc_static }}' AS rsrc_static
                     FROM {{ this }} t
-                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}'
+                    WHERE {{ src_rsrc }} like '{{ rsrc_static }}' ESCAPE '\\'
                     AND {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
                     GROUP BY rsrc_static
                     {%- if not loop.last %}
@@ -160,7 +160,7 @@ WITH
     {%- if is_incremental() and ns.has_rsrc_static_defined and ns.source_included_before[source_number|int] and not disable_hwm %}
         WHERE 
         {% for rsrc_static in rsrc_statics %}
-          (src.{{ src_rsrc }} = '{{ rsrc_static }}' AND src.{{ src_ldts }} > (
+          (src.{{ src_rsrc }} like '{{ rsrc_static }}' ESCAPE '\\' AND src.{{ src_ldts }} > (
             SELECT COALESCE(MAX(max_ldts), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
             FROM max_ldts_per_rsrc_static_in_target
             WHERE rsrc_static = '{{ rsrc_static }}' AND max_ldts != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
