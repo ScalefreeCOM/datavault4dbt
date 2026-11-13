@@ -39,7 +39,7 @@ end_dated_source AS (
         {%- endif %}
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD(TRY_SUBTRACT({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }}
+        COALESCE(LEAD({{ datavault4dbt.subtract_clocktick(src_ldts) }}) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }}
         {%- if include_payload -%},
             {{ datavault4dbt.print_list(source_columns_to_select) }}
         {%- endif %}

@@ -33,7 +33,7 @@ end_dated_source AS (
         {%- endif %}
         {{ src_rsrc }},
         {{ src_ldts }},
-        COALESCE(LEAD({{ src_ldts }} - INTERVAL '0.000001' SECOND) OVER (PARTITION BY {%- for ref_key in ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }}
+        COALESCE(LEAD({{ datavault4dbt.subtract_clocktick(src_ldts) }}) OVER (PARTITION BY {%- for ref_key in ref_keys %} {{ref_key}} {%- if not loop.last %}, {% endif %}{% endfor %} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) as {{ ledts_alias }}
         {%- if source_columns_to_select -%},
         {{ datavault4dbt.print_list(source_columns_to_select) }}
         {%- endif %}
