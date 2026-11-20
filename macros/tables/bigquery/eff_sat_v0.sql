@@ -4,7 +4,7 @@
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set ns = namespace(last_cte= "") -%}
+{%- set ns = namespace(last_cte= "", use_subquery_hwm=false) -%}
 
 {%- set source_relation = ref(source_model) -%}
 
@@ -20,6 +20,21 @@
 {%- set unknown_value_rsrc = var('datavault4dbt.default_unknown_rsrc', 'SYSTEM') -%}
 
 {%- set is_active_datatype = var('datavault4dbt.is_active_datatype', 'Bool') -%}
+
+{# Get max(ldts) #}
+{% if execute %}
+    {%- if is_incremental() and not disable_hwm %}
+        {%- if this is none -%}
+            {{ exceptions.raise_compiler_error("datavault4dbt: `this` is not available. If this is a unit test on an incremental model, add the model itself as a `given` input so dbt can populate `this`.") }}
+        {%- elif this is string -%}
+            {%- set ns.use_subquery_hwm = true -%}
+        {%- else -%}
+            {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ') FROM ' ~ this ~ ' WHERE ' ~ src_ldts ~ ' != ' ~ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) %}
+            {% set max_ldts_results = run_query(max_ldts_query) %}
+            {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+        {%- endif %}
+    {%- endif %}
+{% endif %}
 
 {{ datavault4dbt.prepend_generated_by() }}
 
@@ -41,12 +56,16 @@ source_data AS (
     FROM {{ source_relation }} src
     WHERE {{ src_ldts }} NOT IN ({{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}, {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
     {%- if is_incremental() and not disable_hwm %}
+    {%- if ns.use_subquery_hwm %}
     AND src.{{ src_ldts }} > (
         SELECT
             COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
         FROM {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
+    {%- else %}
+    AND src.{{ src_ldts }} > '{{ max_ldts }}'
+    {%- endif %}
     {%- endif %}
 ),
 

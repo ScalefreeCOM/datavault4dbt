@@ -1,0 +1,6 @@
+# commithashes in this file are ignored by git blame
+# To use it set the blame.ignoreRevsFile configuration in your local git config by executing the following command:
+# git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Normalise line endings to LF and add .gitattributes
+2c662c26ed56da986895a874cbed8758757c8c1b

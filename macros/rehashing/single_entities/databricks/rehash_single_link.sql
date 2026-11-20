@@ -98,22 +98,23 @@
         {{ log('Replacing existing hash values with new ones...', output_logs) }}
 
         {# 6a. Rename Link Hashkeys #}
-        {% set ns_rename = namespace(rename_queries = ['BEGIN']) %}
-        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=link_hashkey, new_col_name=link_hashkey + '_deprecated'))}}
+        {% set ns_rename = namespace(rename_queries = []) %}
+        {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=link_hashkey, new_col_name=link_hashkey + '_deprecated')) %}
         
-        {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=new_link_hashkey_name, new_col_name=link_hashkey)) }}
+        {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=new_link_hashkey_name, new_col_name=link_hashkey)) %}
 
 
         {# 6b. Rename Hub Hashkeys #}
         {% for hub_hashkey in ns.hub_hashkeys %}
 
-            {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.current_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name + '_deprecated')) }}
+            {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.current_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name + '_deprecated')) %}
             
-            {{ ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.new_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name)) }}
+            {% do ns_rename.rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=link_relation, old_col_name=hub_hashkey.new_hashkey_name, new_col_name=hub_hashkey.current_hashkey_name)) %}
         {% endfor %}
 
-        {{ ns_rename.rename_queries.append('END') }}
-        {% do run_query(ns_rename.rename_queries|join('\n')) %}
+        {% for rename_query in ns_rename.rename_queries %}
+            {% do run_query(rename_query) %}
+        {% endfor %}
 
         {# 6c. Drop Old Values (Loop through drops) #}
         {% if drop_old_values %}

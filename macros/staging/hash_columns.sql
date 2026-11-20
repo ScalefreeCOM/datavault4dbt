@@ -19,7 +19,7 @@
                 {{- datavault4dbt.hash(columns=columns[col]['columns'],
                                 alias=col,
                                 is_hashdiff=columns[col]['is_hashdiff'],
-                                rtrim_hashdiff=columns[col].get('use_rtrim', false),
+                                rtrim_hashdiff=columns[col].get('use_rtrim', none),
                                 multi_active_key=multi_active_key,
                                 main_hashkey_column=main_hashkey_column,
                                 use_trim=columns[col].get('use_trim', none)) -}}
@@ -41,7 +41,7 @@
                 {{- datavault4dbt.hash(columns=columns[col]['columns'],
                                 alias=col,
                                 is_hashdiff=columns[col]['is_hashdiff'],
-                                rtrim_hashdiff=columns[col].get('use_rtrim', false),
+                                rtrim_hashdiff=columns[col].get('use_rtrim', none),
                                 use_trim=columns[col].get('use_trim', none)) -}}
 
             {%- elif columns[col] is not mapping -%}
@@ -81,7 +81,7 @@
                 {{- datavault4dbt.hash(columns=columns[col]['columns'],
                                 alias=col,
                                 is_hashdiff=columns[col]['is_hashdiff'],
-                                rtrim_hashdiff=columns[col].get('use_rtrim', false),
+                                rtrim_hashdiff=columns[col].get('use_rtrim', none),
                                 multi_active_key=multi_active_key,
                                 main_hashkey_column=main_hashkey_column,
                                 use_trim=columns[col].get('use_trim', none)) -}}
@@ -102,7 +102,7 @@
                 {{- datavault4dbt.hash(columns=columns[col]['columns'],
                                 alias=col,
                                 is_hashdiff=columns[col]['is_hashdiff'],
-                                rtrim_hashdiff=columns[col].get('use_rtrim', false),
+                                rtrim_hashdiff=columns[col].get('use_rtrim', none),
                                 use_trim=columns[col].get('use_trim', none)) -}}
 
             {%- elif columns[col] is not mapping -%}

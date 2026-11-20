@@ -57,6 +57,9 @@ macros:
   - name: databricks__link
     description: Databricks-specific implementation of link. Accepts the same arguments as the parent link macro.
 
+  - name: fabricspark__link
+    description: Fabric Spark-specific implementation of link. Accepts the same arguments as the parent link macro.
+
   - name: exasol__link
     description: Exasol-specific implementation of link. Accepts the same arguments as the parent link macro.
 

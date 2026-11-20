@@ -119,7 +119,10 @@ ref_table AS (
 
     {% endfor %} 
 
-    FROM {{ ref(ref_hub) }} h
+    {#- The inline view keeps Oracle 26ai from rejecting CREATE VIEW with
+        ORA-00942 when the ref hub is a view: 26ai fails a FULL OUTER JOIN
+        to a view whose CTEs read other CTEs. 19c accepts both forms. #}
+    FROM (SELECT * FROM {{ ref(ref_hub) }}) h
     
     FULL OUTER JOIN dates ld
         ON 1 = 1  

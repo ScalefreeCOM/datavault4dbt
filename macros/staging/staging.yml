@@ -109,6 +109,9 @@ macros:
   - name: databricks__process_columns_to_select
     description: Databricks-specific implementation of process_columns_to_select. Accepts the same arguments as the parent macro.
 
+  - name: fabricspark__process_columns_to_select
+    description: Fabric Spark-specific implementation of process_columns_to_select. Accepts the same arguments as the parent macro.
+
   - name: synapse__process_columns_to_select
     description: Azure Synapse Analytics-specific implementation of process_columns_to_select. Delegates to default__process_columns_to_select.
 
