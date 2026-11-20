@@ -253,8 +253,9 @@
 
     {%- if columns_dict is mapping -%}
         {%- for key, value in columns_dict.items() -%}
-            {#- A quoted 'false' is a non-empty string and would count as true, so only booleans are accepted. -#}
-            {%- if value is mapping and value.get('overwrite_src_cols', false) not in [true, false] -%}
+            {#- A quoted 'false' is a non-empty string and would count as true, so only booleans are accepted.
+                'in [true, false]' is not enough: 1 == true and 0 == false, so numbers would pass. -#}
+            {%- if value is mapping and value.get('overwrite_src_cols', false) is not boolean -%}
                 {{- exceptions.raise_compiler_error("Derived column '" ~ key ~ "' sets 'overwrite_src_cols' to " ~ (value['overwrite_src_cols'] | tojson) ~ ". Use true or false without quotes.") -}}
             {%- endif -%}
             {%- if value is mapping and value.get('overwrite_src_cols', false) -%}
@@ -273,7 +274,18 @@
         {%- endfor -%}
     {%- endif -%}
 
-    {%- do return(ns.overwrite_columns) -%}
+    {#- The names can have identifier quotes ("name", `name`, [name]), but the source column names
+        they are compared against have none. Remove one enclosing pair, otherwise nothing matches. -#}
+    {%- set overwrite_columns = [] -%}
+    {%- for column in ns.overwrite_columns -%}
+        {%- set name = column | trim if column is string else column -%}
+        {%- if name is string and name | length > 1 and ((name | first == '"' and name | last == '"') or (name | first == '`' and name | last == '`') or (name | first == '[' and name | last == ']')) -%}
+            {%- set name = name[1:-1] -%}
+        {%- endif -%}
+        {%- do overwrite_columns.append(name) -%}
+    {%- endfor -%}
+
+    {%- do return(overwrite_columns) -%}
 
 {%- endmacro -%}
 
