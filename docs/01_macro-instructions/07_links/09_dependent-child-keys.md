@@ -69,7 +69,7 @@ foreign_hashkeys:
 source_models: stg_invoices
 {%- endset -%}
 
-{{ datavault4dbt.stage(yaml_metadata=yaml_metadata) }}
+{{ datavault4dbt.link(yaml_metadata=yaml_metadata) }}
 ```
 
 On top of the previously created stage model, a link between invoices and products is created, as shown in the example model above. Compared to a regular link without a dependent child key, we have hijacked the `foreign_hashkeys` parameter to additionally include the dependent child key in the link table structure.
