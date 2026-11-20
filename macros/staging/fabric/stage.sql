@@ -367,7 +367,15 @@ derived_columns AS (
   {%- endif -%}
 
   {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, exluded_derived_columns) -%}
-  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, overwrite_src_columns) -%}
+  {#- fabric__process_columns_to_select compares names exactly when set_casing is unset. Compare case-insensitively here, like the other adapters. -#}
+  {%- set overwrite_src_columns_lower = overwrite_src_columns | map('lower') | list -%}
+  {%- set columns_without_overwritten = [] -%}
+  {%- for column in final_columns_to_select -%}
+    {%- if column | lower not in overwrite_src_columns_lower -%}
+      {%- do columns_without_overwritten.append(column) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- set final_columns_to_select = columns_without_overwritten -%}
 
   SELECT
   {% if final_columns_to_select | length > 0 -%}
