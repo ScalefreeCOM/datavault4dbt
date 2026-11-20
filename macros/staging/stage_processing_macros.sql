@@ -255,7 +255,7 @@
         {%- for key, value in columns_dict.items() -%}
             {#- A quoted 'false' is a non-empty string and would count as true, so only booleans are accepted. -#}
             {%- if value is mapping and value.get('overwrite_src_cols', false) not in [true, false] -%}
-                {{- exceptions.raise_compiler_error("Derived column '" ~ key ~ "' sets 'overwrite_src_cols' to " ~ value['overwrite_src_cols'] ~ ". Use true or false without quotes.") -}}
+                {{- exceptions.raise_compiler_error("Derived column '" ~ key ~ "' sets 'overwrite_src_cols' to " ~ (value['overwrite_src_cols'] | tojson) ~ ". Use true or false without quotes.") -}}
             {%- endif -%}
             {%- if value is mapping and value.get('overwrite_src_cols', false) -%}
                 {%- if 'src_cols_required' in value -%}
