@@ -63,10 +63,11 @@ latest_entries_in_sat AS (
 {# Get a list of all distinct hashdiffs that exist for each parent_hashkey. #}
 deduped_row_hashdiff AS (
 
-  SELECT 
+  SELECT
     {{ parent_hashkey }},
     {{ src_ldts }},
-    {{ ns.hdiff_alias }}
+    {{ ns.hdiff_alias }},
+    ROW_NUMBER() OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) as rn
   FROM source_data redshift_requires_an_alias_if_the_qualify_is_directly_after_the_from
   QUALIFY CASE
             WHEN {{ ns.hdiff_alias }} = LAG({{ ns.hdiff_alias }}) OVER (PARTITION BY {{ parent_hashkey }} ORDER BY {{ src_ldts }}) THEN FALSE
@@ -77,9 +78,10 @@ deduped_row_hashdiff AS (
 {# Dedupe the source data regarding non-delta groups. #}
 deduped_rows AS (
 
-  SELECT 
+  SELECT
     source_data.{{ parent_hashkey }},
     source_data.{{ ns.hdiff_alias }},
+    deduped_row_hashdiff.rn,
     {{ datavault4dbt.alias_all(columns=source_cols, prefix='source_data') }}
   FROM source_data
   INNER JOIN deduped_row_hashdiff
@@ -99,11 +101,16 @@ records_to_insert AS (
         {{ datavault4dbt.alias_all(columns=source_cols, prefix=source_cte) }}
     FROM {{ source_cte }}
     {%- if is_incremental() %}
-    WHERE NOT EXISTS (
+    WHERE
+        {%- if not source_is_single_batch and not disable_hwm %}
+        {{ source_cte }}.rn > 1
+        OR
+        {%- endif %}
+        NOT EXISTS (
         SELECT 1
         FROM latest_entries_in_sat
         WHERE {{ datavault4dbt.multikey(parent_hashkey, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
-            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }} 
+            AND {{ datavault4dbt.multikey(ns.hdiff_alias, prefix=['latest_entries_in_sat', source_cte], condition='=') }}
             )
     {%- endif %}
 
