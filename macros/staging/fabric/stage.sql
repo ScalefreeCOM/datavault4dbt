@@ -149,7 +149,9 @@
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 
+{%- set overwrite_src_columns = [] -%}
 {%- if datavault4dbt.is_something(derived_columns) %}
+  {%- set overwrite_src_columns = datavault4dbt.extract_overwrite_columns(derived_columns) -%}
   {#- Getting Data types for derived columns with detection from source relation -#}
   {%- set derived_columns_with_datatypes = datavault4dbt.derived_columns_datatypes(derived_columns, source_relation) -%}
   {%- set derived_columns_with_datatypes_DICT = fromjson(derived_columns_with_datatypes) -%}
@@ -365,6 +367,15 @@ derived_columns AS (
   {%- endif -%}
 
   {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, exluded_derived_columns) -%}
+  {#- fabric__process_columns_to_select compares names exactly when set_casing is unset. Compare case-insensitively here, like the other adapters. -#}
+  {%- set overwrite_src_columns_lower = overwrite_src_columns | map('lower') | list -%}
+  {%- set columns_without_overwritten = [] -%}
+  {%- for column in final_columns_to_select -%}
+    {%- if column | lower not in overwrite_src_columns_lower -%}
+      {%- do columns_without_overwritten.append(column) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- set final_columns_to_select = columns_without_overwritten -%}
 
   SELECT
   {% if final_columns_to_select | length > 0 -%}
