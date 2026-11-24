@@ -195,9 +195,9 @@ WITH
 source_data AS (
     SELECT
 
-    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
+    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(all_source_columns), src_alias='src') if all_source_columns else " src.*" }}
 
-  FROM {{ source_relation }}
+  FROM {{ source_relation }} AS src
 
   {% if is_incremental() %}
   WHERE {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) 
