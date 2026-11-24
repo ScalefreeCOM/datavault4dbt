@@ -91,7 +91,13 @@ NULLIF(CONCAT('"', REPLACE(REPLACE(REPLACE(REPLACE({{ expr }}, '\\', '\\\\'), '[
 
 {%- set cast_dtype = datavault4dbt.hash_input_dtype(type='attribute') -%}
 
-{%- set expr = 'LTRIM(RTRIM(CONVERT({}, [EXPRESSION], 1)))'.format(cast_dtype) if use_trim else 'CONVERT({}, [EXPRESSION], 1)'.format(cast_dtype) -%}
+{#-
+    Style 121 keeps the full precision of temporal datatypes (yyyy-mm-dd hh:mi:ss.fffffff).
+    Style 1 would turn DATETIME2 / DATE into mm/dd/yy and drop the time part, see issue #535.
+    VARBINARY input returns NULL with style 121, so binary columns need to be converted to a string
+    beforehand, e.g. via a derived column CONVERT(VARCHAR(4000), <column>, 1).
+-#}
+{%- set expr = 'LTRIM(RTRIM(CONVERT({}, [EXPRESSION], 121)))'.format(cast_dtype) if use_trim else 'CONVERT({}, [EXPRESSION], 121)'.format(cast_dtype) -%}
 
 {%- set concat_repl = var('datavault4dbt.concat_string_replacement', 'dv4dbt-concat-replacement') -%}
 {%- set quote_repl = var('datavault4dbt.quote_character_replacement', 'dv4dbt-quote-replacement') -%}
