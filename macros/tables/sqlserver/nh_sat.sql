@@ -12,7 +12,7 @@
 
 {%- set source_relation = ref(source_model) -%}
 
-{%- set ns = namespace(last_cte='') -%}
+{%- set ns = namespace(last_cte='', use_subquery_hwm=false) -%}
 
 
 {%- set source_cols = datavault4dbt.escape_column_names(source_cols) -%}
@@ -20,6 +20,21 @@
 {%- set src_payload = datavault4dbt.escape_column_names(src_payload) -%}
 {%- set src_ldts = datavault4dbt.escape_column_names(src_ldts) -%}
 {%- set src_rsrc = datavault4dbt.escape_column_names(src_rsrc) -%}
+
+{# Get max(ldts) as a literal value. Style 121 with 7 fractional digits keeps it a string in dbt, preserving datetime2(7) precision. #}
+{% if execute %}
+    {%- if is_incremental() %}
+        {%- if this is none -%}
+            {{ exceptions.raise_compiler_error("datavault4dbt: `this` is not available. If this is a unit test on an incremental model, add the model itself as a `given` input so dbt can populate `this`.") }}
+        {%- elif this is string -%}
+            {%- set ns.use_subquery_hwm = true -%}
+        {%- else -%}
+            {% set max_ldts_query = 'SELECT CONVERT(VARCHAR(27), CAST(COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ') AS datetime2(7)), 121) AS max_ldts FROM ' ~ this ~ ' WHERE ' ~ src_ldts ~ ' != ' ~ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) %}
+            {% set max_ldts_results = run_query(max_ldts_query) %}
+            {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+        {%- endif %}
+    {%- endif %}
+{% endif %}
 
 WITH
 
@@ -39,6 +54,7 @@ source_data AS (
     FROM 
         {{ source_relation }}
     {%- if is_incremental() %}
+    {%- if ns.use_subquery_hwm %}
     WHERE {{ src_ldts }} > (
         SELECT
             COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }})
@@ -46,6 +62,9 @@ source_data AS (
             {{ this }}
         WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
+    {%- else %}
+    WHERE {{ src_ldts }} > CONVERT(datetime2(7), '{{ max_ldts }}', 121)
+    {%- endif %}
     {%- endif %}
 
     {%- set ns.last_cte = 'source_data' -%}

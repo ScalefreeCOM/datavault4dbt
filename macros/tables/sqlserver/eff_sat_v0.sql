@@ -4,7 +4,7 @@
 {%- set beginning_of_all_times = datavault4dbt.beginning_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
-{%- set ns = namespace(last_cte= "") -%}
+{%- set ns = namespace(last_cte= "", use_subquery_hwm=false) -%}
 
 {%- set source_relation = ref(source_model) -%}
 
@@ -21,6 +21,26 @@
 
 {%- set is_active_datatype = var('datavault4dbt.is_active_datatype', 'Bit') -%}
 
+{#
+    Get max(ldts) as a literal value. A scalar subquery on the target prevents SQL Server from
+    estimating the cardinality of the filtered source, which can lead to very slow plans.
+    The HWM is also used in records_to_insert for incremental multi-batch loads, even if disable_hwm is true.
+    The value is returned with style 121 and 7 fractional digits, so dbt keeps it as a string
+    and does not truncate it to microseconds by parsing it into a Python datetime.
+#}
+{% if execute %}
+    {%- if is_incremental() and (not disable_hwm or not source_is_single_batch) %}
+        {%- if this is none -%}
+            {{ exceptions.raise_compiler_error("datavault4dbt: `this` is not available. If this is a unit test on an incremental model, add the model itself as a `given` input so dbt can populate `this`.") }}
+        {%- elif this is string -%}
+            {%- set ns.use_subquery_hwm = true -%}
+        {%- else -%}
+            {% set max_ldts_query = 'SELECT CONVERT(VARCHAR(27), CAST(COALESCE(MAX(' ~ src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ') AS datetime2(7)), 121) AS max_ldts FROM ' ~ this ~ ' WHERE ' ~ src_ldts ~ ' != ' ~ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) %}
+            {% set max_ldts_results = run_query(max_ldts_query) %}
+            {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+        {%- endif %}
+    {%- endif %}
+{% endif %}
 
 WITH
 
@@ -29,7 +49,7 @@ WITH
 {#
     In all cases, the source model is selected, and optionally a HWM is applied. 
 #}
-{% if is_incremental() and not disable_hwm %}
+{% if is_incremental() and not disable_hwm and ns.use_subquery_hwm %}
 max_ldts_prep AS (
 
     SELECT
@@ -51,9 +71,13 @@ source_data AS (
     FROM {{ source_relation }} src
     WHERE {{ src_ldts }} NOT IN ('{{ datavault4dbt.beginning_of_all_times() }}', '{{ datavault4dbt.end_of_all_times() }}')
     {%- if is_incremental() and not disable_hwm %}
+    {%- if ns.use_subquery_hwm %}
     AND src.{{ src_ldts }} > (
         SELECT max_ldts FROM max_ldts_prep
     )
+    {%- else %}
+    AND src.{{ src_ldts }} > CONVERT(datetime2(7), '{{ max_ldts }}', 121)
+    {%- endif %}
     {%- endif %}
 ),
 
@@ -329,7 +353,11 @@ records_to_insert AS (
                     AND cast(di.{{ is_active_alias }} as {{ is_active_datatype }}) = current_status.{{ is_active_alias }}
                     AND di.{{ src_ldts }} = (SELECT MIN({{ src_ldts }}) FROM deduplicated_incoming)
                 )
+            {%- if ns.use_subquery_hwm %}
             AND di.{{ src_ldts }} > (SELECT COALESCE(MAX({{ src_ldts }}), {{ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) }}) FROM {{ this }} WHERE {{ src_ldts }} != {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }})
+            {%- else %}
+            AND di.{{ src_ldts }} > CONVERT(datetime2(7), '{{ max_ldts }}', 121)
+            {%- endif %}
         {% endif %}
 
     {#
