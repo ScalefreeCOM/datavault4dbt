@@ -114,7 +114,7 @@ The clocktick is the time that is subtracted from the ldts of the next record to
 | Name                           | Usage                                  | Explanation |
 |--------------------------------|----------------------------------------|-------------|
 | clocktick_unit                 | sat_v1, ref_sat_v1, ma_sat_v1, pit     | The time unit of the clocktick. Takes one string for all adapters, or a dictionary with the adapter name as key. Write the keys in lowercase, for example `sqlserver`. |
-| clocktick_step_size            | sat_v1, ref_sat_v1, ma_sat_v1, pit     | How many units of `clocktick_unit` are subtracted. Must be a positive integer. If it is not set, the adapter default below applies. |
+| clocktick_step_size            | sat_v1, ref_sat_v1, ma_sat_v1, pit     | How many units of `clocktick_unit` are subtracted. Takes one value for all adapters, or a dictionary with the adapter name as key. Must be a positive integer. If it is not set, or the dictionary has no key for the adapter, the adapter default below applies. |
 
 Default clocktick per adapter:
 
@@ -134,10 +134,10 @@ Example for a project that loads with second precision on Snowflake and SQL Serv
 ```yaml
 vars:
   datavault4dbt.clocktick_unit: {"snowflake": "SECOND", "sqlserver": "SECOND"}
-  datavault4dbt.clocktick_step_size: 1
+  datavault4dbt.clocktick_step_size: {"snowflake": 1, "sqlserver": 1}
 ```
 
-`clocktick_step_size` applies to all adapters, while `clocktick_unit` can differ per adapter. An adapter without a key in the `clocktick_unit` dictionary uses its default unit. On SQL Server and Synapse that is NANOSECOND, which needs a step size of at least 100, so a step size of 1 fails to compile there. In a project for several adapters, add a key for each adapter to the dictionary, or leave `clocktick_step_size` unset.
+Set `clocktick_step_size` per adapter when `clocktick_unit` differs per adapter. A single value applies to all adapters, also to those that use their default unit: on SQL Server and Synapse that is NANOSECOND, which needs a step size of at least 100, so a single step size of 1 fails to compile there.
 
 Supported units per adapter:
 
