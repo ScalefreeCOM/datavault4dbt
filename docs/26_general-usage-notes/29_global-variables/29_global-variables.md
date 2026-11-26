@@ -146,11 +146,12 @@ Supported units per adapter:
 | Exasol                     | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. |
 | Fabric, SQL Server, Synapse| NANOSECOND, MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY | SQL Server and Synapse store at most 100 ns, Fabric at most 1 µs. With NANOSECOND, the step size must be at least 100 (SQL Server, Synapse) or 1000 (Fabric), otherwise compilation fails. If the step size is not set, these minimums are the defaults. |
 | Oracle                     | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. |
-| Postgres, Redshift         | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | |
+| Postgres                   | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | |
+| Redshift                   | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. |
 | Snowflake                  | NANOSECOND, MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY | |
 | Trino                      | MILLISECOND, SECOND, MINUTE, HOUR, DAY                  | Trino's `date_add` has no MICROSECOND or NANOSECOND unit. |
 
-On all adapters except Exasol and Oracle, the database checks the unit when the model runs, not dbt at compile time.
+On all adapters except Exasol, Oracle and Redshift, the database checks the unit when the model runs, not dbt at compile time.
 
 ### DATATYPE SPECIFIC DEFAULT VALUES
 
