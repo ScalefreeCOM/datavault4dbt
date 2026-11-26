@@ -49,6 +49,9 @@ macros:
   - name: databricks__ref_sat_v1
     description: Databricks-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
 
+  - name: fabricspark__ref_sat_v1
+    description: Fabric Spark-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
+
   - name: exasol__ref_sat_v1
     description: Exasol-specific implementation of ref_sat_v1. Accepts the same arguments as the parent ref_sat_v1 macro.
 

@@ -51,8 +51,8 @@ To use the macros efficiently, there are a few prerequisites you need to provide
 - Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt`s development and best practices
 - Find [dbt events](https://events.getdbt.com/) near you
 - Check out the [Scalefree-Blog](https://www.scalefree.com/blog/)
-  - [Data-Vault 2.0 with dbt #1](https://www.scalefree.com/blog/data-vault-2-0-with-dbt-1/)
-  - [Data-Vault 2.0 with dbt #2](https://www.scalefree.com/blog/data-vault-2-0-with-dbt-2/)
+  - [Data-Vault 2.0 with dbt #1](https://www.scalefree.com/blog/tools/data-vault-2-0-with-dbt-part-1/)
+  - [Data-Vault 2.0 with dbt #2](https://www.scalefree.com/blog/tools/data-vault-2-0-with-dbt-part-2/)
   - [Using Multi-Active-Satellites #1](https://www.scalefree.com/scalefree-newsletter/using-multi-active-satellites-the-correct-way-1-2/)
   - [Using Multi-Active-Satellites #2](https://www.scalefree.com/scalefree-newsletter/using-multi-active-satellites-the-correct-way-2-2/)
   - [Non-Historized Links](https://www.scalefree.com/modeling/the-value-of-non-historized-links/)

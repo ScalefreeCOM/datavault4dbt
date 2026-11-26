@@ -109,6 +109,9 @@ macros:
   - name: databricks__process_columns_to_select
     description: Databricks-specific implementation of process_columns_to_select. Accepts the same arguments as the parent macro.
 
+  - name: fabricspark__process_columns_to_select
+    description: Fabric Spark-specific implementation of process_columns_to_select. Accepts the same arguments as the parent macro.
+
   - name: synapse__process_columns_to_select
     description: Azure Synapse Analytics-specific implementation of process_columns_to_select. Delegates to default__process_columns_to_select.
 
@@ -132,6 +135,16 @@ macros:
       - name: columns_dict
         type: any
         description: A dictionary of hash/derived column configs, or a list of processed prejoin dictionaries.
+
+  - name: extract_overwrite_columns
+    description: >
+      Returns the source column names that derived columns with 'overwrite_src_cols: true' remove from the stage output.
+      Uses 'src_cols_required' (a string or a list). Without it, uses 'value' if it is a plain column name, and raises
+      a compiler error otherwise. Also raises a compiler error if 'overwrite_src_cols' is not a boolean.
+    arguments:
+      - name: columns_dict
+        type: dict
+        description: The derived_columns dictionary of the stage.
 
   - name: process_hash_column_excludes
     description: >

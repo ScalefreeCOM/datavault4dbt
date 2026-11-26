@@ -151,6 +151,9 @@ macros:
   - name: databricks__escape_column_name
     description: Databricks-specific implementation of escape_column_name. Respects the datavault4dbt.set_casing variable. Accepts the same arguments as the parent escape_column_name macro.
 
+  - name: fabricspark__escape_column_name
+    description: Fabric Spark-specific implementation of escape_column_name. Respects the datavault4dbt.set_casing variable. Accepts the same arguments as the parent escape_column_name macro.
+
   - name: sqlserver__escape_column_name
     description: SQL Server-specific implementation of escape_column_name. Accepts the same arguments as the parent escape_column_name macro.
 

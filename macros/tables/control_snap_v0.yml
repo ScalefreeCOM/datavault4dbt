@@ -38,6 +38,9 @@ macros:
   - name: databricks__control_snap_v0
     description: Databricks-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
 
+  - name: fabricspark__control_snap_v0
+    description: Fabric Spark-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
+
   - name: exasol__control_snap_v0
     description: Exasol-specific implementation of control_snap_v0. Accepts the same arguments as the parent control_snap_v0 macro.
 

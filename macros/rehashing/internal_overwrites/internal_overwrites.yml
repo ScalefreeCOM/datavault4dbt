@@ -49,6 +49,9 @@ macros:
   - name: databricks__custom_get_rename_column_sql
     description: Databricks-specific implementation of custom_get_rename_column_sql using ALTER TABLE ... RENAME COLUMN. Accepts the same arguments as the parent macro.
 
+  - name: fabricspark__custom_get_rename_column_sql
+    description: Fabric Spark-specific implementation of custom_get_rename_column_sql using ALTER TABLE ... RENAME COLUMN. Accepts the same arguments as the parent macro.
+
   - name: snowflake__custom_get_rename_column_sql
     description: Snowflake-specific implementation of custom_get_rename_column_sql. Handles dynamic tables via the DDL prefix for ALTER. Accepts the same arguments as the parent macro.
 
