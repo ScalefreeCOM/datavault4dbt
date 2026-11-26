@@ -136,6 +136,16 @@ macros:
         type: any
         description: A dictionary of hash/derived column configs, or a list of processed prejoin dictionaries.
 
+  - name: extract_overwrite_columns
+    description: >
+      Returns the source column names that derived columns with 'overwrite_src_cols: true' remove from the stage output.
+      Uses 'src_cols_required' (a string or a list). Without it, uses 'value' if it is a plain column name, and raises
+      a compiler error otherwise. Also raises a compiler error if 'overwrite_src_cols' is not a boolean.
+    arguments:
+      - name: columns_dict
+        type: dict
+        description: The derived_columns dictionary of the stage.
+
   - name: process_hash_column_excludes
     description: >
       For each entry in a 'hashed_columns' definition that specifies 'exclude_columns' instead of an explicit

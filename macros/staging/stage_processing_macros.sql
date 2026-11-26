@@ -104,6 +104,10 @@
     {% elif set_casing|lower in ['lower', 'lowercase'] %}
         {% set exclude_columns_list = exclude_columns_list | map('lower') | list %}
         {% set columns_list = columns_list | map('lower') | list %}
+    {% else %}
+        {#- Callers pass '| map' generators; materialize them, otherwise the first 'in' check below consumes the exclude list. -#}
+        {% if datavault4dbt.is_list(exclude_columns_list) %}{% set exclude_columns_list = exclude_columns_list | list %}{% endif %}
+        {% if datavault4dbt.is_list(columns_list) %}{% set columns_list = columns_list | list %}{% endif %}
     {% endif %}
 
     {% set columns_to_select = [] %}
@@ -139,6 +143,10 @@
     {% elif set_casing|lower in ['lower', 'lowercase'] %}
         {% set exclude_columns_list = exclude_columns_list | map('lower') | list %}
         {% set columns_list = columns_list | map('lower') | list %}
+    {% else %}
+        {#- Callers pass '| map' generators; materialize them, otherwise the first 'in' check below consumes the exclude list. -#}
+        {% if datavault4dbt.is_list(exclude_columns_list) %}{% set exclude_columns_list = exclude_columns_list | list %}{% endif %}
+        {% if datavault4dbt.is_list(columns_list) %}{% set columns_list = columns_list | list %}{% endif %}
     {% endif %}
 
     {% set columns_to_select = [] %}
@@ -231,6 +239,53 @@
     {%- endif -%}
 
     {%- do return(ns.extracted_input_columns) -%}
+
+{%- endmacro -%}
+
+
+{%- macro extract_overwrite_columns(columns_dict=none) -%}
+{#- Returns all src_cols_required for derived columns where overwrite_src_cols=true.
+    Used to drop the original source column from the derived_columns CTE SELECT list,
+    so only the renamed alias survives (e.g. when renaming a column with special characters).
+    Without src_cols_required, 'value' is used if it is a plain column name; otherwise an error is raised. -#}
+
+    {%- set ns = namespace(overwrite_columns = []) -%}
+
+    {%- if columns_dict is mapping -%}
+        {%- for key, value in columns_dict.items() -%}
+            {#- A quoted 'false' is a non-empty string and would count as true, so only booleans are accepted.
+                'in [true, false]' is not enough: 1 == true and 0 == false, so numbers would pass. -#}
+            {%- if value is mapping and value.get('overwrite_src_cols', false) is not boolean -%}
+                {{- exceptions.raise_compiler_error("Derived column '" ~ key ~ "' sets 'overwrite_src_cols' to " ~ (value['overwrite_src_cols'] | tojson) ~ ". Use true or false without quotes.") -}}
+            {%- endif -%}
+            {%- if value is mapping and value.get('overwrite_src_cols', false) -%}
+                {%- if 'src_cols_required' in value -%}
+                    {%- if datavault4dbt.is_list(value['src_cols_required']) -%}
+                        {%- set ns.overwrite_columns = ns.overwrite_columns + value['src_cols_required'] -%}
+                    {%- else -%}
+                        {%- do ns.overwrite_columns.append(value['src_cols_required']) -%}
+                    {%- endif -%}
+                {%- elif datavault4dbt.is_attribute(value['value']) -%}
+                    {%- do ns.overwrite_columns.append(value['value']) -%}
+                {%- else -%}
+                    {{- exceptions.raise_compiler_error("Derived column '" ~ key ~ "' sets 'overwrite_src_cols: true', but its 'value' is not a plain column name: " ~ value['value'] ~ ". Use 'src_cols_required' to list the source columns to overwrite.") -}}
+                {%- endif -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endif -%}
+
+    {#- The names can have identifier quotes ("name", `name`, [name]), but the source column names
+        they are compared against have none. Remove one enclosing pair, otherwise nothing matches. -#}
+    {%- set overwrite_columns = [] -%}
+    {%- for column in ns.overwrite_columns -%}
+        {%- set name = column | trim if column is string else column -%}
+        {%- if name is string and name | length > 1 and ((name | first == '"' and name | last == '"') or (name | first == '`' and name | last == '`') or (name | first == '[' and name | last == ']')) -%}
+            {%- set name = name[1:-1] -%}
+        {%- endif -%}
+        {%- do overwrite_columns.append(name) -%}
+    {%- endfor -%}
+
+    {%- do return(overwrite_columns) -%}
 
 {%- endmacro -%}
 
