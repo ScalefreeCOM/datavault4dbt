@@ -39,6 +39,9 @@ macros:
   - name: databricks__ref_hub
     description: Databricks-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
 
+  - name: fabricspark__ref_hub
+    description: Fabric Spark-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
+
   - name: exasol__ref_hub
     description: Exasol-specific implementation of ref_hub. Accepts the same arguments as the parent ref_hub macro.
 

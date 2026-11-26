@@ -61,6 +61,7 @@ Currently supported platforms are:
 * Amazon Redshift
 * Microsoft Azure Synapse
 * Microsoft Fabric
+* Microsoft Fabric Lakehouse (dbt-fabricspark)
 * Databricks
 * Oracle
 * Microsoft SQL Server

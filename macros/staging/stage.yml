@@ -42,11 +42,14 @@ macros:
           another dictionary with the pairs 'is_hashdiff:true' and 'columns: <list of columns>'.
           Example: {'hk_account_h': ['account_number', 'account_key'], 'hd_account_s': {'is_hashdiff': true, 'columns': ['name', 'address']}}.
       - name: derived_columns
-        type: dict[string, dict[string, string]]
+        type: dict[string, any]
         description: >
           Defines values and datatypes for derived ('added' or 'calculated') columns. The values of this dictionary
           are the desired column names; the value is another dictionary with the keys 'value' (holding a column name,
           a SQL expression, or a static string beginning with '!') and 'datatype' (holding a valid SQL datatype).
+          Optional keys: 'src_cols_required' (a source column name or a list of them, that the 'value' needs) and
+          'overwrite_src_cols' (true or false; if true, the columns in 'src_cols_required', or the column named in
+          'value', are removed from the output, so only the derived column remains).
           Example: {'country_isocode': {'value': '!GER', 'datatype': 'STRING'}}.
       - name: sequence
         type: string
@@ -87,6 +90,9 @@ macros:
 
   - name: databricks__stage
     description: Databricks-specific implementation of stage. Accepts the same arguments as the parent stage macro.
+
+  - name: fabricspark__stage
+    description: Fabric Spark-specific implementation of stage. Accepts the same arguments as the parent stage macro.
 
   - name: exasol__stage
     description: Exasol-specific implementation of stage. Accepts the same arguments as the parent stage macro.

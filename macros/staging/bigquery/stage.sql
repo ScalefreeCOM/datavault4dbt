@@ -155,7 +155,9 @@
 {%- set final_columns_to_select = final_columns_to_select + source_columns_to_select -%}
 {%- set derived_columns_to_select = datavault4dbt.process_columns_to_select(source_and_derived_column_names, hashed_column_names) | unique | list -%}
 
+{%- set overwrite_src_columns = [] -%}
 {%- if datavault4dbt.is_something(derived_columns) %}
+  {%- set overwrite_src_columns = datavault4dbt.extract_overwrite_columns(derived_columns) -%}
   {#- Getting Data types for derived columns with detection from source relation -#}
   {%- set derived_columns_with_datatypes = datavault4dbt.derived_columns_datatypes(derived_columns, source_relation) -%}
   {%- set derived_columns_with_datatypes_DICT = fromjson(derived_columns_with_datatypes) -%}
@@ -193,9 +195,9 @@ WITH
 source_data AS (
     SELECT
 
-    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(all_source_columns)) if all_source_columns else " *" }}
+    {{- "\n\n    " ~ datavault4dbt.print_list(datavault4dbt.escape_column_names(all_source_columns), src_alias='src') if all_source_columns else " src.*" }}
 
-  FROM {{ source_relation }}
+  FROM {{ source_relation }} AS src
 
   {% if is_incremental() %}
   WHERE {{ ldts }} > (SELECT max({{ load_datetime_col_name}}) 
@@ -356,6 +358,7 @@ prejoined_columns AS (
 derived_columns AS (
 
   {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, derived_column_names) -%}
+  {%- set final_columns_to_select = datavault4dbt.process_columns_to_select(final_columns_to_select, overwrite_src_columns) -%}
 
   SELECT
   {% if final_columns_to_select | length > 0 -%}

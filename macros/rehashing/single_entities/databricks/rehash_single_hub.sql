@@ -58,14 +58,15 @@
         {% else %}
             {% do run_query("ALTER TABLE " ~ hub_relation ~ " DROP COLUMN IF EXISTS `" ~ dep_hashkey_name ~ "`") %}
             
-            {% set rename_queries = ['BEGIN'] %}
+            {% set rename_queries = [] %}
             {# Rename Old -> Deprecated #}
-            {{ rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=dep_hashkey_name)) }}
+            {% do rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=hub_relation, old_col_name=hashkey, new_col_name=dep_hashkey_name)) %}
             
             {# Rename New -> Standard #}
-            {{ rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) }}
-            {{ rename_queries.append('END') }}
-            {% do run_query(rename_queries|join('\n')) %}
+            {% do rename_queries.append(datavault4dbt.custom_get_rename_column_sql(relation=hub_relation, old_col_name=new_hashkey_name, new_col_name=hashkey)) %}
+            {% for rename_query in rename_queries %}
+                {% do run_query(rename_query) %}
+            {% endfor %}
         {% endif %}
 
     {% endif %}
