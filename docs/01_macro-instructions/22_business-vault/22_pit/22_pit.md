@@ -10,6 +10,8 @@ title: PIT
 
 This macro creates a PIT table to gather snapshot based information of one hub and its surrounding satellites. For this macro to work, a snapshot table is required, that has a trigger column to identify which snapshots to include in the PIT table. The easiest way to create such a snapshot table is to use the control_snap macros provided by this package.
 
+The load end date of a record is the ldts of the next record of the same satellite and hashkey minus one clocktick. The global variables `datavault4dbt.clocktick_unit` and `datavault4dbt.clocktick_step_size` set the clocktick; see [Global variables](../../../26_general-usage-notes/29_global-variables/29_global-variables.md).
+
 Features:
 
 - Tracks the active satellite entries for each entry in a Hub for each snapshot

@@ -10,6 +10,8 @@ title: Reference Satellite v1
 
 This macro calculates a virtualized load end date on top of a version 0 reference satellite. This column is generated for usage in the reference tables, and only virtualized to follow the insert-only approach. Usually one version 1 sat would be created for each version 0 sat. A version 1 satellite should be materialized as a view by default.
 
+The load end date of a record is the ldts of the next record with the same reference keys minus one clocktick. The global variables `datavault4dbt.clocktick_unit` and `datavault4dbt.clocktick_step_size` set the clocktick; see [Global variables](../../../26_general-usage-notes/29_global-variables/29_global-variables.md).
+
 Compared to a regular version 1 Satellite, a version 1 reference Satellite includes the parent reference keys, instead of a parents Hashkey. Besides that, it shares the same features as a standard v1 Satellite, which are:
 
 - Calculating a virtualized load-end-date on top of a version 0 satellite
@@ -80,7 +82,7 @@ end_dated_source AS (
         hd_nation_rs,
         rsrc,
         ldts,
-        COALESCE(LEAD(ldts - INTERVAL '1 MICROSECOND') OVER (PARTITION BY N_NATIONKEY ORDER BY ldts),TO_TIMESTAMP('8888-12-31T23:59:59', 'YYYY-MM-DDTHH24:MI:SS')) as ledts,
+        COALESCE(LEAD(DATEADD(MICROSECOND, -1, ldts)) OVER (PARTITION BY N_NATIONKEY ORDER BY ldts),TO_TIMESTAMP('8888-12-31T23:59:59', 'YYYY-MM-DDTHH24:MI:SS')) as ledts,
         
         N_COMMENT,
         N_NAME,
