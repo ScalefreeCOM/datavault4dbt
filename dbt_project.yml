@@ -81,8 +81,7 @@ vars:
   datavault4dbt.derived_columns_default_dtype: {"bigquery":"STRING","snowflake":"VARCHAR", "exasol": "VARCHAR (2000000) UTF8", "postgres": "VARCHAR", "redshift": "VARCHAR", "synapse": "VARCHAR", "fabric": "VARCHAR(255)", "oracle":"VARCHAR2(40)", databricks: "STRING", fabricspark: "STRING", trino: "VARCHAR", "sqlserver": "VARCHAR(255)"}
 
   #Clocktick Settings
-  datavault4dbt.clocktick_unit: {"bigquery":"MICROSECOND","snowflake":"MICROSECOND", "exasol": "MILLISECOND", "postgres": "MICROSECOND", "redshift": "MICROSECOND", "synapse": "NANOSECOND", "fabric": "MICROSECOND", "oracle":"MICROSECOND", "databricks": "MICROSECOND", "trino": "MILLISECOND", "sqlserver": "NANOSECOND"}
-  datavault4dbt.clocktick_step_size: '1'
+  datavault4dbt.clocktick_unit: {"bigquery":"MICROSECOND","snowflake":"MICROSECOND", "exasol": "MILLISECOND", "postgres": "MICROSECOND", "redshift": "MICROSECOND", "synapse": "NANOSECOND", "fabric": "MICROSECOND", "oracle":"MICROSECOND", "databricks": "MICROSECOND", "fabricspark": "MICROSECOND", "trino": "MILLISECOND", "sqlserver": "NANOSECOND"}
 
   #Datatype specific default values
   datavault4dbt.error_value__STRING: '(error)'

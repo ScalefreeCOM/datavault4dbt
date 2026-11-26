@@ -230,6 +230,31 @@
 {%- endmacro -%}
 
 
+{%- macro fabricspark__clocktick_unit() %}
+
+{%- set global_var = var('datavault4dbt.clocktick_unit', none) -%}
+{%- set clocktick_unit = '' -%}
+
+{%- if global_var is mapping -%}
+    {%- if 'fabricspark' in global_var.keys()|map('lower') -%}
+        {% set clocktick_unit = global_var['fabricspark'] %}
+    {%- else -%}
+        {%- if execute -%}
+            {%- do exceptions.warn("Warning: You have set the global variable 'datavault4dbt.clocktick_unit' to a dictionary, but have not included the adapter you use (fabricspark) as a key. Applying the default value.") -%}
+        {% endif %}
+        {%- set clocktick_unit = "MICROSECOND" -%}
+    {% endif %}
+{%- elif global_var is not mapping and datavault4dbt.is_something(global_var) -%}
+    {%- set clocktick_unit = global_var -%}
+{%- else -%}
+    {%- set clocktick_unit = "MICROSECOND" -%}
+{%- endif -%}
+
+{{ return(clocktick_unit) }}
+
+{%- endmacro -%}
+
+
 {%- macro trino__clocktick_unit() %}
 
 {%- set global_var = var('datavault4dbt.clocktick_unit', none) -%}

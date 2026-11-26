@@ -8,7 +8,7 @@
 {%- macro default__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
-{%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+{%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 
 TIMESTAMP_SUB({{ timestamp_expression }}, INTERVAL {{ clocktick_step_size }} {{ clocktick_unit }})
 
@@ -18,7 +18,7 @@ TIMESTAMP_SUB({{ timestamp_expression }}, INTERVAL {{ clocktick_step_size }} {{ 
 {%- macro snowflake__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
-{%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+{%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 
 DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expression }})
 
@@ -28,7 +28,7 @@ DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expressio
 {%- macro exasol__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
-{%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+{%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 
 {%- if clocktick_unit == 'MICROSECOND' -%}
 ADD_SECONDS({{ timestamp_expression }}, -({{ clocktick_step_size }} / 1000000.0))
@@ -52,10 +52,11 @@ ADD_DAYS({{ timestamp_expression }}, -{{ clocktick_step_size }})
 {%- macro synapse__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
-{%- if clocktick_unit == 'NANOSECOND' and var('datavault4dbt.clocktick_step_size', '1')|int < 100 -%}
-    {%- set clocktick_step_size = 100 -%}
+{#- datetime2 / datetimeoffset stores at most 100 ns. DATEADD rounds a smaller NANOSECOND step down to zero. -#}
+{%- if clocktick_unit == 'NANOSECOND' -%}
+    {%- set clocktick_step_size = datavault4dbt.clocktick_step_size(default_step_size=100, minimum_step_size=100) -%}
 {%- else -%}
-    {%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+    {%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 {%- endif -%}
 
 DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expression }})
@@ -66,7 +67,7 @@ DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expressio
 {%- macro postgres__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | lower -%}
-{%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+{%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 
 {{ timestamp_expression }} - CAST('{{ clocktick_step_size }} {{ clocktick_unit }}' AS INTERVAL)
 
@@ -75,10 +76,11 @@ DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expressio
 
 {%- macro redshift__subtract_clocktick(timestamp_expression) -%}
 
-{%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
-{%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+{#- Interval subtraction instead of DATEADD: DATEADD has no TIMESTAMPTZ signature and returns TIMESTAMP. -#}
+{%- set clocktick_unit = datavault4dbt.clocktick_unit() | lower -%}
+{%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 
-DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expression }})
+{{ timestamp_expression }} - INTERVAL '{{ clocktick_step_size }} {{ clocktick_unit }}'
 
 {%- endmacro -%}
 
@@ -86,10 +88,11 @@ DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expressio
 {%- macro fabric__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
-{%- if clocktick_unit == 'NANOSECOND' and var('datavault4dbt.clocktick_step_size', '1')|int < 1000 -%}
-    {%- set clocktick_step_size = 1000 -%}
+{#- Fabric Warehouse datetime2 stores at most 1 microsecond. DATEADD rounds a smaller NANOSECOND step down to zero. -#}
+{%- if clocktick_unit == 'NANOSECOND' -%}
+    {%- set clocktick_step_size = datavault4dbt.clocktick_step_size(default_step_size=1000, minimum_step_size=1000) -%}
 {%- else -%}
-    {%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+    {%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 {%- endif -%}
 
 DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expression }})
@@ -100,7 +103,7 @@ DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expressio
 {%- macro oracle__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
-{%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+{%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 
 {%- if clocktick_unit == 'MICROSECOND' -%}
 {{ timestamp_expression }} - NUMTODSINTERVAL({{ clocktick_step_size }} / 1000000.0, 'SECOND')
@@ -118,7 +121,17 @@ DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expressio
 {%- macro databricks__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
-{%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+{%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
+
+TRY_SUBTRACT({{ timestamp_expression }}, INTERVAL {{ clocktick_step_size }} {{ clocktick_unit }})
+
+{%- endmacro -%}
+
+
+{%- macro fabricspark__subtract_clocktick(timestamp_expression) -%}
+
+{%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
+{%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 
 TRY_SUBTRACT({{ timestamp_expression }}, INTERVAL {{ clocktick_step_size }} {{ clocktick_unit }})
 
@@ -128,7 +141,7 @@ TRY_SUBTRACT({{ timestamp_expression }}, INTERVAL {{ clocktick_step_size }} {{ c
 {%- macro trino__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | lower -%}
-{%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+{%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 
 date_add('{{ clocktick_unit }}', -{{ clocktick_step_size }}, {{ timestamp_expression }})
 
@@ -138,10 +151,11 @@ date_add('{{ clocktick_unit }}', -{{ clocktick_step_size }}, {{ timestamp_expres
 {%- macro sqlserver__subtract_clocktick(timestamp_expression) -%}
 
 {%- set clocktick_unit = datavault4dbt.clocktick_unit() | upper -%}
-{%- if clocktick_unit == 'NANOSECOND' and var('datavault4dbt.clocktick_step_size', '1')|int < 100 -%}
-    {%- set clocktick_step_size = 100 -%}
+{#- datetime2 / datetimeoffset stores at most 100 ns. DATEADD rounds a smaller NANOSECOND step down to zero. -#}
+{%- if clocktick_unit == 'NANOSECOND' -%}
+    {%- set clocktick_step_size = datavault4dbt.clocktick_step_size(default_step_size=100, minimum_step_size=100) -%}
 {%- else -%}
-    {%- set clocktick_step_size = var('datavault4dbt.clocktick_step_size', '1') -%}
+    {%- set clocktick_step_size = datavault4dbt.clocktick_step_size() -%}
 {%- endif -%}
 
 DATEADD({{ clocktick_unit }}, -{{ clocktick_step_size }}, {{ timestamp_expression }})
