@@ -137,14 +137,16 @@ vars:
   datavault4dbt.clocktick_step_size: 1
 ```
 
+`clocktick_step_size` applies to all adapters, while `clocktick_unit` can differ per adapter. An adapter without a key in the `clocktick_unit` dictionary uses its default unit. On SQL Server and Synapse that is NANOSECOND, which needs a step size of at least 100, so a step size of 1 fails to compile there. In a project for several adapters, add a key for each adapter to the dictionary, or leave `clocktick_step_size` unset.
+
 Supported units per adapter:
 
 | Adapter                    | Supported units                                         | Notes |
 |----------------------------|---------------------------------------------------------|-------|
 | BigQuery                   | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | |
 | Databricks, FabricSpark    | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | |
-| Exasol                     | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. |
-| Fabric, SQL Server, Synapse| NANOSECOND, MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY | SQL Server and Synapse store at most 100 ns, Fabric at most 1 µs. With NANOSECOND, the step size must be at least 100 (SQL Server, Synapse) or 1000 (Fabric), otherwise compilation fails. If the step size is not set, these minimums are the defaults. |
+| Exasol                     | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. The default ldts type `TIMESTAMP(3) WITH LOCAL TIME ZONE` stores milliseconds, and Exasol before 8.32 handles at most 3 decimal places in `ADD_SECONDS`. A MICROSECOND clocktick then rounds down to zero. |
+| Fabric, SQL Server, Synapse| NANOSECOND, MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY | The abbreviations of T-SQL `DATEADD` (for example `ns`, `mcs`, `ms`) count as the full unit names. SQL Server and Synapse store at most 100 ns, Fabric at most 1 µs. With NANOSECOND, the step size must be at least 100 (SQL Server, Synapse) or 1000 (Fabric), otherwise compilation fails. If the step size is not set, these minimums are the defaults. |
 | Oracle                     | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. |
 | Postgres                   | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | |
 | Redshift                   | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. |
