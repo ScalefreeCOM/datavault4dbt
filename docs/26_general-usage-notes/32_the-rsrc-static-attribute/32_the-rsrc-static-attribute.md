@@ -30,6 +30,8 @@ Sometimes the record source column inside one staging area is not always the sam
 
 Obviously the timestamp part inside that rsrc would change from load to load, and we now need to identify parts of it that will be static over all loads. In the shown example it would be `SALESFORCE/Partners/`. That expression now needs to be enriched with wildcards to catch all occurrences of the static part of the record source. Therefore the rsrc_static would be `SALESFORCE/Partners/%`.
 
+The rsrc_static values of different staging models must not match the same record sources. The macros calculate the high-water mark of an rsrc_static value over all rows in the target entity that match it, whichever source loaded them. If the values overlap, one source can raise the high-water mark of another source, and that source then skips rows. For example, do not combine `SALESFORCE/%` for one staging model with `SALESFORCE/Partners/%` for another.
+
 ## WILDCARDS
 
 On all data platforms, the macros compare the record source column with rsrc_static by using the SQL `LIKE` operator. Therefore the `LIKE` syntax of your data platform applies:
@@ -47,7 +49,7 @@ To match only a literal `_`, escape it. The syntax depends on the data platform:
 
 | Data platform | rsrc_static with a literal `_` |
 |---|---|
-| Snowflake, BigQuery, Databricks, Redshift | `'SALESFORCE/ORDER\\_ITEMS/%'` |
+| Snowflake, BigQuery, Databricks, Microsoft Fabric Lakehouse, Redshift | `'SALESFORCE/ORDER\\_ITEMS/%'` |
 | PostgreSQL, Oracle, Trino, Exasol | `'SALESFORCE/ORDER\_ITEMS/%'` |
 | SQL Server, Azure Synapse, Microsoft Fabric | `'SALESFORCE/ORDER[_]ITEMS/%'` |
 
@@ -57,9 +59,11 @@ The values in the table apply to single-quoted strings in `yaml_metadata`. In a 
 
 On the platforms of the first two rows, the backslash is the escape character. A record source that contains a literal backslash therefore needs it doubled in rsrc_static: `\\\\` in the first row, `\\` in the second row. On SQL Server, Azure Synapse and Microsoft Fabric, `[` and `]` are wildcards as well. Write a literal `[` as `[[]`.
 
+Since v2.5.0, the macros on Snowflake, Oracle and Trino use the backslash as the escape character when they compare with rsrc_static. If your rsrc_static contains a literal backslash, double it as described above. On Snowflake, double the backslashes you already doubled.
+
 Inside `yaml_metadata`, always quote an rsrc_static that starts with `%`. YAML does not allow an unquoted value to start with `%`.
 
-Do not escape `_` or `%` in the rsrc_static of Record Tracking Satellites. They write the rsrc_static value itself into the record source column and look it up again with `LIKE`. On most data platforms, an escaped value does not match its own stored text, and the incremental load then loses the high-water mark of that value.
+Do not escape `_` or `%` in the rsrc_static of Record Tracking Satellites. They write the rsrc_static value itself into the record source column and look it up again with `LIKE`. On most data platforms, an escaped value does not match its own stored text, and the incremental load then loses the high-water mark of that value. Trino is the exception: its Record Tracking Satellites write the real record source, so the escape syntax from the table applies there.
 
 ## SPECIAL CASES
 
