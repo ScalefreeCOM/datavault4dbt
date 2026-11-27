@@ -39,9 +39,31 @@
         {%- elif this is string -%}
             {%- set ns.use_subquery_hwm = true -%}
         {%- else -%}
-            {% set max_ldts_query = 'SELECT COALESCE(MAX(' ~src_ldts ~ '), ' ~ datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) ~ ')  FROM ' ~ this ~' WHERE '~ src_ldts ~' < '~datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times)  %}
-            {% set max_ldts_results = run_query(max_ldts_query) %}
-            {% set max_ldts = max_ldts_results.columns[0].values()[0] %}
+            {#
+                Fetch the HWM as text with 9 fractional digits. A fetched timestamp becomes a Python datetime,
+                which holds microseconds only, so a mark like .1760647 would be cut to .176064.
+                The column type decides the parse function: NTZ compared with a TZ value is shifted by the session time zone.
+            #}
+            {%- set hwm_fmt_tz = 'YYYY-MM-DD HH24:MI:SS.FF9 TZH:TZM' -%}
+            {%- set hwm_fmt_ntz = 'YYYY-MM-DD HH24:MI:SS.FF9' -%}
+            {% set max_ldts_query %}
+            SELECT
+                TO_VARCHAR(MAX({{ src_ldts }}), '{{ hwm_fmt_tz }}') AS max_ldts_tz,
+                TO_VARCHAR(MAX({{ src_ldts }}), '{{ hwm_fmt_ntz }}') AS max_ldts_ntz,
+                SYSTEM$TYPEOF(MAX({{ src_ldts }})) AS ldts_type
+            FROM {{ this }}
+            WHERE {{ src_ldts }} < {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
+            {% endset %}
+            {%- set hwm_row = run_query(max_ldts_query).rows[0] -%}
+            {%- if hwm_row[0] is none -%}
+                {%- set hwm_expr = datavault4dbt.string_to_timestamp(timestamp_format, beginning_of_all_times) -%}
+            {%- elif hwm_row[2].startswith('TIMESTAMP_NTZ') -%}
+                {%- set hwm_expr = "TO_TIMESTAMP_NTZ('" ~ hwm_row[1] ~ "', '" ~ hwm_fmt_ntz ~ "')" -%}
+            {%- elif hwm_row[2].startswith('TIMESTAMP_LTZ') -%}
+                {%- set hwm_expr = "TO_TIMESTAMP_LTZ('" ~ hwm_row[0] ~ "', '" ~ hwm_fmt_tz ~ "')" -%}
+            {%- else -%}
+                {%- set hwm_expr = "TO_TIMESTAMP_TZ('" ~ hwm_row[0] ~ "', '" ~ hwm_fmt_tz ~ "')" -%}
+            {%- endif -%}
         {%- endif %}
     {%- endif %}
 {% endif %}
@@ -69,7 +91,7 @@ source_data AS (
         WHERE {{ src_ldts }} < {{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}
     )
     {%- else %}
-    WHERE {{ src_ldts }} > '{{ max_ldts }}'
+    WHERE {{ src_ldts }} > {{ hwm_expr }}
     {%- endif %}
     {%- endif %}
 
