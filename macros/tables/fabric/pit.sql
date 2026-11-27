@@ -14,12 +14,18 @@
 {%- set end_of_all_times = datavault4dbt.end_of_all_times() -%}
 {%- set timestamp_format = datavault4dbt.timestamp_format() -%}
 
+{#-
+    The hashkey is VARBINARY and would become NULL inside attribute_standardise (CONVERT style 121).
+    Converting it with style 1 (0x... hex string) beforehand keeps the previous dimension key input.
+-#}
+{%- set hashkey_hash_input = 'CONVERT({}, {}, 1)'.format(datavault4dbt.hash_input_dtype(type='attribute'), datavault4dbt.prefix([hashkey],'te')) -%}
+
 {%- if datavault4dbt.is_something(pit_type) -%}
     {%- set quote = "'" -%}
     {%- set pit_type_quoted = quote + pit_type + quote -%}
-    {%- set hashed_cols = [pit_type_quoted, datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+    {%- set hashed_cols = [pit_type_quoted, hashkey_hash_input, datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- else -%}
-    {%- set hashed_cols = [datavault4dbt.prefix([hashkey],'te'), datavault4dbt.prefix([sdts], 'snap')] -%}
+    {%- set hashed_cols = [hashkey_hash_input, datavault4dbt.prefix([sdts], 'snap')] -%}
 {%- endif -%}
 
 {%- set hashkey = datavault4dbt.escape_column_names(hashkey) -%}
