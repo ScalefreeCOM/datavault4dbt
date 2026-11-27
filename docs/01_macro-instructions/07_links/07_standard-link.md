@@ -73,9 +73,9 @@ foreign_hashkeys:
     - 'hk_account_h'
 source_models:
     - name: stage_opportunity
-      rsrc_static: '*/SALESFORCE/Opportunity/*'
+      rsrc_static: '%/SALESFORCE/Opportunity/%'
     - name: stage_account
-      rsrc_static: '*/SAP/Account/*'
+      rsrc_static: '%/SAP/Account/%'
       link_hk: 'hashkey_account_opportunity'
       fk_columns: 
           - hashkey_opportunity

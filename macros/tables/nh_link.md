@@ -19,7 +19,7 @@ descriptive attributes as additional payload.
     payload=['currency_isocode', 'amount', 'purpose', 'transaction_date'],
     source_models={
         'stg_transaction': {
-            'rsrc_static': '*/ERP/Transactions/*'
+            'rsrc_static': '%/ERP/Transactions/%'
         }
     }
 ) }}
@@ -45,7 +45,7 @@ payload:
   - transaction_date
 source_models:
   stg_transaction:
-    rsrc_static: '*/ERP/Transactions/*'
+    rsrc_static: '%/ERP/Transactions/%'
 {%- endset -%}
 
 {{ datavault4dbt.nh_link(yaml_metadata=meta) }}

@@ -22,11 +22,11 @@ Features:
     tracked_hashkey='hk_contact_h',
     source_models={
         'stg_contact_crm': {
-            'rsrc_static': '*/CRM/Contact/*'
+            'rsrc_static': '%/CRM/Contact/%'
         },
         'stg_contact_erp': {
             'hk_column': 'hk_contact_erp_h',
-            'rsrc_static': '*/ERP/Contact/*'
+            'rsrc_static': '%/ERP/Contact/%'
         }
     }
 ) }}
@@ -44,10 +44,10 @@ Features:
 tracked_hashkey: 'hk_contact_h'
 source_models:
   stg_contact_crm:
-    rsrc_static: '*/CRM/Contact/*'
+    rsrc_static: '%/CRM/Contact/%'
   stg_contact_erp:
     hk_column: hk_contact_erp_h
-    rsrc_static: '*/ERP/Contact/*'
+    rsrc_static: '%/ERP/Contact/%'
 {%- endset -%}
 
 {{ datavault4dbt.rec_track_sat(yaml_metadata=meta) }}

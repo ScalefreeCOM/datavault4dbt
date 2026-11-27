@@ -23,8 +23,8 @@ macros:
           Dictionary with information about the source model. The key of the dict is the name of the source model,
           and the value is another dictionary. This inner dictionary requires to have the key 'rsrc_static', and
           optionally the key 'hk_column'. The 'rsrc_static' attribute defines a STRING or list of strings that will
-          always be the same over all loads of one source. Wildcards (e.g. '*') can be used to match variable parts.
-          If rsrc_static is solely '*', the performance lookup will not be executed.
+          always be the same over all loads of one source. The record source is compared with SQL LIKE,
+          so the wildcards '%' and '_' can be used to match variable parts.
       - name: src_ldts
         type: string
         description: >
