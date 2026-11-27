@@ -10,6 +10,8 @@ title: Standard Satellite v1
 
 This macro calculates a virtualized load end date on top of a version 0 satellite. This column is generated for usage in the PIT tables, and only virtualized to follow the insert-only approach. Usually one version 1 sat would be created for each version 0 sat. A version 1 satellite should be materialized as a view by default.
 
+The load end date of a record is the ldts of the next record with the same hashkey minus one clocktick. The global variables `datavault4dbt.clocktick_unit` and `datavault4dbt.clocktick_step_size` set the clocktick; see [Global variables](../../../26_general-usage-notes/29_global-variables/29_global-variables.md).
+
 Features:
 
 - Calculating a virtualized load-end-date on top of a version 0 satellite

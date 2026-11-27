@@ -10,6 +10,8 @@ title: Multi-Active Satellite v1
 
 This macro calculates the load end dates for multi active data, based on a multi active attribute. It must be based on a version 0 multi-active satellite, that would then hold multiple records per hashkey+ldts combination.
 
+The load end date of a record is the ldts of the next record with the same hashkey minus one clocktick. The global variables `datavault4dbt.clocktick_unit` and `datavault4dbt.clocktick_step_size` set the clocktick; see [Global variables](../../../26_general-usage-notes/29_global-variables/29_global-variables.md).
+
 Features:
 
 - Calculates virtualized load-end-dates to correctly identify multiple active records per batch

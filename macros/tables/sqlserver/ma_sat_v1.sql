@@ -51,7 +51,8 @@ end_dated_loads AS (
     {{ hashkey }},
     {{ src_ldts }},
     COALESCE(
-        DATEADD(ns, -100, LEAD({{ src_ldts }}) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }})),
+        {%- set lead_ldts %}LEAD({{ src_ldts }}) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}){% endset %}
+        {{ datavault4dbt.subtract_clocktick(lead_ldts) }},
         CAST('{{ end_of_all_times }}' AS {{ datavault4dbt.timestamp_default_dtype() }})
     ) AS {{ ledts_alias }}
 FROM distinct_hk_ldts

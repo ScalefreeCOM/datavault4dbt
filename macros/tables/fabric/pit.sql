@@ -87,7 +87,8 @@ pit_records AS (
             SELECT
                 {{ hashkey }},
                 {{ ldts }},
-                COALESCE(LEAD(DATEADD(MICROSECOND, -1, {{ ldts }})) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
+                {%- set lead_ldts %}LEAD({{ ldts }}) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ ldts }}){% endset %}
+                COALESCE({{ datavault4dbt.subtract_clocktick(lead_ldts) }},{{ datavault4dbt.string_to_timestamp(timestamp_format, end_of_all_times) }}) AS {{ ledts }}
             FROM {{ ref(satellite.name) }}
         ) {{ satellite.name }}
         {% endif %}

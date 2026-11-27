@@ -107,6 +107,54 @@ The safe per-column bound on those adapters is roughly `8000 / number_of_columns
 | stg_default_dtype              | Record Tracking Satellite     | The default datatype for the `stg_alias` column inside a record tracking satellite. |
 | derived_columns_default_dtype  | Stage                         | The default datatype for derived columns, if no other datatype can be detected automatically. |
 
+### CLOCKTICK CONFIGURATION
+
+The clocktick is the time that is subtracted from the ldts of the next record to calculate the ledts of a record.
+
+| Name                           | Usage                                  | Explanation |
+|--------------------------------|----------------------------------------|-------------|
+| clocktick_unit                 | sat_v1, ref_sat_v1, ma_sat_v1, pit     | The time unit of the clocktick. Takes one string for all adapters, or a dictionary with the adapter name as key. Write the keys in lowercase, for example `sqlserver`. |
+| clocktick_step_size            | sat_v1, ref_sat_v1, ma_sat_v1, pit     | How many units of `clocktick_unit` are subtracted. Takes one value for all adapters, or a dictionary with the adapter name as key. Must be a positive integer. If it is not set, or the dictionary has no key for the adapter, the adapter default below applies. |
+
+Default clocktick per adapter:
+
+| Adapter                                                                           | Unit        | Step size | Subtracted |
+|-----------------------------------------------------------------------------------|-------------|-----------|------------|
+| BigQuery, Databricks, Fabric, FabricSpark, Oracle, Postgres, Redshift, Snowflake  | MICROSECOND | 1         | 1 µs       |
+| Exasol, Trino                                                                     | MILLISECOND | 1         | 1 ms       |
+| SQL Server, Synapse                                                               | NANOSECOND  | 100       | 100 ns     |
+
+Set the clocktick to the precision of your ldts data type (see `timestamp_default_dtype`). For example, for an ldts of type `datetime2(0)`, set `clocktick_unit: SECOND`.
+
+- **Clocktick smaller than the ldts precision:** the database rounds the subtraction away. The ledts then equals the ldts of the next record, and two records are valid at the same point in time.
+- **Clocktick larger than the ldts precision:** a gap opens between two records. If two loads are closer together than one clocktick, the ledts of the first record is earlier than its own ldts.
+
+Example for a project that loads with second precision on Snowflake and SQL Server:
+
+```yaml
+vars:
+  datavault4dbt.clocktick_unit: {"snowflake": "SECOND", "sqlserver": "SECOND"}
+  datavault4dbt.clocktick_step_size: {"snowflake": 1, "sqlserver": 1}
+```
+
+Set `clocktick_step_size` per adapter when `clocktick_unit` differs per adapter. A single value applies to all adapters, also to those that use their default unit: on SQL Server and Synapse that is NANOSECOND, which needs a step size of at least 100, so a single step size of 1 fails to compile there.
+
+Supported units per adapter:
+
+| Adapter                    | Supported units                                         | Notes |
+|----------------------------|---------------------------------------------------------|-------|
+| BigQuery                   | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | |
+| Databricks, FabricSpark    | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | |
+| Exasol                     | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. The default ldts type `TIMESTAMP(3) WITH LOCAL TIME ZONE` stores milliseconds, and Exasol before 8.32 handles at most 3 decimal places in `ADD_SECONDS`. A MICROSECOND clocktick then rounds down to zero. |
+| Fabric, SQL Server, Synapse| NANOSECOND, MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY | The abbreviations of T-SQL `DATEADD` (for example `ns`, `mcs`, `ms`) count as the full unit names. SQL Server and Synapse store at most 100 ns, Fabric at most 1 µs. With NANOSECOND, the step size must be at least 100 (SQL Server, Synapse) or 1000 (Fabric), otherwise compilation fails. If the step size is not set, these minimums are the defaults. |
+| Oracle                     | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. |
+| Postgres                   | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | |
+| Redshift                   | MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY     | Other units fail at compile time. |
+| Snowflake                  | NANOSECOND, MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR, DAY | |
+| Trino                      | MILLISECOND, SECOND, MINUTE, HOUR, DAY                  | Trino's `date_add` has no MICROSECOND or NANOSECOND unit. |
+
+On all adapters except Exasol, Oracle and Redshift, the database checks the unit when the model runs, not dbt at compile time.
+
 ### DATATYPE SPECIFIC DEFAULT VALUES
 
 For each datatype there is a default unknown and error value defined. Additionally, an alternative, usually much shorter value is defined. See the applied default values in the table below.

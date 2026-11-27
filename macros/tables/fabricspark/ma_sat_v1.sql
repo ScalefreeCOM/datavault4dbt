@@ -49,7 +49,8 @@ end_dated_loads AS (
     SELECT
         {{ hashkey }},
         {{ src_ldts }},
-        COALESCE(LEAD(TRY_SUBTRACT({{ src_ldts }}, INTERVAL 1 MICROSECOND)) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}),{{ datavault4dbt.string_to_timestamp(timestamp_format,end_of_all_times) }}) as {{ ledts_alias }}
+        {%- set lead_ldts %}LEAD({{ src_ldts }}) OVER (PARTITION BY {{ hashkey }} ORDER BY {{ src_ldts }}){% endset %}
+        COALESCE({{ datavault4dbt.subtract_clocktick(lead_ldts) }},{{ datavault4dbt.string_to_timestamp(timestamp_format,end_of_all_times) }}) as {{ ledts_alias }}
     FROM distinct_hk_ldts
 
 ),
